@@ -38,12 +38,21 @@ if (typeof window !== 'undefined' && (window as any).__TAURI__) {
   presetDatabase = new IndexedDbPresetDatabase()
 }
 
+export async function syncPresets(): Promise<void> {
+  try {
+    const localPresets = await presetDatabase.getPresets()
+    await presetDatabase.syncPresets(localPresets)
+    console.log('Presets synchronized successfully.')
+  } catch (error) {
+    console.error('Failed to synchronize presets:', error)
+  }
+}
+
 export async function getIoportNames(): Promise<string[]> {
   if (!WebMidi.enabled) {
     await WebMidi.enable({ sysex: true })
   }
 
-  console.log(WebMidi.inputs)
   return WebMidi.inputs.map((input) => input.name)
 }
 
@@ -385,6 +394,10 @@ export interface PresetDatabase {
   addPreset(preset: Preset): Promise<void>
   updatePreset(preset: Preset): Promise<void>
   deletePreset(id: string): Promise<void>
+  syncPresets(localPresets: Preset[]): Promise<void>
+  isAvailable(): Promise<boolean>
+  import(json: string): Promise<void>
+  export(): Promise<string>
 }
 
 export async function getPresets(): Promise<Preset[]> {
@@ -401,4 +414,12 @@ export async function updatePreset(preset: Preset): Promise<void> {
 
 export async function deletePreset(id: string): Promise<void> {
   return presetDatabase.deletePreset(id)
+}
+
+export async function exportPresets(): Promise<string> {
+  return presetDatabase.export()
+}
+
+export async function importPresets(json: string): Promise<void> {
+  return presetDatabase.import(json)
 }

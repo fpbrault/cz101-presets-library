@@ -93,4 +93,58 @@ export class IndexedDbPresetDatabase implements PresetDatabase {
       }
     })
   }
+
+  async syncPresets(localPresets: Preset[]): Promise<void> {
+    const db = await openDatabase()
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite')
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.clear()
+
+      request.onsuccess = () => {
+        const addRequests = localPresets.map((preset) => store.add(preset))
+        Promise.all(addRequests).then(() => {
+          resolve()
+        })
+      }
+
+      request.onerror = () => {
+        console.error(request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  async isAvailable(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION)
+
+      request.onsuccess = () => {
+        resolve(true)
+        request.result.close()
+      }
+
+      request.onerror = () => {
+        resolve(false)
+      }
+    })
+  }
+
+  async export(): Promise<string> {
+    const presets = await this.getPresets()
+    const serializedPresets = presets.map((preset) => ({
+      ...preset,
+      sysexData: Array.from(preset.sysexData),
+    }))
+    return JSON.stringify(serializedPresets)
+  }
+
+  async import(json: string): Promise<void> {
+    const serializedPresets: any[] = JSON.parse(json)
+    const presets: Preset[] = serializedPresets.map((preset) => ({
+      ...preset,
+      sysexData: Uint8Array.from(preset.sysexData),
+    }))
+    await this.syncPresets(presets)
+  }
 }
