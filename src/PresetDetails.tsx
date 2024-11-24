@@ -1,0 +1,172 @@
+// src/PresetDetails.tsx
+import React from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import { Preset } from './lib/presetManager'
+import { buf2hex } from './utils'
+
+interface PresetDetailsProps {
+  currentPreset: Preset | null
+  editMode: boolean
+  formData: any
+  handleInputChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void
+  handleSave: () => void
+  handleCancel: () => void
+  setEditMode: (editMode: boolean) => void
+  setShowDeleteModal: (show: boolean) => void
+}
+
+const PresetDetails: React.FC<PresetDetailsProps> = ({
+  currentPreset,
+  editMode,
+  formData,
+  handleInputChange,
+  handleSave,
+  handleCancel,
+  setEditMode,
+  setShowDeleteModal,
+}) => {
+  return (
+    <div
+      className={
+        'w-96 flex flex-col p-4 bg-base-200 h-full overflow-auto' +
+        (currentPreset ? ' block' : ' hidden')
+      }
+    >
+      <h2>Preset Details</h2>
+      <div className="gap-2 flex">
+        {editMode ? (
+          <>
+            <button onClick={handleSave} className="btn btn-success">
+              Save
+            </button>
+            <button onClick={handleCancel} className="btn btn-error">
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className="btn btn-primary"
+              onClick={() => setEditMode(true)}
+            >
+              Edit
+            </button>
+            <button
+              className="btn btn-error"
+              onClick={() => setShowDeleteModal(true)}
+            >
+              Delete
+            </button>
+          </>
+        )}
+      </div>
+      <div className="flex flex-col flex-grow">
+        {[
+          {
+            label: 'ID',
+            id: 'id',
+            value: currentPreset?.id || '',
+            type: 'text',
+          },
+          {
+            label: 'Name',
+            id: 'name',
+            value: formData.name,
+            type: 'text',
+          },
+          {
+            label: 'Filename',
+            id: 'filename',
+            value: formData.filename,
+            type: 'text',
+          },
+          {
+            label: 'Tags',
+            id: 'tags',
+            value: formData.tags,
+            type: 'text',
+          },
+          {
+            label: 'Description',
+            id: 'description',
+            value: formData.description,
+            type: 'textarea',
+          },
+          {
+            label: 'Author',
+            id: 'author',
+            value: formData.author,
+            type: 'text',
+          },
+          {
+            label: 'Created Date',
+            id: 'createdDate',
+            value: formData.createdDate,
+            type: 'text',
+          },
+          {
+            label: 'Modified Date',
+            id: 'modifiedDate',
+            value: formData.modifiedDate,
+            type: 'text',
+          },
+          {
+            label: 'Slot',
+            id: 'slot',
+            value: currentPreset?.slot || '',
+            type: 'text',
+          },
+          {
+            label: 'Sysex Data',
+            id: 'sysexData',
+            value: buf2hex(currentPreset?.sysexData || []),
+            type: 'textarea',
+          },
+        ].map((item, index) => (
+          <label key={index} className="form-control w-full max-w-xs">
+            <div className="label">
+              <span className="label-text">{item.label}</span>
+            </div>
+            {editMode &&
+            !['filename', 'createdDate', 'modifiedDate', 'sysexData'].includes(
+              item.id,
+            ) ? (
+              item.type === 'textarea' ? (
+                <textarea
+                  id={item.id}
+                  value={item.value}
+                  onChange={handleInputChange}
+                  placeholder={`${item.label}`}
+                  className="textarea textarea-bordered textarea-sm w-full max-w-xs"
+                ></textarea>
+              ) : (
+                <input
+                  type={item.type}
+                  id={item.id}
+                  value={item.value}
+                  onChange={handleInputChange}
+                  placeholder={`${item.label}`}
+                  className="input input-bordered input-sm w-full max-w-xs"
+                />
+              )
+            ) : (
+              <div className="ml-4 font-bold gap-2 flex flex-wrap break-word max-h-36 overflow-auto">
+                {item.id === 'tags'
+                  ? currentPreset?.tags.map((tag: string) => (
+                      <span key={uuidv4()} className="badge badge-primary">
+                        {tag}
+                      </span>
+                    ))
+                  : item.value}
+              </div>
+            )}
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default PresetDetails

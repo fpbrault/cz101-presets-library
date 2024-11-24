@@ -1,0 +1,404 @@
+import fs from 'fs'
+import { WebMidi, Output, Input } from 'webmidi'
+import natsort from 'natsort'
+import { FakePresetDatabase } from './fakePresetDatabase'
+import { IndexedDbPresetDatabase } from './browserDatabase'
+
+import { exists, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
+import { v4 as uuidv4 } from 'uuid'
+
+let presetDatabase: PresetDatabase
+
+const REQUEST_COMMANDS = Array.from(
+  { length: 16 },
+  (_, i) =>
+    new Uint8Array([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x10,
+      i + 0x20,
+      0x70,
+      0x31,
+      0xf7,
+    ]),
+)
+const BACKUP_FOLDER = 'cz101_backup'
+const CONFIG_FILE = 'config.json'
+
+if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+  console.log('Running in Tauri')
+  // Running in Tauri
+  presetDatabase = new IndexedDbPresetDatabase()
+} else {
+  console.log('Running in a browser')
+  // Running in a browser
+  presetDatabase = new IndexedDbPresetDatabase()
+}
+
+export async function getIoportNames(): Promise<string[]> {
+  if (!WebMidi.enabled) {
+    await WebMidi.enable({ sysex: true })
+  }
+
+  console.log(WebMidi.inputs)
+  return WebMidi.inputs.map((input) => input.name)
+}
+
+export async function backupPresets(portName: string): Promise<void> {
+  fs.mkdirSync(BACKUP_FOLDER, { recursive: true })
+  const input = WebMidi.getInputByName(portName) as Input
+  const output = WebMidi.getOutputByName(portName) as Output
+
+  for (let i = 0; i < 16; i++) {
+    const command = REQUEST_COMMANDS[i]
+    output.sendSysex([], command)
+
+    const response = await new Promise<Uint8Array | null>((resolve) => {
+      const listener = (e: any) => {
+        input.removeListener('sysex', listener)
+        resolve(e.data)
+      }
+      input.addListener('sysex', listener)
+
+      setTimeout(() => {
+        input.removeListener('sysex', listener)
+        resolve(null)
+      }, 1000)
+    })
+
+    if (response && response.length === 261) {
+      fs.writeFileSync(
+        `${BACKUP_FOLDER}/user/preset_${i + 1}.syx`,
+        Buffer.from([0xf0, ...response, 0xf7]),
+      )
+      console.log(`Preset ${i + 1} backed up successfully.`)
+    } else {
+      console.log(
+        `Error: Preset ${i + 1} data length is ${response ? response.length : 0} bytes, expected 261 bytes. Backup skipped.`,
+      )
+    }
+  }
+}
+
+export function formatPresetData(
+  data: Uint8Array,
+  targetSlot?: number,
+): Uint8Array {
+  if (data.slice(0, 7).toString() === '240,68,0,0,112,33,0') {
+    data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])
+  }
+  if (data.slice(0, 7).toString() === '240,68,0,0,112,32,96') {
+    data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])
+  }
+
+  if (targetSlot !== undefined) {
+    data = new Uint8Array([
+      ...data.slice(0, 5),
+      32,
+      targetSlot + 32,
+      ...data.slice(6),
+    ])
+  } else {
+    data = new Uint8Array([...data.slice(0, 5), 32, 96, ...data.slice(6)])
+  }
+
+  return data
+}
+
+export async function restorePresets(
+  portName: string,
+  targetSlot?: number,
+  filename?: string,
+): Promise<void> {
+  const output = WebMidi.getOutputByName(portName) as Output
+  const filePaths = filename
+    ? [filename]
+    : Array.from(
+        { length: 16 },
+        (_, i) => `${BACKUP_FOLDER}/user/preset_${i + 1}.syx`,
+      )
+
+  for (const filePath of filePaths) {
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath)
+      if (data.length !== 263) {
+        console.log(
+          `Error: Preset file ${filePath} data length is ${data.length} bytes, expected 263 bytes. Restore skipped.`,
+        )
+        continue
+      }
+
+      const target =
+        targetSlot !== undefined ? targetSlot : filePaths.indexOf(filePath)
+      const formattedData = formatPresetData(new Uint8Array(data), target)
+      output.sendSysex([], formattedData.slice(1, -1))
+      console.log(
+        `Preset from ${filePath} restored to slot ${target + 1} successfully.`,
+      )
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    } else {
+      console.log(`Preset file ${filePath} not found.`)
+    }
+  }
+}
+
+export async function restoreToBuffer(
+  portName: string,
+  filename: string,
+): Promise<void> {
+  const output = WebMidi.getOutputByName(portName) as Output
+  if (fs.existsSync(filename)) {
+    const data = fs.readFileSync(filename)
+    const formattedData = formatPresetData(new Uint8Array(data))
+    output.sendSysex([], formattedData.slice(1, -1))
+    console.log(`Preset from ${filename} restored to buffer successfully.`)
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  } else {
+    console.log(`Preset file ${filename} not found.`)
+  }
+}
+
+export async function restorePresetToBuffer(
+  preset: Preset,
+  portName: string,
+): Promise<void> {
+  const output = WebMidi.getOutputByName(portName) as Output
+
+  const formattedData = formatPresetData(preset.sysexData)
+  output.sendSysex([], formattedData.slice(1, -1))
+  console.log(`Preset from ${preset.filename} restored to buffer successfully.`)
+  await new Promise((resolve) => setTimeout(resolve, 100))
+}
+
+export async function getPresetList(): Promise<string[]> {
+  const presetFiles: string[] = []
+  for (let i = 0; i < 16; i++) {
+    const filePath = `${BACKUP_FOLDER}/user/preset_${i + 1}.syx`
+    const fileExists = await exists(filePath, {
+      baseDir: BaseDirectory.Document,
+    })
+    if (fileExists) {
+      presetFiles.push(filePath)
+    }
+  }
+  return presetFiles
+}
+
+export async function loadPresetToBuffer(
+  portName: string,
+  presetNumber: number,
+): Promise<void> {
+  const filename = `${BACKUP_FOLDER}/user/preset_${presetNumber}.syx`
+  await restoreToBuffer(portName, filename)
+}
+
+export async function savePreset(
+  portName: string,
+  presetNumber: number,
+  filename: string,
+): Promise<void> {
+  const output = WebMidi.getOutputByName(portName) as Output
+  const input = WebMidi.getInputByName(portName) as Input
+
+  const command = REQUEST_COMMANDS[presetNumber - 1]
+  output.sendSysex([], command)
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  const response = await new Promise<Uint8Array | null>((resolve) => {
+    const listener = (e: any) => {
+      input.removeListener('sysex', listener)
+      resolve(e.data)
+    }
+    input.addListener('sysex', listener)
+
+    setTimeout(() => {
+      input.removeListener('sysex', listener)
+      resolve(null)
+    }, 1000)
+  })
+
+  if (response && response.length === 261) {
+    fs.writeFileSync(filename, Buffer.from([0xf0, ...response, 0xf7]))
+    console.log(`Preset ${presetNumber} saved to ${filename} successfully.`)
+  } else {
+    console.log(`Failed to save preset ${presetNumber}.`)
+  }
+}
+
+export function loadSettings(): Record<string, any> {
+  if (fs.existsSync(CONFIG_FILE)) {
+    return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'))
+  }
+  return {}
+}
+
+export function saveSettings(settings: Record<string, any>): void {
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(settings, null, 2))
+}
+
+export function getBackupFolder(): string {
+  return BACKUP_FOLDER
+}
+
+export async function getBackupFiles(): Promise<string[]> {
+  const fileList: string[] = []
+  const entries = await readDir(BACKUP_FOLDER, {
+    baseDir: BaseDirectory.Document,
+  })
+
+  for (const entry of entries) {
+    if (entry.isFile) {
+      fileList.push(entry.name)
+    } else if (entry.isDirectory) {
+      const childEntries: DirEntry[] = await readDir(entry.name, {
+        baseDir: BaseDirectory.Document,
+      })
+      for (const child of childEntries) {
+        if (child.isFile) {
+          fileList.push(`${entry.name}/${child.name}`)
+        }
+      }
+    }
+  }
+
+  return fileList.sort(natsort())
+}
+
+export type Preset = {
+  id: string
+  name: string
+  createdDate: string
+  modifiedDate: string
+  slot?: number
+  filename: string
+  sysexData: Uint8Array
+  tags: string[]
+  author?: string
+  description?: string
+  [key: string]: any
+}
+
+let fakePresets: Preset[] = [
+  {
+    id: uuidv4(),
+    name: 'Preset 1',
+    createdDate: '2021-09-01',
+    modifiedDate: '2021-09-01',
+    filename: 'preset_1.syx',
+    sysexData: new Uint8Array(263),
+    author: 'Author 1',
+    description: 'Description 1',
+    tags: ['Bass'],
+  },
+  {
+    id: uuidv4(),
+    name: 'Preset 2',
+    createdDate: '2021-09-02',
+    modifiedDate: '2021-09-02',
+    filename: 'preset_2.syx',
+    sysexData: new Uint8Array(263),
+    author: 'Author 1',
+    description: 'Description 1',
+    tags: ['Pad', 'Lofi', 'Slow'],
+  },
+  {
+    id: uuidv4(),
+    name: 'Preset 3',
+    createdDate: '2021-09-03',
+    modifiedDate: '2021-09-03',
+    filename: 'preset_3.syx',
+    sysexData: new Uint8Array(263),
+    author: 'Author 1',
+    description: 'Description 1',
+    tags: ['Brass'],
+  },
+]
+
+/**
+ * Simulates the retrieval of backup files.
+ * This is a fake implementation and should be replaced with actual logic.
+ *
+ * @returns {Promise<Preset[]>} A promise that resolves to an array of backup file names, which are stored in a hierarchy of dirs.
+ */
+export async function getBackupFilesFake(): Promise<Preset[]> {
+  return fakePresets
+}
+
+/**
+ * Updates the preset data.
+ *
+ * @param {Preset} updatedPreset The updated preset data.
+ * @returns {Promise<void>} A promise that resolves when the preset data is updated.
+ */
+export async function updatePresetData(updatedPreset: Preset): Promise<void> {
+  fakePresets = fakePresets.map((preset) =>
+    preset.filename === updatedPreset.filename ? updatedPreset : preset,
+  )
+}
+
+/**
+ * Adds a new preset.
+ *
+ * @param {string} filename The name of the file.
+ * @param {Uint8Array} sysexData The sysex data of the preset.
+ * @returns {Promise<void>} A promise that resolves when the preset is added.
+ */
+export async function addNewPreset(
+  filename: string,
+  sysexData: Uint8Array,
+): Promise<void> {
+  const newPreset: Preset = {
+    id: uuidv4(),
+    name: filename,
+    createdDate: new Date().toISOString(),
+    modifiedDate: new Date().toISOString(),
+    filename,
+    sysexData,
+    tags: [],
+    author: '',
+    description: '',
+  }
+  fakePresets.push(newPreset)
+}
+
+export async function createPresetData(
+  filename: string,
+  sysexData: Uint8Array,
+): Promise<Preset> {
+  return {
+    id: uuidv4(),
+    name: filename,
+    createdDate: new Date().toISOString(),
+    modifiedDate: new Date().toISOString(),
+    filename,
+    sysexData,
+    tags: [],
+    author: '',
+    description: '',
+  }
+}
+
+export interface PresetDatabase {
+  getPresets(): Promise<Preset[]>
+  addPreset(preset: Preset): Promise<void>
+  updatePreset(preset: Preset): Promise<void>
+  deletePreset(id: string): Promise<void>
+}
+
+export async function getPresets(): Promise<Preset[]> {
+  return presetDatabase.getPresets()
+}
+
+export async function addPreset(preset: Preset): Promise<void> {
+  return presetDatabase.addPreset(preset)
+}
+
+export async function updatePreset(preset: Preset): Promise<void> {
+  return presetDatabase.updatePreset(preset)
+}
+
+export async function deletePreset(id: string): Promise<void> {
+  return presetDatabase.deletePreset(id)
+}
