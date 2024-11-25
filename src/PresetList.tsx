@@ -171,8 +171,11 @@ const PresetList: React.FC<PresetListProps> = ({
                 <td>{preset.author}</td>
                 <td className="flex gap-2">
                   {preset.tags.map((tag: string) => (
-                    <span key={uuidv4()} className="badge badge-primary">
-                      {tag}
+                    <span
+                      key={uuidv4()}
+                      className="capitalize badge badge-primary"
+                    >
+                      {tag.toLowerCase()}
                     </span>
                   ))}
                 </td>
