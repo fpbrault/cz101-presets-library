@@ -175,6 +175,26 @@ export default function PresetManager() {
     }
   }
 
+  const handleSetFavorite = async (preset: Preset) => {
+    const updatedPreset = {
+      ...preset,
+      favorite: !preset.favorite,
+    }
+
+    await updatePreset(updatedPreset)
+    triggerRefresh()
+  }
+
+  const handleSetRating = async (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => {
+    const updatedPreset = {
+      ...preset,
+      rating,
+    }
+
+    await updatePreset(updatedPreset)
+    triggerRefresh()
+  }
+
   const handleSendCurrentPreset = () => {
     if (currentPreset && selectedMidiPort) {
       restorePresetToBuffer(currentPreset, selectedMidiPort)
@@ -224,6 +244,8 @@ export default function PresetManager() {
           ></FilterPanel>
         </div>
         <PresetList
+          handleSetFavorite={handleSetFavorite}
+          handleSetRating={handleSetRating}
           handleSelectPreset={handleSelectPreset}
           currentPreset={currentPreset}
           filteredPresets={filteredPresets}
