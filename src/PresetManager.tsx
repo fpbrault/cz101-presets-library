@@ -19,6 +19,7 @@ import PresetList from './PresetList'
 import OptionPanel from './OptionPanel'
 import SettingsPanel from './SettingsPanel'
 import { useRefresh } from './RefreshContext'
+import useDragDrop from './useDragDrop'
 
 export default function PresetManager() {
   const [editMode, setEditMode] = useState(false)
@@ -125,130 +126,7 @@ export default function PresetManager() {
     setEditMode(false)
   }
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-      // Tauri environment
-      console.log('Tauri environment')
-      const setupTauriDragDrop = async () => {
-        const unlisten = await getCurrentWebview().onDragDropEvent(
-          async (event) => {
-            if (event.payload.type === 'drop') {
-              for (const path of event.payload.paths) {
-                const response = await fetch(`file://${path}`)
-                const arrayBuffer = await response.arrayBuffer()
-                const sysexData = new Uint8Array(arrayBuffer)
-                const presetData = await createPresetData(
-                  path.split('/').pop() || '',
-                  sysexData,
-                )
-                await addPreset(presetData)
-                triggerRefresh()
-              }
-            }
-          },
-        )
-        return () => {
-          unlisten()
-        }
-      }
-      setupTauriDragDrop()
-
-      const handleFileSelect = async (
-        e: React.ChangeEvent<HTMLInputElement>,
-      ) => {
-        const files = e.target.files
-        if (files) {
-          for (const file of files) {
-            if (file && file.name.endsWith('.syx')) {
-              const sysexData = new Uint8Array(await file.arrayBuffer())
-              const presetData = await createPresetData(file.name, sysexData)
-              await addPreset(presetData)
-              triggerRefresh()
-            }
-          }
-        }
-      }
-
-      const dropArea = document.getElementById('drop-area')
-      const fileInput = document.createElement('input')
-      fileInput.type = 'file'
-      fileInput.accept = '.syx'
-      fileInput.multiple = true
-      fileInput.style.display = 'none'
-      fileInput.addEventListener(
-        'change',
-        handleFileSelect as unknown as EventListener,
-      )
-
-      if (dropArea && !dropArea.hasAttribute('data-listeners-attached')) {
-        dropArea.addEventListener('click', () => {
-          fileInput.click()
-        })
-        dropArea.setAttribute('data-listeners-attached', 'true')
-        document.body.appendChild(fileInput)
-      }
-    } else {
-      // Browser environment
-      const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        for (const file of e.dataTransfer.files) {
-          if (file && file.name.endsWith('.syx')) {
-            const sysexData = new Uint8Array(await file.arrayBuffer())
-            const presetData = await createPresetData(file.name, sysexData)
-            await addPreset(presetData)
-            triggerRefresh()
-          }
-        }
-      }
-
-      const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault()
-      }
-
-      const handleFileSelect = async (
-        e: React.ChangeEvent<HTMLInputElement>,
-      ) => {
-        const files = e.target.files
-        if (files) {
-          for (const file of files) {
-            if (file && file.name.endsWith('.syx')) {
-              const sysexData = new Uint8Array(await file.arrayBuffer())
-              const presetData = await createPresetData(file.name, sysexData)
-              await addPreset(presetData)
-              triggerRefresh()
-            }
-          }
-        }
-      }
-
-      const dropArea = document.getElementById('drop-area')
-      const fileInput = document.createElement('input')
-      fileInput.type = 'file'
-      fileInput.accept = '.syx'
-      fileInput.multiple = true
-      fileInput.style.display = 'none'
-      fileInput.addEventListener(
-        'change',
-        handleFileSelect as unknown as EventListener,
-      )
-
-      if (dropArea && !dropArea.hasAttribute('data-listeners-attached')) {
-        dropArea.addEventListener(
-          'drop',
-          handleDrop as unknown as EventListener,
-        )
-        dropArea.addEventListener(
-          'dragover',
-          handleDragOver as unknown as EventListener,
-        )
-        dropArea.addEventListener('click', () => {
-          fileInput.click()
-        })
-        dropArea.setAttribute('data-listeners-attached', 'true')
-        document.body.appendChild(fileInput)
-      }
-    }
-  }, [])
+  useDragDrop()
 
   const handleDeletePreset = async (id: string) => {
     await deletePreset(id)
@@ -258,10 +136,11 @@ export default function PresetManager() {
   }
 
   const handleTagClick = (tag: string) => {
+    const lowerCaseTag = tag.toLowerCase()
     setSelectedTags((prevTags) => {
-      const newTags = prevTags.includes(tag)
-        ? prevTags.filter((t) => t !== tag)
-        : [...prevTags, tag]
+      const newTags = prevTags.includes(lowerCaseTag)
+        ? prevTags.filter((t) => t.toLowerCase() !== lowerCaseTag)
+        : [...prevTags, lowerCaseTag]
       saveToLocalStorage('selectedTags', newTags)
       return newTags
     })
@@ -312,33 +191,13 @@ export default function PresetManager() {
     }
   }
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (currentPreset) {
-        const currentIndex = presets.findIndex(
-          (preset) => preset.id === currentPreset.id,
-        )
-        if (e.key === 'ArrowUp' && currentIndex > 0) {
-          handleSelectPreset(presets[currentIndex - 1])
-        } else if (e.key === 'ArrowDown' && currentIndex < presets.length - 1) {
-          handleSelectPreset(presets[currentIndex + 1])
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [currentPreset, presets, autoSend, selectedMidiPort])
-
   const filteredPresets = presets.filter((preset) => {
     if (selectedTags.length === 0) return true
-    const presetTags = new Set(preset.tags)
+    const presetTags = new Set(preset.tags.map((tag) => tag.toLowerCase()))
     if (filterMode === 'inclusive') {
-      return selectedTags.every((tag) => presetTags.has(tag))
+      return selectedTags.every((tag) => presetTags.has(tag.toLowerCase()))
     } else {
-      return selectedTags.some((tag) => presetTags.has(tag))
+      return selectedTags.some((tag) => presetTags.has(tag.toLowerCase()))
     }
   })
 
@@ -365,6 +224,7 @@ export default function PresetManager() {
           ></FilterPanel>
         </div>
         <PresetList
+          handleSelectPreset={handleSelectPreset}
           currentPreset={currentPreset}
           filteredPresets={filteredPresets}
           handleRowClick={handleRowClick}

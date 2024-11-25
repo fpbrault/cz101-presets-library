@@ -35,7 +35,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
       }
     >
       <h2>Preset Details</h2>
-      <div className="gap-2 flex">
+      <div className="flex gap-2">
         {editMode ? (
           <>
             <button onClick={handleSave} className="btn btn-success">
@@ -125,7 +125,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
             type: 'textarea',
           },
         ].map((item, index) => (
-          <label key={index} className="form-control w-full max-w-xs">
+          <label key={index} className="w-full max-w-xs form-control">
             <div className="label">
               <span className="label-text">{item.label}</span>
             </div>
@@ -139,7 +139,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
                   value={item.value}
                   onChange={handleInputChange}
                   placeholder={`${item.label}`}
-                  className="textarea textarea-bordered textarea-sm w-full max-w-xs"
+                  className="w-full max-w-xs textarea textarea-bordered textarea-sm"
                 ></textarea>
               ) : (
                 <input
@@ -148,15 +148,18 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
                   value={item.value}
                   onChange={handleInputChange}
                   placeholder={`${item.label}`}
-                  className="input input-bordered input-sm w-full max-w-xs"
+                  className="w-full max-w-xs input input-bordered input-sm"
                 />
               )
             ) : (
-              <div className="ml-4 font-bold gap-2 flex flex-wrap break-word max-h-36 overflow-auto">
+              <div className="flex flex-wrap gap-2 ml-4 overflow-auto font-bold break-word max-h-36">
                 {item.id === 'tags'
                   ? currentPreset?.tags.map((tag: string) => (
-                      <span key={uuidv4()} className="badge badge-primary">
-                        {tag}
+                      <span
+                        key={uuidv4()}
+                        className="capitalize badge badge-primary"
+                      >
+                        {tag.toLowerCase()}
                       </span>
                     ))
                   : item.value}

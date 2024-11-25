@@ -1,14 +1,15 @@
-import { getCurrentWebview } from '@tauri-apps/api/webview'
 import { useEffect } from 'react'
+import { getCurrentWebview } from '@tauri-apps/api/webview'
+import { createPresetData, addPreset } from './lib/presetManager'
+import { useRefresh } from './RefreshContext'
 
-const useDragDrop = (
-  createPresetData: (name: string, data: Uint8Array) => Promise<any>,
-  addPreset: (presetData: any) => Promise<void>,
-  setRefreshPresets: React.Dispatch<React.SetStateAction<boolean>>,
-) => {
+const useDragDrop = () => {
+  const { triggerRefresh } = useRefresh()
+
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).__TAURI__) {
       // Tauri environment
+      console.log('Tauri environment')
       const setupTauriDragDrop = async () => {
         const unlisten = await getCurrentWebview().onDragDropEvent(
           async (event) => {
@@ -22,7 +23,7 @@ const useDragDrop = (
                   sysexData,
                 )
                 await addPreset(presetData)
-                setRefreshPresets((prev) => !prev)
+                triggerRefresh()
               }
             }
           },
@@ -32,6 +33,41 @@ const useDragDrop = (
         }
       }
       setupTauriDragDrop()
+
+      const handleFileSelect = async (
+        e: React.ChangeEvent<HTMLInputElement>,
+      ) => {
+        const files = e.target.files
+        if (files) {
+          for (const file of files) {
+            if (file && file.name.endsWith('.syx')) {
+              const sysexData = new Uint8Array(await file.arrayBuffer())
+              const presetData = await createPresetData(file.name, sysexData)
+              await addPreset(presetData)
+              triggerRefresh()
+            }
+          }
+        }
+      }
+
+      const dropArea = document.getElementById('drop-area')
+      const fileInput = document.createElement('input')
+      fileInput.type = 'file'
+      fileInput.accept = '.syx'
+      fileInput.multiple = true
+      fileInput.style.display = 'none'
+      fileInput.addEventListener(
+        'change',
+        handleFileSelect as unknown as EventListener,
+      )
+
+      if (dropArea && !dropArea.hasAttribute('data-listeners-attached')) {
+        dropArea.addEventListener('click', () => {
+          fileInput.click()
+        })
+        dropArea.setAttribute('data-listeners-attached', 'true')
+        document.body.appendChild(fileInput)
+      }
     } else {
       // Browser environment
       const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
@@ -41,7 +77,7 @@ const useDragDrop = (
             const sysexData = new Uint8Array(await file.arrayBuffer())
             const presetData = await createPresetData(file.name, sysexData)
             await addPreset(presetData)
-            setRefreshPresets((prev) => !prev)
+            triggerRefresh()
           }
         }
       }
@@ -60,7 +96,7 @@ const useDragDrop = (
               const sysexData = new Uint8Array(await file.arrayBuffer())
               const presetData = await createPresetData(file.name, sysexData)
               await addPreset(presetData)
-              setRefreshPresets((prev) => !prev)
+              triggerRefresh()
             }
           }
         }
@@ -77,7 +113,7 @@ const useDragDrop = (
         handleFileSelect as unknown as EventListener,
       )
 
-      if (dropArea) {
+      if (dropArea && !dropArea.hasAttribute('data-listeners-attached')) {
         dropArea.addEventListener(
           'drop',
           handleDrop as unknown as EventListener,
@@ -86,25 +122,14 @@ const useDragDrop = (
           'dragover',
           handleDragOver as unknown as EventListener,
         )
-        dropArea.addEventListener('click', () => fileInput.click())
+        dropArea.addEventListener('click', () => {
+          fileInput.click()
+        })
+        dropArea.setAttribute('data-listeners-attached', 'true')
         document.body.appendChild(fileInput)
       }
-
-      return () => {
-        if (dropArea) {
-          dropArea.removeEventListener(
-            'drop',
-            handleDrop as unknown as EventListener,
-          )
-          dropArea.removeEventListener(
-            'dragover',
-            handleDragOver as unknown as EventListener,
-          )
-          dropArea.removeEventListener('click', () => fileInput.click())
-          document.body.removeChild(fileInput)
-        }
-      }
     }
-  }, [createPresetData, addPreset, setRefreshPresets])
+  }, [triggerRefresh])
 }
+
 export default useDragDrop

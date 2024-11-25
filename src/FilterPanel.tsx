@@ -48,7 +48,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         </button>
         {Object.entries(
           presets
-            .map((preset) => preset.tags)
+            .map((preset) => preset.tags.map((tag) => tag.toLowerCase()))
             .flat()
             .reduce(
               (acc, tag) => {
@@ -64,7 +64,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         ).map(([tag, count]) => (
           <div
             key={tag}
-            className={`badge badge-lg badge-neutral ${
+            className={`badge badge-lg p-4 text-2xl font-bold capitalize badge-neutral ${
               selectedTags.includes(tag) ? 'badge-primary' : ''
             }`}
             onClick={() => handleTagClick(tag)}
