@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Preset } from './lib/presetManager'
+import { FaCog, FaCross } from 'react-icons/fa'
+import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
 
 type PerformanceModeProps = {
   presets: Preset[]
@@ -19,6 +21,23 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
   const [currentBank, setCurrentBank] = useState(0)
   const [filteredPresets, setFilteredPresets] = useState<Preset[]>(presets)
   const [showFavorites, setShowFavorites] = useState(false)
+  const [isNumPadOpen, setIsNumPadOpen] = useState(false)
+  const [bankInput, setBankInput] = useState('')
+
+  const handleOpenNumPad = () => {
+    setBankInput('')
+    setIsNumPadOpen(true)
+  }
+  const handleCloseNumPad = () => setIsNumPadOpen(false)
+  const handleNumPadClick = (num: string) => setBankInput(bankInput + num)
+  const handleClearNumPad = () => setBankInput('')
+  const handleSelectBank = () => {
+    const bankNumber = parseInt(bankInput, 10) - 1
+    if (bankNumber >= 0 && bankNumber < Math.ceil(filteredPresets.length / 8)) {
+      setCurrentBank(bankNumber)
+      handleCloseNumPad()
+    }
+  }
 
   useEffect(() => {
     let updatedPresets = presets
@@ -56,10 +75,14 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
       number: currentBank * 8 + index + 1,
     }))
 
+  const totalBanks = Math.ceil(filteredPresets.length / 8)
+  const maxNumPadValue =
+    bankInput.length === 0 ? totalBanks : parseInt(bankInput + '9', 10)
+
   return (
     <div className="flex flex-col w-full h-full gap-4 p-2">
-      <div className="flex justify-between gap-4">
-        <div className="flex flex-wrap w-1/2 gap-2">
+      <div className="flex items-center justify-between h-24 gap-4 ">
+        <div className="flex flex-wrap content-start w-1/2 h-24 gap-2 overflow-auto">
           Filters:
           {Object.entries(
             presets
@@ -88,6 +111,11 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
             </div>
           ))}
         </div>
+        <div className="flex items-center justify-center w-full h-full p-4 rounded-md shadow-md bg-base-300 max-w-96">
+          <span className="ml-2 text-2xl font-bold font-performanceMode">
+            {currentPreset?.number} | {currentPreset?.name || 'None'}
+          </span>
+        </div>
         <button
           onClick={() => setShowFavorites(!showFavorites)}
           className={`btn btn-lg btn-accent`}
@@ -96,7 +124,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         </button>
       </div>
       <div className="flex h-full gap-4 pb-16">
-        <div className="grid flex-grow grid-cols-2 grid-rows-4 gap-4 lg:grid-cols-4 lg:grid-rows-2 w-7/8 font-performanceMode">
+        <div className="grid flex-grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">
           {currentPresets.map((preset) => (
             <button
               key={preset.id}
@@ -116,29 +144,76 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
             </button>
           ))}
         </div>
-        <div className="flex flex-col gap-4 w-1/8">
+        <div className="flex flex-col w-full gap-4 max-w-48">
           <button
             onClick={handlePreviousBank}
-            className="flex-grow btn btn-lg btn-secondary"
+            disabled={currentBank === 0}
+            className="flex-grow w-full text-2xl btn btn-lg btn-secondary"
           >
             Previous Bank
           </button>
-          <div className="flex flex-col items-center">
-            <span>
-              Bank: {currentBank + 1}/{Math.ceil(filteredPresets.length / 8)}
-            </span>
-            <span>
-              Presets: {currentBank * 8 + 1}/{filteredPresets.length}{' '}
-            </span>
+          <div className="flex justify-evenly">
+            <div className="flex flex-col items-center gap-2">
+              <span>
+                Bank: {currentBank + 1}/{totalBanks}
+              </span>
+              <span>
+                Presets: {currentBank * 8 + 1}/{filteredPresets.length}{' '}
+              </span>
+            </div>
+            <button
+              onClick={handleOpenNumPad}
+              className="btn btn-square btn-xl btn-primary"
+            >
+              <FaMagnifyingGlass size={32} />
+            </button>
           </div>
           <button
             onClick={handleNextBank}
-            className="flex-grow btn btn-lg btn-secondary"
+            disabled={(currentBank + 1) * 8 >= filteredPresets.length}
+            className="flex-grow text-2xl btn btn-lg btn-secondary"
           >
             Next Bank
           </button>
         </div>
       </div>
+      {isNumPadOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 font-performanceMode">
+          <div className="p-4 shadow-lg bg-base-100 rounded-xl">
+            <h2 className="mb-4 text-xl">Select Bank</h2>
+            <input
+              type="text"
+              value={bankInput}
+              className="mb-2 text-xl form-input input input-primary w-fit"
+              readOnly
+            />
+            <div className="grid grid-cols-3 gap-2">
+              {[...Array(9).keys()].map((num) => (
+                <button
+                  key={num + 1}
+                  onClick={() => handleNumPadClick((num + 1).toString())}
+                  className="text-3xl btn btn-primary"
+                  disabled={parseInt(bankInput + (num + 1), 10) > totalBanks}
+                >
+                  {num + 1}
+                </button>
+              ))}
+              <button onClick={handleClearNumPad} className="btn btn-secondary">
+                <FaX size={24} />
+              </button>
+              <button
+                onClick={handleSelectBank}
+                className="col-span-2 text-xl btn btn-primary"
+              >
+                Select
+              </button>
+            </div>
+            <button onClick={handleCloseNumPad} className="mt-4 btn">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
