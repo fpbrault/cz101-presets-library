@@ -21,7 +21,6 @@ interface PresetListProps {
   handleSetFavorite: (reset: Preset) => void
   handleSetRating: (reset: Preset, rating: 1 | 2 | 3 | 4 | 5) => void
 }
-
 const PresetList: React.FC<PresetListProps> = ({
   currentPreset,
   filteredPresets,
@@ -33,11 +32,22 @@ const PresetList: React.FC<PresetListProps> = ({
   const [sortConfig, setSortConfig] = useState<{
     key: string
     direction: string
-  } | null>(null)
+  } | null>({ key: 'name', direction: 'ascending' })
   const [searchTerm, setSearchTerm] = useState('')
 
   const sortedPresets = React.useMemo(() => {
     let sortablePresets = [...filteredPresets]
+
+    // First, sort alphabetically by name
+    sortablePresets.sort((a, b) => {
+      const aName = a.name.toLowerCase()
+      const bName = b.name.toLowerCase()
+      if (aName < bName) return -1
+      if (aName > bName) return 1
+      return 0
+    })
+
+    // Then, apply the selected sort
     if (sortConfig !== null) {
       sortablePresets.sort((a, b) => {
         if (sortConfig.key === 'favorite') {
@@ -70,6 +80,7 @@ const PresetList: React.FC<PresetListProps> = ({
         return 0
       })
     }
+
     return sortablePresets
   }, [filteredPresets, sortConfig])
 

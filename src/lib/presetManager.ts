@@ -295,9 +295,10 @@ export async function createPresetData(
   filename: string,
   sysexData: Uint8Array,
 ): Promise<Preset> {
+  console.log(filename)
   return {
     id: uuidv4(),
-    name: filename,
+    name: filename.replace(/\.[^/.]+$/, ''),
     createdDate: new Date().toISOString(),
     modifiedDate: new Date().toISOString(),
     filename,

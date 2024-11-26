@@ -8,10 +8,7 @@ import {
   deletePreset,
   getPresets,
   updatePreset,
-  addPreset,
-  createPresetData,
 } from './lib/presetManager'
-import { getCurrentWebview } from '@tauri-apps/api/webview'
 import { loadFromLocalStorage, saveToLocalStorage } from './utils'
 import FilterPanel from './FilterPanel'
 import PresetDetails from './PresetDetails'
