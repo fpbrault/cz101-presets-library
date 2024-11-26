@@ -30,7 +30,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
   return (
     <div
       className={
-        'w-96 flex flex-col p-4 bg-base-200 h-full overflow-auto' +
+        'w-96 flex flex-col p-4 bg-base-200 h-full overflow-auto min-w-64' +
         (currentPreset ? ' block' : ' hidden')
       }
     >

@@ -8,6 +8,7 @@ import {
   deletePreset,
   getPresets,
   updatePreset,
+  savePreset,
 } from './lib/presetManager'
 import { loadFromLocalStorage, saveToLocalStorage } from './utils'
 import FilterPanel from './FilterPanel'
@@ -192,6 +193,11 @@ export default function PresetManager() {
     triggerRefresh()
   }
 
+  const handleSavePreset = async (slot: number) => {
+    await savePreset(selectedMidiPort, slot, 'newPreset')
+    triggerRefresh()
+  }
+
   const handleSendCurrentPreset = () => {
     if (currentPreset && selectedMidiPort) {
       restorePresetToBuffer(currentPreset, selectedMidiPort)
@@ -221,8 +227,9 @@ export default function PresetManager() {
   return (
     <main className="flex flex-col h-full">
       <div className="flex flex-row h-full overflow-auto">
-        <div className="flex flex-col w-64 h-full gap-2 p-4 overflow-auto bg-base-200">
+        <div className="flex flex-col w-64 h-full gap-2 p-4 overflow-auto bg-base-200 min-w-64">
           <OptionPanel
+            handleSavePreset={handleSavePreset}
             handleSendCurrentPreset={handleSendCurrentPreset}
             autoSend={autoSend}
             midiPorts={midiPorts}

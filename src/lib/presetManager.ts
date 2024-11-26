@@ -11,19 +11,7 @@ let presetDatabase: PresetDatabase
 
 const REQUEST_COMMANDS = Array.from(
   { length: 16 },
-  (_, i) =>
-    new Uint8Array([
-      0xf0,
-      0x44,
-      0x00,
-      0x00,
-      0x70,
-      0x10,
-      i + 0x20,
-      0x70,
-      0x31,
-      0xf7,
-    ]),
+  (_, i) => new Uint8Array([240, 68, 0, 0, 112, 16, i + 32, 112, 49, 247]),
 )
 const BACKUP_FOLDER = 'cz101_backup'
 const CONFIG_FILE = 'config.json'
@@ -203,7 +191,9 @@ export async function loadPresetToBuffer(
   const filename = `${BACKUP_FOLDER}/user/preset_${presetNumber}.syx`
   await restoreToBuffer(portName, filename)
 }
-
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 export async function savePreset(
   portName: string,
   presetNumber: number,
@@ -212,24 +202,32 @@ export async function savePreset(
   const output = WebMidi.getOutputByName(portName) as Output
   const input = WebMidi.getInputByName(portName) as Input
 
-  const command = REQUEST_COMMANDS[presetNumber - 1]
-  output.sendSysex([], command)
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  const response = await new Promise<Uint8Array | null>((resolve) => {
-    const listener = (e: any) => {
-      input.removeListener('sysex', listener)
-      resolve(e.data)
-    }
-    input.addListener('sysex', listener)
+  console.log('Input:', input)
 
-    setTimeout(() => {
-      input.removeListener('sysex', listener)
-      resolve(null)
-    }, 1000)
+  const command = REQUEST_COMMANDS[presetNumber - 1]
+  console.log('Request Commands:', REQUEST_COMMANDS)
+
+  const response = await new Promise<Uint8Array | null>(async (resolve) => {
+    input.addOneTimeListener('sysex', (e: any) => {
+      console.log('Received sysex data inside promise:', e.data)
+
+      resolve(e.data)
+    })
+
+    // Add a delay before sending the SysEx command
+    await delay(500) // 500ms delay
+    console.log('Sending SysEx command:', command.slice(1, -1))
+    output.sendSysex([], command.slice(1, -1))
   })
 
-  if (response && response.length === 261) {
-    fs.writeFileSync(filename, Buffer.from([0xf0, ...response, 0xf7]))
+  if (response && response.length === 263) {
+    console.log('Response Buffer:', new Uint8Array([0xf0, ...response, 0xf7]))
+    const preset = await createPresetData(
+      'preset_' + presetNumber + '.syx',
+      new Uint8Array([...response]),
+    )
+    addPreset(preset)
+    // fs.writeFileSync(filename, Buffer.from([0xf0, ...response, 0xf7]))
     console.log(`Preset ${presetNumber} saved to ${filename} successfully.`)
   } else {
     console.log(`Failed to save preset ${presetNumber}.`)
