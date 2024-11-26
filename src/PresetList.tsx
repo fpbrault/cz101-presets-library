@@ -12,6 +12,7 @@ import {
   FaStar,
   FaRegStar,
 } from 'react-icons/fa'
+import useDragDrop from './useDragDrop'
 
 interface PresetListProps {
   currentPreset: Preset | null
@@ -83,7 +84,7 @@ const PresetList: React.FC<PresetListProps> = ({
 
     return sortablePresets
   }, [filteredPresets, sortConfig])
-
+  useDragDrop()
   const filteredAndSortedPresets = sortedPresets.filter(
     (preset) =>
       preset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

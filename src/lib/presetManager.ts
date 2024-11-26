@@ -198,7 +198,7 @@ export async function savePreset(
   portName: string,
   presetNumber: number,
   filename: string,
-): Promise<void> {
+): Promise<Preset> {
   const output = WebMidi.getOutputByName(portName) as Output
   const input = WebMidi.getInputByName(portName) as Input
 
@@ -226,11 +226,15 @@ export async function savePreset(
       'preset_' + presetNumber + '.syx',
       new Uint8Array([...response]),
     )
-    addPreset(preset)
+
     // fs.writeFileSync(filename, Buffer.from([0xf0, ...response, 0xf7]))
     console.log(`Preset ${presetNumber} saved to ${filename} successfully.`)
+    preset.slot = presetNumber
+    const newPreset = await addPreset(preset)
+    return newPreset
   } else {
     console.log(`Failed to save preset ${presetNumber}.`)
+    throw new Error('Failed to save preset.')
   }
 }
 
@@ -309,7 +313,7 @@ export async function createPresetData(
 
 export interface PresetDatabase {
   getPresets(): Promise<Preset[]>
-  addPreset(preset: Preset): Promise<void>
+  addPreset(preset: Preset): Promise<Preset>
   updatePreset(preset: Preset): Promise<void>
   deletePreset(id: string): Promise<void>
   syncPresets(localPresets: Preset[]): Promise<void>
@@ -322,7 +326,7 @@ export async function getPresets(): Promise<Preset[]> {
   return presetDatabase.getPresets()
 }
 
-export async function addPreset(preset: Preset): Promise<void> {
+export async function addPreset(preset: Preset): Promise<Preset> {
   return presetDatabase.addPreset(preset)
 }
 

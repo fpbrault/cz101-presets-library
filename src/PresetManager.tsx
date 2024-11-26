@@ -17,10 +17,11 @@ import PresetList from './PresetList'
 import OptionPanel from './OptionPanel'
 import SettingsPanel from './SettingsPanel'
 import { useRefresh } from './RefreshContext'
-import useDragDrop from './useDragDrop'
+import PerformanceMode from './PerformanceMode'
 
 export default function PresetManager() {
   const [editMode, setEditMode] = useState(false)
+  const [performanceMode, setPerformanceMode] = useState(false)
   const [presets, setPresets] = useState<Preset[]>([])
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
   const [formData, setFormData] = useState({
@@ -124,8 +125,6 @@ export default function PresetManager() {
     setEditMode(false)
   }
 
-  useDragDrop()
-
   const handleDeletePreset = async (id: string) => {
     await deletePreset(id)
     triggerRefresh()
@@ -194,8 +193,9 @@ export default function PresetManager() {
   }
 
   const handleSavePreset = async (slot: number) => {
-    await savePreset(selectedMidiPort, slot, 'newPreset')
+    const preset = await savePreset(selectedMidiPort, slot, 'newPreset')
     triggerRefresh()
+    setCurrentPreset(preset)
   }
 
   const handleSendCurrentPreset = () => {
@@ -225,68 +225,96 @@ export default function PresetManager() {
   })
 
   return (
-    <main className="flex flex-col h-full">
-      <div className="flex flex-row h-full overflow-auto">
-        <div className="flex flex-col w-64 h-full gap-2 p-4 overflow-auto bg-base-200 min-w-64">
-          <OptionPanel
-            handleSavePreset={handleSavePreset}
-            handleSendCurrentPreset={handleSendCurrentPreset}
-            autoSend={autoSend}
-            midiPorts={midiPorts}
-            selectedMidiPort={selectedMidiPort}
-            handleToggleAutoSend={handleToggleAutoSend}
-            setSelectedMidiPort={setSelectedMidiPort}
-          ></OptionPanel>
-          <SettingsPanel></SettingsPanel>
-          <FilterPanel
-            selectedTags={selectedTags}
-            filterMode={filterMode}
-            presets={presets}
-            handleClearFilters={handleClearFilters}
-            handleToggleFilterMode={handleToggleFilterMode}
-            handleTagClick={handleTagClick}
-          ></FilterPanel>
-        </div>
-        <PresetList
-          handleSetFavorite={handleSetFavorite}
-          handleSetRating={handleSetRating}
-          handleSelectPreset={handleSelectPreset}
-          currentPreset={currentPreset}
-          filteredPresets={filteredPresets}
-          handleRowClick={handleRowClick}
-        ></PresetList>
-        <PresetDetails
-          editMode={editMode}
-          currentPreset={currentPreset}
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleSave={handleSave}
-          handleCancel={handleCancel}
-          setShowDeleteModal={setShowDeleteModal}
-          setEditMode={setEditMode}
-        ></PresetDetails>
-      </div>
-      {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-4 shadow-lg bg-base-100 rounded-xl">
-            <h2 className="mb-4 text-xl">Confirm Delete</h2>
-            <p>Are you sure you want to delete this preset?</p>
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                className="btn btn-error"
-                onClick={() => handleDeletePreset(currentPreset?.id || '')}
-              >
-                Delete
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowDeleteModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
+    <main className="flex flex-col w-full h-full">
+      {performanceMode ? (
+        <>
+          <div className="absolute translate-x-1/2 bottom-4 right-1/2">
+            <button
+              className="text-xl shadow opacity-50 btn-md btn btn-neutral hover:opacity-100"
+              onClick={() => setPerformanceMode(false)}
+            >
+              Exit Performance Mode
+            </button>
           </div>
-        </div>
+          <PerformanceMode
+            presets={presets}
+            currentPreset={currentPreset}
+            selectedTags={selectedTags}
+            handleSelectPreset={handleSelectPreset}
+            handleTagClick={handleTagClick}
+          />
+        </>
+      ) : (
+        <>
+          <div className="flex flex-row h-full overflow-hidden">
+            <div className="flex flex-col w-64 h-full gap-2 p-4 bg-base-200 min-w-64">
+              <button
+                className=" btn btn-secondary btn-lg"
+                onClick={() => setPerformanceMode(true)}
+              >
+                Performance Mode
+              </button>
+              <OptionPanel
+                handleSavePreset={handleSavePreset}
+                handleSendCurrentPreset={handleSendCurrentPreset}
+                autoSend={autoSend}
+                midiPorts={midiPorts}
+                selectedMidiPort={selectedMidiPort}
+                handleToggleAutoSend={handleToggleAutoSend}
+                setSelectedMidiPort={setSelectedMidiPort}
+              ></OptionPanel>
+              <SettingsPanel></SettingsPanel>
+              <FilterPanel
+                selectedTags={selectedTags}
+                filterMode={filterMode}
+                presets={presets}
+                handleClearFilters={handleClearFilters}
+                handleToggleFilterMode={handleToggleFilterMode}
+                handleTagClick={handleTagClick}
+              ></FilterPanel>
+            </div>
+            <PresetList
+              handleSetFavorite={handleSetFavorite}
+              handleSetRating={handleSetRating}
+              handleSelectPreset={handleSelectPreset}
+              currentPreset={currentPreset}
+              filteredPresets={filteredPresets}
+              handleRowClick={handleRowClick}
+            ></PresetList>
+            <PresetDetails
+              editMode={editMode}
+              currentPreset={currentPreset}
+              formData={formData}
+              handleInputChange={handleInputChange}
+              handleSave={handleSave}
+              handleCancel={handleCancel}
+              setShowDeleteModal={setShowDeleteModal}
+              setEditMode={setEditMode}
+            ></PresetDetails>
+          </div>
+          {showDeleteModal && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="p-4 shadow-lg bg-base-100 rounded-xl">
+                <h2 className="mb-4 text-xl">Confirm Delete</h2>
+                <p>Are you sure you want to delete this preset?</p>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    className="btn btn-error"
+                    onClick={() => handleDeletePreset(currentPreset?.id || '')}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowDeleteModal(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </main>
   )

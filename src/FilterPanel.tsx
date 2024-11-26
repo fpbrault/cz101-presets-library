@@ -22,7 +22,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 }) => {
   return (
     <>
-      <div className="flex flex-col gap-2 ">
+      <div className="flex flex-col h-full gap-2 overflow-auto">
         <h3>Filters</h3>
         <button
           onClick={handleClearFilters}
@@ -46,32 +46,34 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             </>
           )}
         </button>
-        {Object.entries(
-          presets
-            .map((preset) => preset.tags.map((tag) => tag.toLowerCase()))
-            .flat()
-            .reduce(
-              (acc, tag) => {
-                if (acc[tag]) {
-                  acc[tag]++
-                } else {
-                  acc[tag] = 1
-                }
-                return acc
-              },
-              {} as Record<string, number>,
-            ),
-        ).map(([tag, count]) => (
-          <div
-            key={tag}
-            className={`badge badge-lg p-4 text-2xl font-bold capitalize badge-neutral ${
-              selectedTags.includes(tag) ? 'badge-primary' : ''
-            }`}
-            onClick={() => handleTagClick(tag)}
-          >
-            {tag} ({count})
-          </div>
-        ))}
+        <div className="flex flex-wrap content-start flex-grow gap-1 overflow-scroll ">
+          {Object.entries(
+            presets
+              .map((preset) => preset.tags.map((tag) => tag.toLowerCase()))
+              .flat()
+              .reduce(
+                (acc, tag) => {
+                  if (acc[tag]) {
+                    acc[tag]++
+                  } else {
+                    acc[tag] = 1
+                  }
+                  return acc
+                },
+                {} as Record<string, number>,
+              ),
+          ).map(([tag, count]) => (
+            <div
+              key={tag}
+              className={`badge badge-lg text-lg p-3 font-bold capitalize badge-neutral ${
+                selectedTags.includes(tag) ? 'badge-primary' : ''
+              }`}
+              onClick={() => handleTagClick(tag)}
+            >
+              {tag} ({count})
+            </div>
+          ))}
+        </div>
       </div>
     </>
   )

@@ -43,7 +43,7 @@ export class IndexedDbPresetDatabase implements PresetDatabase {
     })
   }
 
-  async addPreset(preset: Preset): Promise<void> {
+  async addPreset(preset: Preset): Promise<Preset> {
     const db = await openDatabase()
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(STORE_NAME, 'readwrite')
@@ -51,7 +51,7 @@ export class IndexedDbPresetDatabase implements PresetDatabase {
       const request = store.add(preset)
 
       request.onsuccess = () => {
-        resolve()
+        resolve(preset)
       }
 
       request.onerror = () => {
