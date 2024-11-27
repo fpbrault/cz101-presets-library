@@ -18,11 +18,13 @@ const useDragDrop = () => {
                 const response = await fetch(`file://${path}`)
                 const arrayBuffer = await response.arrayBuffer()
                 const sysexData = new Uint8Array(arrayBuffer)
-                const presetData = await createPresetData(
+                const presets = await createPresetData(
                   path.split('/').pop() || '',
                   sysexData,
                 )
-                await addPreset(presetData)
+                for (const preset of presets) {
+                  await addPreset(preset)
+                }
                 triggerRefresh()
               }
             }
@@ -40,10 +42,12 @@ const useDragDrop = () => {
         const files = e.target.files
         if (files) {
           for (const file of files) {
-            if (file && file.name.endsWith('.syx')) {
+            if (file && file.name.toLowerCase().endsWith('.syx')) {
               const sysexData = new Uint8Array(await file.arrayBuffer())
-              const presetData = await createPresetData(file.name, sysexData)
-              await addPreset(presetData)
+              const presets = await createPresetData(file.name, sysexData)
+              for (const preset of presets) {
+                await addPreset(preset)
+              }
               triggerRefresh()
             }
           }
@@ -53,7 +57,7 @@ const useDragDrop = () => {
       const dropArea = document.getElementById('drop-area')
       const fileInput = document.createElement('input')
       fileInput.type = 'file'
-      fileInput.accept = '.syx'
+      fileInput.accept = '.syx,.SYX'
       fileInput.multiple = true
       fileInput.style.display = 'none'
       fileInput.addEventListener(
@@ -73,10 +77,13 @@ const useDragDrop = () => {
       const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
         for (const file of e.dataTransfer.files) {
-          if (file && file.name.endsWith('.syx')) {
+          if (file && file.name.toLowerCase().endsWith('.syx')) {
             const sysexData = new Uint8Array(await file.arrayBuffer())
-            const presetData = await createPresetData(file.name, sysexData)
-            await addPreset(presetData)
+            const presets = await createPresetData(file.name, sysexData)
+
+            for (const preset of presets) {
+              await addPreset(preset)
+            }
             triggerRefresh()
           }
         }
@@ -90,12 +97,16 @@ const useDragDrop = () => {
         e: React.ChangeEvent<HTMLInputElement>,
       ) => {
         const files = e.target.files
+        console.log(files)
         if (files) {
           for (const file of files) {
-            if (file && file.name.endsWith('.syx')) {
+            if (file && file.name.toLowerCase().endsWith('.syx')) {
+              console.log(file)
               const sysexData = new Uint8Array(await file.arrayBuffer())
-              const presetData = await createPresetData(file.name, sysexData)
-              await addPreset(presetData)
+              const presets = await createPresetData(file.name, sysexData)
+              for (const preset of presets) {
+                await addPreset(preset)
+              }
               triggerRefresh()
             }
           }

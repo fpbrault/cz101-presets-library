@@ -103,7 +103,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               className={`badge badge-lg font-bold capitalize badge-neutral ${
                 selectedTags.includes(tag) ? 'badge-primary' : ''
               }`}
-              onClick={() => handleTagClick(tag)}
+              onPointerUp={() => handleTagClick(tag)}
               onTouchEnd={(event) => {
                 event.stopPropagation()
                 handleTagClick(tag)
@@ -119,11 +119,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
           </span>
         </div>
         <button
-          onClick={() => setShowFavorites(!showFavorites)}
-          onTouchEnd={(event) => {
-            event.stopPropagation()
-            setShowFavorites(!showFavorites)
-          }}
+          onPointerUp={() => setShowFavorites(!showFavorites)}
           className={`btn btn-lg btn-accent`}
         >
           {showFavorites ? 'Show All' : 'Show Favorites'}
@@ -134,7 +130,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
           {currentPresets.map((preset) => (
             <button
               key={preset.id}
-              onClick={() => handleSelectPreset(preset)}
+              onPointerUp={() => handleSelectPreset(preset)}
               onTouchEnd={(event) => {
                 event.stopPropagation()
                 handleSelectPreset(preset)
@@ -156,7 +152,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         </div>
         <div className="flex flex-col w-full gap-4 max-w-48">
           <button
-            onClick={handlePreviousBank}
+            onPointerUp={handlePreviousBank}
             onTouchEnd={(event) => {
               event.stopPropagation()
               handlePreviousBank()
@@ -176,7 +172,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               </span>
             </div>
             <button
-              onClick={handleOpenNumPad}
+              onPointerUp={handleOpenNumPad}
               onTouchEnd={(event) => {
                 event.stopPropagation()
                 handleOpenNumPad()
@@ -187,7 +183,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
             </button>
           </div>
           <button
-            onClick={handleNextBank}
+            onPointerUp={handleNextBank}
             onTouchEnd={(event) => {
               event.stopPropagation()
               handleNextBank()
@@ -213,7 +209,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               {[...Array(9).keys()].map((num) => (
                 <button
                   key={num + 1}
-                  onClick={() => handleNumPadClick((num + 1).toString())}
+                  onPointerUp={() => handleNumPadClick((num + 1).toString())}
                   onTouchEnd={(event) => {
                     event.stopPropagation()
                     handleNumPadClick((num + 1).toString())
@@ -225,7 +221,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 </button>
               ))}
               <button
-                onClick={handleClearNumPad}
+                onPointerUp={handleClearNumPad}
                 onTouchEnd={(event) => {
                   event.stopPropagation()
                   handleClearNumPad()
@@ -235,7 +231,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 <FaX size={24} />
               </button>
               <button
-                onClick={handleSelectBank}
+                onPointerUp={handleSelectBank}
                 onTouchEnd={(event) => {
                   event.stopPropagation()
                   handleSelectBank()
@@ -246,7 +242,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               </button>
             </div>
             <button
-              onClick={handleCloseNumPad}
+              onPointerUp={handleCloseNumPad}
               onTouchEnd={(event) => {
                 event.stopPropagation()
                 handleCloseNumPad()

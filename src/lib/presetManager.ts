@@ -222,10 +222,12 @@ export async function savePreset(
 
   if (response && response.length === 263) {
     console.log('Response Buffer:', new Uint8Array([0xf0, ...response, 0xf7]))
-    const preset = await createPresetData(
-      'preset_' + presetNumber + '.syx',
-      new Uint8Array([...response]),
-    )
+    const preset = (
+      await createPresetData(
+        'preset_' + presetNumber + '.syx',
+        new Uint8Array([...response]),
+      )
+    )[0]
 
     // fs.writeFileSync(filename, Buffer.from([0xf0, ...response, 0xf7]))
     console.log(`Preset ${presetNumber} saved to ${filename} successfully.`)
@@ -296,19 +298,33 @@ export type Preset = {
 export async function createPresetData(
   filename: string,
   sysexData: Uint8Array,
-): Promise<Preset> {
-  console.log(filename)
-  return {
-    id: uuidv4(),
-    name: filename.replace(/\.[^/.]+$/, ''),
-    createdDate: new Date().toISOString(),
-    modifiedDate: new Date().toISOString(),
-    filename,
-    sysexData,
-    tags: [],
-    author: '',
-    description: '',
+): Promise<Preset[]> {
+  const presets: Preset[] = []
+  let startIndex = 0
+
+  while (startIndex < sysexData.length) {
+    const endIndex = sysexData.indexOf(0xf7, startIndex)
+    console.log('End Index:', endIndex)
+    if (endIndex === -1) break // No more presets found
+
+    const presetData = sysexData.slice(startIndex, endIndex + 1)
+    if (presetData[0] === 0xf0 && presetData[presetData.length - 1] === 0xf7) {
+      presets.push({
+        id: uuidv4(),
+        name: `${filename.replace(/\.[^/.]+$/, '')}_${presets.length + 1}`,
+        createdDate: new Date().toISOString(),
+        modifiedDate: new Date().toISOString(),
+        filename,
+        sysexData: presetData,
+        tags: [],
+        author: '',
+        description: '',
+      })
+    }
+    startIndex = endIndex + 1
   }
+
+  return presets
 }
 
 export interface PresetDatabase {
