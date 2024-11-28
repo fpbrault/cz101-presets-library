@@ -2,24 +2,36 @@
 import React from 'react'
 import { FaCheckCircle, FaRegDotCircle, FaTrash } from 'react-icons/fa'
 import { Preset } from './lib/presetManager'
+import { useSearchFilter } from './SearchFilterContext'
 
 interface FilterPanelProps {
-  selectedTags: string[]
-  filterMode: 'inclusive' | 'exclusive'
   presets: Preset[]
-  handleClearFilters: () => void
-  handleToggleFilterMode: () => void
-  handleTagClick: (tag: string) => void
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({
-  selectedTags,
-  filterMode,
-  presets,
-  handleClearFilters,
-  handleToggleFilterMode,
-  handleTagClick,
-}) => {
+const FilterPanel: React.FC<FilterPanelProps> = ({ presets }) => {
+  const { selectedTags, filterMode, setFilterMode, setSelectedTags } =
+    useSearchFilter()
+
+  const handleToggleFilterMode = () => {
+    if (filterMode === 'inclusive') {
+      setFilterMode('exclusive')
+    } else {
+      setFilterMode('inclusive')
+    }
+  }
+
+  const handleTagClick = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag))
+    } else {
+      setSelectedTags([...selectedTags, tag])
+    }
+  }
+
+  const handleClearFilters = () => {
+    selectedTags.forEach((tag) => handleTagClick(tag))
+  }
+
   return (
     <>
       <div className="flex flex-col h-full gap-2 overflow-auto">

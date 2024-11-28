@@ -1,28 +1,50 @@
 import React, { useState, useEffect } from 'react'
-import { Preset } from './lib/presetManager'
-import { FaCog, FaCross } from 'react-icons/fa'
+import { fetchPresetData, Preset } from './lib/presetManager'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
+import { useSearchFilter } from './SearchFilterContext'
 
 type PerformanceModeProps = {
-  presets: Preset[]
   currentPreset: Preset | null
-  selectedTags: string[]
   handleSelectPreset: (preset: Preset) => void
-  handleTagClick: (tag: string) => void
 }
 
 const PerformanceMode: React.FC<PerformanceModeProps> = ({
-  presets,
   currentPreset,
-  selectedTags,
   handleSelectPreset,
-  handleTagClick,
 }) => {
   const [currentBank, setCurrentBank] = useState(0)
-  const [filteredPresets, setFilteredPresets] = useState<Preset[]>(presets)
+  const [presets, setPresets] = useState<Preset[]>([])
   const [showFavorites, setShowFavorites] = useState(false)
   const [isNumPadOpen, setIsNumPadOpen] = useState(false)
   const [bankInput, setBankInput] = useState('')
+
+  const { searchTerm, selectedTags, filterMode, sorting, setSelectedTags } =
+    useSearchFilter()
+
+  const handleTagClick = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag))
+    } else {
+      setSelectedTags([...selectedTags, tag])
+    }
+  }
+
+  useEffect(() => {
+    const fetchPresets = async () => {
+      const data = await fetchPresetData(
+        0,
+        60,
+        sorting,
+        searchTerm,
+        selectedTags,
+        filterMode,
+      )
+
+      setPresets(data.presets)
+    }
+
+    fetchPresets()
+  }, [searchTerm, selectedTags, filterMode, sorting])
 
   const handleOpenNumPad = () => {
     setBankInput('')
@@ -33,31 +55,14 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
   const handleClearNumPad = () => setBankInput('')
   const handleSelectBank = () => {
     const bankNumber = parseInt(bankInput, 10) - 1
-    if (bankNumber >= 0 && bankNumber < Math.ceil(filteredPresets.length / 8)) {
+    if (bankNumber >= 0 && bankNumber < Math.ceil(presets?.length / 8)) {
       setCurrentBank(bankNumber)
       handleCloseNumPad()
     }
   }
 
-  useEffect(() => {
-    let updatedPresets = presets
-
-    if (selectedTags.length > 0) {
-      updatedPresets = updatedPresets.filter((preset) =>
-        selectedTags.every((tag) => preset.tags.includes(tag)),
-      )
-    }
-
-    if (showFavorites) {
-      updatedPresets = updatedPresets.filter((preset) => preset.favorite)
-    }
-
-    setFilteredPresets(updatedPresets)
-    setCurrentBank(0) // Reset to the first bank when filters change
-  }, [selectedTags, showFavorites, presets])
-
   const handleNextBank = () => {
-    if ((currentBank + 1) * 8 < filteredPresets.length) {
+    if ((currentBank + 1) * 8 < presets.length) {
       setCurrentBank(currentBank + 1)
     }
   }
@@ -68,14 +73,15 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     }
   }
 
-  const currentPresets = filteredPresets
+  const currentPresets = presets
+
     .slice(currentBank * 8, (currentBank + 1) * 8)
     .map((preset, index) => ({
       ...preset,
       number: currentBank * 8 + index + 1,
     }))
 
-  const totalBanks = Math.ceil(filteredPresets.length / 8)
+  const totalBanks = Math.ceil(presets.length / 8)
 
   return (
     <div className="flex flex-col w-full h-full gap-4 p-2">
@@ -168,7 +174,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 Bank: {currentBank + 1}/{totalBanks}
               </span>
               <span>
-                Presets: {currentBank * 8 + 1}/{filteredPresets.length}{' '}
+                Presets: {currentBank * 8 + 1}/{presets.length}{' '}
               </span>
             </div>
             <button
@@ -188,7 +194,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               event.stopPropagation()
               handleNextBank()
             }}
-            disabled={(currentBank + 1) * 8 >= filteredPresets.length}
+            disabled={(currentBank + 1) * 8 >= presets.length}
             className="flex-grow text-2xl btn btn-lg btn-secondary"
           >
             Next Bank
@@ -231,12 +237,23 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 <FaX size={24} />
               </button>
               <button
+                disabled={parseInt(bankInput + '0', 10) > totalBanks}
+                onPointerUp={() => handleNumPadClick('0')}
+                onTouchEnd={(event) => {
+                  event.stopPropagation()
+                  handleNumPadClick('0')
+                }}
+                className="text-3xl btn btn-primary"
+              >
+                0
+              </button>
+              <button
                 onPointerUp={handleSelectBank}
                 onTouchEnd={(event) => {
                   event.stopPropagation()
                   handleSelectBank()
                 }}
-                className="col-span-2 text-xl btn btn-primary"
+                className="col-span-1 text-xl btn btn-primary"
               >
                 Select
               </button>

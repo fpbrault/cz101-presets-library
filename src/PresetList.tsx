@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from 'react'
-import { v4 as uuidv4 } from 'uuid'
-import { Preset } from './lib/presetManager'
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  memo,
+} from 'react'
+import { fetchPresetData, Preset, updatePreset } from './lib/presetManager'
 import {
   FaPlusSquare,
   FaSort,
@@ -13,318 +19,537 @@ import {
   FaRegStar,
 } from 'react-icons/fa'
 import useDragDrop from './useDragDrop'
+import {
+  useReactTable,
+  ColumnDef,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  SortingState,
+  OnChangeFn,
+} from '@tanstack/react-table'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { useSearchFilter } from './SearchFilterContext'
+import {
+  keepPreviousData,
+  QueryClient,
+  QueryClientProvider,
+  useInfiniteQuery,
+} from '@tanstack/react-query'
 
 interface PresetListProps {
   currentPreset: Preset | null
-  filteredPresets: Preset[]
-  handleRowClick: (e: React.MouseEvent<HTMLTableRowElement>) => void
   handleSelectPreset: (preset: Preset) => void
-  handleSetFavorite: (reset: Preset) => void
-  handleSetRating: (reset: Preset, rating: 1 | 2 | 3 | 4 | 5) => void
 }
+
+const fetchSize = 50
+
+const TagsCell = memo(({ tags }: { tags: string[] }) => (
+  <div className="flex gap-2">
+    {tags.map((tag: string) => (
+      <span key={tag} className="capitalize badge badge-primary">
+        {tag.toLowerCase()}
+      </span>
+    ))}
+  </div>
+))
+
+const RatingCell = memo(
+  ({
+    rating,
+    handleSetRating,
+    preset,
+  }: {
+    rating: 1 | 2 | 3 | 4 | 5 | undefined
+    handleSetRating: (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => void
+    preset: Preset
+  }) => (
+    <div>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          onMouseEnter={(e) => {
+            const parent = e.currentTarget.parentElement
+            if (parent) {
+              const stars = parent.querySelectorAll('button')
+              stars.forEach((s, i) => {
+                if (i < star) s.classList.add('text-primary')
+                else s.classList.remove('text-primary')
+              })
+            }
+          }}
+          onMouseLeave={(e) => {
+            const parent = e.currentTarget.parentElement
+            if (parent) {
+              const stars = parent.querySelectorAll('button')
+              stars.forEach((s, i) => {
+                if (i < (rating || 0)) s.classList.add('text-primary')
+                else s.classList.remove('text-primary')
+              })
+            }
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleSetRating(preset, star as 1 | 2 | 3 | 4 | 5)
+          }}
+          className={`hover:text-primary transition-colors ${
+            star <= (rating || 0) ? 'text-primary' : ''
+          }`}
+        >
+          {star <= (rating || 0) ? (
+            <FaStar size={16} />
+          ) : (
+            <FaRegStar size={16} />
+          )}
+        </button>
+      ))}
+    </div>
+  ),
+)
+
+function PresetListTopBar(props: {
+  searchTerm: string
+  setSearchTerm: (arg0: string) => void
+  totalDBRowCount: number
+}) {
+  return (
+    <div className="flex items-center justify-between bg-base-200">
+      <div className="relative inline-block">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={props.searchTerm}
+          onChange={(e) => props.setSearchTerm(e.target.value)}
+          className="pr-8 mx-4 my-2 input input-secondary input-md"
+        />
+        {props.searchTerm && (
+          <button
+            className="absolute text-gray-500 -translate-y-1/2 right-6 top-1/2 hover:text-gray-700"
+            onClick={() => props.setSearchTerm('')}
+          >
+            <FaTimes size={20} />
+          </button>
+        )}
+      </div>
+
+      <span>{props.totalDBRowCount} Presets Found</span>
+
+      <div
+        id="drop-area"
+        className="p-2 mx-4 my-2 border-2 border-gray-400 border-dashed hover:bg-base-300 bg-base-100"
+      >
+        <FaPlusSquare size={20} className="inline mr-2"></FaPlusSquare>Drag and
+        drop a .syx file or click here to add a new preset
+      </div>
+    </div>
+  )
+}
+
 const PresetList: React.FC<PresetListProps> = ({
   currentPreset,
-  filteredPresets,
-  handleRowClick,
+
   handleSelectPreset,
-  handleSetFavorite,
-  handleSetRating,
 }) => {
-  const [sortConfig, setSortConfig] = useState<{
-    key: string
-    direction: string
-  } | null>({ key: 'name', direction: 'ascending' })
-  const [searchTerm, setSearchTerm] = useState('')
+  const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const sortedPresets = React.useMemo(() => {
-    let sortablePresets = [...filteredPresets]
+  const {
+    searchTerm,
+    selectedTags,
+    filterMode,
+    setSearchTerm,
+    sorting,
+    setSorting,
+  } = useSearchFilter()
 
-    // First, sort alphabetically by name
-    sortablePresets.sort((a, b) => {
-      const aName = a.name.toLowerCase()
-      const bName = b.name.toLowerCase()
-      if (aName < bName) return -1
-      if (aName > bName) return 1
-      return 0
-    })
+  const fetchData = async (
+    start: number,
+    size: number,
+    sorting: SortingState,
+  ) => {
+    const result = await fetchPresetData(
+      start,
+      size,
+      sorting,
+      searchTerm,
+      selectedTags,
+      filterMode,
+    )
+    return result
+  }
 
-    // Then, apply the selected sort
-    if (sortConfig !== null) {
-      sortablePresets.sort((a, b) => {
-        if (sortConfig.key === 'favorite') {
-          // Handle boolean favorite values
-          if (a.favorite === b.favorite) return 0
-          return sortConfig.direction === 'ascending'
-            ? a.favorite
-              ? -1
-              : 1
-            : a.favorite
-              ? 1
-              : -1
-        }
-        if (sortConfig.key === 'rating') {
-          const aRating = a.rating || 0
-          const bRating = b.rating || 0
-          return sortConfig.direction === 'ascending'
-            ? aRating - bRating
-            : bRating - aRating
-        }
-        // Existing string comparison logic
-        const aValue = a[sortConfig.key].toString().toLowerCase()
-        const bValue = b[sortConfig.key].toString().toLowerCase()
-        if (aValue < bValue) {
-          return sortConfig.direction === 'ascending' ? -1 : 1
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'ascending' ? 1 : -1
-        }
-        return 0
-      })
-    }
-
-    return sortablePresets
-  }, [filteredPresets, sortConfig])
-  useDragDrop()
-  const filteredAndSortedPresets = sortedPresets.filter(
-    (preset) =>
-      preset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      preset.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      preset.tags.some((tag) =>
-        tag.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
+  const queryKey = useMemo(
+    () => ['presets', sorting, searchTerm, selectedTags, filterMode],
+    [sorting, searchTerm, selectedTags, filterMode],
   )
 
-  const requestSort = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      setSortConfig({ key, direction: 'ascending' })
-    } else if (sortConfig.direction === 'ascending') {
-      setSortConfig({ key, direction: 'descending' })
-    } else {
-      setSortConfig(null)
-    }
-  }
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <FaSort className="inline" />
-    }
-    if (sortConfig.direction === 'ascending') {
-      return <FaSortUp className="inline" />
-    }
-    return <FaSortDown className="inline" />
-  }
-  // Add this helper function before the useEffect
-  const isElementInViewport = (element: HTMLElement) => {
-    const container = element.closest('.overflow-auto')
-    if (!container) return true
+  const updateQueryData = useCallback(
+    (preset: Preset, updates: Partial<Preset>) => {
+      queryClient.setQueryData(
+        queryKey,
+        (old: {
+          pageParams: any
+          pages: { presets: Preset[]; totalCount: number }[]
+        }) => {
+          if (!old?.pages) return old
+          const updatedPages = old.pages.map((page) => ({
+            ...page,
+            presets: page.presets.map((p) =>
+              p.id === preset.id ? { ...p, ...updates } : p,
+            ),
+          }))
+          return {
+            ...old,
+            pages: updatedPages,
+          }
+        },
+      )
+    },
+    [queryKey],
+  )
 
-    const containerRect = container.getBoundingClientRect()
-    const elementRect = element.getBoundingClientRect()
+  const handleSetFavorite = useCallback(
+    async (preset: Preset) => {
+      const newFavorite = !preset.favorite
+      updateQueryData(preset, { favorite: newFavorite })
 
-    return (
-      elementRect.top >= containerRect.top &&
-      elementRect.bottom <= containerRect.bottom
-    )
-  }
-  const isColumnSorted = (key: string) => {
-    return sortConfig?.key === key
-  }
+      try {
+        await updatePreset({
+          ...preset,
+          favorite: newFavorite,
+        })
+      } catch (error) {
+        updateQueryData(preset, { favorite: preset.favorite })
+      }
+    },
+    [updateQueryData],
+  )
 
-  // Modify the useEffect keyboard handler section:
+  const handleSetRating = useCallback(
+    async (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => {
+      updateQueryData(preset, { rating })
+
+      try {
+        await updatePreset({
+          ...preset,
+          rating,
+        })
+      } catch (error) {
+        updateQueryData(preset, { rating: preset.rating })
+      }
+    },
+    [updateQueryData],
+  )
+
+  const columns = useMemo<ColumnDef<Preset>[]>(
+    () => [
+      {
+        header: 'Favorite',
+        accessorKey: 'favorite',
+        cell: ({ row }) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleSetFavorite(row.original)
+            }}
+          >
+            {row.original.favorite ? (
+              <FaHeart
+                size={20}
+                className="hover:text-base-content text-primary"
+              />
+            ) : (
+              <FaRegHeart size={20} className="hover:text-primary" />
+            )}
+          </button>
+        ),
+      },
+      {
+        header: 'Name',
+        accessorKey: 'name',
+      },
+      {
+        header: 'Author',
+        accessorKey: 'author',
+      },
+      {
+        header: 'Tags',
+        accessorKey: 'tags',
+        cell: ({ row }) => <TagsCell tags={row.original.tags} />,
+      },
+      {
+        header: 'Rating',
+        accessorKey: 'rating',
+        cell: ({ row }) => (
+          <RatingCell
+            rating={row.original.rating}
+            handleSetRating={handleSetRating}
+            preset={row.original}
+          />
+        ),
+      },
+    ],
+    [handleSetFavorite, handleSetRating],
+  )
+
+  const { data, fetchNextPage, isFetching, refetch } = useInfiniteQuery<{
+    presets: Preset[]
+    totalCount: number
+  }>({
+    queryKey: [
+      'presets',
+      sorting, //refetch when sorting changes
+      searchTerm,
+      selectedTags,
+      filterMode,
+    ],
+    queryFn: async ({ pageParam = 0 }) => {
+      const start = (pageParam as number) * fetchSize
+      const fetchedData = await fetchData(start, fetchSize, sorting) //pretend api call
+      return fetchedData
+    },
+    initialPageParam: 0,
+    getNextPageParam: (_lastGroup, groups) => groups.length,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
+  })
+
+  useEffect(() => {
+    refetch()
+  }, [searchTerm, selectedTags, filterMode, refetch])
+
+  const flatData = React.useMemo(
+    () => data?.pages?.flatMap((page) => page.presets) ?? [],
+    [data],
+  )
+  const totalDBRowCount = data?.pages?.[0]?.totalCount ?? 0
+  const totalFetched = flatData.length
+
+  useDragDrop()
+
+  const [visualSelectedId, setVisualSelectedId] = useState<string | null>(null)
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (currentPreset) {
-        const currentIndex = filteredAndSortedPresets.findIndex(
-          (preset) => preset.id === currentPreset.id,
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+
+        const currentIndex = flatData.findIndex(
+          (preset) => preset.id === (visualSelectedId ?? currentPreset?.id),
         )
-        let newIndex = currentIndex
+
+        let nextIndex = currentIndex
         if (e.key === 'ArrowUp' && currentIndex > 0) {
-          e.preventDefault()
-          newIndex = currentIndex - 1
+          nextIndex = currentIndex - 1
         } else if (
           e.key === 'ArrowDown' &&
-          currentIndex < filteredAndSortedPresets.length - 1
+          currentIndex < flatData.length - 1
         ) {
-          e.preventDefault()
-          newIndex = currentIndex + 1
+          nextIndex = currentIndex + 1
         }
 
-        if (newIndex !== currentIndex) {
-          const newPreset = filteredAndSortedPresets[newIndex]
-          handleSelectPreset(newPreset)
+        if (nextIndex !== currentIndex) {
+          // Update visual selection only
+          setVisualSelectedId(flatData[nextIndex].id)
 
-          // Only scroll if the new selected preset is not visible
-          const row = document.getElementById('preset-' + newPreset.id)
-          if (row && !isElementInViewport(row)) {
-            row.scrollIntoView({ block: 'center', behavior: 'instant' })
+          setTimeout(() => {
+            const row = document.querySelector(`tr[data-index="${nextIndex}"]`)
+            if (row) {
+              row.scrollIntoView({
+                behavior: 'instant',
+                block: 'nearest',
+              })
+            }
+          }, 0)
+        }
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        // Only load preset when key is released
+        if (visualSelectedId) {
+          const preset = flatData.find((p) => p.id === visualSelectedId)
+          if (preset) {
+            handleSelectPreset(preset)
+            setVisualSelectedId(null)
           }
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [currentPreset, filteredAndSortedPresets, handleSelectPreset])
+  }, [currentPreset, flatData, handleSelectPreset, visualSelectedId])
+
+  const fetchMoreOnBottomReached = React.useCallback(
+    (containerRefElement?: HTMLDivElement | null) => {
+      if (containerRefElement) {
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+        //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+        if (
+          scrollHeight - scrollTop - clientHeight < 500 &&
+          !isFetching &&
+          totalFetched < totalDBRowCount
+        ) {
+          fetchNextPage()
+        }
+      }
+    },
+    [fetchNextPage, isFetching, totalFetched, totalDBRowCount],
+  )
+
+  useEffect(() => {
+    fetchMoreOnBottomReached(tableContainerRef.current)
+  }, [fetchMoreOnBottomReached])
+
+  const table = useReactTable({
+    data: flatData,
+    columns,
+    state: {
+      sorting,
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualSorting: true,
+    debugTable: false,
+  })
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater as SortingState)
+    if (!!table.getRowModel().rows.length) {
+      rowVirtualizer.scrollToIndex?.(0)
+    }
+  }
+
+  //since this table option is derived from table row model state, we're using the table.setOptions utility
+  table.setOptions((prev) => ({
+    ...prev,
+    onSortingChange: handleSortingChange,
+  }))
+
+  const { rows } = table.getRowModel()
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    estimateSize: () => 33,
+    getScrollElement: () => tableContainerRef.current,
+    measureElement:
+      typeof window !== 'undefined' &&
+      navigator.userAgent.indexOf('Firefox') === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 5,
+  })
+
   return (
     <div className="flex flex-col flex-grow select-none bg-base-300">
-      <div className="flex items-center justify-between bg-base-200">
-        <div>
-          <div className="relative inline-block">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-8 mx-4 my-2 input input-secondary input-md"
-            />
-            {searchTerm && (
-              <button
-                className="absolute text-gray-500 -translate-y-1/2 right-6 top-1/2 hover:text-gray-700"
-                onClick={() => setSearchTerm('')}
-              >
-                <FaTimes size={20} />
-              </button>
-            )}
-          </div>
-
-          <span>{filteredAndSortedPresets.length} Presets Found</span>
-        </div>
-        <div
-          id="drop-area"
-          className="p-2 mx-4 my-2 border-2 border-gray-400 border-dashed hover:bg-base-300 bg-base-100"
-        >
-          <FaPlusSquare size={20} className="inline mr-2"></FaPlusSquare>Drag
-          and drop a .syx file or click here to add a new preset
-        </div>
-      </div>
-      <div className="max-h-full overflow-auto ">
-        <table className="relative table table-lg ">
+      <PresetListTopBar
+        totalDBRowCount={totalDBRowCount}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      ></PresetListTopBar>
+      <div
+        className="max-h-full overflow-auto"
+        onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)}
+        ref={tableContainerRef}
+      >
+        <table className="relative table table-lg">
           <thead className="sticky top-0 bg-base-300">
-            <tr className="text-xl">
-              <th className="hidden"></th>
-              <th
-                onClick={() => requestSort('favorite')}
-                className={`w-2 ${isColumnSorted('favorite') ? 'font-bold text-primary' : 'font-normal'}`}
-              >
-                <FaHeart size={20} className="inline" />
-                {getSortIcon('favorite')}
-              </th>
-              <th
-                onClick={() => requestSort('name')}
-                className={
-                  isColumnSorted('name')
-                    ? 'font-bold text-primary'
-                    : 'font-normal'
-                }
-              >
-                Name {getSortIcon('name')}
-              </th>
-
-              <th
-                onClick={() => requestSort('author')}
-                className={
-                  isColumnSorted('author')
-                    ? 'font-bold text-primary'
-                    : 'font-normal'
-                }
-              >
-                Author {getSortIcon('author')}
-              </th>
-              <th className="font-normal">Tags</th>
-              <th
-                onClick={() => requestSort('rating')}
-                className={`w-32 ${isColumnSorted('rating') ? 'font-bold text-primary' : 'font-normal'}`}
-              >
-                Rating {getSortIcon('rating')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAndSortedPresets.map((preset) => (
-              <tr
-                id={'preset-' + preset.id}
-                key={preset.id}
-                className={
-                  currentPreset?.id === preset.id
-                    ? 'bg-neutral text-neutral-content'
-                    : ''
-                }
-                onClick={handleRowClick}
-              >
-                <td className="hidden">{preset.id}</td>
-                <td>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSetFavorite(preset)
-                    }}
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="text-xl flex justify-between">
+                {headerGroup.headers.map((column) => (
+                  <th
+                    key={column.id}
+                    onClick={column.column.getToggleSortingHandler()}
+                    className={`${
+                      column.column.getIsSorted()
+                        ? column.column.getIsSorted() === 'desc'
+                          ? 'font-bold text-primary'
+                          : 'font-bold text-primary'
+                        : 'font-normal'
+                    }`}
                   >
-                    {preset.favorite ? (
-                      <FaHeart
-                        size={20}
-                        className="hover:text-base-content text-primary"
-                      />
-                    ) : (
-                      <FaRegHeart size={20} className="hover:text-primary" />
+                    {flexRender(
+                      column.column.columnDef.header,
+                      column.getContext(),
                     )}
-                  </button>
-                </td>
-                <td className="text-xl font-bold">{preset.name}</td>
-                <td>{preset.author}</td>
-                <td className="flex gap-2">
-                  {preset.tags.map((tag: string) => (
-                    <span
-                      key={uuidv4()}
-                      className="capitalize badge badge-primary"
-                    >
-                      {tag.toLowerCase()}
-                    </span>
-                  ))}
-                </td>
-                <td>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onMouseEnter={(e) => {
-                        const parent = e.currentTarget.parentElement
-                        if (parent) {
-                          const stars = parent.querySelectorAll('button')
-                          stars.forEach((s, i) => {
-                            if (i < star) s.classList.add('text-primary')
-                            else s.classList.remove('text-primary')
-                          })
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        const parent = e.currentTarget.parentElement
-                        if (parent) {
-                          const stars = parent.querySelectorAll('button')
-                          stars.forEach((s, i) => {
-                            if (i < (preset.rating || 0))
-                              s.classList.add('text-primary')
-                            else s.classList.remove('text-primary')
-                          })
-                        }
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleSetRating(preset, star as 1 | 2 | 3 | 4 | 5)
-                      }}
-                      className={`hover:text-primary transition-colors ${
-                        star <= (preset.rating || 0) ? 'text-primary' : ''
-                      }`}
-                    >
-                      {star <= (preset.rating || 0) ? (
-                        <FaStar size={16} />
+                    <span>
+                      {column.column.getIsSorted() ? (
+                        column.column.getIsSorted() === 'desc' ? (
+                          <FaSortDown className="inline" />
+                        ) : (
+                          <FaSortUp className="inline" />
+                        )
                       ) : (
-                        <FaRegStar size={16} />
+                        <FaSort className="inline" />
                       )}
-                    </button>
-                  ))}
-                </td>
+                    </span>
+                  </th>
+                ))}
               </tr>
             ))}
+          </thead>
+          <tbody
+            style={{
+              width: '100%',
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              position: 'relative',
+            }}
+          >
+            {!isFetching &&
+              rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index]
+                return (
+                  <tr
+                    data-index={virtualRow.index}
+                    ref={(node) => rowVirtualizer.measureElement(node)}
+                    key={row.id}
+                    className={
+                      'justify-between ' +
+                      (visualSelectedId === row.original.id ||
+                      (!visualSelectedId &&
+                        currentPreset?.id === row.original.id)
+                        ? 'bg-base-100'
+                        : '')
+                    }
+                    style={{
+                      display: 'flex',
+                      position: 'absolute',
+                      transform: `translateY(${virtualRow.start}px)`,
+                      width: '100%',
+                    }}
+                    onClick={() => handleSelectPreset(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        style={{
+                          display: 'flex',
+                          width: cell.column.getSize(),
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })}
+            {isFetching && (
+              <tr>
+                <td
+                  colSpan={table.getAllColumns().length}
+                  className="text-center"
+                >
+                  Fetching More...
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -332,4 +557,12 @@ const PresetList: React.FC<PresetListProps> = ({
   )
 }
 
-export default PresetList
+const queryClient = new QueryClient()
+
+const PresetListWrapper: React.FC<PresetListProps> = (props) => (
+  <QueryClientProvider client={queryClient}>
+    <PresetList {...props} />
+  </QueryClientProvider>
+)
+
+export default PresetListWrapper

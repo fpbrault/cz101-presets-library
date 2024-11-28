@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-
 import { WebMidi } from 'webmidi'
 import {
   Preset,
@@ -33,12 +32,6 @@ export default function PresetManager() {
     createdDate: '',
     modifiedDate: '',
   })
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    loadFromLocalStorage('selectedTags', []),
-  )
-  const [filterMode, setFilterMode] = useState<'inclusive' | 'exclusive'>(
-    loadFromLocalStorage('filterMode', 'inclusive'),
-  )
   const [autoSend, setAutoSend] = useState(
     loadFromLocalStorage('autoSend', false),
   )
@@ -132,30 +125,6 @@ export default function PresetManager() {
     setShowDeleteModal(false)
   }
 
-  const handleTagClick = (tag: string) => {
-    const lowerCaseTag = tag.toLowerCase()
-    setSelectedTags((prevTags) => {
-      const newTags = prevTags.includes(lowerCaseTag)
-        ? prevTags.filter((t) => t.toLowerCase() !== lowerCaseTag)
-        : [...prevTags, lowerCaseTag]
-      saveToLocalStorage('selectedTags', newTags)
-      return newTags
-    })
-  }
-
-  const handleClearFilters = () => {
-    setSelectedTags([])
-    saveToLocalStorage('selectedTags', [])
-  }
-
-  const handleToggleFilterMode = () => {
-    setFilterMode((prevMode) => {
-      const newMode = prevMode === 'inclusive' ? 'exclusive' : 'inclusive'
-      saveToLocalStorage('filterMode', newMode)
-      return newMode
-    })
-  }
-
   const handleToggleAutoSend = () => {
     setAutoSend((prevAutoSend: any) => {
       const newAutoSend = !prevAutoSend
@@ -172,26 +141,6 @@ export default function PresetManager() {
     }
   }
 
-  const handleSetFavorite = async (preset: Preset) => {
-    const updatedPreset = {
-      ...preset,
-      favorite: !preset.favorite,
-    }
-
-    await updatePreset(updatedPreset)
-    triggerRefresh()
-  }
-
-  const handleSetRating = async (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => {
-    const updatedPreset = {
-      ...preset,
-      rating,
-    }
-
-    await updatePreset(updatedPreset)
-    triggerRefresh()
-  }
-
   const handleSavePreset = async (slot: number) => {
     const preset = await savePreset(selectedMidiPort, slot, 'newPreset')
     triggerRefresh()
@@ -203,26 +152,6 @@ export default function PresetManager() {
       restorePresetToBuffer(currentPreset, selectedMidiPort)
     }
   }
-
-  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
-    const id = e.currentTarget.children[0].textContent
-    if (id) {
-      const preset = presets.find((p) => p.id === id)
-      if (preset) {
-        handleSelectPreset(preset)
-      }
-    }
-  }
-
-  const filteredPresets = presets.filter((preset) => {
-    if (selectedTags.length === 0) return true
-    const presetTags = new Set(preset.tags.map((tag) => tag.toLowerCase()))
-    if (filterMode === 'inclusive') {
-      return selectedTags.every((tag) => presetTags.has(tag.toLowerCase()))
-    } else {
-      return selectedTags.some((tag) => presetTags.has(tag.toLowerCase()))
-    }
-  })
 
   return (
     <main className="flex flex-col w-full h-full">
@@ -237,11 +166,8 @@ export default function PresetManager() {
             </button>
           </div>
           <PerformanceMode
-            presets={presets}
             currentPreset={currentPreset}
-            selectedTags={selectedTags}
             handleSelectPreset={handleSelectPreset}
-            handleTagClick={handleTagClick}
           />
         </>
       ) : (
@@ -264,22 +190,11 @@ export default function PresetManager() {
                 setSelectedMidiPort={setSelectedMidiPort}
               ></OptionPanel>
               <SettingsPanel></SettingsPanel>
-              <FilterPanel
-                selectedTags={selectedTags}
-                filterMode={filterMode}
-                presets={presets}
-                handleClearFilters={handleClearFilters}
-                handleToggleFilterMode={handleToggleFilterMode}
-                handleTagClick={handleTagClick}
-              ></FilterPanel>
+              <FilterPanel presets={presets}></FilterPanel>
             </div>
             <PresetList
-              handleSetFavorite={handleSetFavorite}
-              handleSetRating={handleSetRating}
               handleSelectPreset={handleSelectPreset}
               currentPreset={currentPreset}
-              filteredPresets={filteredPresets}
-              handleRowClick={handleRowClick}
             ></PresetList>
             <PresetDetails
               editMode={editMode}

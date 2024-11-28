@@ -51,7 +51,7 @@ export class PostgresPresetDatabase implements PresetDatabase {
     await client.query('DELETE FROM presets WHERE id = $1', [id])
   }
 
-  async syncPresets(localPresets: Preset[]): Promise<void> {
+  async syncPresets(_localPresets: Preset[]): Promise<void> {
     // Implement synchronization logic here
   }
 

@@ -2,11 +2,14 @@ import './App.css'
 
 import { RefreshProvider } from './RefreshContext'
 import PresetManager from './PresetManager'
+import { SearchFilterProvider } from './SearchFilterContext'
 
 export default function App() {
   return (
     <RefreshProvider>
-      <PresetManager></PresetManager>
+      <SearchFilterProvider>
+        <PresetManager></PresetManager>
+      </SearchFilterProvider>
     </RefreshProvider>
   )
 }

@@ -39,6 +39,18 @@ let fakePresets: Preset[] = [
 ]
 
 export class FakePresetDatabase implements PresetDatabase {
+  syncPresets(_localPresets: Preset[]): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+  isAvailable(): Promise<boolean> {
+    throw new Error('Method not implemented.')
+  }
+  import(_json: string): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+  export(): Promise<string> {
+    throw new Error('Method not implemented.')
+  }
   async getPresets(): Promise<Preset[]> {
     return fakePresets
   }

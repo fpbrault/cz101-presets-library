@@ -3,6 +3,9 @@ import { FaCog } from 'react-icons/fa'
 import { exportPresets, importPresets } from './lib/presetManager'
 import { useRefresh } from './RefreshContext'
 
+import { writeTextFile } from '@tauri-apps/plugin-fs'
+import { save } from '@tauri-apps/plugin-dialog'
+
 const SettingsPanel: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { triggerRefresh } = useRefresh()
@@ -12,13 +15,29 @@ const SettingsPanel: React.FC = () => {
 
   const handleExport = async () => {
     const data = await exportPresets()
-    const blob = new Blob([data], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'presets.json'
-    a.click()
-    URL.revokeObjectURL(url)
+    if ((window as any).__TAURI__) {
+      // Tauri environment
+      const filePath = await save({
+        filters: [
+          {
+            name: 'JSON',
+            extensions: ['json'],
+          },
+        ],
+      })
+      if (filePath) {
+        await writeTextFile(filePath, data)
+      }
+    } else {
+      // Browser environment
+      const blob = new Blob([data], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'presets.json'
+      a.click()
+      URL.revokeObjectURL(url)
+    }
   }
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {

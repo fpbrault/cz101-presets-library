@@ -86,9 +86,10 @@ export function formatPresetData(
 ): Uint8Array {
   if (data.slice(0, 7).toString() === '240,68,0,0,112,33,0') {
     data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])
-  }
-  if (data.slice(0, 7).toString() === '240,68,0,0,112,32,96') {
+  } else if (data.slice(0, 7).toString() === '240,68,0,0,112,32,96') {
     data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])
+  } else if (data.slice(0, 6).toString() === '240,68,0,0,112,32') {
+    data = new Uint8Array([...data.slice(0, 5), 0x00, ...data.slice(7)])
   }
 
   if (targetSlot !== undefined) {
@@ -158,11 +159,68 @@ export async function restoreToBuffer(
   }
 }
 
+export async function fetchTags(): Promise<string[]> {
+  const presets = (await getPresets()) ?? []
+  const tags = new Set<string>()
+  presets.forEach((preset) => {
+    preset.tags.forEach((tag) => tags.add(tag))
+  })
+  return Array.from(tags).sort()
+}
+
+export async function fetchPresetData(
+  start: number,
+  size: number,
+  sorting: any,
+  searchTerm: string,
+  selectedTags: string[],
+  filterMode: 'inclusive' | 'exclusive',
+): Promise<{ presets: Preset[]; totalCount: number }> {
+  const presets = (await getPresets()) ?? []
+
+  // Filter presets based on search term
+  let filteredPresets = presets
+  if (searchTerm) {
+    filteredPresets = filteredPresets.filter((preset) =>
+      preset.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+  }
+
+  // Filter presets based on selected tags
+  if (selectedTags.length > 0) {
+    filteredPresets = filteredPresets.filter((preset) => {
+      if (filterMode === 'inclusive') {
+        return selectedTags.every((tag) => preset.tags.includes(tag))
+      } else {
+        return selectedTags.some((tag) => preset.tags.includes(tag))
+      }
+    })
+  }
+
+  // Sort presets based on sorting state
+  const sortedPresets = filteredPresets.sort((a, b) => {
+    if (sorting.length === 0) return 0
+    const { id, desc } = sorting[0]
+    const order = desc ? -1 : 1
+    if (a[id] < b[id]) return -1 * order
+    if (a[id] > b[id]) return 1 * order
+    return 0
+  })
+
+  // Paginate presets
+  const paginatedPresets = sortedPresets.slice(start, start + size)
+  return { presets: paginatedPresets ?? [], totalCount: filteredPresets.length }
+}
+
 export async function restorePresetToBuffer(
   preset: Preset,
   portName: string,
 ): Promise<void> {
   const output = WebMidi.getOutputByName(portName) as Output
+
+  if (!output) {
+    throw new Error('Output not ready')
+  }
 
   const formattedData = formatPresetData(preset.sysexData)
   output.sendSysex([], formattedData.slice(1, -1))
@@ -339,7 +397,13 @@ export interface PresetDatabase {
 }
 
 export async function getPresets(): Promise<Preset[]> {
-  return presetDatabase.getPresets()
+  return (await presetDatabase.getPresets()).sort((a, b) => {
+    const aName = a.name.toLowerCase()
+    const bName = b.name.toLowerCase()
+    if (aName < bName) return -1
+    if (aName > bName) return 1
+    return 0
+  })
 }
 
 export async function addPreset(preset: Preset): Promise<Preset> {
