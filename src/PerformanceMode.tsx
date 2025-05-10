@@ -14,12 +14,18 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 }) => {
   const [currentBank, setCurrentBank] = useState(0)
   const [presets, setPresets] = useState<Preset[]>([])
-  const [showFavorites, setShowFavorites] = useState(false)
   const [isNumPadOpen, setIsNumPadOpen] = useState(false)
   const [bankInput, setBankInput] = useState('')
 
-  const { searchTerm, selectedTags, filterMode, sorting, setSelectedTags } =
-    useSearchFilter()
+  const {
+    searchTerm,
+    selectedTags,
+    filterMode,
+    sorting,
+    setSelectedTags,
+    favoritesOnly,
+    setFavoritesOnly,
+  } = useSearchFilter()
 
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -33,18 +39,19 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     const fetchPresets = async () => {
       const data = await fetchPresetData(
         0,
-        60,
+        -1,
         sorting,
         searchTerm,
         selectedTags,
         filterMode,
+        favoritesOnly,
       )
 
       setPresets(data.presets)
     }
 
     fetchPresets()
-  }, [searchTerm, selectedTags, filterMode, sorting])
+  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly])
 
   const handleOpenNumPad = () => {
     setBankInput('')
@@ -110,10 +117,6 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 selectedTags.includes(tag) ? 'badge-primary' : ''
               }`}
               onPointerUp={() => handleTagClick(tag)}
-              onTouchEnd={(event) => {
-                event.stopPropagation()
-                handleTagClick(tag)
-              }}
             >
               {tag} ({count})
             </div>
@@ -125,10 +128,10 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
           </span>
         </div>
         <button
-          onPointerUp={() => setShowFavorites(!showFavorites)}
+          onPointerUp={() => setFavoritesOnly(!favoritesOnly)}
           className={`btn btn-lg btn-accent`}
         >
-          {showFavorites ? 'Show All' : 'Show Favorites'}
+          {favoritesOnly ? 'Show All' : 'Show Favorites'}
         </button>
       </div>
       <div className="flex h-full gap-4 pb-16">

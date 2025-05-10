@@ -10,6 +10,10 @@ interface SearchFilterContextProps {
   setSelectedTags: (tags: string[]) => void
   filterMode: 'inclusive' | 'exclusive'
   setFilterMode: (mode: 'inclusive' | 'exclusive') => void
+  favoritesOnly: boolean
+  setFavoritesOnly: (favoritesOnly: boolean) => void
+  randomOrder: boolean
+  setRandomOrder: (randomOrder: boolean) => void
 }
 
 const SearchFilterContext = createContext<SearchFilterContextProps | undefined>(
@@ -29,7 +33,9 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
     'inclusive',
   )
 
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [sorting, setSorting] = useState<SortingState | []>([])
+  const [randomOrder, setRandomOrder] = useState(false)
 
   return (
     <SearchFilterContext.Provider
@@ -42,6 +48,10 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
         setSelectedTags,
         filterMode,
         setFilterMode,
+        favoritesOnly,
+        setFavoritesOnly,
+        randomOrder,
+        setRandomOrder,
       }}
     >
       {children}

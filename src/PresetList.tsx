@@ -111,6 +111,8 @@ function PresetListTopBar(props: {
   searchTerm: string
   setSearchTerm: (arg0: string) => void
   totalDBRowCount: number
+  randomOrder: boolean
+  setRandomOrder: (arg0: boolean) => void
 }) {
   return (
     <div className="flex items-center justify-between bg-base-200">
@@ -134,6 +136,13 @@ function PresetListTopBar(props: {
 
       <span>{props.totalDBRowCount} Presets Found</span>
 
+      <button
+        className="mx-4 my-2 btn btn-secondary"
+        onClick={() => props.setRandomOrder(!props.randomOrder)}
+      >
+        {props.randomOrder ? 'Disable Random Order' : 'Enable Random Order'}
+      </button>
+
       <div
         id="drop-area"
         className="p-2 mx-4 my-2 border-2 border-gray-400 border-dashed hover:bg-base-300 bg-base-100"
@@ -143,6 +152,24 @@ function PresetListTopBar(props: {
       </div>
     </div>
   )
+}
+
+const shuffleArray = (array: any[], seed: number) => {
+  let m = array.length,
+    t,
+    i
+  while (m) {
+    i = Math.floor(random(seed++) * m--)
+    t = array[m]
+    array[m] = array[i]
+    array[i] = t
+  }
+  return array
+}
+
+const random = (seed: number) => {
+  const x = Math.sin(seed++) * 10000
+  return x - Math.floor(x)
 }
 
 const PresetList: React.FC<PresetListProps> = ({
@@ -159,7 +186,16 @@ const PresetList: React.FC<PresetListProps> = ({
     setSearchTerm,
     sorting,
     setSorting,
+    randomOrder,
+    setRandomOrder,
   } = useSearchFilter()
+  const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now())
+
+  useEffect(() => {
+    if (randomOrder) {
+      setShuffleSeed(Date.now())
+    }
+  }, [randomOrder])
 
   const fetchData = async (
     start: number,
@@ -173,13 +209,24 @@ const PresetList: React.FC<PresetListProps> = ({
       searchTerm,
       selectedTags,
       filterMode,
+      false, // Add the missing favoritesOnly argument
+      randomOrder,
+      shuffleSeed,
     )
     return result
   }
 
   const queryKey = useMemo(
-    () => ['presets', sorting, searchTerm, selectedTags, filterMode],
-    [sorting, searchTerm, selectedTags, filterMode],
+    () => [
+      'presets',
+      sorting,
+      searchTerm,
+      selectedTags,
+      filterMode,
+      randomOrder,
+      shuffleSeed,
+    ],
+    [sorting, searchTerm, selectedTags, filterMode, randomOrder, shuffleSeed],
   )
 
   const updateQueryData = useCallback(
@@ -243,8 +290,19 @@ const PresetList: React.FC<PresetListProps> = ({
   const columns = useMemo<ColumnDef<Preset>[]>(
     () => [
       {
+        header: 'No',
+        accessorKey: 'number',
+        size: 20,
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center h-4">
+            {row.index + 1}
+          </div>
+        ),
+      },
+      {
         header: 'Favorite',
         accessorKey: 'favorite',
+        size: 5,
         cell: ({ row }) => (
           <button
             onClick={(e) => {
@@ -265,6 +323,7 @@ const PresetList: React.FC<PresetListProps> = ({
       },
       {
         header: 'Name',
+        size: 500,
         accessorKey: 'name',
       },
       {
@@ -276,7 +335,7 @@ const PresetList: React.FC<PresetListProps> = ({
         accessorKey: 'tags',
         cell: ({ row }) => <TagsCell tags={row.original.tags} />,
       },
-      {
+      /*     {
         header: 'Rating',
         accessorKey: 'rating',
         cell: ({ row }) => (
@@ -286,7 +345,7 @@ const PresetList: React.FC<PresetListProps> = ({
             preset={row.original}
           />
         ),
-      },
+      }, */
     ],
     [handleSetFavorite, handleSetRating],
   )
@@ -295,13 +354,7 @@ const PresetList: React.FC<PresetListProps> = ({
     presets: Preset[]
     totalCount: number
   }>({
-    queryKey: [
-      'presets',
-      sorting, //refetch when sorting changes
-      searchTerm,
-      selectedTags,
-      filterMode,
-    ],
+    queryKey,
     queryFn: async ({ pageParam = 0 }) => {
       const start = (pageParam as number) * fetchSize
       const fetchedData = await fetchData(start, fetchSize, sorting) //pretend api call
@@ -317,10 +370,15 @@ const PresetList: React.FC<PresetListProps> = ({
     refetch()
   }, [searchTerm, selectedTags, filterMode, refetch])
 
-  const flatData = React.useMemo(
-    () => data?.pages?.flatMap((page) => page.presets) ?? [],
-    [data],
-  )
+  const flatData = React.useMemo(() => {
+    let flatData =
+      data?.pages?.flatMap((page: { presets: any }) => page.presets) ?? []
+    if (randomOrder) {
+      flatData = shuffleArray(flatData, shuffleSeed)
+    }
+    return flatData
+  }, [data, randomOrder, shuffleSeed])
+
   const totalDBRowCount = data?.pages?.[0]?.totalCount ?? 0
   const totalFetched = flatData.length
 
@@ -334,7 +392,8 @@ const PresetList: React.FC<PresetListProps> = ({
         e.preventDefault()
 
         const currentIndex = flatData.findIndex(
-          (preset) => preset.id === (visualSelectedId ?? currentPreset?.id),
+          (preset: { id: string | undefined }) =>
+            preset.id === (visualSelectedId ?? currentPreset?.id),
         )
 
         let nextIndex = currentIndex
@@ -368,7 +427,9 @@ const PresetList: React.FC<PresetListProps> = ({
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         // Only load preset when key is released
         if (visualSelectedId) {
-          const preset = flatData.find((p) => p.id === visualSelectedId)
+          const preset = flatData.find(
+            (p: { id: string }) => p.id === visualSelectedId,
+          )
           if (preset) {
             handleSelectPreset(preset)
             setVisualSelectedId(null)
@@ -450,6 +511,8 @@ const PresetList: React.FC<PresetListProps> = ({
         totalDBRowCount={totalDBRowCount}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        randomOrder={randomOrder}
+        setRandomOrder={setRandomOrder}
       ></PresetListTopBar>
       <div
         className="max-h-full overflow-auto"
@@ -459,10 +522,14 @@ const PresetList: React.FC<PresetListProps> = ({
         <table className="relative table table-lg">
           <thead className="sticky top-0 bg-base-300">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="text-xl flex justify-between">
+              <tr
+                key={headerGroup.id}
+                className="text-xl w-full fle justiy-between"
+              >
                 {headerGroup.headers.map((column) => (
                   <th
                     key={column.id}
+                    style={{ width: column.column.getSize() + 'px' }}
                     onClick={column.column.getToggleSortingHandler()}
                     className={`${
                       column.column.getIsSorted()
@@ -502,13 +569,14 @@ const PresetList: React.FC<PresetListProps> = ({
             {!isFetching &&
               rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const row = rows[virtualRow.index]
+                if (!row.original) return null // Ensure row.original is defined
                 return (
                   <tr
                     data-index={virtualRow.index}
                     ref={(node) => rowVirtualizer.measureElement(node)}
                     key={row.id}
                     className={
-                      'justify-between ' +
+                      'justifybetween ' +
                       (visualSelectedId === row.original.id ||
                       (!visualSelectedId &&
                         currentPreset?.id === row.original.id)
@@ -527,7 +595,6 @@ const PresetList: React.FC<PresetListProps> = ({
                       <td
                         key={cell.id}
                         style={{
-                          display: 'flex',
                           width: cell.column.getSize(),
                         }}
                       >

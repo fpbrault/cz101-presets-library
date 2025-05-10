@@ -175,11 +175,18 @@ export async function fetchPresetData(
   searchTerm: string,
   selectedTags: string[],
   filterMode: 'inclusive' | 'exclusive',
+  favoritesOnly: boolean,
+  randomOrder: boolean,
+  seed: number
 ): Promise<{ presets: Preset[]; totalCount: number }> {
   const presets = (await getPresets()) ?? []
 
   // Filter presets based on search term
   let filteredPresets = presets
+
+  if (favoritesOnly) {
+    filteredPresets = filteredPresets.filter((preset) => preset.favorite)
+  }
   if (searchTerm) {
     filteredPresets = filteredPresets.filter((preset) =>
       preset.name.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -198,7 +205,7 @@ export async function fetchPresetData(
   }
 
   // Sort presets based on sorting state
-  const sortedPresets = filteredPresets.sort((a, b) => {
+  let sortedPresets = filteredPresets.sort((a, b) => {
     if (sorting.length === 0) return 0
     const { id, desc } = sorting[0]
     const order = desc ? -1 : 1
@@ -207,9 +214,32 @@ export async function fetchPresetData(
     return 0
   })
 
+  // Shuffle presets if randomOrder is enabled
+  if (randomOrder) {
+    sortedPresets = shuffleArray(sortedPresets, seed)
+  }
+
   // Paginate presets
   const paginatedPresets = sortedPresets.slice(start, start + size)
   return { presets: paginatedPresets ?? [], totalCount: filteredPresets.length }
+}
+
+const shuffleArray = (array: any[], seed: number) => {
+  let m = array.length,
+    t,
+    i
+  while (m) {
+    i = Math.floor(random(seed++) * m--)
+    t = array[m]
+    array[m] = array[i]
+    array[i] = t
+  }
+  return array
+}
+
+const random = (seed: number) => {
+  const x = Math.sin(seed++) * 10000
+  return x - Math.floor(x)
 }
 
 export async function restorePresetToBuffer(
@@ -353,6 +383,72 @@ export type Preset = {
   rating?: 1 | 2 | 3 | 4 | 5
 }
 
+import { patches } from '../assets/cznames'
+
+// Helper to parse preset names from cznames.json
+async function parsePresetNames(): Promise<{
+  [key: string]: { [key: string]: string }
+}> {
+  try {
+    return patches
+  } catch (error) {
+    return {} // Return empty object if file not found or parsing fails
+  }
+}
+
+// Function to determine tags based on preset name
+function determineTags(presetName: string): string[] {
+  const tags: string[] = []
+  const lowerCaseName = presetName.toLowerCase()
+
+  const tagMappings: { [key: string]: string[] } = {
+    bass: ['bass', 'jaco', 'fretless', 'slap', 'p-bass', 'j-bass', 'bassline'],
+    guitar: ['guitar', 'gtr', 'guit', 'koto'],
+    piano: ['pian', 'ep', 'rhodes', 'clav', 'harpsi', 'key', 'kalim', 'pluck'],
+    synth: ['synth'],
+    effect: ['effect', 'fx'],
+    drum: [
+      'drum',
+      'kick',
+      'snare',
+      'hat',
+      'tom',
+      'cymbal',
+      'perc',
+      'conga',
+      'mallet',
+    ],
+    organ: ['organ'],
+    bell: ['bell'],
+    winds: [
+      'flute',
+      'flut',
+      'whistle',
+      'clarinet',
+      'pan',
+      'trump',
+      'recorder',
+      'horn',
+      'sax',
+      'oboe',
+      'bassoon',
+      'wind',
+    ],
+    voice: ['voice', 'choir', 'vox', 'vocal'],
+    pad: ['pad'],
+    strings: ['violin', 'viola', 'cello', 'strings', 'string', 'str'],
+    brass: ['brass'],
+    lead: ['lead'],
+  }
+
+  for (const [tag, keywords] of Object.entries(tagMappings)) {
+    if (keywords.some((keyword) => lowerCaseName.includes(keyword))) {
+      tags.push(tag)
+    }
+  }
+
+  return tags
+}
 export async function createPresetData(
   filename: string,
   sysexData: Uint8Array,
@@ -360,22 +456,33 @@ export async function createPresetData(
   const presets: Preset[] = []
   let startIndex = 0
 
+  // Try to load preset names
+  const presetNames = await parsePresetNames()
+  const baseFilename = filename.replace(/\.syx$/i, '')
+
   while (startIndex < sysexData.length) {
     const endIndex = sysexData.indexOf(0xf7, startIndex)
-    console.log('End Index:', endIndex)
-    if (endIndex === -1) break // No more presets found
+    if (endIndex === -1) break
 
     const presetData = sysexData.slice(startIndex, endIndex + 1)
     if (presetData[0] === 0xf0 && presetData[presetData.length - 1] === 0xf7) {
+      const presetIndex = presets.length
+      const presetName =
+        (presetNames[baseFilename] &&
+          presetNames[baseFilename][String(presetIndex + 1)]) ||
+        `${baseFilename}_${presetIndex + 1}`
+
+      const tags = determineTags(presetName)
+
       presets.push({
         id: uuidv4(),
-        name: `${filename.replace(/\.[^/.]+$/, '')}_${presets.length + 1}`,
+        name: presetName,
         createdDate: new Date().toISOString(),
         modifiedDate: new Date().toISOString(),
         filename,
         sysexData: presetData,
-        tags: [],
-        author: '',
+        tags,
+        author: 'Temple of CZ',
         description: '',
       })
     }
@@ -384,7 +491,6 @@ export async function createPresetData(
 
   return presets
 }
-
 export interface PresetDatabase {
   getPresets(): Promise<Preset[]>
   addPreset(preset: Preset): Promise<Preset>
