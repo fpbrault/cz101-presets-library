@@ -6,7 +6,13 @@ import React, {
   useCallback,
   memo,
 } from 'react'
-import { fetchPresetData, Preset, updatePreset } from '@/lib/presetManager'
+import {
+  deleteTagGlobally,
+  fetchPresetData,
+  Preset,
+  renameTagGlobally,
+  updatePreset,
+} from '@/lib/presetManager'
 import {
   FaPlusSquare,
   FaSortUp,
@@ -21,6 +27,7 @@ import {
   FaTags,
   FaChevronDown,
   FaChevronUp,
+  FaCopy,
 } from 'react-icons/fa'
 import useDragDrop from '@/useDragDrop'
 import {
@@ -42,6 +49,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { getPresetQueryKey } from '@/lib/presetQueryKey'
+import TagManagerModal from '@/features/presets/components/TagManagerModal'
 
 interface PresetListProps {
   currentPreset: Preset | null
@@ -134,6 +142,9 @@ function PresetListTopBar(props: {
   onClearFilters: () => void
   onToggleTag: (tag: string) => void
   availableTags: [string, number][]
+  duplicatesOnly: boolean
+  onToggleDuplicatesOnly: () => void
+  onOpenTagManager: () => void
 }) {
   const [isTagsPanelOpen, setIsTagsPanelOpen] = useState(false)
 
@@ -161,6 +172,25 @@ function PresetListTopBar(props: {
         <span>{props.totalDBRowCount} Presets Found</span>
 
         <div className="flex items-center gap-2 mx-4 my-2">
+          <button
+            className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
+              props.duplicatesOnly ? 'btn-warning' : 'btn-neutral'
+            }`}
+            onClick={props.onToggleDuplicatesOnly}
+            title="Show only duplicate SysEx presets"
+          >
+            <FaCopy size={12} />
+            Duplicates
+          </button>
+
+          <button
+            className="btn btn-sm sm:btn-md normal-case font-semibold shadow-md btn-neutral"
+            onClick={props.onOpenTagManager}
+            title="Rename, merge, or delete tags globally"
+          >
+            Manage Tags
+          </button>
+
           <button
             className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
               isTagsPanelOpen
@@ -305,9 +335,12 @@ const PresetList: React.FC<PresetListProps> = ({
     setSorting,
     randomOrder,
     setRandomOrder,
+    duplicatesOnly,
+    setDuplicatesOnly,
   } = useSearchFilter()
   const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now())
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange')
+  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false)
 
   useEffect(() => {
     if (randomOrder) {
@@ -339,6 +372,7 @@ const PresetList: React.FC<PresetListProps> = ({
       favoritesOnly,
       randomOrder,
       shuffleSeed,
+      duplicatesOnly,
     )
     return result
   }
@@ -351,6 +385,7 @@ const PresetList: React.FC<PresetListProps> = ({
         selectedTags,
         filterMode,
         favoritesOnly,
+        duplicatesOnly,
         randomOrder,
         shuffleSeed,
       }),
@@ -360,6 +395,7 @@ const PresetList: React.FC<PresetListProps> = ({
       selectedTags,
       filterMode,
       favoritesOnly,
+      duplicatesOnly,
       randomOrder,
       shuffleSeed,
     ],
@@ -516,6 +552,7 @@ const PresetList: React.FC<PresetListProps> = ({
         false,
         false,
         0,
+        false,
       )
       return result.presets
     },
@@ -560,6 +597,29 @@ const PresetList: React.FC<PresetListProps> = ({
   const handleClearFilters = useCallback(() => {
     setSelectedTags([])
   }, [setSelectedTags])
+
+  const handleToggleDuplicatesOnly = useCallback(() => {
+    setDuplicatesOnly(!duplicatesOnly)
+  }, [duplicatesOnly, setDuplicatesOnly])
+
+  const handleRenameOrMergeTag = useCallback(
+    async (sourceTag: string, targetTag: string) => {
+      await renameTagGlobally(sourceTag, targetTag)
+      await queryClient.invalidateQueries({ queryKey: ['presets'] })
+    },
+    [queryClient],
+  )
+
+  const handleDeleteTag = useCallback(
+    async (tag: string) => {
+      await deleteTagGlobally(tag)
+      await queryClient.invalidateQueries({ queryKey: ['presets'] })
+      if (selectedTags.includes(tag)) {
+        setSelectedTags(selectedTags.filter((selectedTag) => selectedTag !== tag))
+      }
+    },
+    [queryClient, selectedTags, setSelectedTags],
+  )
 
   const { data, fetchNextPage, isFetching, refetch } = useInfiniteQuery<{
     presets: Preset[]
@@ -769,7 +829,17 @@ const PresetList: React.FC<PresetListProps> = ({
         onClearFilters={handleClearFilters}
         onToggleTag={handleToggleTag}
         availableTags={availableTags}
+        duplicatesOnly={duplicatesOnly}
+        onToggleDuplicatesOnly={handleToggleDuplicatesOnly}
+        onOpenTagManager={() => setIsTagManagerOpen(true)}
       ></PresetListTopBar>
+      <TagManagerModal
+        isOpen={isTagManagerOpen}
+        availableTags={availableTags}
+        onClose={() => setIsTagManagerOpen(false)}
+        onRenameOrMerge={handleRenameOrMergeTag}
+        onDeleteTag={handleDeleteTag}
+      />
       <div
         className="relative max-h-full overflow-auto"
         onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)}

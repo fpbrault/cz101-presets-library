@@ -8,8 +8,13 @@ export interface FilterPresetsOptions {
   selectedTags: string[]
   filterMode: FilterMode
   favoritesOnly: boolean
+  duplicatesOnly?: boolean
   randomOrder: boolean
   seed: number
+}
+
+function getPresetFingerprint(preset: Preset): string {
+  return Array.from(preset.sysexData).join(',')
 }
 
 export function filterPresets(
@@ -22,6 +27,7 @@ export function filterPresets(
     selectedTags,
     filterMode,
     favoritesOnly,
+    duplicatesOnly,
     randomOrder,
     seed,
   } = options
@@ -46,6 +52,22 @@ export function filterPresets(
       }
 
       return selectedTags.some((tag) => preset.tags.includes(tag))
+    })
+  }
+
+  if (duplicatesOnly) {
+    const fingerprintCounts = filteredPresets.reduce(
+      (acc, preset) => {
+        const key = getPresetFingerprint(preset)
+        acc[key] = (acc[key] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
+    )
+
+    filteredPresets = filteredPresets.filter((preset) => {
+      const key = getPresetFingerprint(preset)
+      return (fingerprintCounts[key] ?? 0) > 1
     })
   }
 

@@ -14,6 +14,8 @@ interface SearchFilterContextProps {
   setFavoritesOnly: (favoritesOnly: boolean) => void
   randomOrder: boolean
   setRandomOrder: (randomOrder: boolean) => void
+  duplicatesOnly: boolean
+  setDuplicatesOnly: (duplicatesOnly: boolean) => void
 }
 
 const SearchFilterContext = createContext<SearchFilterContextProps | undefined>(
@@ -36,6 +38,7 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [sorting, setSorting] = useState<SortingState | []>([])
   const [randomOrder, setRandomOrder] = useState(false)
+  const [duplicatesOnly, setDuplicatesOnly] = useState(false)
 
   return (
     <SearchFilterContext.Provider
@@ -52,6 +55,8 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
         setFavoritesOnly,
         randomOrder,
         setRandomOrder,
+        duplicatesOnly,
+        setDuplicatesOnly,
       }}
     >
       {children}

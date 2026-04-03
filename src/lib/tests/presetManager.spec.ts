@@ -5,6 +5,9 @@ import {
   createPresetData,
   fetchPresetData,
   addPreset,
+  deleteTagGlobally,
+  getPresets,
+  renameTagGlobally,
 } from '@/lib/presetManager'
 import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
 
@@ -416,6 +419,39 @@ describe('fetchPresetData', () => {
     expect(result.totalCount).toBe(3)
   })
 
+  it('should filter to duplicates only when requested', async () => {
+    const uniquePreset: Preset = {
+      id: '4',
+      name: 'Unique Lead',
+      createdDate: '2021-01-04',
+      modifiedDate: '2021-01-04',
+      filename: 'test4.syx',
+      sysexData: new Uint8Array([0xf0, 0x44, 0x00, 0x00, 0x70, 0x20, 0x01, 0xf7]),
+      tags: ['lead'],
+      author: 'Test',
+      description: 'Unique',
+      favorite: false,
+    }
+
+    await addPreset(uniquePreset)
+
+    const result = await fetchPresetData(
+      0,
+      10,
+      [],
+      '',
+      [],
+      'inclusive',
+      false,
+      false,
+      0,
+      true,
+    )
+
+    expect(result.presets).toHaveLength(3)
+    expect(result.presets.every((preset) => preset.id !== '4')).toBe(true)
+  })
+
   it('should handle pagination offset', async () => {
     const firstPage = await fetchPresetData(0, 2, [], '', [], 'inclusive', false, false, 0)
     const secondPage = await fetchPresetData(2, 2, [], '', [], 'inclusive', false, false, 0)
@@ -423,5 +459,26 @@ describe('fetchPresetData', () => {
     expect(firstPage.presets.length).toBe(2)
     expect(secondPage.presets.length).toBe(1)
     expect(firstPage.presets[0].id).not.toBe(secondPage.presets[0].id)
+  })
+
+  it('should rename and merge tags globally', async () => {
+    const updated = await renameTagGlobally('bass', 'low-end')
+
+    expect(updated).toBeGreaterThan(0)
+
+    const presets = await getPresets()
+    const bassPresets = presets.filter((preset) => preset.name === 'Bass Lead')
+    expect(bassPresets[0].tags).toContain('low-end')
+    expect(bassPresets[0].tags).not.toContain('bass')
+  })
+
+  it('should delete tags globally', async () => {
+    const updated = await deleteTagGlobally('drum')
+
+    expect(updated).toBeGreaterThan(0)
+
+    const presets = await getPresets()
+    const drumPreset = presets.find((preset) => preset.name === 'Drum Kit')
+    expect(drumPreset?.tags).not.toContain('drum')
   })
 })

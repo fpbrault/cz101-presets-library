@@ -41,6 +41,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     setSelectedTags,
     favoritesOnly,
     setFavoritesOnly,
+    duplicatesOnly,
   } = useSearchFilter()
 
   const handleTagClick = (tag: string) => {
@@ -57,6 +58,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     selectedTags,
     filterMode,
     favoritesOnly,
+    duplicatesOnly,
     randomOrder: false,
   })
 
@@ -73,6 +75,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         favoritesOnly,
         false,
         0,
+        duplicatesOnly,
       )
       return result.presets
     },
@@ -83,7 +86,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 
   useEffect(() => {
     setCurrentBank(0)
-  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly])
+  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly, duplicatesOnly])
 
   useEffect(() => {
     const totalBanks = Math.max(1, Math.ceil(presets.length / 8))

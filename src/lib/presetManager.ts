@@ -536,7 +536,8 @@ export async function fetchPresetData(
   filterMode: 'inclusive' | 'exclusive',
   favoritesOnly: boolean,
   randomOrder: boolean,
-  seed: number
+  seed: number,
+  duplicatesOnly: boolean = false,
 ): Promise<{ presets: Preset[]; totalCount: number }> {
   const presets = (await getPresets()) ?? []
 
@@ -548,6 +549,7 @@ export async function fetchPresetData(
       selectedTags,
       filterMode,
       favoritesOnly,
+      duplicatesOnly,
       randomOrder,
       seed,
     },
@@ -866,6 +868,72 @@ export async function updatePreset(preset: Preset): Promise<void> {
 
 export async function deletePreset(id: string): Promise<void> {
   return presetDatabase.deletePreset(id)
+}
+
+function normalizeTagValue(tag: string): string {
+  return tag.trim().toLowerCase()
+}
+
+export async function renameTagGlobally(
+  sourceTag: string,
+  targetTag: string,
+): Promise<number> {
+  const source = normalizeTagValue(sourceTag)
+  const target = normalizeTagValue(targetTag)
+
+  if (!source || !target) {
+    return 0
+  }
+
+  const presets = await getPresets()
+  let updatedCount = 0
+
+  for (const preset of presets) {
+    const nextTags = Array.from(
+      new Set(
+        preset.tags.map((tag) => {
+          const normalized = normalizeTagValue(tag)
+          return normalized === source ? target : normalized
+        }),
+      ),
+    )
+
+    if (nextTags.join('|') !== preset.tags.map(normalizeTagValue).join('|')) {
+      await updatePreset({
+        ...preset,
+        tags: nextTags,
+      })
+      updatedCount += 1
+    }
+  }
+
+  return updatedCount
+}
+
+export async function deleteTagGlobally(tagToDelete: string): Promise<number> {
+  const target = normalizeTagValue(tagToDelete)
+  if (!target) {
+    return 0
+  }
+
+  const presets = await getPresets()
+  let updatedCount = 0
+
+  for (const preset of presets) {
+    const nextTags = preset.tags
+      .map(normalizeTagValue)
+      .filter((tag) => tag !== target)
+
+    if (nextTags.join('|') !== preset.tags.map(normalizeTagValue).join('|')) {
+      await updatePreset({
+        ...preset,
+        tags: Array.from(new Set(nextTags)),
+      })
+      updatedCount += 1
+    }
+  }
+
+  return updatedCount
 }
 
 export async function exportPresets(): Promise<string> {
