@@ -163,7 +163,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 className={`badge badge-lg font-bold capitalize badge-neutral ${
                   selectedTags.includes(tag) ? 'badge-primary' : ''
                 }`}
-                onPointerUp={() => handleTagClick(tag)}
+                onClick={() => handleTagClick(tag)}
               >
                 {tag} ({count})
               </div>
@@ -181,7 +181,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
             </div>
           </div>
           <Button
-            onPointerUp={() => setFavoritesOnly(!favoritesOnly)}
+            onClick={() => setFavoritesOnly(!favoritesOnly)}
             variant="accent"
             size="lg"
           >
@@ -194,11 +194,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
           {currentPresets.map((preset) => (
             <button
               key={preset.id}
-              onPointerUp={() => handleSelectPreset(preset)}
-              onTouchEnd={(event) => {
-                event.stopPropagation()
-                handleSelectPreset(preset)
-              }}
+              onClick={() => handleSelectPreset(preset)}
               className={
                 'h-full btn btn-lg text-xl md:text-2xl xl:text-4xl flex flex-col justify-between items-center uppercase break-all sm:break-normal' +
                 (currentPreset?.id === preset.id
@@ -216,11 +212,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         </div>
         <div className="flex flex-col w-full gap-4 max-w-48">
           <button
-            onPointerUp={handlePreviousBank}
-            onTouchEnd={(event) => {
-              event.stopPropagation()
-              handlePreviousBank()
-            }}
+            onClick={handlePreviousBank}
             disabled={currentBank === 0}
             className="flex-grow w-full text-2xl btn btn-lg btn-secondary"
           >
@@ -236,22 +228,14 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               </span>
             </div>
             <button
-              onPointerUp={handleOpenNumPad}
-              onTouchEnd={(event) => {
-                event.stopPropagation()
-                handleOpenNumPad()
-              }}
+              onClick={handleOpenNumPad}
               className="btn btn-square btn-xl btn-primary"
             >
               <FaMagnifyingGlass size={32} />
             </button>
           </div>
           <button
-            onPointerUp={handleNextBank}
-            onTouchEnd={(event) => {
-              event.stopPropagation()
-              handleNextBank()
-            }}
+            onClick={handleNextBank}
             disabled={(currentBank + 1) * 8 >= presets.length}
             className="flex-grow text-2xl btn btn-lg btn-secondary"
           >
@@ -273,11 +257,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               {[...Array(9).keys()].map((num) => (
                 <button
                   key={num + 1}
-                  onPointerUp={() => handleNumPadClick((num + 1).toString())}
-                  onTouchEnd={(event) => {
-                    event.stopPropagation()
-                    handleNumPadClick((num + 1).toString())
-                  }}
+                  onClick={() => handleNumPadClick((num + 1).toString())}
                   className="text-3xl btn btn-primary"
                   disabled={parseInt(bankInput + (num + 1), 10) > totalBanks}
                 >
@@ -285,43 +265,27 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 </button>
               ))}
               <button
-                onPointerUp={handleClearNumPad}
-                onTouchEnd={(event) => {
-                  event.stopPropagation()
-                  handleClearNumPad()
-                }}
+                onClick={handleClearNumPad}
                 className="btn btn-secondary"
               >
                 <FaX size={24} />
               </button>
               <button
                 disabled={parseInt(bankInput + '0', 10) > totalBanks}
-                onPointerUp={() => handleNumPadClick('0')}
-                onTouchEnd={(event) => {
-                  event.stopPropagation()
-                  handleNumPadClick('0')
-                }}
+                onClick={() => handleNumPadClick('0')}
                 className="text-3xl btn btn-primary"
               >
                 0
               </button>
               <button
-                onPointerUp={handleSelectBank}
-                onTouchEnd={(event) => {
-                  event.stopPropagation()
-                  handleSelectBank()
-                }}
+                onClick={handleSelectBank}
                 className="col-span-1 text-xl btn btn-primary"
               >
                 Select
               </button>
             </div>
             <button
-              onPointerUp={handleCloseNumPad}
-              onTouchEnd={(event) => {
-                event.stopPropagation()
-                handleCloseNumPad()
-              }}
+              onClick={handleCloseNumPad}
               className="mt-4 btn"
             >
               Close

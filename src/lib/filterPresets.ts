@@ -53,6 +53,15 @@ export function filterPresets(
     if (sorting.length === 0) return 0
     const { id, desc } = sorting[0]
     const order = desc ? -1 : 1
+
+    if (id === 'favorite') {
+      const aValue = a.favorite ? 1 : 0
+      const bValue = b.favorite ? 1 : 0
+      if (aValue < bValue) return -1 * order
+      if (aValue > bValue) return 1 * order
+      return 0
+    }
+
     if (a[id] < b[id]) return -1 * order
     if (a[id] > b[id]) return 1 * order
     return 0

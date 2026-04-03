@@ -9,12 +9,18 @@ import React, {
 import { fetchPresetData, Preset, updatePreset } from '@/lib/presetManager'
 import {
   FaPlusSquare,
-  FaSort,
   FaSortUp,
   FaSortDown,
+  FaRandom,
   FaHeart,
   FaRegHeart,
   FaTimes,
+  FaCheckCircle,
+  FaRegDotCircle,
+  FaTrash,
+  FaTags,
+  FaChevronDown,
+  FaChevronUp,
 } from 'react-icons/fa'
 import useDragDrop from '@/useDragDrop'
 import {
@@ -25,15 +31,16 @@ import {
   flexRender,
   SortingState,
   OnChangeFn,
+  ColumnResizeMode,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useSearchFilter } from '@/SearchFilterContext'
 import {
   keepPreviousData,
   useInfiniteQuery,
+  useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import Button from '@/components/Button'
 import { getPresetQueryKey } from '@/lib/presetQueryKey'
 
 interface PresetListProps {
@@ -42,6 +49,16 @@ interface PresetListProps {
 }
 
 const fetchSize = 50
+
+const getColumnStyle = (size: number) => ({
+  width: size,
+  minWidth: size,
+  maxWidth: size,
+  flex: `0 0 ${size}px`,
+})
+
+const isCompactColumn = (columnId: string) =>
+  columnId === 'number' || columnId === 'favorite'
 
 const TagsCell = memo(({ tags }: { tags: string[] }) => (
   <div className="flex gap-2">
@@ -53,7 +70,6 @@ const TagsCell = memo(({ tags }: { tags: string[] }) => (
   </div>
 ))
 
-// TODO: IMPLEMENT RATING FEATURE
 // const RatingCell = memo(
 //   ({
 //     rating,
@@ -111,66 +127,160 @@ function PresetListTopBar(props: {
   searchTerm: string
   setSearchTerm: (arg0: string) => void
   totalDBRowCount: number
-  randomOrder: boolean
-  setRandomOrder: (arg0: boolean) => void
+  selectedTags: string[]
+  filterMode: 'inclusive' | 'exclusive'
+  onToggleFilterMode: () => void
+  onClearFilters: () => void
+  onToggleTag: (tag: string) => void
+  availableTags: [string, number][]
 }) {
+  const [isTagsPanelOpen, setIsTagsPanelOpen] = useState(false)
+
   return (
-    <div className="flex items-center justify-between bg-base-200">
-      <div className="relative inline-block">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={props.searchTerm}
-          onChange={(e) => props.setSearchTerm(e.target.value)}
-          className="pr-8 mx-4 my-2 input input-secondary input-md"
-        />
-        {props.searchTerm && (
+    <div className="relative border-b bg-base-200 border-base-content/10">
+      <div className="flex items-center justify-between">
+        <div className="relative inline-block">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={props.searchTerm}
+            onChange={(e) => props.setSearchTerm(e.target.value)}
+            className="pr-8 mx-4 my-2 input input-secondary input-md"
+          />
+          {props.searchTerm && (
+            <button
+              className="absolute text-gray-500 -translate-y-1/2 right-6 top-1/2 hover:text-gray-700"
+              onClick={() => props.setSearchTerm('')}
+            >
+              <FaTimes size={20} />
+            </button>
+          )}
+        </div>
+
+        <span>{props.totalDBRowCount} Presets Found</span>
+
+        <div className="flex items-center gap-2 mx-4 my-2">
           <button
-            className="absolute text-gray-500 -translate-y-1/2 right-6 top-1/2 hover:text-gray-700"
-            onClick={() => props.setSearchTerm('')}
+            className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
+              isTagsPanelOpen
+                ? 'btn-primary ring-2 ring-primary/40'
+                : 'btn-accent text-accent-content'
+            }`}
+            onClick={() => setIsTagsPanelOpen((open) => !open)}
+            aria-expanded={isTagsPanelOpen}
+            aria-label="Toggle tag filters"
           >
-            <FaTimes size={20} />
+            <FaTags size={14} />
+            Tag Filters
+            {props.selectedTags.length > 0 && (
+              <span className="badge badge-primary badge-sm">
+                {props.selectedTags.length} selected
+              </span>
+            )}
+            {isTagsPanelOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
           </button>
-        )}
+
+          <div
+            id="drop-area"
+            className="hidden p-2 border-2 border-gray-400 border-dashed lg:block hover:bg-base-300 bg-base-100"
+          >
+            <FaPlusSquare size={20} className="inline mr-2"></FaPlusSquare>
+            Drag and drop a .syx file or click here to add a new preset
+          </div>
+        </div>
       </div>
 
-      <span>{props.totalDBRowCount} Presets Found</span>
+      {isTagsPanelOpen && (
+        <>
+          <button
+            className="fixed inset-0 z-30 cursor-default bg-black/30"
+            onClick={() => setIsTagsPanelOpen(false)}
+            aria-label="Close tag filters"
+          />
+          <div className="absolute left-2 right-2 z-40 p-3 mt-2 border shadow-xl sm:left-4 sm:right-4 lg:left-auto lg:right-4 lg:w-[44rem] rounded-xl bg-base-100 border-base-content/20">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <h3 className="text-lg font-semibold">Tag Filters</h3>
+              <button
+                onClick={() => setIsTagsPanelOpen(false)}
+                className="btn btn-sm btn-ghost"
+                aria-label="Close tags panel"
+              >
+                <FaTimes size={14} />
+              </button>
+            </div>
 
-      <Button
-        variant="secondary"
-        className="mx-4 my-2"
-        onClick={() => props.setRandomOrder(!props.randomOrder)}
-      >
-        {props.randomOrder ? 'Disable Random Order' : 'Enable Random Order'}
-      </Button>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <button
+                onClick={props.onToggleFilterMode}
+                className="btn btn-sm btn-info"
+                title={
+                  props.filterMode === 'exclusive'
+                    ? 'Matching any selected tag'
+                    : 'Matching all selected tags'
+                }
+              >
+                {props.filterMode === 'exclusive' ? (
+                  <>
+                    Match Any
+                    <FaRegDotCircle size={14} />
+                  </>
+                ) : (
+                  <>
+                    Match All
+                    <FaCheckCircle size={14} />
+                  </>
+                )}
+              </button>
+              <button
+                onClick={props.onClearFilters}
+                className="btn btn-sm btn-error"
+                disabled={props.selectedTags.length === 0}
+              >
+                Clear
+                <FaTrash size={12} />
+              </button>
+            </div>
 
-      <div
-        id="drop-area"
-        className="p-2 mx-4 my-2 border-2 border-gray-400 border-dashed hover:bg-base-300 bg-base-100"
-      >
-        <FaPlusSquare size={20} className="inline mr-2"></FaPlusSquare>Drag and
-        drop a .syx file or click here to add a new preset
-      </div>
+            <div className="max-h-[50vh] overflow-y-auto pr-1">
+              <div className="flex flex-wrap items-center gap-2">
+                {props.availableTags.map(([tag, count]) => {
+                  const selected = props.selectedTags.includes(tag)
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => props.onToggleTag(tag)}
+                      className={`badge badge-lg h-10 px-4 text-sm font-semibold capitalize ${
+                        selected
+                          ? 'badge-primary'
+                          : 'badge-neutral border-base-content/20'
+                      }`}
+                    >
+                      {tag} ({count})
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {props.selectedTags.length > 0 && (
+        <div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto">
+          {props.selectedTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => props.onToggleTag(tag)}
+              className="badge badge-primary badge-lg h-8 capitalize"
+              title="Tap to remove"
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
-}
-
-const shuffleArray = (array: any[], seed: number) => {
-  let m = array.length,
-    t,
-    i
-  while (m) {
-    i = Math.floor(random(seed++) * m--)
-    t = array[m]
-    array[m] = array[i]
-    array[i] = t
-  }
-  return array
-}
-
-const random = (seed: number) => {
-  const x = Math.sin(seed++) * 10000
-  return x - Math.floor(x)
 }
 
 const PresetList: React.FC<PresetListProps> = ({
@@ -184,7 +294,10 @@ const PresetList: React.FC<PresetListProps> = ({
   const {
     searchTerm,
     selectedTags,
+    setSelectedTags,
     filterMode,
+    setFilterMode,
+    favoritesOnly,
     setSearchTerm,
     sorting,
     setSorting,
@@ -192,12 +305,22 @@ const PresetList: React.FC<PresetListProps> = ({
     setRandomOrder,
   } = useSearchFilter()
   const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now())
+  const [columnResizeMode] = useState<ColumnResizeMode>('onChange')
 
   useEffect(() => {
     if (randomOrder) {
       setShuffleSeed(Date.now())
+      if (sorting.length > 0) {
+        setSorting([])
+      }
     }
-  }, [randomOrder])
+  }, [randomOrder, setSorting, sorting.length])
+
+  const effectiveSorting = useMemo<SortingState>(
+    () => (sorting.length > 0 ? sorting : [{ id: 'name', desc: false }]),
+    [sorting],
+  )
+  const favoriteSortEnabled = sorting[0]?.id === 'favorite'
 
   const fetchData = async (
     start: number,
@@ -207,11 +330,11 @@ const PresetList: React.FC<PresetListProps> = ({
     const result = await fetchPresetData(
       start,
       size,
-      sorting,
+      randomOrder ? [] : sorting,
       searchTerm,
       selectedTags,
       filterMode,
-      false, // Add the missing favoritesOnly argument
+      favoritesOnly,
       randomOrder,
       shuffleSeed,
     )
@@ -221,15 +344,23 @@ const PresetList: React.FC<PresetListProps> = ({
   const queryKey = useMemo(
     () =>
       getPresetQueryKey({
-        sorting,
+        sorting: randomOrder ? [] : effectiveSorting,
         searchTerm,
         selectedTags,
         filterMode,
-        favoritesOnly: false,
+        favoritesOnly,
         randomOrder,
         shuffleSeed,
       }),
-    [sorting, searchTerm, selectedTags, filterMode, randomOrder, shuffleSeed],
+    [
+      effectiveSorting,
+      searchTerm,
+      selectedTags,
+      filterMode,
+      favoritesOnly,
+      randomOrder,
+      shuffleSeed,
+    ],
   )
 
   const updateQueryData = useCallback(
@@ -293,19 +424,11 @@ const PresetList: React.FC<PresetListProps> = ({
   const columns = useMemo<ColumnDef<Preset>[]>(
     () => [
       {
-        header: 'No',
-        accessorKey: 'number',
-        size: 20,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center h-4">
-            {row.index + 1}
-          </div>
-        ),
-      },
-      {
-        header: 'Favorite',
+        header: () => <FaHeart size={18} className="text-primary" />,
         accessorKey: 'favorite',
-        size: 5,
+        enableSorting: false,
+        size: 96,
+        minSize: 112,
         cell: ({ row }) => (
           <button
             onClick={(e) => {
@@ -326,17 +449,42 @@ const PresetList: React.FC<PresetListProps> = ({
       },
       {
         header: 'Name',
-        size: 500,
+        size: 360,
         accessorKey: 'name',
       },
       {
         header: 'Author',
         accessorKey: 'author',
+        size: 220,
       },
       {
         header: 'Tags',
         accessorKey: 'tags',
+        size: 320,
         cell: ({ row }) => <TagsCell tags={row.original.tags} />,
+      },
+      {
+        id: 'randomOrder',
+        header: () => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setRandomOrder(!randomOrder)
+            }}
+            className={`btn btn-ghost btn-sm ${
+              randomOrder ? 'text-primary' : 'opacity-70'
+            }`}
+            title={randomOrder ? 'Disable random order' : 'Enable random order'}
+            aria-label={
+              randomOrder ? 'Disable random order' : 'Enable random order'
+            }
+          >
+            <FaRandom size={16} />
+          </button>
+        ),
+        enableSorting: false,
+        size: 112,
+        cell: () => null,
       },
       /*     {
         header: 'Rating',
@@ -350,8 +498,66 @@ const PresetList: React.FC<PresetListProps> = ({
         ),
       }, */
     ],
-    [handleSetFavorite, handleSetRating],
+    [handleSetFavorite, handleSetRating, randomOrder, setRandomOrder],
   )
+
+  const { data: tagsData } = useQuery({
+    queryKey: ['presets', 'filter-panel-tags'],
+    queryFn: async () => {
+      const result = await fetchPresetData(
+        0,
+        Number.MAX_SAFE_INTEGER,
+        [],
+        '',
+        [],
+        'inclusive',
+        false,
+        false,
+        0,
+      )
+      return result.presets
+    },
+    refetchOnWindowFocus: false,
+  })
+
+  const availableTags = useMemo<[string, number][]>(() => {
+    const presets = tagsData ?? []
+    return Object.entries(
+      presets
+        .map((preset) => preset.tags.map((tag) => tag.toLowerCase()))
+        .flat()
+        .reduce(
+          (acc, tag) => {
+            acc[tag] = (acc[tag] ?? 0) + 1
+            return acc
+          },
+          {} as Record<string, number>,
+        ),
+    ).sort((a, b) => b[1] - a[1])
+  }, [tagsData])
+
+  const handleToggleFilterMode = useCallback(() => {
+    if (filterMode === 'inclusive') {
+      setFilterMode('exclusive')
+    } else {
+      setFilterMode('inclusive')
+    }
+  }, [filterMode, setFilterMode])
+
+  const handleToggleTag = useCallback(
+    (tag: string) => {
+      if (selectedTags.includes(tag)) {
+        setSelectedTags(selectedTags.filter((selectedTag) => selectedTag !== tag))
+      } else {
+        setSelectedTags([...selectedTags, tag])
+      }
+    },
+    [selectedTags, setSelectedTags],
+  )
+
+  const handleClearFilters = useCallback(() => {
+    setSelectedTags([])
+  }, [setSelectedTags])
 
   const { data, fetchNextPage, isFetching, refetch } = useInfiniteQuery<{
     presets: Preset[]
@@ -360,7 +566,7 @@ const PresetList: React.FC<PresetListProps> = ({
     queryKey,
     queryFn: async ({ pageParam = 0 }) => {
       const start = (pageParam as number) * fetchSize
-      const fetchedData = await fetchData(start, fetchSize, sorting) //pretend api call
+      const fetchedData = await fetchData(start, fetchSize, effectiveSorting) //pretend api call
       return fetchedData
     },
     initialPageParam: 0,
@@ -374,13 +580,8 @@ const PresetList: React.FC<PresetListProps> = ({
   }, [searchTerm, selectedTags, filterMode, refetch])
 
   const flatData = React.useMemo(() => {
-    let flatData =
-      data?.pages?.flatMap((page: { presets: any }) => page.presets) ?? []
-    if (randomOrder) {
-      flatData = shuffleArray(flatData, shuffleSeed)
-    }
-    return flatData
-  }, [data, randomOrder, shuffleSeed])
+    return data?.pages?.flatMap((page: { presets: any }) => page.presets) ?? []
+  }, [data])
 
   const totalDBRowCount = data?.pages?.[0]?.totalCount ?? 0
   const totalFetched = flatData.length
@@ -473,9 +674,13 @@ const PresetList: React.FC<PresetListProps> = ({
   const table = useReactTable({
     data: flatData,
     columns,
-    state: {
-      sorting,
+    defaultColumn: {
+      minSize: 112,
     },
+    state: {
+      sorting: randomOrder ? [] : effectiveSorting,
+    },
+    columnResizeMode,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     manualSorting: true,
@@ -514,57 +719,121 @@ const PresetList: React.FC<PresetListProps> = ({
         totalDBRowCount={totalDBRowCount}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        randomOrder={randomOrder}
-        setRandomOrder={setRandomOrder}
+        selectedTags={selectedTags}
+        filterMode={filterMode}
+        onToggleFilterMode={handleToggleFilterMode}
+        onClearFilters={handleClearFilters}
+        onToggleTag={handleToggleTag}
+        availableTags={availableTags}
       ></PresetListTopBar>
       <div
-        className="max-h-full overflow-auto"
+        className="relative max-h-full overflow-auto"
         onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)}
         ref={tableContainerRef}
       >
-        <table className="relative table table-lg">
-          <thead className="sticky top-0 bg-base-300">
+        <table
+          className="table table-lg min-w-full border-separate border-spacing-0"
+          style={{ width: table.getTotalSize() }}
+        >
+          <thead className="sticky top-0 z-20 bg-base-300 shadow-sm">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr
                 key={headerGroup.id}
-                className="text-xl w-full fle justiy-between"
+                className="flex w-full text-xl group"
               >
                 {headerGroup.headers.map((column) => (
                   <th
                     key={column.id}
-                    style={{ width: column.column.getSize() + 'px' }}
-                    onClick={column.column.getToggleSortingHandler()}
-                    className={`${
-                      column.column.getIsSorted()
-                        ? column.column.getIsSorted() === 'desc'
-                          ? 'font-bold text-primary'
-                          : 'font-bold text-primary'
-                        : 'font-normal'
-                    }`}
+                    style={getColumnStyle(column.column.getSize())}
+                    onClick={
+                      column.column.id === 'favorite'
+                        ? () => {
+                            if (randomOrder) {
+                              setRandomOrder(false)
+                            }
+                            if (favoriteSortEnabled) {
+                              setSorting([])
+                            } else {
+                              setSorting([{ id: 'favorite', desc: true }])
+                            }
+                          }
+                        : column.column.getCanSort()
+                        ? (e) => {
+                            if (randomOrder) {
+                              setRandomOrder(false)
+                            }
+                            column.column.getToggleSortingHandler()?.(e)
+                          }
+                        : undefined
+                    }
+                    className="relative bg-base-300"
                   >
-                    {flexRender(
-                      column.column.columnDef.header,
-                      column.getContext(),
-                    )}
-                    <span>
-                      {column.column.getIsSorted() ? (
-                        column.column.getIsSorted() === 'desc' ? (
-                          <FaSortDown className="inline" />
-                        ) : (
-                          <FaSortUp className="inline" />
+                    <div
+                      className={`flex items-center py-3 ${
+                        isCompactColumn(column.column.id)
+                          ? 'justify-center gap-1 px-2'
+                          : 'gap-1 px-4'
+                      } ${
+                        column.column.id === 'favorite'
+                          ? favoriteSortEnabled
+                            ? 'font-bold text-primary'
+                            : 'font-normal'
+                          : column.column.getIsSorted()
+                          ? 'font-bold text-primary'
+                          : 'font-normal'
+                      }`}
+                    >
+                      {column.column.id === 'favorite' ? (
+                        <>
+                          {favoriteSortEnabled ? (
+                            <FaHeart size={20} className="text-primary" />
+                          ) : (
+                            <FaRegHeart size={20} className="opacity-70" />
+                          )}
+                        </>
+                      ) : column.column.id === 'randomOrder' ? (
+                        flexRender(
+                          column.column.columnDef.header,
+                          column.getContext(),
                         )
                       ) : (
-                        <FaSort className="inline" />
+                        <>
+                          {flexRender(
+                            column.column.columnDef.header,
+                            column.getContext(),
+                          )}
+                          {!randomOrder && column.column.getIsSorted() && (
+                            <span>
+                              {column.column.getIsSorted() === 'desc' ? (
+                                <FaSortDown className="inline" />
+                              ) : (
+                                <FaSortUp className="inline" />
+                              )}
+                            </span>
+                          )}
+                        </>
                       )}
-                    </span>
+                    </div>
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={() => column.column.resetSize()}
+                      onMouseDown={column.getResizeHandler()}
+                      onTouchStart={column.getResizeHandler()}
+                      className={`absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none select-none hover:bg-primary transition-opacity ${
+                        column.column.getIsResizing()
+                          ? 'bg-primary opacity-100'
+                          : 'bg-base-content/20 opacity-0 group-hover:opacity-100'
+                      }`}
+                    />
                   </th>
                 ))}
               </tr>
             ))}
           </thead>
           <tbody
+            className="relative block w-full"
             style={{
-              width: '100%',
+              width: table.getTotalSize(),
               height: `${rowVirtualizer.getTotalSize()}px`,
               position: 'relative',
             }}
@@ -590,15 +859,20 @@ const PresetList: React.FC<PresetListProps> = ({
                       display: 'flex',
                       position: 'absolute',
                       transform: `translateY(${virtualRow.start}px)`,
-                      width: '100%',
+                      width: table.getTotalSize(),
                     }}
                     onClick={() => handleSelectPreset(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
+                        className={
+                          isCompactColumn(cell.column.id)
+                            ? 'px-2 py-2 text-center'
+                            : 'px-4 py-2'
+                        }
                         style={{
-                          width: cell.column.getSize(),
+                          ...getColumnStyle(cell.column.getSize()),
                         }}
                       >
                         {flexRender(

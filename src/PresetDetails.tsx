@@ -1,5 +1,6 @@
 // src/PresetDetails.tsx
 import React, { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { v4 as uuidv4 } from 'uuid'
 import { Preset, updatePreset } from '@/lib/presetManager'
 import { buf2hex } from '@/utils'
@@ -30,6 +31,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
   setEditMode,
   setShowDeleteModal,
 }) => {
+  const queryClient = useQueryClient()
   const [formData, setFormData] = useState<PresetFormData>({
     name: '',
     filename: '',
@@ -74,6 +76,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
     }
 
     await updatePreset(updatedPreset)
+    await queryClient.invalidateQueries({ queryKey: ['presets'] })
     onPresetUpdated(updatedPreset)
     setEditMode(false)
   }

@@ -7,7 +7,6 @@ import {
   savePreset,
 } from '@/lib/presetManager'
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
-import FilterPanel from '@/FilterPanel'
 import PresetDetails from '@/PresetDetails'
 import PresetList from '@/PresetList'
 import OptionPanel from '@/OptionPanel'
@@ -108,7 +107,6 @@ export default function PresetManager() {
                 handleToggleAutoSend={handleToggleAutoSend}
               ></OptionPanel>
               <SettingsPanel></SettingsPanel>
-              <FilterPanel></FilterPanel>
             </div>
             <PresetList
               handleSelectPreset={handleSelectPreset}
