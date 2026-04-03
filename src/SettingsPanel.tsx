@@ -5,6 +5,7 @@ import { useRefresh } from './RefreshContext'
 
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
+import Button from './components/Button'
 
 const SettingsPanel: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -52,12 +53,9 @@ const SettingsPanel: React.FC = () => {
 
   return (
     <>
-      <button
-        onClick={handleOpenModal}
-        className="mt-2 btn btn-lg btn-secondary"
-      >
+      <Button onClick={handleOpenModal} variant="secondary">
         <FaCog size={16} /> Settings
-      </button>
+      </Button>
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -68,9 +66,9 @@ const SettingsPanel: React.FC = () => {
                 <div className="label">
                   <span className="label-text">Export Database</span>
                 </div>
-                <button onClick={handleExport} className="btn btn-primary">
+                <Button onClick={handleExport} variant="primary">
                   Export
-                </button>
+                </Button>
               </label>
               <label className="w-full max-w-xs form-control">
                 <div className="label">
@@ -84,9 +82,9 @@ const SettingsPanel: React.FC = () => {
                   className="w-full max-w-xs file-input file-input-bordered file-input-secondary"
                 />
               </label>
-              <button onClick={handleCloseModal} className="btn">
+              <Button variant="error" onClick={handleCloseModal}>
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>

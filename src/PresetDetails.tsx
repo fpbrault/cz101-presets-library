@@ -3,6 +3,7 @@ import React from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { Preset } from './lib/presetManager'
 import { buf2hex } from './utils'
+import Button from './components/Button'
 
 interface PresetDetailsProps {
   currentPreset: Preset | null
@@ -38,27 +39,21 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
       <div className="flex gap-2">
         {editMode ? (
           <>
-            <button onClick={handleSave} className="btn btn-success">
+            <Button onClick={handleSave} variant="success">
               Save
-            </button>
-            <button onClick={handleCancel} className="btn btn-error">
+            </Button>
+            <Button onClick={handleCancel} variant="error">
               Cancel
-            </button>
+            </Button>
           </>
         ) : (
           <>
-            <button
-              className="btn btn-primary"
-              onClick={() => setEditMode(true)}
-            >
+            <Button variant="primary" onClick={() => setEditMode(true)}>
               Edit
-            </button>
-            <button
-              className="btn btn-error"
-              onClick={() => setShowDeleteModal(true)}
-            >
+            </Button>
+            <Button variant="error" onClick={() => setShowDeleteModal(true)}>
               Delete
-            </button>
+            </Button>
           </>
         )}
       </div>

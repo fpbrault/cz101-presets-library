@@ -7,13 +7,18 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['Raleway', ...defaultTheme.fontFamily.sans],
-        'performanceMode': ['Outfit', 'ui-sans-serif', 'system-ui']
-      }
+        sans: ['Raleway', ...defaultTheme.fontFamily.sans],
+        performanceMode: ['Outfit', 'ui-sans-serif', 'system-ui'],
+      },
     },
   },
+  safelist: [
+    {
+      pattern: /btn-.*/,
+    },
+  ],
   daisyui: {
-    themes: ['dracula'],
+    themes: ['dracula', 'cyberpunk'],
   },
   plugins: [require('daisyui')],
 }

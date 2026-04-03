@@ -36,6 +36,7 @@ import {
   QueryClientProvider,
   useInfiniteQuery,
 } from '@tanstack/react-query'
+import Button from './components/Button'
 
 interface PresetListProps {
   currentPreset: Preset | null
@@ -136,12 +137,13 @@ function PresetListTopBar(props: {
 
       <span>{props.totalDBRowCount} Presets Found</span>
 
-      <button
-        className="mx-4 my-2 btn btn-secondary"
+      <Button
+        variant="secondary"
+        className="mx-4 my-2"
         onClick={() => props.setRandomOrder(!props.randomOrder)}
       >
         {props.randomOrder ? 'Disable Random Order' : 'Enable Random Order'}
-      </button>
+      </Button>
 
       <div
         id="drop-area"

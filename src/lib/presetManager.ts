@@ -82,6 +82,7 @@ export async function backupPresets(portName: string): Promise<void> {
 
 export function formatPresetData(
   data: Uint8Array,
+  channel: number,
   targetSlot?: number,
 ): Uint8Array {
   if (data.slice(0, 7).toString() === '240,68,0,0,112,33,0') {
@@ -103,6 +104,13 @@ export function formatPresetData(
     data = new Uint8Array([...data.slice(0, 5), 32, 96, ...data.slice(6)])
   }
 
+  // set the channel
+  if (channel > 0 && channel < 17) {
+    data[4] = 111 + channel
+  } else {
+    data[4] = 111
+  }
+
   return data
 }
 
@@ -110,6 +118,7 @@ export async function restorePresets(
   portName: string,
   targetSlot?: number,
   filename?: string,
+  channel: number =1,
 ): Promise<void> {
   const output = WebMidi.getOutputByName(portName) as Output
   const filePaths = filename
@@ -131,7 +140,7 @@ export async function restorePresets(
 
       const target =
         targetSlot !== undefined ? targetSlot : filePaths.indexOf(filePath)
-      const formattedData = formatPresetData(new Uint8Array(data), target)
+      const formattedData = formatPresetData(new Uint8Array(data), channel, target)
       output.sendSysex([], formattedData.slice(1, -1))
       console.log(
         `Preset from ${filePath} restored to slot ${target + 1} successfully.`,
@@ -146,11 +155,13 @@ export async function restorePresets(
 export async function restoreToBuffer(
   portName: string,
   filename: string,
+  channel: number = 1,
 ): Promise<void> {
   const output = WebMidi.getOutputByName(portName) as Output
   if (fs.existsSync(filename)) {
     const data = fs.readFileSync(filename)
-    const formattedData = formatPresetData(new Uint8Array(data))
+    const formattedData = formatPresetData(new Uint8Array(data), channel)
+    console.log('Formatted Data:', formattedData)
     output.sendSysex([], formattedData.slice(1, -1))
     console.log(`Preset from ${filename} restored to buffer successfully.`)
     await new Promise((resolve) => setTimeout(resolve, 100))
@@ -245,6 +256,7 @@ const random = (seed: number) => {
 export async function restorePresetToBuffer(
   preset: Preset,
   portName: string,
+  channel: number = 1,
 ): Promise<void> {
   const output = WebMidi.getOutputByName(portName) as Output
 
@@ -252,7 +264,8 @@ export async function restorePresetToBuffer(
     throw new Error('Output not ready')
   }
 
-  const formattedData = formatPresetData(preset.sysexData)
+  const formattedData = formatPresetData(preset.sysexData, channel)
+  console.log('Formatted Data:', formattedData)
   output.sendSysex([], formattedData.slice(1, -1))
   console.log(`Preset from ${preset.filename} restored to buffer successfully.`)
   await new Promise((resolve) => setTimeout(resolve, 100))

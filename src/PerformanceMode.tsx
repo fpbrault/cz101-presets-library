@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { fetchPresetData, Preset } from './lib/presetManager'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
 import { useSearchFilter } from './SearchFilterContext'
+import Button from './components/Button'
 
 type PerformanceModeProps = {
   currentPreset: Preset | null
@@ -16,6 +17,16 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
   const [presets, setPresets] = useState<Preset[]>([])
   const [isNumPadOpen, setIsNumPadOpen] = useState(false)
   const [bankInput, setBankInput] = useState('')
+
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen()
+    } else {
+      document.exitFullscreen()
+    }
+  }
 
   const {
     searchTerm,
@@ -45,6 +56,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         selectedTags,
         filterMode,
         favoritesOnly,
+        false,
+        0,
       )
 
       setPresets(data.presets)
@@ -91,48 +104,58 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
   const totalBanks = Math.ceil(presets.length / 8)
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 p-2">
-      <div className="flex items-center justify-between h-24 gap-4 ">
-        <div className="flex flex-wrap content-start w-1/2 h-24 gap-2 overflow-auto">
-          Filters:
-          {Object.entries(
-            presets
-              .map((preset) => preset.tags.map((tag) => tag.toLowerCase()))
-              .flat()
-              .reduce(
-                (acc, tag) => {
-                  if (acc[tag]) {
-                    acc[tag]++
-                  } else {
-                    acc[tag] = 1
-                  }
-                  return acc
-                },
-                {} as Record<string, number>,
-              ),
-          ).map(([tag, count]) => (
-            <div
-              key={tag}
-              className={`badge badge-lg font-bold capitalize badge-neutral ${
-                selectedTags.includes(tag) ? 'badge-primary' : ''
-              }`}
-              onPointerUp={() => handleTagClick(tag)}
-            >
-              {tag} ({count})
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-center w-full h-full p-4 rounded-md shadow-md bg-base-300 max-w-96">
-          <span className="ml-2 text-2xl font-bold font-performanceMode">
-            {currentPreset?.number} | {currentPreset?.name || 'None'}
-          </span>
-        </div>
-        <button
-          onPointerUp={() => setFavoritesOnly(!favoritesOnly)}
-          className={`btn btn-lg btn-accent`}
-        >
-          {favoritesOnly ? 'Show All' : 'Show Favorites'}
+    <div
+      ref={containerRef}
+      data-theme="cyberpunk"
+      className="flex flex-col w-full h-full gap-4 p-2"
+    >
+      <div className="flex items-center justify-between h-24 gap-4">
+        <button onClick={toggleFullscreen} className="btn btn-primary">
+          Toggle Fullscreen
         </button>
+        <div className="flex items-center justify-between h-24 gap-4 ">
+          <div className="flex flex-wrap content-start w-1/2 h-24 gap-2 overflow-auto">
+            Filters:
+            {Object.entries(
+              presets
+                .map((preset) => preset.tags.map((tag) => tag.toLowerCase()))
+                .flat()
+                .reduce(
+                  (acc, tag) => {
+                    if (acc[tag]) {
+                      acc[tag]++
+                    } else {
+                      acc[tag] = 1
+                    }
+                    return acc
+                  },
+                  {} as Record<string, number>,
+                ),
+            ).map(([tag, count]) => (
+              <div
+                key={tag}
+                className={`badge badge-lg font-bold capitalize badge-neutral ${
+                  selectedTags.includes(tag) ? 'badge-primary' : ''
+                }`}
+                onPointerUp={() => handleTagClick(tag)}
+              >
+                {tag} ({count})
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-center w-full h-full p-4 rounded-md shadow-md bg-base-300 max-w-96">
+            <span className="ml-2 text-2xl font-bold font-performanceMode">
+              {currentPreset?.number} | {currentPreset?.name || 'None'}
+            </span>
+          </div>
+          <Button
+            onPointerUp={() => setFavoritesOnly(!favoritesOnly)}
+            variant="accent"
+            size="lg"
+          >
+            {favoritesOnly ? 'Show All' : 'Show Favorites'}
+          </Button>
+        </div>
       </div>
       <div className="flex h-full gap-4 pb-16">
         <div className="grid flex-grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">

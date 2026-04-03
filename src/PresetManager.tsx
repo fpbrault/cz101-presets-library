@@ -17,6 +17,7 @@ import OptionPanel from './OptionPanel'
 import SettingsPanel from './SettingsPanel'
 import { useRefresh } from './RefreshContext'
 import PerformanceMode from './PerformanceMode'
+import Button from './components/Button'
 
 export default function PresetManager() {
   const [editMode, setEditMode] = useState(false)
@@ -39,6 +40,10 @@ export default function PresetManager() {
   const [selectedMidiPort, setSelectedMidiPort] = useState<string>(
     loadFromLocalStorage('selectedMidiPort', ''),
   )
+  const [selectedMidiChannel, setSelectedMidiChannel] = useState<number>(
+    loadFromLocalStorage('selectedMidiChannel', 1),
+  )
+
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const { refreshPresets, triggerRefresh } = useRefresh()
 
@@ -137,7 +142,7 @@ export default function PresetManager() {
     setCurrentPreset(preset)
 
     if (autoSend && preset && selectedMidiPort) {
-      restorePresetToBuffer(preset, selectedMidiPort)
+      restorePresetToBuffer(preset, selectedMidiPort, selectedMidiChannel)
     }
   }
 
@@ -149,7 +154,11 @@ export default function PresetManager() {
 
   const handleSendCurrentPreset = () => {
     if (currentPreset && selectedMidiPort) {
-      restorePresetToBuffer(currentPreset, selectedMidiPort)
+      restorePresetToBuffer(
+        currentPreset,
+        selectedMidiPort,
+        selectedMidiChannel,
+      )
     }
   }
 
@@ -174,20 +183,23 @@ export default function PresetManager() {
         <>
           <div className="flex flex-row h-full overflow-hidden">
             <div className="flex flex-col w-64 h-full gap-2 p-4 bg-base-200 min-w-64">
-              <button
-                className=" btn btn-secondary btn-lg"
+              <Button
+                variant="secondary"
+                size="lg"
                 onClick={() => setPerformanceMode(true)}
               >
                 Performance Mode
-              </button>
+              </Button>
               <OptionPanel
                 handleSavePreset={handleSavePreset}
                 handleSendCurrentPreset={handleSendCurrentPreset}
                 autoSend={autoSend}
                 midiPorts={midiPorts}
                 selectedMidiPort={selectedMidiPort}
+                selectedMidiChannel={selectedMidiChannel}
                 handleToggleAutoSend={handleToggleAutoSend}
                 setSelectedMidiPort={setSelectedMidiPort}
+                setSelectedMidiChannel={setSelectedMidiChannel}
               ></OptionPanel>
               <SettingsPanel></SettingsPanel>
               <FilterPanel presets={presets}></FilterPanel>
@@ -213,18 +225,18 @@ export default function PresetManager() {
                 <h2 className="mb-4 text-xl">Confirm Delete</h2>
                 <p>Are you sure you want to delete this preset?</p>
                 <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    className="btn btn-error"
+                  <Button
+                    variant="error"
                     onClick={() => handleDeletePreset(currentPreset?.id || '')}
                   >
                     Delete
-                  </button>
-                  <button
-                    className="btn btn-secondary"
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={() => setShowDeleteModal(false)}
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
 import { saveToLocalStorage } from './utils'
+import Button from './components/Button'
 
 interface OptionPanelProps {
   autoSend: boolean
   midiPorts: string[]
   selectedMidiPort: string
+  selectedMidiChannel: number
   handleToggleAutoSend: () => void
   handleSendCurrentPreset: () => void
   setSelectedMidiPort: (port: string) => void
+  setSelectedMidiChannel: (channel: number) => void
   handleSavePreset: (slot: number) => void
 }
 
@@ -15,9 +18,11 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
   autoSend,
   midiPorts,
   selectedMidiPort,
+  selectedMidiChannel,
   handleSendCurrentPreset,
   handleToggleAutoSend,
   setSelectedMidiPort,
+  setSelectedMidiChannel,
   handleSavePreset,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -28,12 +33,9 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
   return (
     <>
       <div className="flex flex-col gap-2">
-        <button
-          onClick={handleSendCurrentPreset}
-          className="btn btn-lg btn-primary"
-        >
+        <Button onClick={handleSendCurrentPreset} variant="primary">
           Send Preset
-        </button>
+        </Button>
         <div className="form-control w-52">
           <label className="cursor-pointer label">
             <span className="label-text">Auto Send</span>
@@ -59,9 +61,24 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
             </option>
           ))}
         </select>
-        <button onClick={handleOpenModal} className="btn btn-lg btn-accent">
+        <select
+          className="select select-bordered"
+          value={selectedMidiChannel}
+          onChange={(e) => {
+            const channel = parseInt(e.target.value, 10)
+            setSelectedMidiChannel(channel)
+            saveToLocalStorage('selectedMidiChannel', channel)
+          }}
+        >
+          {Array.from({ length: 16 }, (_, i) => (
+            <option key={i + 1} value={i + 1}>
+              Channel {i + 1}
+            </option>
+          ))}
+        </select>
+        <Button onClick={handleOpenModal} variant="accent">
           Save Preset
-        </button>
+        </Button>
       </div>
 
       {isModalOpen && (
@@ -70,24 +87,22 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
             <h2 className="mb-4 text-xl">Select Preset Slot</h2>
             <div className="grid grid-cols-4 gap-2">
               {Array.from({ length: 16 }, (_, i) => (
-                <button
+                <Button
                   key={i + 1}
                   onClick={() => {
                     handleSavePreset(i + 1)
                     handleCloseModal()
                   }}
-                  className="text-2xl font-bold btn btn-primary btn-lg"
+                  variant="primary"
+                  className="text-2xl font-bold"
                 >
                   {i + 1}
-                </button>
+                </Button>
               ))}
             </div>
-            <button
-              onClick={handleCloseModal}
-              className="mt-4 btn btn-lg btn-error"
-            >
+            <Button onClick={handleCloseModal} variant="error" className="mt-4">
               Close
-            </button>
+            </Button>
           </div>
         </div>
       )}
