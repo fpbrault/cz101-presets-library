@@ -1,4 +1,4 @@
-import { Preset, PresetDatabase } from './presetManager'
+import { Preset, PresetDatabase } from '@/lib/presetManager'
 
 const DB_NAME = 'PresetDatabase'
 const STORE_NAME = 'presets'

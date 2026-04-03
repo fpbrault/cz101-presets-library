@@ -1,30 +1,24 @@
 import React, { useState } from 'react'
-import { saveToLocalStorage } from './utils'
-import Button from './components/Button'
+import { useMidiChannel } from '@/MidiChannelContext'
+import { useMidiPort } from '@/MidiPortContext'
+import { saveToLocalStorage } from '@/utils'
+import Button from '@/components/Button'
 
 interface OptionPanelProps {
   autoSend: boolean
-  midiPorts: string[]
-  selectedMidiPort: string
-  selectedMidiChannel: number
   handleToggleAutoSend: () => void
   handleSendCurrentPreset: () => void
-  setSelectedMidiPort: (port: string) => void
-  setSelectedMidiChannel: (channel: number) => void
   handleSavePreset: (slot: number) => void
 }
 
 const OptionPanel: React.FC<OptionPanelProps> = ({
   autoSend,
-  midiPorts,
-  selectedMidiPort,
-  selectedMidiChannel,
   handleSendCurrentPreset,
   handleToggleAutoSend,
-  setSelectedMidiPort,
-  setSelectedMidiChannel,
   handleSavePreset,
 }) => {
+  const { midiPorts, selectedMidiPort, setSelectedMidiPort } = useMidiPort()
+  const { selectedMidiChannel, setSelectedMidiChannel } = useMidiChannel()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleOpenModal = () => setIsModalOpen(true)

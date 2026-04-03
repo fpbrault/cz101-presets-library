@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { fetchPresetData, Preset } from './lib/presetManager'
+import { fetchPresetData, Preset } from '@/lib/presetManager'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
-import { useSearchFilter } from './SearchFilterContext'
-import Button from './components/Button'
+import { useMidiChannel } from '@/MidiChannelContext'
+import { useMidiPort } from '@/MidiPortContext'
+import { useSearchFilter } from '@/SearchFilterContext'
+import Button from '@/components/Button'
 
 type PerformanceModeProps = {
   currentPreset: Preset | null
@@ -13,6 +15,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
   currentPreset,
   handleSelectPreset,
 }) => {
+  const { selectedMidiChannel } = useMidiChannel()
+  const { selectedMidiPort } = useMidiPort()
   const [currentBank, setCurrentBank] = useState(0)
   const [presets, setPresets] = useState<Preset[]>([])
   const [isNumPadOpen, setIsNumPadOpen] = useState(false)
@@ -144,9 +148,15 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
             ))}
           </div>
           <div className="flex items-center justify-center w-full h-full p-4 rounded-md shadow-md bg-base-300 max-w-96">
-            <span className="ml-2 text-2xl font-bold font-performanceMode">
-              {currentPreset?.number} | {currentPreset?.name || 'None'}
-            </span>
+            <div className="flex flex-col">
+              <span className="ml-2 text-2xl font-bold font-performanceMode">
+                {currentPreset?.number} | {currentPreset?.name || 'None'}
+              </span>
+              <span className="ml-2 text-sm opacity-70">
+                {selectedMidiPort ? selectedMidiPort : 'No MIDI Port'} | Ch{' '}
+                {selectedMidiChannel}
+              </span>
+            </div>
           </div>
           <Button
             onPointerUp={() => setFavoritesOnly(!favoritesOnly)}

@@ -6,7 +6,7 @@ import React, {
   useCallback,
   memo,
 } from 'react'
-import { fetchPresetData, Preset, updatePreset } from './lib/presetManager'
+import { fetchPresetData, Preset, updatePreset } from '@/lib/presetManager'
 import {
   FaPlusSquare,
   FaSort,
@@ -18,7 +18,7 @@ import {
   FaStar,
   FaRegStar,
 } from 'react-icons/fa'
-import useDragDrop from './useDragDrop'
+import useDragDrop from '@/useDragDrop'
 import {
   useReactTable,
   ColumnDef,
@@ -29,14 +29,13 @@ import {
   OnChangeFn,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useSearchFilter } from './SearchFilterContext'
+import { useSearchFilter } from '@/SearchFilterContext'
 import {
   keepPreviousData,
-  QueryClient,
-  QueryClientProvider,
   useInfiniteQuery,
+  useQueryClient,
 } from '@tanstack/react-query'
-import Button from './components/Button'
+import Button from '@/components/Button'
 
 interface PresetListProps {
   currentPreset: Preset | null
@@ -179,6 +178,7 @@ const PresetList: React.FC<PresetListProps> = ({
 
   handleSelectPreset,
 }) => {
+  const queryClient = useQueryClient()
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -626,12 +626,4 @@ const PresetList: React.FC<PresetListProps> = ({
   )
 }
 
-const queryClient = new QueryClient()
-
-const PresetListWrapper: React.FC<PresetListProps> = (props) => (
-  <QueryClientProvider client={queryClient}>
-    <PresetList {...props} />
-  </QueryClientProvider>
-)
-
-export default PresetListWrapper
+export default PresetList

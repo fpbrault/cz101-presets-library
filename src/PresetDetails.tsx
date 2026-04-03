@@ -1,9 +1,9 @@
 // src/PresetDetails.tsx
 import React from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { Preset } from './lib/presetManager'
-import { buf2hex } from './utils'
-import Button from './components/Button'
+import { Preset } from '@/lib/presetManager'
+import { buf2hex } from '@/utils'
+import Button from '@/components/Button'
 
 interface PresetDetailsProps {
   currentPreset: Preset | null

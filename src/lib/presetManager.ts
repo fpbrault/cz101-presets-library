@@ -1,7 +1,7 @@
 import { WebMidi, Output, Input } from 'webmidi'
 import natsort from 'natsort'
 //import { FakePresetDatabase } from './fakePresetDatabase'
-import { IndexedDbPresetDatabase } from './browserDatabase'
+import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
@@ -400,7 +400,7 @@ export type Preset = {
   rating?: 1 | 2 | 3 | 4 | 5
 }
 
-import { patches } from '../assets/cznames'
+import { patches } from '@/assets/cznames'
 
 // Helper to parse preset names from cznames.json
 async function parsePresetNames(): Promise<{

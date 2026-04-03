@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
-import { createPresetData, addPreset } from './lib/presetManager'
-import { useRefresh } from './RefreshContext'
+import { createPresetData, addPreset } from '@/lib/presetManager'
 
 const useDragDrop = () => {
-  const { triggerRefresh } = useRefresh()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).__TAURI__) {
@@ -25,7 +25,7 @@ const useDragDrop = () => {
                 for (const preset of presets) {
                   await addPreset(preset)
                 }
-                triggerRefresh()
+                await queryClient.invalidateQueries({ queryKey: ['presets'] })
               }
             }
           },
@@ -48,7 +48,7 @@ const useDragDrop = () => {
               for (const preset of presets) {
                 await addPreset(preset)
               }
-              triggerRefresh()
+              await queryClient.invalidateQueries({ queryKey: ['presets'] })
             }
           }
         }
@@ -84,7 +84,7 @@ const useDragDrop = () => {
             for (const preset of presets) {
               await addPreset(preset)
             }
-            triggerRefresh()
+            await queryClient.invalidateQueries({ queryKey: ['presets'] })
           }
         }
       }
@@ -107,7 +107,7 @@ const useDragDrop = () => {
               for (const preset of presets) {
                 await addPreset(preset)
               }
-              triggerRefresh()
+              await queryClient.invalidateQueries({ queryKey: ['presets'] })
             }
           }
         }
@@ -140,7 +140,7 @@ const useDragDrop = () => {
         document.body.appendChild(fileInput)
       }
     }
-  }, [triggerRefresh])
+  }, [queryClient])
 }
 
 export default useDragDrop

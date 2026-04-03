@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { FaCog } from 'react-icons/fa'
-import { exportPresets, importPresets } from './lib/presetManager'
-import { useRefresh } from './RefreshContext'
+import { exportPresets, importPresets } from '@/lib/presetManager'
 
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
-import Button from './components/Button'
+import Button from '@/components/Button'
 
 const SettingsPanel: React.FC = () => {
+  const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { triggerRefresh } = useRefresh()
 
   const handleOpenModal = () => setIsModalOpen(true)
   const handleCloseModal = () => setIsModalOpen(false)
@@ -45,9 +45,9 @@ const SettingsPanel: React.FC = () => {
     const file = event.target.files?.[0]
     if (file) {
       const data = await file.text()
-      importPresets(data)
+      await importPresets(data)
       handleCloseModal()
-      triggerRefresh()
+      await queryClient.invalidateQueries({ queryKey: ['presets'] })
     }
   }
 

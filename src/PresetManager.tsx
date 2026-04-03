@@ -1,28 +1,29 @@
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { WebMidi } from 'webmidi'
 import {
   Preset,
   restorePresetToBuffer,
   getIoportNames,
   deletePreset,
-  getPresets,
   updatePreset,
   savePreset,
-} from './lib/presetManager'
-import { loadFromLocalStorage, saveToLocalStorage } from './utils'
-import FilterPanel from './FilterPanel'
-import PresetDetails from './PresetDetails'
-import PresetList from './PresetList'
-import OptionPanel from './OptionPanel'
-import SettingsPanel from './SettingsPanel'
-import { useRefresh } from './RefreshContext'
-import PerformanceMode from './PerformanceMode'
-import Button from './components/Button'
+} from '@/lib/presetManager'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import FilterPanel from '@/FilterPanel'
+import PresetDetails from '@/PresetDetails'
+import PresetList from '@/PresetList'
+import OptionPanel from '@/OptionPanel'
+import SettingsPanel from '@/SettingsPanel'
+import { useMidiChannel } from '@/MidiChannelContext'
+import { useMidiPort } from '@/MidiPortContext'
+import PerformanceMode from '@/PerformanceMode'
+import Button from '@/components/Button'
 
 export default function PresetManager() {
+  const queryClient = useQueryClient()
   const [editMode, setEditMode] = useState(false)
   const [performanceMode, setPerformanceMode] = useState(false)
-  const [presets, setPresets] = useState<Preset[]>([])
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
   const [formData, setFormData] = useState({
     name: '',
@@ -36,16 +37,11 @@ export default function PresetManager() {
   const [autoSend, setAutoSend] = useState(
     loadFromLocalStorage('autoSend', false),
   )
-  const [midiPorts, setMidiPorts] = useState<string[]>([])
-  const [selectedMidiPort, setSelectedMidiPort] = useState<string>(
-    loadFromLocalStorage('selectedMidiPort', ''),
-  )
-  const [selectedMidiChannel, setSelectedMidiChannel] = useState<number>(
-    loadFromLocalStorage('selectedMidiChannel', 1),
-  )
+  const { setMidiPorts } = useMidiPort()
+  const { selectedMidiPort } = useMidiPort()
+  const { selectedMidiChannel } = useMidiChannel()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const { refreshPresets, triggerRefresh } = useRefresh()
 
   useEffect(() => {
     const fetchIoportNames = async () => {
@@ -79,14 +75,6 @@ export default function PresetManager() {
       })
     }
   }, [currentPreset])
-
-  useEffect(() => {
-    const fetchPresets = async () => {
-      const presetList = await getPresets()
-      setPresets(presetList)
-    }
-    fetchPresets()
-  }, [editMode, refreshPresets])
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -125,7 +113,7 @@ export default function PresetManager() {
 
   const handleDeletePreset = async (id: string) => {
     await deletePreset(id)
-    triggerRefresh()
+    await queryClient.invalidateQueries({ queryKey: ['presets'] })
     setCurrentPreset(null)
     setShowDeleteModal(false)
   }
@@ -148,7 +136,7 @@ export default function PresetManager() {
 
   const handleSavePreset = async (slot: number) => {
     const preset = await savePreset(selectedMidiPort, slot, 'newPreset')
-    triggerRefresh()
+    await queryClient.invalidateQueries({ queryKey: ['presets'] })
     setCurrentPreset(preset)
   }
 
@@ -194,15 +182,10 @@ export default function PresetManager() {
                 handleSavePreset={handleSavePreset}
                 handleSendCurrentPreset={handleSendCurrentPreset}
                 autoSend={autoSend}
-                midiPorts={midiPorts}
-                selectedMidiPort={selectedMidiPort}
-                selectedMidiChannel={selectedMidiChannel}
                 handleToggleAutoSend={handleToggleAutoSend}
-                setSelectedMidiPort={setSelectedMidiPort}
-                setSelectedMidiChannel={setSelectedMidiChannel}
               ></OptionPanel>
               <SettingsPanel></SettingsPanel>
-              <FilterPanel presets={presets}></FilterPanel>
+              <FilterPanel></FilterPanel>
             </div>
             <PresetList
               handleSelectPreset={handleSelectPreset}

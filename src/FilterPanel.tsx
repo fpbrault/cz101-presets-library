@@ -1,17 +1,35 @@
 // src/FilterPanel.tsx
 import React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { FaCheckCircle, FaRegDotCircle, FaTrash } from 'react-icons/fa'
-import { Preset } from './lib/presetManager'
-import { useSearchFilter } from './SearchFilterContext'
-import Button from './components/Button'
+import { fetchPresetData } from '@/lib/presetManager'
+import { useSearchFilter } from '@/SearchFilterContext'
+import Button from '@/components/Button'
 
-interface FilterPanelProps {
-  presets: Preset[]
-}
-
-const FilterPanel: React.FC<FilterPanelProps> = ({ presets }) => {
+const FilterPanel: React.FC = () => {
   const { selectedTags, filterMode, setFilterMode, setSelectedTags } =
     useSearchFilter()
+
+  const { data } = useQuery({
+    queryKey: ['presets', 'filter-panel-tags'],
+    queryFn: async () => {
+      const result = await fetchPresetData(
+        0,
+        Number.MAX_SAFE_INTEGER,
+        [],
+        '',
+        [],
+        'inclusive',
+        false,
+        false,
+        0,
+      )
+      return result.presets
+    },
+    refetchOnWindowFocus: false,
+  })
+
+  const presets = data ?? []
 
   const handleToggleFilterMode = () => {
     if (filterMode === 'inclusive') {

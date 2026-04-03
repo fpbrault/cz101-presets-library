@@ -5,8 +5,8 @@ import {
   createPresetData,
   fetchPresetData,
   addPreset,
-} from '../presetManager'
-import { IndexedDbPresetDatabase } from '../browserDatabase'
+} from '@/lib/presetManager'
+import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
 
 describe('formatPresetData', () => {
   it('should format preset data with channel', () => {

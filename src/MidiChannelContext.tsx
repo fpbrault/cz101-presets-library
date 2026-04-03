@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
+import { loadFromLocalStorage } from '@/utils'
 
 interface MidiChannelContextType {
   selectedMidiChannel: number
@@ -11,13 +12,11 @@ const MidiChannelContext = createContext<MidiChannelContextType | undefined>(
 
 export const MidiChannelProvider = ({
   children,
-  initialChannel = 1,
 }: {
   children: ReactNode
-  initialChannel?: number
 }) => {
   const [selectedMidiChannel, setSelectedMidiChannel] =
-    useState<number>(initialChannel)
+    useState<number>(loadFromLocalStorage('selectedMidiChannel', 1))
   return (
     <MidiChannelContext.Provider
       value={{ selectedMidiChannel, setSelectedMidiChannel }}
