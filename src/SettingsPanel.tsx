@@ -2,6 +2,11 @@ import React, { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { FaCog } from 'react-icons/fa'
 import { exportPresets, importPresets } from '@/lib/presetManager'
+import {
+  exportWorkspaceBackup,
+  importWorkspaceBackup,
+  isWorkspaceBackupEnvelope,
+} from '@/lib/workspaceBackup'
 
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
@@ -45,9 +50,44 @@ const SettingsPanel: React.FC = () => {
     const file = event.target.files?.[0]
     if (file) {
       const data = await file.text()
-      await importPresets(data)
+      try {
+        const parsed = JSON.parse(data)
+        if (isWorkspaceBackupEnvelope(parsed)) {
+          await importWorkspaceBackup(data)
+        } else {
+          await importPresets(data)
+        }
+      } catch (error) {
+        console.error('Failed to import JSON file:', error)
+        return
+      }
       handleCloseModal()
       await queryClient.invalidateQueries({ queryKey: ['presets'] })
+    }
+  }
+
+  const handleExportWorkspace = async () => {
+    const data = await exportWorkspaceBackup()
+    if ((window as any).__TAURI__) {
+      const filePath = await save({
+        filters: [
+          {
+            name: 'JSON',
+            extensions: ['json'],
+          },
+        ],
+      })
+      if (filePath) {
+        await writeTextFile(filePath, data)
+      }
+    } else {
+      const blob = new Blob([data], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'workspace-backup.json'
+      a.click()
+      URL.revokeObjectURL(url)
     }
   }
 
@@ -62,6 +102,14 @@ const SettingsPanel: React.FC = () => {
           <div className="p-4 shadow-lg bg-base-100 rounded-xl">
             <h2 className="mb-4 text-xl">Settings</h2>
             <div className="flex flex-col justify-end gap-2 mt-4">
+              <label className="w-full max-w-xs form-control">
+                <div className="label">
+                  <span className="label-text">Export Full Workspace Backup</span>
+                </div>
+                <Button onClick={handleExportWorkspace} variant="accent">
+                  Export Full Backup
+                </Button>
+              </label>
               <label className="w-full max-w-xs form-control">
                 <div className="label">
                   <span className="label-text">Export Database</span>

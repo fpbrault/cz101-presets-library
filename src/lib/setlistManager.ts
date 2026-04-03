@@ -25,7 +25,7 @@ interface SerializedSetlistEntry extends Omit<SetlistEntry, 'sysexData'> {
   sysexData: number[]
 }
 
-interface SerializedSetlist extends Omit<Setlist, 'entries'> {
+export interface SerializedSetlist extends Omit<Setlist, 'entries'> {
   entries: SerializedSetlistEntry[]
 }
 
@@ -57,6 +57,31 @@ function loadSerializedSetlists(): SerializedSetlist[] {
 
 function saveSerializedSetlists(setlists: SerializedSetlist[]) {
   saveToLocalStorage(SETLIST_STORAGE_KEY, setlists)
+}
+
+export function exportAllSetlists(): SerializedSetlist[] {
+  return loadSerializedSetlists()
+}
+
+export function importAllSetlists(
+  serializedSetlists: SerializedSetlist[],
+  mode: 'replace' | 'merge' = 'replace',
+): void {
+  const incoming = serializedSetlists.map((setlist) => ({
+    ...setlist,
+    entries: setlist.entries.map((entry) => ({
+      ...entry,
+      sysexData: Array.from(entry.sysexData),
+    })),
+  }))
+
+  if (mode === 'merge') {
+    const current = loadSerializedSetlists()
+    saveSerializedSetlists([...current, ...incoming])
+    return
+  }
+
+  saveSerializedSetlists(incoming)
 }
 
 export function getSetlists(): Setlist[] {

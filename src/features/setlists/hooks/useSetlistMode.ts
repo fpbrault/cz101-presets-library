@@ -67,6 +67,16 @@ export function useSetlistMode({
 
   useEffect(() => {
     refreshSetlists()
+
+    const handleSetlistsUpdated = () => {
+      refreshSetlists()
+    }
+
+    window.addEventListener('setlists-updated', handleSetlistsUpdated)
+
+    return () => {
+      window.removeEventListener('setlists-updated', handleSetlistsUpdated)
+    }
   }, [])
 
   const handleCreateBackup = async () => {
