@@ -11,6 +11,7 @@ import {
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
 import Button from '@/components/Button'
+import FileInput from '@/components/FileInput'
 
 const SettingsPanel: React.FC = () => {
   const queryClient = useQueryClient()
@@ -122,12 +123,10 @@ const SettingsPanel: React.FC = () => {
                 <div className="label">
                   <span className="label-text">Import Database</span>
                 </div>
-                <input
-                  type="file"
+                <FileInput
                   accept="application/json"
                   onChange={handleImport}
-                  placeholder="Import Database"
-                  className="w-full max-w-xs file-input file-input-bordered file-input-secondary"
+                  tone="secondary"
                 />
               </label>
               <Button variant="error" onClick={handleCloseModal}>

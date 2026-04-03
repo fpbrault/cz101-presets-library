@@ -3,6 +3,7 @@ import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import { saveToLocalStorage } from '@/utils'
 import Button from '@/components/Button'
+import SelectInput from '@/components/SelectInput'
 import { Preset } from '@/lib/presetManager'
 
 interface OptionPanelProps {
@@ -53,8 +54,7 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
             />
           </label>
         </div>
-        <select
-          className="select select-bordered"
+        <SelectInput
           value={selectedMidiPort}
           onChange={(e) => {
             setSelectedMidiPort(e.target.value)
@@ -66,9 +66,8 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
               {port}
             </option>
           ))}
-        </select>
-        <select
-          className="select select-bordered"
+        </SelectInput>
+        <SelectInput
           value={selectedMidiChannel}
           onChange={(e) => {
             const channel = parseInt(e.target.value, 10)
@@ -81,7 +80,7 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
               Channel {i + 1}
             </option>
           ))}
-        </select>
+        </SelectInput>
         <Button onClick={handleRetrieveCurrentPreset} variant="accent">
           Retrieve Current
         </Button>
@@ -110,8 +109,7 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
               <label className="label">
                 <span className="label-text">Bank</span>
               </label>
-              <select
-                className="select select-bordered w-full"
+              <SelectInput
                 value={slotBank}
                 onChange={(e) =>
                   setSlotBank(e.target.value as 'internal' | 'cartridge')
@@ -119,7 +117,7 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
               >
                 <option value="internal">Internal</option>
                 <option value="cartridge">Cartridge</option>
-              </select>
+              </SelectInput>
             </div>
             <div className="grid grid-cols-4 gap-2">
               {Array.from({ length: 16 }, (_, i) => (
@@ -151,8 +149,7 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
               <label className="label">
                 <span className="label-text">Bank</span>
               </label>
-              <select
-                className="select select-bordered w-full"
+              <SelectInput
                 value={slotBank}
                 onChange={(e) =>
                   setSlotBank(e.target.value as 'internal' | 'cartridge')
@@ -160,7 +157,7 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
               >
                 <option value="internal">Internal</option>
                 <option value="cartridge">Cartridge</option>
-              </select>
+              </SelectInput>
             </div>
             <div className="grid grid-cols-4 gap-2">
               {Array.from({ length: 16 }, (_, i) => (

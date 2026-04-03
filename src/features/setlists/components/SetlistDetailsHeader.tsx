@@ -1,4 +1,5 @@
 import Button from '@/components/Button'
+import SelectInput from '@/components/SelectInput'
 import { Setlist } from '@/lib/setlistManager'
 
 interface SetlistDetailsHeaderProps {
@@ -30,16 +31,18 @@ export default function SetlistDetailsHeader({
         </div>
       </div>
       <div className="flex gap-2">
-        <select
-          className="select select-bordered select-sm"
-          value={restoreBank}
-          onChange={(event) =>
-            onRestoreBankChange(event.target.value as 'internal' | 'cartridge')
-          }
-        >
-          <option value="internal">Restore to Internal</option>
-          <option value="cartridge">Restore to Cartridge</option>
-        </select>
+        <div className="w-52">
+          <SelectInput
+            selectSize="sm"
+            value={restoreBank}
+            onChange={(event) =>
+              onRestoreBankChange(event.target.value as 'internal' | 'cartridge')
+            }
+          >
+            <option value="internal">Restore to Internal</option>
+            <option value="cartridge">Restore to Cartridge</option>
+          </SelectInput>
+        </div>
         <Button
           variant="accent"
           size="sm"

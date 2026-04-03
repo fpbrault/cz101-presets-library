@@ -1,4 +1,6 @@
 import Button from '@/components/Button'
+import FileInput from '@/components/FileInput'
+import InlineNotice from '@/components/InlineNotice'
 import { Setlist } from '@/lib/setlistManager'
 
 interface SetlistsSidebarProps {
@@ -29,10 +31,9 @@ export default function SetlistsSidebar({
           {isBackingUp ? 'Backing Up...' : 'New Backup (16 Slots)'}
         </Button>
         <label className="w-full form-control">
-          <input
-            type="file"
+          <FileInput
             accept="application/json"
-            className="w-full file-input file-input-bordered file-input-sm"
+            inputSize="sm"
             onChange={(event) => {
               const file = event.target.files?.[0]
               if (file) {
@@ -57,7 +58,10 @@ export default function SetlistsSidebar({
 
       <div className="space-y-2">
         {setlists.length === 0 && (
-          <div className="text-sm opacity-60">No setlists yet.</div>
+          <InlineNotice
+            message="No setlists yet. Create a backup or import a JSON setlist."
+            tone="neutral"
+          />
         )}
         {setlists.map((setlist) => (
           <button

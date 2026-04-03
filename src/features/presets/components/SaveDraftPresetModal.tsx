@@ -1,5 +1,8 @@
 import Button from '@/components/Button'
+import FormField from '@/components/FormField'
 import ModalShell from '@/components/ModalShell'
+import TextInput from '@/components/TextInput'
+import TextAreaInput from '@/components/TextAreaInput'
 
 interface SaveDraftPresetModalProps {
   isOpen: boolean
@@ -45,41 +48,33 @@ export default function SaveDraftPresetModal({
         )}
 
         <div className="grid grid-cols-1 gap-3">
-          <label className="form-control">
-            <span className="label-text">Name</span>
-            <input
-              className="input input-bordered"
+          <FormField label="Name">
+            <TextInput
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
             />
-          </label>
+          </FormField>
 
-          <label className="form-control">
-            <span className="label-text">Author</span>
-            <input
-              className="input input-bordered"
+          <FormField label="Author">
+            <TextInput
               value={author}
               onChange={(e) => onAuthorChange(e.target.value)}
             />
-          </label>
+          </FormField>
 
-          <label className="form-control">
-            <span className="label-text">Tags (comma-separated)</span>
-            <input
-              className="input input-bordered"
+          <FormField label="Tags (comma-separated)">
+            <TextInput
               value={tags}
               onChange={(e) => onTagsChange(e.target.value)}
             />
-          </label>
+          </FormField>
 
-          <label className="form-control">
-            <span className="label-text">Description</span>
-            <textarea
-              className="textarea textarea-bordered"
+          <FormField label="Description">
+            <TextAreaInput
               value={description}
               onChange={(e) => onDescriptionChange(e.target.value)}
             />
-          </label>
+          </FormField>
         </div>
 
         <div className="flex justify-end gap-2 mt-4">

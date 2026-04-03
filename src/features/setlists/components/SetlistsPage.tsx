@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import InlineNotice from '@/components/InlineNotice'
 import SetlistsSidebar from '@/features/setlists/components/SetlistsSidebar'
 import SetlistDetailsHeader from '@/features/setlists/components/SetlistDetailsHeader'
 import SetlistEntriesTable from '@/features/setlists/components/SetlistEntriesTable'
@@ -51,8 +52,13 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 
       <section className="flex flex-col flex-grow h-full overflow-hidden">
         {!selectedSetlist && (
-          <div className="flex items-center justify-center flex-grow text-base-content/60">
-            Select a setlist to view backup entries.
+          <div className="flex items-center justify-center flex-grow px-4">
+            <InlineNotice
+              message="Select a setlist to view backup entries."
+              tone="neutral"
+              size="md"
+              className="max-w-md"
+            />
           </div>
         )}
 

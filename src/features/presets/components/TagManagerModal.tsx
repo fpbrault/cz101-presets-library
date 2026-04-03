@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import Button from '@/components/Button'
 import ModalShell from '@/components/ModalShell'
+import SelectInput from '@/components/SelectInput'
+import TextInput from '@/components/TextInput'
 
 interface TagManagerModalProps {
   isOpen: boolean
@@ -44,8 +46,7 @@ export default function TagManagerModal({
         <div className="grid grid-cols-1 gap-3">
           <label className="form-control">
             <span className="label-text">Source tag</span>
-            <select
-              className="select select-bordered"
+            <SelectInput
               value={sourceTag}
               onChange={(e) => {
                 setSourceTag(e.target.value)
@@ -60,13 +61,12 @@ export default function TagManagerModal({
                   {tag} ({count})
                 </option>
               ))}
-            </select>
+            </SelectInput>
           </label>
 
           <label className="form-control">
             <span className="label-text">Target tag (for rename/merge)</span>
-            <input
-              className="input input-bordered"
+            <TextInput
               value={targetTag}
               placeholder="e.g. bass"
               onChange={(e) => setTargetTag(e.target.value.toLowerCase())}

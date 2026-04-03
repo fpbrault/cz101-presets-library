@@ -1,4 +1,5 @@
 import Button from '@/components/Button'
+import SelectInput from '@/components/SelectInput'
 import ModalShell from '@/components/ModalShell'
 import { Setlist } from '@/lib/setlistManager'
 import { SendModalState } from '@/features/setlists/components/SetlistsPage.types'
@@ -27,9 +28,8 @@ export default function SendEntryModal({
         <div className="flex flex-col gap-3">
           <label className="form-control">
             <span className="label-text">Bank</span>
-            <select
+            <SelectInput
               data-testid="send-entry-bank"
-              className="select select-bordered"
               value={sendModalState.bank}
               onChange={(event) =>
                 setSendModalState({
@@ -40,14 +40,13 @@ export default function SendEntryModal({
             >
               <option value="internal">Internal</option>
               <option value="cartridge">Cartridge</option>
-            </select>
+            </SelectInput>
           </label>
 
           <label className="form-control">
             <span className="label-text">Slot</span>
-            <select
+            <SelectInput
               data-testid="send-entry-slot"
-              className="select select-bordered"
               value={sendModalState.slot}
               onChange={(event) =>
                 setSendModalState({
@@ -61,7 +60,7 @@ export default function SendEntryModal({
                   {index + 1}
                 </option>
               ))}
-            </select>
+            </SelectInput>
           </label>
         </div>
 

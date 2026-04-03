@@ -8,6 +8,7 @@ import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import PerformanceMode from '@/PerformanceMode'
 import Button from '@/components/Button'
+import InlineNotice from '@/components/InlineNotice'
 import { useMidiSetup } from '@/useMidiSetup'
 import SetlistsPage from '@/features/setlists/components/SetlistsPage'
 import SaveDraftPresetModal from '@/features/presets/components/SaveDraftPresetModal'
@@ -167,9 +168,11 @@ export default function PresetManager() {
               )}
 
               {!leftPanelCollapsed && statusMessage && (
-                <div className="p-2 mt-auto text-xs rounded-md bg-base-300/70 text-base-content/80">
-                  {statusMessage}
-                </div>
+                <InlineNotice
+                  message={statusMessage}
+                  tone="info"
+                  className="mt-auto"
+                />
               )}
             </div>
 

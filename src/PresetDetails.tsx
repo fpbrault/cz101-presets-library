@@ -5,7 +5,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { Preset, updatePreset } from '@/lib/presetManager'
 import { buf2hex } from '@/utils'
 import Button from '@/components/Button'
+import FormField from '@/components/FormField'
+import KeyValueBlock from '@/components/KeyValueBlock'
 import PatchParameterViewer from '@/components/PatchParameterViewer'
+import TextAreaInput from '@/components/TextAreaInput'
+import TextInput from '@/components/TextInput'
 
 interface PresetFormData {
   name: string
@@ -143,95 +147,104 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
           </div>
           <div className="space-y-3">
             <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
-              <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                Name
-              </div>
-              {editMode ? (
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Name"
-                  className="w-full mt-1 input input-bordered input-sm"
-                />
-              ) : (
-                <div className="mt-1 text-lg font-bold leading-tight break-words">
-                  {formData.name || '-'}
-                </div>
-              )}
+              <FormField
+                label="Name"
+                labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+              >
+                {editMode ? (
+                  <TextInput
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Name"
+                    inputSize="sm"
+                  />
+                ) : (
+                  <div className="mt-1 text-lg font-bold leading-tight break-words">
+                    {formData.name || '-'}
+                  </div>
+                )}
+              </FormField>
             </div>
 
             <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
-              <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                Tags
-              </div>
-              {editMode ? (
-                <input
-                  type="text"
-                  id="tags"
-                  value={formData.tags}
-                  onChange={handleInputChange}
-                  placeholder="tag1, tag2"
-                  className="w-full mt-1 input input-bordered input-sm"
-                />
-              ) : (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {currentPreset?.tags.length ? (
-                    currentPreset.tags.map((tag: string) => (
-                      <span
-                        key={uuidv4()}
-                        className="capitalize badge badge-primary badge-sm"
-                      >
-                        {tag.toLowerCase()}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs opacity-50">No tags</span>
-                  )}
-                </div>
-              )}
+              <FormField
+                label="Tags"
+                labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+              >
+                {editMode ? (
+                  <TextInput
+                    type="text"
+                    id="tags"
+                    value={formData.tags}
+                    onChange={handleInputChange}
+                    placeholder="tag1, tag2"
+                    inputSize="sm"
+                  />
+                ) : (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {currentPreset?.tags.length ? (
+                      currentPreset.tags.map((tag: string) => (
+                        <span
+                          key={uuidv4()}
+                          className="capitalize badge badge-primary badge-sm"
+                        >
+                          {tag.toLowerCase()}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs opacity-50">No tags</span>
+                    )}
+                  </div>
+                )}
+              </FormField>
             </div>
 
             <div className="grid grid-cols-1 gap-2">
               <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
-                <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                  Author
-                </div>
-                {editMode ? (
-                  <input
-                    type="text"
-                    id="author"
-                    value={formData.author}
-                    onChange={handleInputChange}
-                    placeholder="Author"
-                    className="w-full mt-1 input input-bordered input-sm"
-                  />
-                ) : (
-                  <div className="mt-1 text-xs font-semibold break-words">
-                    {formData.author || '-'}
-                  </div>
-                )}
+                <FormField
+                  label="Author"
+                  labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+                >
+                  {editMode ? (
+                    <TextInput
+                      type="text"
+                      id="author"
+                      value={formData.author}
+                      onChange={handleInputChange}
+                      placeholder="Author"
+                      inputSize="sm"
+                    />
+                  ) : (
+                    <div className="mt-1 text-xs font-semibold break-words">
+                      {formData.author || '-'}
+                    </div>
+                  )}
+                </FormField>
               </div>
             </div>
 
             <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
-              <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                Description
-              </div>
-              {editMode ? (
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Description"
-                  className="w-full mt-1 textarea textarea-bordered textarea-sm min-h-20"
-                ></textarea>
-              ) : (
-                <div className="mt-1 text-xs font-semibold whitespace-pre-wrap break-words">
-                  {formData.description || '-'}
-                </div>
-              )}
+              <FormField
+                label="Description"
+                labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+              >
+                {editMode ? (
+                  <TextAreaInput
+                    id="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Description"
+                    size="sm"
+                    rows={4}
+                  />
+                ) : (
+                  <div className="mt-1 text-xs font-semibold whitespace-pre-wrap break-words">
+                    {formData.description || '-'}
+                  </div>
+                )}
+              </FormField>
             </div>
 
             <details className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
@@ -239,38 +252,10 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
                 Additional Data
               </summary>
               <div className="grid grid-cols-1 gap-2 mt-2">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                    ID
-                  </div>
-                  <div className="mt-1 text-xs font-mono font-semibold break-all">
-                    {currentPreset?.id || '-'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                    Filename
-                  </div>
-                  <div className="mt-1 text-xs font-mono font-semibold break-all">
-                    {formData.filename || '-'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                    Created
-                  </div>
-                  <div className="mt-1 text-xs font-mono font-semibold break-all">
-                    {formData.createdDate || '-'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
-                    Modified
-                  </div>
-                  <div className="mt-1 text-xs font-mono font-semibold break-all">
-                    {formData.modifiedDate || '-'}
-                  </div>
-                </div>
+                <KeyValueBlock label="ID" value={currentPreset?.id || '-'} />
+                <KeyValueBlock label="Filename" value={formData.filename || '-'} />
+                <KeyValueBlock label="Created" value={formData.createdDate || '-'} />
+                <KeyValueBlock label="Modified" value={formData.modifiedDate || '-'} />
               </div>
             </details>
 
