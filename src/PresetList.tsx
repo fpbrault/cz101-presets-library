@@ -7,6 +7,7 @@ import React, {
   memo,
 } from 'react'
 import {
+  deletePreset,
   deleteTagGlobally,
   fetchPresetData,
   Preset,
@@ -50,6 +51,9 @@ import {
 } from '@tanstack/react-query'
 import { getPresetQueryKey } from '@/lib/presetQueryKey'
 import TagManagerModal from '@/features/presets/components/TagManagerModal'
+import DuplicateReviewModal, {
+  DuplicateGroup,
+} from '@/features/presets/components/DuplicateReviewModal'
 
 interface PresetListProps {
   currentPreset: Preset | null
@@ -145,6 +149,8 @@ function PresetListTopBar(props: {
   duplicatesOnly: boolean
   onToggleDuplicatesOnly: () => void
   onOpenTagManager: () => void
+  duplicateGroupCount: number
+  onOpenDuplicateReview: () => void
 }) {
   const [isTagsPanelOpen, setIsTagsPanelOpen] = useState(false)
 
@@ -181,6 +187,20 @@ function PresetListTopBar(props: {
           >
             <FaCopy size={12} />
             Duplicates
+          </button>
+
+          <button
+            className="btn btn-sm sm:btn-md normal-case font-semibold shadow-md btn-neutral"
+            onClick={props.onOpenDuplicateReview}
+            title="Review and clean duplicate presets"
+            disabled={props.duplicateGroupCount === 0}
+          >
+            Review Duplicates
+            {props.duplicateGroupCount > 0 && (
+              <span className="badge badge-warning badge-sm">
+                {props.duplicateGroupCount}
+              </span>
+            )}
           </button>
 
           <button
@@ -341,6 +361,7 @@ const PresetList: React.FC<PresetListProps> = ({
   const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now())
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange')
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false)
+  const [isDuplicateReviewOpen, setIsDuplicateReviewOpen] = useState(false)
 
   useEffect(() => {
     if (randomOrder) {
@@ -559,6 +580,26 @@ const PresetList: React.FC<PresetListProps> = ({
     refetchOnWindowFocus: false,
   })
 
+  const { data: duplicatePresetsData } = useQuery({
+    queryKey: ['presets', 'duplicate-review'],
+    queryFn: async () => {
+      const result = await fetchPresetData(
+        0,
+        Number.MAX_SAFE_INTEGER,
+        [],
+        '',
+        [],
+        'inclusive',
+        false,
+        false,
+        0,
+        true,
+      )
+      return result.presets
+    },
+    refetchOnWindowFocus: false,
+  })
+
   const availableTags = useMemo<[string, number][]>(() => {
     const presets = tagsData ?? []
     return Object.entries(
@@ -574,6 +615,33 @@ const PresetList: React.FC<PresetListProps> = ({
         ),
     ).sort((a, b) => b[1] - a[1])
   }, [tagsData])
+
+  const duplicateGroups = useMemo<DuplicateGroup[]>(() => {
+    const presets = duplicatePresetsData ?? []
+    const grouped = presets.reduce(
+      (acc, preset) => {
+        const key = Array.from(preset.sysexData).join(',')
+        if (!acc[key]) {
+          acc[key] = []
+        }
+        acc[key].push(preset)
+        return acc
+      },
+      {} as Record<string, Preset[]>,
+    )
+
+    return Object.entries(grouped).map(([fingerprint, groupedPresets]) => ({
+      fingerprint,
+      presets: [...groupedPresets].sort((a, b) => {
+        const favoriteDelta = Number(Boolean(b.favorite)) - Number(Boolean(a.favorite))
+        if (favoriteDelta !== 0) {
+          return favoriteDelta
+        }
+
+        return a.name.localeCompare(b.name)
+      }),
+    }))
+  }, [duplicatePresetsData])
 
   const handleToggleFilterMode = useCallback(() => {
     if (filterMode === 'inclusive') {
@@ -619,6 +687,14 @@ const PresetList: React.FC<PresetListProps> = ({
       }
     },
     [queryClient, selectedTags, setSelectedTags],
+  )
+
+  const handleDeleteDuplicatePresets = useCallback(
+    async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deletePreset(id)))
+      await queryClient.invalidateQueries({ queryKey: ['presets'] })
+    },
+    [queryClient],
   )
 
   const { data, fetchNextPage, isFetching, refetch } = useInfiniteQuery<{
@@ -832,6 +908,8 @@ const PresetList: React.FC<PresetListProps> = ({
         duplicatesOnly={duplicatesOnly}
         onToggleDuplicatesOnly={handleToggleDuplicatesOnly}
         onOpenTagManager={() => setIsTagManagerOpen(true)}
+        duplicateGroupCount={duplicateGroups.length}
+        onOpenDuplicateReview={() => setIsDuplicateReviewOpen(true)}
       ></PresetListTopBar>
       <TagManagerModal
         isOpen={isTagManagerOpen}
@@ -839,6 +917,12 @@ const PresetList: React.FC<PresetListProps> = ({
         onClose={() => setIsTagManagerOpen(false)}
         onRenameOrMerge={handleRenameOrMergeTag}
         onDeleteTag={handleDeleteTag}
+      />
+      <DuplicateReviewModal
+        isOpen={isDuplicateReviewOpen}
+        groups={duplicateGroups}
+        onClose={() => setIsDuplicateReviewOpen(false)}
+        onDeletePresets={handleDeleteDuplicatePresets}
       />
       <div
         className="relative max-h-full overflow-auto"
