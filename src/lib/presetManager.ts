@@ -7,6 +7,7 @@ import {
   PresetSyncCoordinator,
   RemotePresetSyncAdapter,
 } from '@/lib/presetSync'
+import { isOnlineSyncEnabled } from '@/lib/onlineSyncSettings'
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
@@ -33,6 +34,15 @@ export async function flushPresetSyncQueue(): Promise<boolean> {
 
 export function getPresetSyncQueueLength(): number {
   return presetSync.getQueueLength()
+}
+
+function enqueueSyncOperation(action: () => void): void {
+  if (!isOnlineSyncEnabled()) {
+    return
+  }
+
+  action()
+  void presetSync.flush()
 }
 
 const REQUEST_COMMANDS = Array.from(
@@ -875,8 +885,7 @@ export async function addPreset(preset: Preset): Promise<Preset> {
     modifiedDate: new Date().toISOString(),
   }
   const savedPreset = await presetDatabase.addPreset(nextPreset)
-  presetSync.enqueueUpsert(savedPreset)
-  void presetSync.flush()
+  enqueueSyncOperation(() => presetSync.enqueueUpsert(savedPreset))
   return savedPreset
 }
 
@@ -886,14 +895,12 @@ export async function updatePreset(preset: Preset): Promise<void> {
     modifiedDate: new Date().toISOString(),
   }
   await presetDatabase.updatePreset(nextPreset)
-  presetSync.enqueueUpsert(nextPreset)
-  void presetSync.flush()
+  enqueueSyncOperation(() => presetSync.enqueueUpsert(nextPreset))
 }
 
 export async function deletePreset(id: string): Promise<void> {
   await presetDatabase.deletePreset(id)
-  presetSync.enqueueDelete(id)
-  void presetSync.flush()
+  enqueueSyncOperation(() => presetSync.enqueueDelete(id))
 }
 
 function normalizeTagValue(tag: string): string {
@@ -969,6 +976,5 @@ export async function exportPresets(): Promise<string> {
 export async function importPresets(json: string): Promise<void> {
   await presetDatabase.import(json)
   const presets = await presetDatabase.getPresets()
-  presetSync.enqueueReplaceAll(presets)
-  void presetSync.flush()
+  enqueueSyncOperation(() => presetSync.enqueueReplaceAll(presets))
 }
