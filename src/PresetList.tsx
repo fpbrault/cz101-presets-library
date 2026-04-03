@@ -661,7 +661,7 @@ const PresetList: React.FC<PresetListProps> = ({
     [queryClient],
   )
 
-  const { data, fetchNextPage, isFetching, refetch } = useInfiniteQuery<{
+  const { data, fetchNextPage, isFetching } = useInfiniteQuery<{
     presets: Preset[]
     totalCount: number
   }>({
@@ -676,10 +676,6 @@ const PresetList: React.FC<PresetListProps> = ({
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   })
-
-  useEffect(() => {
-    refetch()
-  }, [searchTerm, selectedTags, filterMode, refetch])
 
   const flatData = React.useMemo(() => {
     return data?.pages?.flatMap((page: { presets: any }) => page.presets) ?? []

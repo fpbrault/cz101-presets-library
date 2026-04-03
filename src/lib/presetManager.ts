@@ -3,12 +3,17 @@ import natsort from 'natsort'
 //import { FakePresetDatabase } from './fakePresetDatabase'
 import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
 import { filterPresets } from '@/lib/filterPresets'
+import {
+  PresetSyncCoordinator,
+  RemotePresetSyncAdapter,
+} from '@/lib/presetSync'
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
 import { SetlistEntry } from '@/lib/setlistManager'
 
 let presetDatabase: PresetDatabase
+const presetSync = new PresetSyncCoordinator()
 
 export function setPresetDatabase(database: PresetDatabase): void {
   presetDatabase = database
@@ -16,6 +21,18 @@ export function setPresetDatabase(database: PresetDatabase): void {
 
 export function resetPresetDatabase(): void {
   presetDatabase = new IndexedDbPresetDatabase()
+}
+
+export function setPresetSyncAdapter(adapter: RemotePresetSyncAdapter): void {
+  presetSync.setAdapter(adapter)
+}
+
+export async function flushPresetSyncQueue(): Promise<boolean> {
+  return presetSync.flush()
+}
+
+export function getPresetSyncQueueLength(): number {
+  return presetSync.getQueueLength()
 }
 
 const REQUEST_COMMANDS = Array.from(
@@ -529,15 +546,6 @@ export async function restoreToBuffer(
   }
 }
 
-export async function fetchTags(): Promise<string[]> {
-  const presets = (await getPresets()) ?? []
-  const tags = new Set<string>()
-  presets.forEach((preset) => {
-    preset.tags.forEach((tag) => tags.add(tag))
-  })
-  return Array.from(tags).sort()
-}
-
 export async function fetchPresetData(
   start: number,
   size: number,
@@ -866,7 +874,10 @@ export async function addPreset(preset: Preset): Promise<Preset> {
     ...preset,
     modifiedDate: new Date().toISOString(),
   }
-  return presetDatabase.addPreset(nextPreset)
+  const savedPreset = await presetDatabase.addPreset(nextPreset)
+  presetSync.enqueueUpsert(savedPreset)
+  void presetSync.flush()
+  return savedPreset
 }
 
 export async function updatePreset(preset: Preset): Promise<void> {
@@ -874,11 +885,15 @@ export async function updatePreset(preset: Preset): Promise<void> {
     ...preset,
     modifiedDate: new Date().toISOString(),
   }
-  return presetDatabase.updatePreset(nextPreset)
+  await presetDatabase.updatePreset(nextPreset)
+  presetSync.enqueueUpsert(nextPreset)
+  void presetSync.flush()
 }
 
 export async function deletePreset(id: string): Promise<void> {
-  return presetDatabase.deletePreset(id)
+  await presetDatabase.deletePreset(id)
+  presetSync.enqueueDelete(id)
+  void presetSync.flush()
 }
 
 function normalizeTagValue(tag: string): string {
@@ -952,5 +967,8 @@ export async function exportPresets(): Promise<string> {
 }
 
 export async function importPresets(json: string): Promise<void> {
-  return presetDatabase.import(json)
+  await presetDatabase.import(json)
+  const presets = await presetDatabase.getPresets()
+  presetSync.enqueueReplaceAll(presets)
+  void presetSync.flush()
 }
