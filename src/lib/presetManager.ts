@@ -1,10 +1,9 @@
-import fs from 'fs'
 import { WebMidi, Output, Input } from 'webmidi'
 import natsort from 'natsort'
 //import { FakePresetDatabase } from './fakePresetDatabase'
 import { IndexedDbPresetDatabase } from './browserDatabase'
 
-import { exists, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
+import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
 
 let presetDatabase: PresetDatabase
@@ -45,7 +44,7 @@ export async function getIoportNames(): Promise<string[]> {
 }
 
 export async function backupPresets(portName: string): Promise<void> {
-  fs.mkdirSync(BACKUP_FOLDER, { recursive: true })
+  await mkdir(`${BACKUP_FOLDER}/user`, { baseDir: BaseDirectory.Document, recursive: true })
   const input = WebMidi.getInputByName(portName) as Input
   const output = WebMidi.getOutputByName(portName) as Output
 
@@ -67,9 +66,10 @@ export async function backupPresets(portName: string): Promise<void> {
     })
 
     if (response && response.length === 261) {
-      fs.writeFileSync(
+      await writeFile(
         `${BACKUP_FOLDER}/user/preset_${i + 1}.syx`,
-        Buffer.from([0xf0, ...response, 0xf7]),
+        new Uint8Array([0xf0, ...response, 0xf7]),
+        { baseDir: BaseDirectory.Document },
       )
       console.log(`Preset ${i + 1} backed up successfully.`)
     } else {
@@ -129,8 +129,9 @@ export async function restorePresets(
       )
 
   for (const filePath of filePaths) {
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath)
+    const fileExists = await exists(filePath, { baseDir: BaseDirectory.Document })
+    if (fileExists) {
+      const data = await readFile(filePath, { baseDir: BaseDirectory.Document })
       if (data.length !== 263) {
         console.log(
           `Error: Preset file ${filePath} data length is ${data.length} bytes, expected 263 bytes. Restore skipped.`,
@@ -158,8 +159,9 @@ export async function restoreToBuffer(
   channel: number = 1,
 ): Promise<void> {
   const output = WebMidi.getOutputByName(portName) as Output
-  if (fs.existsSync(filename)) {
-    const data = fs.readFileSync(filename)
+  const fileExists = await exists(filename, { baseDir: BaseDirectory.Document })
+  if (fileExists) {
+    const data = await readFile(filename, { baseDir: BaseDirectory.Document })
     const formattedData = formatPresetData(new Uint8Array(data), channel)
     console.log('Formatted Data:', formattedData)
     output.sendSysex([], formattedData.slice(1, -1))
@@ -341,15 +343,17 @@ export async function savePreset(
   }
 }
 
-export function loadSettings(): Record<string, any> {
-  if (fs.existsSync(CONFIG_FILE)) {
-    return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'))
+export async function loadSettings(): Promise<Record<string, any>> {
+  const fileExists = await exists(CONFIG_FILE, { baseDir: BaseDirectory.Document })
+  if (fileExists) {
+    const content = await readTextFile(CONFIG_FILE, { baseDir: BaseDirectory.Document })
+    return JSON.parse(content)
   }
   return {}
 }
 
-export function saveSettings(settings: Record<string, any>): void {
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(settings, null, 2))
+export async function saveSettings(settings: Record<string, any>): Promise<void> {
+  await writeTextFile(CONFIG_FILE, JSON.stringify(settings, null, 2), { baseDir: BaseDirectory.Document })
 }
 
 export function getBackupFolder(): string {
