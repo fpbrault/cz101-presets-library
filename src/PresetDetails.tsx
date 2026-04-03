@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Preset, updatePreset } from '@/lib/presetManager'
 import { buf2hex } from '@/utils'
 import Button from '@/components/Button'
+import PatchParameterViewer from '@/components/PatchParameterViewer'
 
 interface PresetFormData {
   name: string
@@ -104,133 +105,193 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
         (currentPreset ? ' block' : ' hidden')
       }
     >
-      <h2>Preset Details</h2>
-      <div className="flex gap-2">
-        {editMode ? (
-          <>
-            <Button onClick={handleSave} variant="success">
-              Save
-            </Button>
-            <Button onClick={handleCancel} variant="error">
-              Cancel
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button variant="primary" onClick={() => setEditMode(true)}>
-              Edit
-            </Button>
-            <Button variant="error" onClick={() => setShowDeleteModal(true)}>
-              Delete
-            </Button>
-          </>
-        )}
-      </div>
-      <div className="flex flex-col flex-grow">
-        {[
-          {
-            label: 'ID',
-            id: 'id',
-            value: currentPreset?.id || '',
-            type: 'text',
-          },
-          {
-            label: 'Name',
-            id: 'name',
-            value: formData.name,
-            type: 'text',
-          },
-          {
-            label: 'Filename',
-            id: 'filename',
-            value: formData.filename,
-            type: 'text',
-          },
-          {
-            label: 'Tags',
-            id: 'tags',
-            value: formData.tags,
-            type: 'text',
-          },
-          {
-            label: 'Description',
-            id: 'description',
-            value: formData.description,
-            type: 'textarea',
-          },
-          {
-            label: 'Author',
-            id: 'author',
-            value: formData.author,
-            type: 'text',
-          },
-          {
-            label: 'Created Date',
-            id: 'createdDate',
-            value: formData.createdDate,
-            type: 'text',
-          },
-          {
-            label: 'Modified Date',
-            id: 'modifiedDate',
-            value: formData.modifiedDate,
-            type: 'text',
-          },
-          {
-            label: 'Slot',
-            id: 'slot',
-            value: currentPreset?.slot || '',
-            type: 'text',
-          },
-          {
-            label: 'Sysex Data',
-            id: 'sysexData',
-            value: buf2hex(currentPreset?.sysexData || []),
-            type: 'textarea',
-          },
-        ].map((item, index) => (
-          <label key={index} className="w-full max-w-xs form-control">
-            <div className="label">
-              <span className="label-text">{item.label}</span>
+      <div className="flex flex-col flex-grow gap-2">
+        <div className="p-2 border rounded-lg border-base-content/10 bg-base-100/20">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="text-xs font-bold tracking-wider uppercase text-base-content/60">
+              Preset Details
             </div>
-            {editMode &&
-            !['filename', 'createdDate', 'modifiedDate', 'sysexData'].includes(
-              item.id,
-            ) ? (
-              item.type === 'textarea' ? (
-                <textarea
-                  id={item.id}
-                  value={item.value}
-                  onChange={handleInputChange}
-                  placeholder={`${item.label}`}
-                  className="w-full max-w-xs textarea textarea-bordered textarea-sm"
-                ></textarea>
+            <div className="flex gap-2">
+              {editMode ? (
+                <>
+                  <Button onClick={handleSave} variant="success" size="sm">
+                    Save
+                  </Button>
+                  <Button onClick={handleCancel} variant="error" size="sm">
+                    Cancel
+                  </Button>
+                </>
               ) : (
+                <>
+                  <Button
+                    variant="primary"
+                    onClick={() => setEditMode(true)}
+                    size="sm"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="error"
+                    onClick={() => setShowDeleteModal(true)}
+                    size="sm"
+                  >
+                    Delete
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
+              <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                Name
+              </div>
+              {editMode ? (
                 <input
-                  type={item.type}
-                  id={item.id}
-                  value={item.value}
+                  type="text"
+                  id="name"
+                  value={formData.name}
                   onChange={handleInputChange}
-                  placeholder={`${item.label}`}
-                  className="w-full max-w-xs input input-bordered input-sm"
+                  placeholder="Name"
+                  className="w-full mt-1 input input-bordered input-sm"
                 />
-              )
-            ) : (
-              <div className="flex flex-wrap gap-2 ml-4 overflow-auto font-bold break-word max-h-36">
-                {item.id === 'tags'
-                  ? currentPreset?.tags.map((tag: string) => (
+              ) : (
+                <div className="mt-1 text-lg font-bold leading-tight break-words">
+                  {formData.name || '-'}
+                </div>
+              )}
+            </div>
+
+            <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
+              <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                Tags
+              </div>
+              {editMode ? (
+                <input
+                  type="text"
+                  id="tags"
+                  value={formData.tags}
+                  onChange={handleInputChange}
+                  placeholder="tag1, tag2"
+                  className="w-full mt-1 input input-bordered input-sm"
+                />
+              ) : (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {currentPreset?.tags.length ? (
+                    currentPreset.tags.map((tag: string) => (
                       <span
                         key={uuidv4()}
-                        className="capitalize badge badge-primary"
+                        className="capitalize badge badge-primary badge-sm"
                       >
                         {tag.toLowerCase()}
                       </span>
                     ))
-                  : item.value}
+                  ) : (
+                    <span className="text-xs opacity-50">No tags</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
+                <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                  Author
+                </div>
+                {editMode ? (
+                  <input
+                    type="text"
+                    id="author"
+                    value={formData.author}
+                    onChange={handleInputChange}
+                    placeholder="Author"
+                    className="w-full mt-1 input input-bordered input-sm"
+                  />
+                ) : (
+                  <div className="mt-1 text-xs font-semibold break-words">
+                    {formData.author || '-'}
+                  </div>
+                )}
               </div>
-            )}
-          </label>
-        ))}
+            </div>
+
+            <div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
+              <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                Description
+              </div>
+              {editMode ? (
+                <textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Description"
+                  className="w-full mt-1 textarea textarea-bordered textarea-sm min-h-20"
+                ></textarea>
+              ) : (
+                <div className="mt-1 text-xs font-semibold whitespace-pre-wrap break-words">
+                  {formData.description || '-'}
+                </div>
+              )}
+            </div>
+
+            <details className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
+              <summary className="text-[10px] font-bold uppercase tracking-wider cursor-pointer text-base-content/60">
+                Additional Data
+              </summary>
+              <div className="grid grid-cols-1 gap-2 mt-2">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                    ID
+                  </div>
+                  <div className="mt-1 text-xs font-mono font-semibold break-all">
+                    {currentPreset?.id || '-'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                    Filename
+                  </div>
+                  <div className="mt-1 text-xs font-mono font-semibold break-all">
+                    {formData.filename || '-'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                    Created
+                  </div>
+                  <div className="mt-1 text-xs font-mono font-semibold break-all">
+                    {formData.createdDate || '-'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-base-content/40">
+                    Modified
+                  </div>
+                  <div className="mt-1 text-xs font-mono font-semibold break-all">
+                    {formData.modifiedDate || '-'}
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <details className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
+              <summary className="text-[10px] font-bold uppercase tracking-wider cursor-pointer text-base-content/60">
+                Raw SysEx Data
+              </summary>
+              <div className="mt-2 max-h-40 overflow-auto text-[10px] font-mono font-semibold whitespace-pre-wrap break-all opacity-80">
+                {buf2hex(currentPreset?.sysexData || [])}
+              </div>
+            </details>
+          </div>
+        </div>
+        {currentPreset?.sysexData && (
+          <div className="p-2 border rounded-lg border-base-content/10 bg-base-100/20">
+            <div className="mb-2 text-xs font-bold tracking-wider uppercase text-base-content/60">
+              Patch Parameters
+            </div>
+            <PatchParameterViewer sysexData={currentPreset.sysexData} />
+          </div>
+        )}
       </div>
     </div>
   )

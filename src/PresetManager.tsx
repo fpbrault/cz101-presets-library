@@ -19,6 +19,7 @@ import { useMidiSetup } from '@/useMidiSetup'
 
 export default function PresetManager() {
   const queryClient = useQueryClient()
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true)
   const [editMode, setEditMode] = useState(false)
   const [performanceMode, setPerformanceMode] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
@@ -92,21 +93,53 @@ export default function PresetManager() {
       ) : (
         <>
           <div className="flex flex-row h-full overflow-hidden">
-            <div className="flex flex-col w-64 h-full gap-2 p-4 bg-base-200 min-w-64">
+            <div
+              className={
+                'relative flex flex-col h-full gap-2 p-3 bg-base-200 transition-all duration-200 border-r border-base-content/10 ' +
+                (leftPanelCollapsed ? 'w-14 min-w-14' : 'w-64 min-w-64')
+              }
+            >
               <Button
                 variant="secondary"
-                size="lg"
-                onClick={() => setPerformanceMode(true)}
+                size="sm"
+                className="w-full"
+                onClick={() => setLeftPanelCollapsed((prev) => !prev)}
               >
-                Performance Mode
+                {leftPanelCollapsed ? '>' : '<'}
               </Button>
-              <OptionPanel
-                handleSavePreset={handleSavePreset}
-                handleSendCurrentPreset={handleSendCurrentPreset}
-                autoSend={autoSend}
-                handleToggleAutoSend={handleToggleAutoSend}
-              ></OptionPanel>
-              <SettingsPanel></SettingsPanel>
+
+              {leftPanelCollapsed ? (
+                <div className="flex flex-col items-center gap-2 pt-1">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full text-[10px]"
+                    onClick={() => setPerformanceMode(true)}
+                  >
+                    PM
+                  </Button>
+                  <div className="text-[10px] font-mono text-base-content/40 [writing-mode:vertical-rl] rotate-180 tracking-widest mt-2">
+                    CONTROLS
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onClick={() => setPerformanceMode(true)}
+                  >
+                    Performance Mode
+                  </Button>
+                  <OptionPanel
+                    handleSavePreset={handleSavePreset}
+                    handleSendCurrentPreset={handleSendCurrentPreset}
+                    autoSend={autoSend}
+                    handleToggleAutoSend={handleToggleAutoSend}
+                  ></OptionPanel>
+                  <SettingsPanel></SettingsPanel>
+                </>
+              )}
             </div>
             <PresetList
               handleSelectPreset={handleSelectPreset}
