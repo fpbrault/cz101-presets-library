@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { fetchPresetData, Preset } from '@/lib/presetManager'
 import { useQuery } from '@tanstack/react-query'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
+import { WebMidi } from 'webmidi'
 import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import { useSearchFilter } from '@/SearchFilterContext'
@@ -22,6 +23,10 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
   const [currentBank, setCurrentBank] = useState(0)
   const [isNumPadOpen, setIsNumPadOpen] = useState(false)
   const [bankInput, setBankInput] = useState('')
+  const [vibratoEnabled, setVibratoEnabled] = useState(false)
+  const [portamentoEnabled, setPortamentoEnabled] = useState(false)
+  const [portamentoTime, setPortamentoTime] = useState(0)
+  const [controlMessage, setControlMessage] = useState('')
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -132,18 +137,58 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 
   const totalBanks = Math.ceil(presets.length / 8)
 
+  const sendControlChange = async (controller: number, value: number) => {
+    if (!selectedMidiPort) {
+      setControlMessage('Select a MIDI port before sending performance controls.')
+      return
+    }
+
+    if (!WebMidi.enabled) {
+      await WebMidi.enable({ sysex: true })
+    }
+
+    const output = WebMidi.getOutputByName(selectedMidiPort)
+    if (!output) {
+      setControlMessage('Selected MIDI output is not available.')
+      return
+    }
+
+    output.sendControlChange(controller, value, { channels: selectedMidiChannel })
+  }
+
+  const handleToggleVibrato = async () => {
+    const next = !vibratoEnabled
+    await sendControlChange(1, next ? 127 : 0)
+    setVibratoEnabled(next)
+    setControlMessage(`Vibrato ${next ? 'enabled' : 'disabled'}.`)
+  }
+
+  const handleTogglePortamento = async () => {
+    const next = !portamentoEnabled
+    await sendControlChange(41, next ? 127 : 0)
+    setPortamentoEnabled(next)
+    setControlMessage(`Portamento ${next ? 'enabled' : 'disabled'}.`)
+  }
+
+  const handlePortamentoTimeChange = async (value: number) => {
+    setPortamentoTime(value)
+    await sendControlChange(5, value)
+    setControlMessage(`Portamento time set to ${value}.`)
+  }
+
   return (
     <div
       ref={containerRef}
       data-theme="cyberpunk"
       className="flex flex-col w-full h-full gap-4 p-2"
     >
-      <div className="flex items-center justify-between h-24 gap-4">
+      <div className="flex flex-wrap items-start gap-3">
         <button onClick={toggleFullscreen} className="btn btn-primary">
           Toggle Fullscreen
         </button>
-        <div className="flex items-center justify-between h-24 gap-4 ">
-          <div className="flex flex-wrap content-start w-1/2 h-24 gap-2 overflow-auto">
+
+        <div className="flex flex-wrap items-start flex-1 gap-3 min-w-0">
+          <div className="flex flex-wrap content-start flex-1 min-w-[16rem] max-h-24 gap-2 overflow-auto">
             Filters:
             {Object.entries(
               presets
@@ -172,7 +217,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-center w-full h-full p-4 rounded-md shadow-md bg-base-300 max-w-96">
+
+          <div className="flex items-center justify-center flex-1 min-w-[16rem] p-4 rounded-md shadow-md bg-base-300 max-w-96">
             <div className="flex flex-col">
               <span className="ml-2 text-2xl font-bold font-performanceMode">
                 {currentPreset?.number} | {currentPreset?.name || 'None'}
@@ -183,6 +229,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
               </span>
             </div>
           </div>
+
           <Button
             onClick={() => setFavoritesOnly(!favoritesOnly)}
             variant="accent"
@@ -190,6 +237,42 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
           >
             {favoritesOnly ? 'Show All' : 'Show Favorites'}
           </Button>
+
+          <div className="flex flex-col flex-1 min-w-[18rem] gap-2 p-3 rounded-md shadow-md bg-base-300 max-w-md">
+            <div className="text-sm font-semibold">Performance Controls</div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={handleToggleVibrato}
+                variant={vibratoEnabled ? 'success' : 'secondary'}
+                size="sm"
+              >
+                Vibrato {vibratoEnabled ? 'On' : 'Off'}
+              </Button>
+              <Button
+                onClick={handleTogglePortamento}
+                variant={portamentoEnabled ? 'success' : 'secondary'}
+                size="sm"
+              >
+                Portamento {portamentoEnabled ? 'On' : 'Off'}
+              </Button>
+            </div>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs opacity-80">
+                Portamento Time (CC 05): {portamentoTime}
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={127}
+                value={portamentoTime}
+                className="range range-primary range-xs"
+                onChange={(e) => handlePortamentoTimeChange(Number(e.target.value))}
+              />
+            </label>
+            {controlMessage && (
+              <div className="text-xs opacity-70">{controlMessage}</div>
+            )}
+          </div>
         </div>
       </div>
       <div className="flex h-full gap-4 pb-16">
