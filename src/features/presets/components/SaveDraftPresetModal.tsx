@@ -1,4 +1,5 @@
 import Button from '@/components/Button'
+import ModalShell from '@/components/ModalShell'
 
 interface SaveDraftPresetModalProps {
   isOpen: boolean
@@ -34,8 +35,7 @@ export default function SaveDraftPresetModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-      <div className="w-full max-w-2xl p-4 shadow-2xl bg-base-100 rounded-xl">
+    <ModalShell panelClassName="w-full max-w-2xl p-4 shadow-2xl bg-base-100 rounded-xl">
         <h2 className="mb-3 text-xl font-bold">Save Retrieved Preset</h2>
 
         {matchingPresetName && (
@@ -90,7 +90,6 @@ export default function SaveDraftPresetModal({
             Save New Preset
           </Button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }

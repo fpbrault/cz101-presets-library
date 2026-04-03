@@ -64,3 +64,5 @@ Key files: [src/lib/presetManager.ts](../src/lib/presetManager.ts) (core API), [
 - SysEx byte arrays start with `0xF0` and end with `0xF7`.
 - Always use `Uint8Array` for raw MIDI data — never plain `number[]`.
 - MIDI port state is stored in `MidiChannelContext`; listen for port changes via WebMidi event listeners set up in [src/PresetManager.tsx](../src/PresetManager.tsx).
+
+https://www.youngmonkey.ca/nose/audio_tech/synth/Casio-CZ.html

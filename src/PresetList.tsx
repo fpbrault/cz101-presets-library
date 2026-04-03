@@ -46,6 +46,7 @@ import { getPresetQueryKey } from '@/lib/presetQueryKey'
 interface PresetListProps {
   currentPreset: Preset | null
   handleSelectPreset: (preset: Preset) => void
+  handleActivatePreset?: (preset: Preset) => void
 }
 
 const fetchSize = 50
@@ -287,6 +288,7 @@ const PresetList: React.FC<PresetListProps> = ({
   currentPreset,
 
   handleSelectPreset,
+  handleActivatePreset,
 }) => {
   const queryClient = useQueryClient()
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -591,7 +593,25 @@ const PresetList: React.FC<PresetListProps> = ({
   const [visualSelectedId, setVisualSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
+    const isTextInputTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) {
+        return false
+      }
+
+      const tagName = target.tagName
+      return (
+        target.isContentEditable ||
+        tagName === 'INPUT' ||
+        tagName === 'TEXTAREA' ||
+        tagName === 'SELECT'
+      )
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isTextInputTarget(e.target)) {
+        return
+      }
+
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         e.preventDefault()
 
@@ -625,6 +645,24 @@ const PresetList: React.FC<PresetListProps> = ({
           }, 0)
         }
       }
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+
+        const activePreset =
+          flatData.find((preset: Preset) => preset.id === visualSelectedId) ||
+          flatData.find((preset: Preset) => preset.id === currentPreset?.id) ||
+          flatData[0]
+
+        if (activePreset) {
+          if (handleActivatePreset) {
+            handleActivatePreset(activePreset)
+          } else {
+            handleSelectPreset(activePreset)
+          }
+          setVisualSelectedId(null)
+        }
+      }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -648,7 +686,13 @@ const PresetList: React.FC<PresetListProps> = ({
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [currentPreset, flatData, handleSelectPreset, visualSelectedId])
+  }, [
+    currentPreset,
+    flatData,
+    handleSelectPreset,
+    handleActivatePreset,
+    visualSelectedId,
+  ])
 
   const fetchMoreOnBottomReached = React.useCallback(
     (containerRefElement?: HTMLDivElement | null) => {

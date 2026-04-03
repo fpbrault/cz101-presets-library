@@ -177,6 +177,7 @@ export default function PresetManager() {
               <>
                 <PresetList
                   handleSelectPreset={presetMode.handleSelectPreset}
+                  handleActivatePreset={presetMode.handleActivatePreset}
                   currentPreset={currentPreset}
                 ></PresetList>
                 <PresetDetails

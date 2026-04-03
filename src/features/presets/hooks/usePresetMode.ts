@@ -128,6 +128,14 @@ export function usePresetMode({
     }
   }
 
+  const handleActivatePreset = (preset: Preset) => {
+    setCurrentPreset(preset)
+
+    if (selectedMidiPort) {
+      restorePresetToBuffer(preset, selectedMidiPort, selectedMidiChannel)
+    }
+  }
+
   const handleSendCurrentPreset = (currentPreset: Preset | null) => {
     if (currentPreset && selectedMidiPort) {
       restorePresetToBuffer(
@@ -235,6 +243,7 @@ export function usePresetMode({
     deletePresetById,
     handleToggleAutoSend,
     handleSelectPreset,
+    handleActivatePreset,
     handleSendCurrentPreset,
     handleRetrieveCurrentPreset,
     handleRetrievePresetSlot,

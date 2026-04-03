@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest",
+    "test:component": "vitest --run src/features/ src/components/",
+    "test:component:watch": "vitest src/features/ src/components/",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   },
@@ -35,6 +37,9 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.9.3",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
