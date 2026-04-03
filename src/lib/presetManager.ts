@@ -439,7 +439,10 @@ export function formatPresetData(
   channel: number,
   targetSlot?: number,
 ): Uint8Array {
-  if (matchesBytes(data, [240, 68, 0, 0, 112, 33, 0])) {
+  if (
+    data.length >= 7 &&
+    matchesBytes(data, [240, 68, 0, 0, data[4], 33])
+  ) {
     data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])
   } else if (matchesBytes(data, [240, 68, 0, 0, 112, 32, 96])) {
     data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])

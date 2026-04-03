@@ -79,6 +79,40 @@ describe('formatPresetData', () => {
     // Should still return a Uint8Array even with invalid input
     expect(result).toBeInstanceOf(Uint8Array)
   })
+
+  it('normalizes 0x21 voice dump responses regardless of slot byte', () => {
+    const responseSlot1 = new Uint8Array([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x21,
+      0x20,
+      0x01,
+      0x02,
+      0xf7,
+    ])
+    const responseSlot16 = new Uint8Array([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x21,
+      0x2f,
+      0x01,
+      0x02,
+      0xf7,
+    ])
+
+    const normalizedSlot1 = formatPresetData(responseSlot1, 1)
+    const normalizedSlot16 = formatPresetData(responseSlot16, 1)
+
+    expect(Array.from(normalizedSlot1)).toEqual(Array.from(normalizedSlot16))
+    expect(normalizedSlot1[5]).toBe(0x20)
+    expect(normalizedSlot1[6]).toBe(0x60)
+  })
 })
 
 describe('determineTags', () => {
