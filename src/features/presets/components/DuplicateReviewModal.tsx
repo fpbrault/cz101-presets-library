@@ -8,6 +8,11 @@ export interface DuplicateGroup {
   presets: Preset[]
 }
 
+function getSuggestedKeepIndex(presets: Preset[]): number {
+  const favoriteIndex = presets.findIndex((preset) => Boolean(preset.favorite))
+  return favoriteIndex >= 0 ? favoriteIndex : 0
+}
+
 interface DuplicateReviewModalProps {
   isOpen: boolean
   groups: DuplicateGroup[]
@@ -39,9 +44,12 @@ export default function DuplicateReviewModal({
   }
 
   const handleSelectAllExceptFirst = () => {
-    const nextIds = groups.flatMap((group) =>
-      group.presets.slice(1).map((preset) => preset.id),
-    )
+    const nextIds = groups.flatMap((group) => {
+      const keepIndex = getSuggestedKeepIndex(group.presets)
+      return group.presets
+        .filter((_, index) => index !== keepIndex)
+        .map((preset) => preset.id)
+    })
     setSelectedIds(nextIds)
   }
 
@@ -70,32 +78,35 @@ export default function DuplicateReviewModal({
                 Group {groupIndex + 1} ({group.presets.length} presets)
               </div>
               <div className="space-y-2">
-                {group.presets.map((preset, presetIndex) => {
-                  const checked = selectedIds.includes(preset.id)
-                  return (
-                    <label
-                      key={preset.id}
-                      className="flex items-center justify-between gap-3 p-2 rounded-md cursor-pointer bg-base-200/60"
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="checkbox checkbox-sm"
-                          checked={checked}
-                          onChange={() => togglePreset(preset.id)}
-                        />
-                        <span className="font-medium">{preset.name}</span>
-                        {preset.favorite && (
-                          <span className="badge badge-warning badge-sm">Favorite</span>
+                {(() => {
+                  const keepIndex = getSuggestedKeepIndex(group.presets)
+                  return group.presets.map((preset, presetIndex) => {
+                    const checked = selectedIds.includes(preset.id)
+                    return (
+                      <label
+                        key={preset.id}
+                        className="flex items-center justify-between gap-3 p-2 rounded-md cursor-pointer bg-base-200/60"
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="checkbox checkbox-sm"
+                            checked={checked}
+                            onChange={() => togglePreset(preset.id)}
+                          />
+                          <span className="font-medium">{preset.name}</span>
+                          {preset.favorite && (
+                            <span className="badge badge-warning badge-sm">Favorite</span>
+                          )}
+                          <span className="text-xs opacity-70">by {preset.author || 'Unknown'}</span>
+                        </div>
+                        {presetIndex === keepIndex && (
+                          <span className="badge badge-success badge-sm">Suggested keep</span>
                         )}
-                        <span className="text-xs opacity-70">by {preset.author || 'Unknown'}</span>
-                      </div>
-                      {presetIndex === 0 && (
-                        <span className="badge badge-success badge-sm">Suggested keep</span>
-                      )}
-                    </label>
-                  )
-                })}
+                      </label>
+                    )
+                  })
+                })()}
               </div>
             </div>
           ))}
