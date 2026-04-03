@@ -6,6 +6,7 @@ import { filterPresets } from '@/lib/filterPresets'
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
+import { SetlistEntry } from '@/lib/setlistManager'
 
 let presetDatabase: PresetDatabase
 
@@ -15,6 +16,350 @@ const REQUEST_COMMANDS = Array.from(
 )
 const BACKUP_FOLDER = 'cz101_backup'
 const CONFIG_FILE = 'config.json'
+const SYSEX_TIMEOUT_MS = 1500
+
+const matchesBytes = (arr: Uint8Array, bytes: number[]) =>
+  bytes.every((b, i) => arr[i] === b)
+
+function getSysexChannelByte(channel: number): number {
+  if (channel > 0 && channel < 17) {
+    return 111 + channel
+  }
+  return 111
+}
+
+function buildVoiceDumpRequest(channel: number, program: number): Uint8Array {
+  return new Uint8Array([
+    0xf0,
+    0x44,
+    0x00,
+    0x00,
+    getSysexChannelByte(channel),
+    0x10,
+    program,
+    0x70,
+    0x31,
+    0xf7,
+  ])
+}
+
+async function waitForSingleSysexResponse(
+  input: Input,
+  timeoutMs: number = SYSEX_TIMEOUT_MS,
+): Promise<Uint8Array> {
+  return new Promise<Uint8Array>((resolve, reject) => {
+    const listener = (e: { data: Uint8Array }) => {
+      clearTimeout(timeout)
+      input.removeListener('sysex', listener)
+      resolve(new Uint8Array(e.data))
+    }
+
+    input.addListener('sysex', listener)
+
+    const timeout = setTimeout(() => {
+      input.removeListener('sysex', listener)
+      reject(new Error('Timed out waiting for SysEx response from synth'))
+    }, timeoutMs)
+  })
+}
+
+function ensureSysexFraming(data: Uint8Array): Uint8Array {
+  if (data.length === 0) return data
+  if (data[0] === 0xf0 && data[data.length - 1] === 0xf7) {
+    return data
+  }
+  return new Uint8Array([0xf0, ...data, 0xf7])
+}
+
+function isNibblePayload(payload: Uint8Array): boolean {
+  return payload.every((byte) => byte >= 0x00 && byte <= 0x0f)
+}
+
+function toCanonicalVoicePacketFromNibblePayload(payload: Uint8Array): Uint8Array {
+  return new Uint8Array([
+    0xf0,
+    0x44,
+    0x00,
+    0x00,
+    0x70,
+    0x20,
+    0x60,
+    ...payload,
+    0xf7,
+  ])
+}
+
+function toCanonicalVoicePacketFromLogicalPayload(payload: Uint8Array): Uint8Array {
+  const nibblePayload: number[] = []
+  for (const value of payload) {
+    nibblePayload.push(value & 0x0f, (value >> 4) & 0x0f)
+  }
+  return toCanonicalVoicePacketFromNibblePayload(Uint8Array.from(nibblePayload))
+}
+
+export function normalizeSysexForLibrary(data: Uint8Array): Uint8Array {
+  const framed = ensureSysexFraming(data)
+
+  // Canonical: payload starts at offset 7 and is 256 nibble bytes.
+  if (framed.length >= 264) {
+    const payload = framed.slice(7, 7 + 256)
+    if (payload.length === 256 && isNibblePayload(payload)) {
+      return toCanonicalVoicePacketFromNibblePayload(payload)
+    }
+  }
+
+  // Tolerate command/program variations shifting payload start.
+  for (let offset = 7; offset <= 16; offset++) {
+    if (framed.length >= offset + 256 + 1) {
+      const payload = framed.slice(offset, offset + 256)
+      if (payload.length === 256 && isNibblePayload(payload)) {
+        return toCanonicalVoicePacketFromNibblePayload(payload)
+      }
+    }
+  }
+
+  // Some dumps may carry 128 logical bytes; re-encode to canonical nibble stream.
+  for (let offset = 7; offset <= 16; offset++) {
+    if (framed.length >= offset + 128 + 1) {
+      const payload = framed.slice(offset, offset + 128)
+      if (payload.length === 128) {
+        return toCanonicalVoicePacketFromLogicalPayload(payload)
+      }
+    }
+  }
+
+  // Preserve input if no known shape is detected.
+  return framed
+}
+
+function normalizePresetPacketForStorage(data: Uint8Array): Uint8Array {
+  if (data.length === 0) {
+    return data
+  }
+
+  if (data[0] !== 0xf0 || data[data.length - 1] !== 0xf7) {
+    return data
+  }
+
+  if (matchesBytes(data, [0xf0, 0x44, 0x00, 0x00, 0x70, 0x30])) {
+    return new Uint8Array([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x20,
+      0x21,
+      ...data.slice(6, -1),
+      0xf7,
+    ])
+  }
+
+  return data
+}
+
+function canonicalizePresetForLibrary(data: Uint8Array): Uint8Array {
+  const normalized = normalizeSysexForLibrary(data)
+  const formatted = formatPresetData(ensureSysexFraming(normalized), 1)
+  const canonical = new Uint8Array(formatted)
+
+  if (canonical.length > 7) {
+    canonical[4] = 0x70
+    canonical[5] = 0x20
+    canonical[6] = 0x60
+  }
+
+  return canonical
+}
+
+function getProgramByteForSlot(bank: 'internal' | 'cartridge', slot: number): number {
+  if (slot < 1 || slot > 16) {
+    throw new Error('Slot must be between 1 and 16')
+  }
+  if (bank === 'internal') {
+    return 0x20 + (slot - 1)
+  }
+  return slot - 1
+}
+
+function normalizePresetForComparison(data: Uint8Array): Uint8Array {
+  return canonicalizePresetForLibrary(data)
+}
+
+function getPresetFingerprint(data: Uint8Array): string {
+  return Array.from(normalizePresetForComparison(data)).join(',')
+}
+
+async function buildPresetMatchIndex(): Promise<Map<string, Preset>> {
+  const presets = await getPresets()
+  const index = new Map<string, Preset>()
+
+  presets.forEach((preset) => {
+    index.set(getPresetFingerprint(preset.sysexData), preset)
+  })
+
+  return index
+}
+
+async function requestVoiceDump(params: {
+  portName: string
+  channel: number
+  program: number
+  timeoutMs?: number
+}): Promise<Uint8Array> {
+  const output = WebMidi.getOutputByName(params.portName) as Output
+  const input = WebMidi.getInputByName(params.portName) as Input
+
+  if (!output || !input) {
+    throw new Error('MIDI input/output port is not ready')
+  }
+
+  const responsePromise = waitForSingleSysexResponse(input, params.timeoutMs)
+  const command = buildVoiceDumpRequest(params.channel, params.program)
+  output.sendSysex([], command.slice(1, -1))
+
+  const response = await responsePromise
+  return ensureSysexFraming(response)
+}
+
+function buildReceiveRequest1Message(
+  data: Uint8Array,
+  channel: number,
+  targetProgram?: number,
+): Uint8Array {
+  const formatted = formatPresetData(ensureSysexFraming(data), channel)
+  const message = new Uint8Array(formatted)
+
+  if (targetProgram !== undefined) {
+    message[5] = 0x20
+    message[6] = targetProgram
+  }
+
+  return message
+}
+
+function mapToSetlistEntry(
+  slot: number,
+  programByte: number,
+  sysexData: Uint8Array,
+  presetMatchIndex: Map<string, Preset>,
+): SetlistEntry {
+  const matchedPreset = presetMatchIndex.get(getPresetFingerprint(sysexData))
+
+  return {
+    slot,
+    programByte,
+    sysexData,
+    isExactLibraryMatch: Boolean(matchedPreset),
+    matchedPresetId: matchedPreset?.id,
+    matchedPresetName: matchedPreset?.name,
+    matchedPresetAuthor: matchedPreset?.author,
+  }
+}
+
+export async function getMatchingPresetBySysex(
+  sysexData: Uint8Array,
+): Promise<Preset | undefined> {
+  const index = await buildPresetMatchIndex()
+  return index.get(getPresetFingerprint(sysexData))
+}
+
+export async function retrieveCurrentPresetFromSynth(
+  portName: string,
+  channel: number,
+): Promise<{ sysexData: Uint8Array; matchingPreset?: Preset }> {
+  const sysexData = await requestVoiceDump({
+    portName,
+    channel,
+    program: 0x60,
+  })
+  const matchingPreset = await getMatchingPresetBySysex(sysexData)
+  return { sysexData, matchingPreset }
+}
+
+export async function retrievePresetSlotFromSynth(
+  portName: string,
+  channel: number,
+  bank: 'internal' | 'cartridge',
+  slot: number,
+): Promise<{ sysexData: Uint8Array; programByte: number; matchingPreset?: Preset }> {
+  const programByte = getProgramByteForSlot(bank, slot)
+  const sysexData = await requestVoiceDump({
+    portName,
+    channel,
+    program: programByte,
+  })
+  const matchingPreset = await getMatchingPresetBySysex(sysexData)
+  return { sysexData, programByte, matchingPreset }
+}
+
+export async function retrieveInternalBackupFromSynth(
+  portName: string,
+  channel: number,
+  onProgress?: (completed: number, total: number) => void,
+): Promise<SetlistEntry[]> {
+  const presetMatchIndex = await buildPresetMatchIndex()
+  const results: SetlistEntry[] = []
+
+  for (let i = 0; i < 16; i++) {
+    const slot = i + 1
+    const programByte = 0x20 + i
+    const sysexData = await requestVoiceDump({
+      portName,
+      channel,
+      program: programByte,
+    })
+
+    results.push(mapToSetlistEntry(slot, programByte, sysexData, presetMatchIndex))
+    onProgress?.(slot, 16)
+    await delay(60)
+  }
+
+  return results
+}
+
+export async function writePresetToSynthSlot(
+  preset: Preset,
+  portName: string,
+  channel: number,
+  bank: 'internal' | 'cartridge',
+  slot: number,
+): Promise<void> {
+  await writeSysexDataToSynthSlot(preset.sysexData, portName, channel, bank, slot)
+}
+
+export async function writeSysexDataToSynthSlot(
+  sysexData: Uint8Array,
+  portName: string,
+  channel: number,
+  bank: 'internal' | 'cartridge',
+  slot: number,
+): Promise<void> {
+  const output = WebMidi.getOutputByName(portName) as Output
+  if (!output) {
+    throw new Error('Output not ready')
+  }
+
+  const programByte = getProgramByteForSlot(bank, slot)
+  const message = buildReceiveRequest1Message(sysexData, channel, programByte)
+  output.sendSysex([], message.slice(1, -1))
+  await delay(100)
+}
+
+export async function writeSysexDataToTemporaryBuffer(
+  sysexData: Uint8Array,
+  portName: string,
+  channel: number,
+): Promise<void> {
+  const output = WebMidi.getOutputByName(portName) as Output
+  if (!output) {
+    throw new Error('Output not ready')
+  }
+
+  const message = buildReceiveRequest1Message(sysexData, channel, 0x60)
+  output.sendSysex([], message.slice(1, -1))
+  await delay(100)
+}
 
 if (typeof window !== 'undefined' && (window as any).__TAURI__) {
   console.log('Running in Tauri')
@@ -86,11 +431,11 @@ export function formatPresetData(
   channel: number,
   targetSlot?: number,
 ): Uint8Array {
-  if (data.slice(0, 7).toString() === '240,68,0,0,112,33,0') {
+  if (matchesBytes(data, [240, 68, 0, 0, 112, 33, 0])) {
     data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])
-  } else if (data.slice(0, 7).toString() === '240,68,0,0,112,32,96') {
+  } else if (matchesBytes(data, [240, 68, 0, 0, 112, 32, 96])) {
     data = new Uint8Array([...data.slice(0, 6), ...data.slice(7)])
-  } else if (data.slice(0, 6).toString() === '240,68,0,0,112,32') {
+  } else if (matchesBytes(data, [240, 68, 0, 0, 112, 32])) {
     data = new Uint8Array([...data.slice(0, 5), 0x00, ...data.slice(7)])
   }
 
@@ -261,47 +606,34 @@ function delay(ms: number) {
 export async function savePreset(
   portName: string,
   presetNumber: number,
-  filename: string,
+  _filename: string,
+  channel: number = 1,
 ): Promise<Preset> {
-  const output = WebMidi.getOutputByName(portName) as Output
-  const input = WebMidi.getInputByName(portName) as Input
-
-  console.log('Input:', input)
-
-  const command = REQUEST_COMMANDS[presetNumber - 1]
-  console.log('Request Commands:', REQUEST_COMMANDS)
-
-  const response = await new Promise<Uint8Array | null>(async (resolve) => {
-    input.addOneTimeListener('sysex', (e: any) => {
-      console.log('Received sysex data inside promise:', e.data)
-
-      resolve(e.data)
-    })
-
-    // Add a delay before sending the SysEx command
-    await delay(500) // 500ms delay
-    console.log('Sending SysEx command:', command.slice(1, -1))
-    output.sendSysex([], command.slice(1, -1))
-  })
-
-  if (response && response.length === 263) {
-    console.log('Response Buffer:', new Uint8Array([0xf0, ...response, 0xf7]))
-    const preset = (
-      await createPresetData(
-        'preset_' + presetNumber + '.syx',
-        new Uint8Array([...response]),
-      )
-    )[0]
-
-    // fs.writeFileSync(filename, Buffer.from([0xf0, ...response, 0xf7]))
-    console.log(`Preset ${presetNumber} saved to ${filename} successfully.`)
-    preset.slot = presetNumber
-    const newPreset = await addPreset(preset)
-    return newPreset
-  } else {
-    console.log(`Failed to save preset ${presetNumber}.`)
-    throw new Error('Failed to save preset.')
+  if (presetNumber < 1 || presetNumber > 16) {
+    throw new Error('Preset number must be between 1 and 16')
   }
+
+  const { sysexData } = await retrievePresetSlotFromSynth(
+    portName,
+    channel,
+    'internal',
+    presetNumber,
+  )
+
+  const preset = (
+    await createPresetData(
+      'preset_' + presetNumber + '.syx',
+      sysexData,
+    )
+  )[0]
+
+  if (!preset) {
+    throw new Error('Failed to parse preset from synth response.')
+  }
+
+  preset.slot = presetNumber
+  const newPreset = await addPreset(preset)
+  return newPreset
 }
 
 export async function loadSettings(): Promise<Record<string, any>> {
@@ -359,6 +691,31 @@ export type Preset = {
   [key: string]: any
   favorite?: boolean
   rating?: 1 | 2 | 3 | 4 | 5
+}
+
+export function createPresetFromSysex(params: {
+  filename: string
+  name: string
+  sysexData: Uint8Array
+  author?: string
+  description?: string
+  tags?: string[]
+}): Preset {
+  const timestamp = new Date().toISOString()
+  const trimmedName = params.name.trim()
+  const normalizedSysexData = normalizePresetPacketForStorage(params.sysexData)
+
+  return {
+    id: uuidv4(),
+    name: trimmedName,
+    createdDate: timestamp,
+    modifiedDate: timestamp,
+    filename: params.filename,
+    sysexData: normalizedSysexData,
+    tags: params.tags ?? determineTags(trimmedName),
+    author: params.author ?? 'Temple of CZ',
+    description: params.description ?? '',
+  }
 }
 
 import { patches } from '@/assets/cznames'
@@ -432,17 +789,18 @@ export async function createPresetData(
   sysexData: Uint8Array,
 ): Promise<Preset[]> {
   const presets: Preset[] = []
+  const normalizedInput = normalizePresetPacketForStorage(sysexData)
   let startIndex = 0
 
   // Try to load preset names
   const presetNames = await parsePresetNames()
   const baseFilename = filename.replace(/\.syx$/i, '')
 
-  while (startIndex < sysexData.length) {
-    const endIndex = sysexData.indexOf(0xf7, startIndex)
+  while (startIndex < normalizedInput.length) {
+    const endIndex = normalizedInput.indexOf(0xf7, startIndex)
     if (endIndex === -1) break
 
-    const presetData = sysexData.slice(startIndex, endIndex + 1)
+    const presetData = normalizedInput.slice(startIndex, endIndex + 1)
     if (presetData[0] === 0xf0 && presetData[presetData.length - 1] === 0xf7) {
       const presetIndex = presets.length
       const presetName =
@@ -491,11 +849,19 @@ export async function getPresets(): Promise<Preset[]> {
 }
 
 export async function addPreset(preset: Preset): Promise<Preset> {
-  return presetDatabase.addPreset(preset)
+  const nextPreset: Preset = {
+    ...preset,
+    modifiedDate: new Date().toISOString(),
+  }
+  return presetDatabase.addPreset(nextPreset)
 }
 
 export async function updatePreset(preset: Preset): Promise<void> {
-  return presetDatabase.updatePreset(preset)
+  const nextPreset: Preset = {
+    ...preset,
+    modifiedDate: new Date().toISOString(),
+  }
+  return presetDatabase.updatePreset(nextPreset)
 }
 
 export async function deletePreset(id: string): Promise<void> {

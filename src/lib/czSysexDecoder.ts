@@ -20,6 +20,51 @@ function logicalByte(data: Uint8Array, logIdx: number): number {
   return ((data[off + 1] & 0x0f) << 4) | (data[off] & 0x0f)
 }
 
+function ensureFraming(data: Uint8Array): Uint8Array {
+  let framed = data
+  if (!framed.length) return framed
+
+  if (framed[0] !== 0xf0) {
+    framed = new Uint8Array([0xf0, ...framed])
+  }
+  if (framed[framed.length - 1] !== 0xf7) {
+    framed = new Uint8Array([...framed, 0xf7])
+  }
+
+  return framed
+}
+
+function isNibblePayload(payload: Uint8Array): boolean {
+  return payload.every((byte) => byte >= 0x00 && byte <= 0x0f)
+}
+
+function extractNibblePayload(data: Uint8Array): Uint8Array | null {
+  // Canonical packets start payload at index 7, but some synth variants prepend
+  // different command/program bytes while keeping the same 256-nibble payload.
+  const maxOffset = Math.min(data.length - 256 - 1, 20)
+  for (let offset = 7; offset <= maxOffset; offset++) {
+    const payload = data.slice(offset, offset + 256)
+    if (payload.length === 256 && isNibblePayload(payload)) {
+      return payload
+    }
+  }
+  return null
+}
+
+function toCanonicalPacket(payload: Uint8Array): Uint8Array {
+  return new Uint8Array([
+    0xf0,
+    0x44,
+    0x00,
+    0x00,
+    0x70,
+    0x20,
+    0x60,
+    ...payload,
+    0xf7,
+  ])
+}
+
 // ---------------------------------------------------------------------------
 // Envelope step
 // ---------------------------------------------------------------------------
@@ -271,64 +316,70 @@ const VIBRATO_WAVE_MAP: Record<number, 1 | 2 | 3 | 4> = {
  * Returns `null` if the data is too short to be a valid preset.
  */
 export function decodeCzPatch(sysexData: Uint8Array): DecodedPatch | null {
-  // Minimum length: 7 (header) + 256 (nibble data) + 1 (F7) = 264
-  if (!sysexData || sysexData.length < 264) return null
+  if (!sysexData || sysexData.length < 16) return null
+
+  const framed = ensureFraming(sysexData)
+  const payload = extractNibblePayload(framed)
+  if (!payload) return null
+
+  // Decode from a normalized packet shape so all section offsets are stable.
+  const normalized = toCanonicalPacket(payload)
 
   // Section 1 — PFLAG
-  const pflag = logicalByte(sysexData, 0)
+  const pflag = logicalByte(normalized, 0)
   const octaveRaw = (pflag >> 2) & 0x03
   const octave: -1 | 0 | 1 = octaveRaw === 2 ? -1 : octaveRaw === 1 ? 1 : 0
   const lineSelect = LINE_SELECT_MAP[pflag & 0x03] ?? 'L1'
 
   // Section 2 — PDS
-  const pds = logicalByte(sysexData, 1)
+  const pds = logicalByte(normalized, 1)
   const detuneDirection: '+' | '-' = pds === 0x01 ? '-' : '+'
 
   // Section 3 — PDL / PDH
-  const pdl = logicalByte(sysexData, 2)
-  const pdh = logicalByte(sysexData, 3)
+  const pdl = logicalByte(normalized, 2)
+  const pdh = logicalByte(normalized, 3)
   const detuneFine   = (pdl & 0x0f) + ((pdl >> 4) * 16)
   const detuneOctave = Math.floor(pdh / 12)
   const detuneNote   = pdh % 12
 
   // Section 4 — PVK
-  const pvk = logicalByte(sysexData, 4)
+  const pvk = logicalByte(normalized, 4)
   const vibratoWave = VIBRATO_WAVE_MAP[pvk] ?? 1
 
   // Sections 5/6/7 — first byte approximates the value (0–99)
-  const vibratoDelay = logicalByte(sysexData, 5)
-  const vibratoRate  = logicalByte(sysexData, 8)
-  const vibratoDepth = logicalByte(sysexData, 11)
+  const vibratoDelay = logicalByte(normalized, 5)
+  const vibratoRate  = logicalByte(normalized, 8)
+  const vibratoDepth = logicalByte(normalized, 11)
 
   // Section 8 — MFW (DCO1 waveform)
-  const dco1 = decodeWaveform(sysexData, 14)
+  const dco1 = decodeWaveform(normalized, 14)
 
   // Section 9 — DCA1 key follow
-  const dca1KeyFollow = decodeKeyFollow(sysexData, 16)
+  const dca1KeyFollow = decodeKeyFollow(normalized, 16)
   // Section 10 — DCW1 key follow
-  const dcw1KeyFollow = decodeKeyFollow(sysexData, 18)
+  const dcw1KeyFollow = decodeKeyFollow(normalized, 18)
 
   // Sections 11/12 — DCA1 envelope
-  const dca1 = readDcaEnvelope(sysexData, 21, 20)
+  const dca1 = readDcaEnvelope(normalized, 21, 20)
   // Sections 13/14 — DCW1 envelope
-  const dcw1 = readEnvelope(sysexData, 38, 37, decodeDcwStep)
+  const dcw1 = readEnvelope(normalized, 38, 37, decodeDcwStep)
   // Sections 15/16 — DCO1 envelope
-  const dco1Env = readEnvelope(sysexData, 55, 54, decodeDcoStep)
+  const dco1Env = readEnvelope(normalized, 55, 54, decodeDcoStep)
 
   // Section 17 — SFW (DCO2 waveform, modulation bits ignored)
-  const dco2 = decodeWaveform(sysexData, 71, true)
+  const dco2 = decodeWaveform(normalized, 71, true)
 
   // Section 18 — DCA2 key follow
-  const dca2KeyFollow = decodeKeyFollow(sysexData, 73)
+  const dca2KeyFollow = decodeKeyFollow(normalized, 73)
   // Section 19 — DCW2 key follow
-  const dcw2KeyFollow = decodeKeyFollow(sysexData, 75)
+  const dcw2KeyFollow = decodeKeyFollow(normalized, 75)
 
   // Sections 20/21 — DCA2 envelope
-  const dca2 = readDcaEnvelope(sysexData, 78, 77)
+  const dca2 = readDcaEnvelope(normalized, 78, 77)
   // Sections 22/23 — DCW2 envelope
-  const dcw2 = readEnvelope(sysexData, 95, 94, decodeDcwStep)
+  const dcw2 = readEnvelope(normalized, 95, 94, decodeDcwStep)
   // Sections 24/25 — DCO2 envelope
-  const dco2Env = readEnvelope(sysexData, 112, 111, decodeDcoStep)
+  const dco2Env = readEnvelope(normalized, 112, 111, decodeDcoStep)
 
   return {
     lineSelect, octave,

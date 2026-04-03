@@ -1,12 +1,5 @@
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import {
-  Preset,
-  restorePresetToBuffer,
-  deletePreset,
-  savePreset,
-} from '@/lib/presetManager'
-import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import { Preset } from '@/lib/presetManager'
 import PresetDetails from '@/PresetDetails'
 import PresetList from '@/PresetList'
 import OptionPanel from '@/OptionPanel'
@@ -16,61 +9,46 @@ import { useMidiPort } from '@/MidiPortContext'
 import PerformanceMode from '@/PerformanceMode'
 import Button from '@/components/Button'
 import { useMidiSetup } from '@/useMidiSetup'
+import SetlistsPage from '@/SetlistsPage'
+import SaveDraftPresetModal from '@/SaveDraftPresetModal'
+import { usePresetMode } from '@/usePresetMode'
+import { useSetlistMode } from '@/useSetlistMode'
+
+type AppMode = 'presets' | 'setlists'
 
 export default function PresetManager() {
-  const queryClient = useQueryClient()
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true)
-  const [editMode, setEditMode] = useState(false)
   const [performanceMode, setPerformanceMode] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
-  const [autoSend, setAutoSend] = useState(
-    loadFromLocalStorage('autoSend', false),
-  )
-  const { setMidiPorts } = useMidiPort()
-  const { selectedMidiPort } = useMidiPort()
+  const [appMode, setAppMode] = useState<AppMode>('presets')
+  const [statusMessage, setStatusMessage] = useState<string>('')
+
+  const { setMidiPorts, selectedMidiPort } = useMidiPort()
   const { selectedMidiChannel } = useMidiChannel()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   useMidiSetup(setMidiPorts)
 
+  const presetMode = usePresetMode({
+    selectedMidiPort,
+    selectedMidiChannel,
+    setStatusMessage,
+    setCurrentPreset,
+    setAppMode,
+  })
+
+  const setlistMode = useSetlistMode({
+    selectedMidiPort,
+    selectedMidiChannel,
+    setStatusMessage,
+    setAppMode,
+    openSaveDraftPresetModal: presetMode.openSaveDraftPresetModal,
+  })
+
   const handleDeletePreset = async (id: string) => {
-    await deletePreset(id)
-    await queryClient.invalidateQueries({ queryKey: ['presets'] })
-    setCurrentPreset(null)
+    await presetMode.deletePresetById(id)
     setShowDeleteModal(false)
-  }
-
-  const handleToggleAutoSend = () => {
-    setAutoSend((prevAutoSend: boolean) => {
-      const newAutoSend = !prevAutoSend
-      saveToLocalStorage('autoSend', newAutoSend)
-      return newAutoSend
-    })
-  }
-
-  const handleSelectPreset = (preset: Preset) => {
-    setCurrentPreset(preset)
-
-    if (autoSend && preset && selectedMidiPort) {
-      restorePresetToBuffer(preset, selectedMidiPort, selectedMidiChannel)
-    }
-  }
-
-  const handleSavePreset = async (slot: number) => {
-    const preset = await savePreset(selectedMidiPort, slot, 'newPreset')
-    await queryClient.invalidateQueries({ queryKey: ['presets'] })
-    setCurrentPreset(preset)
-  }
-
-  const handleSendCurrentPreset = () => {
-    if (currentPreset && selectedMidiPort) {
-      restorePresetToBuffer(
-        currentPreset,
-        selectedMidiPort,
-        selectedMidiChannel,
-      )
-    }
   }
 
   return (
@@ -87,7 +65,7 @@ export default function PresetManager() {
           </div>
           <PerformanceMode
             currentPreset={currentPreset}
-            handleSelectPreset={handleSelectPreset}
+            handleSelectPreset={presetMode.handleSelectPreset}
           />
         </>
       ) : (
@@ -118,9 +96,24 @@ export default function PresetManager() {
                   >
                     PM
                   </Button>
-                  <div className="text-[10px] font-mono text-base-content/40 [writing-mode:vertical-rl] rotate-180 tracking-widest mt-2">
-                    CONTROLS
-                  </div>
+                  <Button
+                    variant={appMode === 'presets' ? 'accent' : 'secondary'}
+                    size="sm"
+                    className="w-full text-[10px]"
+                    onClick={() => setAppMode('presets')}
+                    title="Presets"
+                  >
+                    P
+                  </Button>
+                  <Button
+                    variant={appMode === 'setlists' ? 'accent' : 'secondary'}
+                    size="sm"
+                    className="w-full text-[10px]"
+                    onClick={() => setAppMode('setlists')}
+                    title="Setlists"
+                  >
+                    S
+                  </Button>
                 </div>
               ) : (
                 <>
@@ -131,28 +124,92 @@ export default function PresetManager() {
                   >
                     Performance Mode
                   </Button>
-                  <OptionPanel
-                    handleSavePreset={handleSavePreset}
-                    handleSendCurrentPreset={handleSendCurrentPreset}
-                    autoSend={autoSend}
-                    handleToggleAutoSend={handleToggleAutoSend}
-                  ></OptionPanel>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={appMode === 'presets' ? 'accent' : 'secondary'}
+                      onClick={() => setAppMode('presets')}
+                    >
+                      Presets
+                    </Button>
+                    <Button
+                      variant={appMode === 'setlists' ? 'accent' : 'secondary'}
+                      onClick={() => setAppMode('setlists')}
+                    >
+                      Setlists
+                    </Button>
+                  </div>
+
+                  {appMode === 'presets' && (
+                    <OptionPanel
+                      currentPreset={currentPreset}
+                      handleSendCurrentPreset={() =>
+                        presetMode.handleSendCurrentPreset(currentPreset)
+                      }
+                      autoSend={presetMode.autoSend}
+                      handleToggleAutoSend={presetMode.handleToggleAutoSend}
+                      handleRetrieveCurrentPreset={presetMode.handleRetrieveCurrentPreset}
+                      handleRetrievePresetSlot={presetMode.handleRetrievePresetSlot}
+                      handleWritePresetSlot={(bank, slot) =>
+                        presetMode.handleWritePresetSlot(currentPreset, bank, slot)
+                      }
+                    ></OptionPanel>
+                  )}
+
+                  {appMode === 'setlists' && (
+                    <div className="p-2 rounded-lg bg-base-300 text-xs">
+                      <div>Setlists: {setlistMode.setlistSummary.count}</div>
+                      <div>Entries: {setlistMode.setlistSummary.entries}</div>
+                    </div>
+                  )}
+
                   <SettingsPanel></SettingsPanel>
                 </>
               )}
+
+              {!leftPanelCollapsed && statusMessage && (
+                <div className="p-2 mt-auto text-xs rounded-md bg-base-300/70 text-base-content/80">
+                  {statusMessage}
+                </div>
+              )}
             </div>
-            <PresetList
-              handleSelectPreset={handleSelectPreset}
-              currentPreset={currentPreset}
-            ></PresetList>
-            <PresetDetails
-              editMode={editMode}
-              currentPreset={currentPreset}
-              onPresetUpdated={setCurrentPreset}
-              setShowDeleteModal={setShowDeleteModal}
-              setEditMode={setEditMode}
-            ></PresetDetails>
+
+            {appMode === 'presets' && (
+              <>
+                <PresetList
+                  handleSelectPreset={presetMode.handleSelectPreset}
+                  currentPreset={currentPreset}
+                ></PresetList>
+                <PresetDetails
+                  editMode={presetMode.editMode}
+                  currentPreset={currentPreset}
+                  onPresetUpdated={setCurrentPreset}
+                  setShowDeleteModal={setShowDeleteModal}
+                  setEditMode={presetMode.setEditMode}
+                ></PresetDetails>
+              </>
+            )}
+
+            {appMode === 'setlists' && (
+              <SetlistsPage
+                setlists={setlistMode.setlists}
+                selectedSetlistId={setlistMode.selectedSetlistId}
+                isBackingUp={setlistMode.isBackingUp}
+                backupProgress={setlistMode.backupProgress}
+                isRestoring={setlistMode.isRestoringSetlist}
+                restoreProgress={setlistMode.restoreProgress}
+                onSelectSetlist={setlistMode.setSelectedSetlistId}
+                onCreateBackup={setlistMode.handleCreateBackup}
+                onRestoreSetlistToSynth={setlistMode.handleRestoreSetlistToSynth}
+                onDeleteSetlist={setlistMode.handleDeleteSetlist}
+                onExportSetlist={setlistMode.handleExportSetlist}
+                onImportSetlist={setlistMode.handleImportSetlist}
+                onSaveEntryAsPreset={setlistMode.handleSaveSetlistEntryAsPreset}
+                onSendEntryToSlot={setlistMode.handleSendSetlistEntryToSlot}
+                onPreviewEntryInBuffer={setlistMode.handlePreviewSetlistEntryInBuffer}
+              />
+            )}
           </div>
+
           {showDeleteModal && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
               <div className="p-4 shadow-lg bg-base-100 rounded-xl">
@@ -175,6 +232,21 @@ export default function PresetManager() {
               </div>
             </div>
           )}
+
+          <SaveDraftPresetModal
+            isOpen={Boolean(presetMode.saveDraftPresetState)}
+            matchingPresetName={presetMode.saveDraftPresetState?.matchingPreset?.name}
+            name={presetMode.saveDraftName}
+            author={presetMode.saveDraftAuthor}
+            tags={presetMode.saveDraftTags}
+            description={presetMode.saveDraftDescription}
+            onNameChange={presetMode.setSaveDraftName}
+            onAuthorChange={presetMode.setSaveDraftAuthor}
+            onTagsChange={presetMode.setSaveDraftTags}
+            onDescriptionChange={presetMode.setSaveDraftDescription}
+            onCancel={presetMode.closeSaveDraftPresetModal}
+            onSave={presetMode.handleSaveDraftPreset}
+          />
         </>
       )}
     </main>

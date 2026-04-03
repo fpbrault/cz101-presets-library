@@ -129,6 +129,65 @@ describe('createPresetData', () => {
     expect(presets[0]).toHaveProperty('author', 'Temple of CZ')
   })
 
+  it('should preserve the original packet bytes when creating a standard preset', async () => {
+    const sysexData = new Uint8Array([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x20,
+      0x24,
+      0x0a,
+      0x00,
+      0x06,
+      0x02,
+      0x0d,
+      0xf7,
+    ])
+
+    const presets = await createPresetData('receive-request.syx', sysexData)
+
+    expect(presets).toHaveLength(1)
+    expect(Array.from(presets[0].sysexData)).toEqual(Array.from(sysexData))
+  })
+
+  it('should convert backup packets to standard preset headers', async () => {
+    const sysexData = new Uint8Array([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x30,
+      0x0a,
+      0x00,
+      0x06,
+      0x02,
+      0x0d,
+      0xf7,
+    ])
+
+    const presets = await createPresetData('backup-entry.syx', sysexData)
+
+    expect(presets).toHaveLength(1)
+    expect(Array.from(presets[0].sysexData)).toEqual([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x20,
+      0x21,
+      0x0a,
+      0x00,
+      0x06,
+      0x02,
+      0x0d,
+      0xf7,
+    ])
+  })
+
   it('should parse multiple presets from SysEx data', async () => {
     const sysexData = new Uint8Array([
       0xf0, 0x68, 0x00, 0x00, 0x70, 0x20, 0x60, 0x00, 0xf7,
@@ -222,6 +281,38 @@ describe('fetchPresetData', () => {
 
   afterEach(async () => {
     await db.syncPresets([])
+  })
+
+  it('should preserve exact sysex bytes when saving a preset', async () => {
+    const sysexData = new Uint8Array([
+      0xf0,
+      0x44,
+      0x00,
+      0x00,
+      0x70,
+      0x20,
+      0x24,
+      0x0a,
+      0x00,
+      0x06,
+      0x02,
+      0x0d,
+      0xf7,
+    ])
+
+    const saved = await addPreset({
+      id: 'raw-save',
+      name: 'Raw Save',
+      createdDate: '2021-01-01',
+      modifiedDate: '2021-01-01',
+      filename: 'raw-save.syx',
+      sysexData,
+      tags: [],
+      author: 'Test',
+      description: 'Test',
+    })
+
+    expect(Array.from(saved.sysexData)).toEqual(Array.from(sysexData))
   })
 
   it('should search presets by name', async () => {

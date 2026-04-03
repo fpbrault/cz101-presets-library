@@ -3,26 +3,38 @@ import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import { saveToLocalStorage } from '@/utils'
 import Button from '@/components/Button'
+import { Preset } from '@/lib/presetManager'
 
 interface OptionPanelProps {
   autoSend: boolean
   handleToggleAutoSend: () => void
   handleSendCurrentPreset: () => void
-  handleSavePreset: (slot: number) => void
+  currentPreset: Preset | null
+  handleRetrieveCurrentPreset: () => void
+  handleRetrievePresetSlot: (bank: 'internal' | 'cartridge', slot: number) => void
+  handleWritePresetSlot: (bank: 'internal' | 'cartridge', slot: number) => void
 }
 
 const OptionPanel: React.FC<OptionPanelProps> = ({
   autoSend,
   handleSendCurrentPreset,
   handleToggleAutoSend,
-  handleSavePreset,
+  currentPreset,
+  handleRetrieveCurrentPreset,
+  handleRetrievePresetSlot,
+  handleWritePresetSlot,
 }) => {
   const { midiPorts, selectedMidiPort, setSelectedMidiPort } = useMidiPort()
   const { selectedMidiChannel, setSelectedMidiChannel } = useMidiChannel()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isRetrieveModalOpen, setIsRetrieveModalOpen] = useState(false)
+  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
 
-  const handleOpenModal = () => setIsModalOpen(true)
-  const handleCloseModal = () => setIsModalOpen(false)
+  const handleOpenRetrieveModal = () => setIsRetrieveModalOpen(true)
+  const handleCloseRetrieveModal = () => setIsRetrieveModalOpen(false)
+  const handleOpenWriteModal = () => setIsWriteModalOpen(true)
+  const handleCloseWriteModal = () => setIsWriteModalOpen(false)
+
+  const [slotBank, setSlotBank] = useState<'internal' | 'cartridge'>('internal')
 
   return (
     <>
@@ -70,22 +82,52 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
             </option>
           ))}
         </select>
-        <Button onClick={handleOpenModal} variant="accent">
-          Save Preset
+        <Button onClick={handleRetrieveCurrentPreset} variant="accent">
+          Retrieve Current
+        </Button>
+        <Button onClick={handleOpenRetrieveModal} variant="secondary">
+          Retrieve Slot
+        </Button>
+        <Button
+          onClick={handleOpenWriteModal}
+          variant="info"
+          disabled={!currentPreset}
+          title={
+            currentPreset
+              ? 'Write selected preset to synth slot'
+              : 'Select a preset to enable slot write'
+          }
+        >
+          Write To Slot
         </Button>
       </div>
 
-      {isModalOpen && (
+      {isRetrieveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="p-4 shadow-lg bg-base-100 rounded-xl">
-            <h2 className="mb-4 text-xl">Select Preset Slot</h2>
+            <h2 className="mb-4 text-xl">Retrieve Preset Slot</h2>
+            <div className="mb-4">
+              <label className="label">
+                <span className="label-text">Bank</span>
+              </label>
+              <select
+                className="select select-bordered w-full"
+                value={slotBank}
+                onChange={(e) =>
+                  setSlotBank(e.target.value as 'internal' | 'cartridge')
+                }
+              >
+                <option value="internal">Internal</option>
+                <option value="cartridge">Cartridge</option>
+              </select>
+            </div>
             <div className="grid grid-cols-4 gap-2">
               {Array.from({ length: 16 }, (_, i) => (
                 <Button
                   key={i + 1}
                   onClick={() => {
-                    handleSavePreset(i + 1)
-                    handleCloseModal()
+                    handleRetrievePresetSlot(slotBank, i + 1)
+                    handleCloseRetrieveModal()
                   }}
                   variant="primary"
                   className="text-2xl font-bold"
@@ -94,7 +136,48 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
                 </Button>
               ))}
             </div>
-            <Button onClick={handleCloseModal} variant="error" className="mt-4">
+            <Button onClick={handleCloseRetrieveModal} variant="error" className="mt-4">
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isWriteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="p-4 shadow-lg bg-base-100 rounded-xl">
+            <h2 className="mb-4 text-xl">Write Preset To Slot</h2>
+            <div className="mb-4">
+              <label className="label">
+                <span className="label-text">Bank</span>
+              </label>
+              <select
+                className="select select-bordered w-full"
+                value={slotBank}
+                onChange={(e) =>
+                  setSlotBank(e.target.value as 'internal' | 'cartridge')
+                }
+              >
+                <option value="internal">Internal</option>
+                <option value="cartridge">Cartridge</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {Array.from({ length: 16 }, (_, i) => (
+                <Button
+                  key={i + 1}
+                  onClick={() => {
+                    handleWritePresetSlot(slotBank, i + 1)
+                    handleCloseWriteModal()
+                  }}
+                  variant="primary"
+                  className="text-2xl font-bold"
+                >
+                  {i + 1}
+                </Button>
+              ))}
+            </div>
+            <Button onClick={handleCloseWriteModal} variant="error" className="mt-4">
               Close
             </Button>
           </div>
