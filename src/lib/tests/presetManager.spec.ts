@@ -7,9 +7,12 @@ import {
   addPreset,
   deleteTagGlobally,
   getPresets,
+  resetPresetDatabase,
   renameTagGlobally,
+  setPresetDatabase,
 } from '@/lib/presetManager'
 import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
+import { FakePresetDatabase } from '@/lib/fakePresetDatabase'
 
 describe('formatPresetData', () => {
   it('should format preset data with channel', () => {
@@ -480,5 +483,17 @@ describe('fetchPresetData', () => {
     const presets = await getPresets()
     const drumPreset = presets.find((preset) => preset.name === 'Drum Kit')
     expect(drumPreset?.tags).not.toContain('drum')
+  })
+})
+
+describe('preset database injection', () => {
+  it('allows swapping preset database implementation for tests', async () => {
+    const fakeDb = new FakePresetDatabase()
+    setPresetDatabase(fakeDb)
+
+    const presets = await getPresets()
+    expect(presets.length).toBeGreaterThan(0)
+
+    resetPresetDatabase()
   })
 })

@@ -560,26 +560,6 @@ const PresetList: React.FC<PresetListProps> = ({
     [handleSetFavorite, handleSetRating, randomOrder, setRandomOrder],
   )
 
-  const { data: tagsData } = useQuery({
-    queryKey: ['presets', 'filter-panel-tags'],
-    queryFn: async () => {
-      const result = await fetchPresetData(
-        0,
-        Number.MAX_SAFE_INTEGER,
-        [],
-        '',
-        [],
-        'inclusive',
-        false,
-        false,
-        0,
-        false,
-      )
-      return result.presets
-    },
-    refetchOnWindowFocus: false,
-  })
-
   const { data: duplicatePresetsData } = useQuery({
     queryKey: ['presets', 'duplicate-review'],
     queryFn: async () => {
@@ -599,22 +579,6 @@ const PresetList: React.FC<PresetListProps> = ({
     },
     refetchOnWindowFocus: false,
   })
-
-  const availableTags = useMemo<[string, number][]>(() => {
-    const presets = tagsData ?? []
-    return Object.entries(
-      presets
-        .map((preset) => preset.tags.map((tag) => tag.toLowerCase()))
-        .flat()
-        .reduce(
-          (acc, tag) => {
-            acc[tag] = (acc[tag] ?? 0) + 1
-            return acc
-          },
-          {} as Record<string, number>,
-        ),
-    ).sort((a, b) => b[1] - a[1])
-  }, [tagsData])
 
   const duplicateGroups = useMemo<DuplicateGroup[]>(() => {
     const presets = duplicatePresetsData ?? []
@@ -720,6 +684,47 @@ const PresetList: React.FC<PresetListProps> = ({
   const flatData = React.useMemo(() => {
     return data?.pages?.flatMap((page: { presets: any }) => page.presets) ?? []
   }, [data])
+
+  const availableTags = useMemo<[string, number][]>(() => {
+    const cachedQueryData = queryClient.getQueriesData({
+      queryKey: ['presets'],
+    })
+
+    const cachedPresets: Preset[] = cachedQueryData.flatMap(
+      ([, queryData]): Preset[] => {
+      if (!queryData || typeof queryData !== 'object') {
+        return []
+      }
+
+      const candidate = queryData as {
+        pages?: Array<{ presets?: Preset[] }>
+        presets?: Preset[]
+      }
+
+      if (Array.isArray(candidate.pages)) {
+          return candidate.pages.flatMap((page) => page.presets ?? [])
+      }
+
+      if (Array.isArray(candidate.presets)) {
+        return candidate.presets
+      }
+
+      return []
+      },
+    )
+
+    const presets = cachedPresets.length > 0 ? cachedPresets : flatData
+    const tagCounts: Record<string, number> = {}
+
+    presets.forEach((preset) => {
+      preset.tags.forEach((tag: string) => {
+        const normalizedTag = tag.toLowerCase()
+        tagCounts[normalizedTag] = (tagCounts[normalizedTag] ?? 0) + 1
+      })
+    })
+
+    return Object.entries(tagCounts).sort((a, b) => b[1] - a[1])
+  }, [flatData, queryClient])
 
   const totalDBRowCount = data?.pages?.[0]?.totalCount ?? 0
   const totalFetched = flatData.length

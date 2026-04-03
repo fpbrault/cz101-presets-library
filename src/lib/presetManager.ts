@@ -10,6 +10,14 @@ import { SetlistEntry } from '@/lib/setlistManager'
 
 let presetDatabase: PresetDatabase
 
+export function setPresetDatabase(database: PresetDatabase): void {
+  presetDatabase = database
+}
+
+export function resetPresetDatabase(): void {
+  presetDatabase = new IndexedDbPresetDatabase()
+}
+
 const REQUEST_COMMANDS = Array.from(
   { length: 16 },
   (_, i) => new Uint8Array([240, 68, 0, 0, 112, 16, i + 32, 112, 49, 247]),
@@ -364,11 +372,11 @@ export async function writeSysexDataToTemporaryBuffer(
 if (typeof window !== 'undefined' && (window as any).__TAURI__) {
   console.log('Running in Tauri')
   // Running in Tauri
-  presetDatabase = new IndexedDbPresetDatabase()
+  resetPresetDatabase()
 } else {
   console.log('Running in a browser')
   // Running in a browser
-  presetDatabase = new IndexedDbPresetDatabase()
+  resetPresetDatabase()
 }
 
 export async function syncPresets(): Promise<void> {
