@@ -1,19 +1,24 @@
 // src/PresetDetails.tsx
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { Preset } from '@/lib/presetManager'
+import { Preset, updatePreset } from '@/lib/presetManager'
 import { buf2hex } from '@/utils'
 import Button from '@/components/Button'
+
+interface PresetFormData {
+  name: string
+  filename: string
+  tags: string
+  description: string
+  author: string
+  createdDate: string
+  modifiedDate: string
+}
 
 interface PresetDetailsProps {
   currentPreset: Preset | null
   editMode: boolean
-  formData: any
-  handleInputChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => void
-  handleSave: () => void
-  handleCancel: () => void
+  onPresetUpdated: (preset: Preset) => void
   setEditMode: (editMode: boolean) => void
   setShowDeleteModal: (show: boolean) => void
 }
@@ -21,13 +26,74 @@ interface PresetDetailsProps {
 const PresetDetails: React.FC<PresetDetailsProps> = ({
   currentPreset,
   editMode,
-  formData,
-  handleInputChange,
-  handleSave,
-  handleCancel,
+  onPresetUpdated,
   setEditMode,
   setShowDeleteModal,
 }) => {
+  const [formData, setFormData] = useState<PresetFormData>({
+    name: '',
+    filename: '',
+    tags: '',
+    description: '',
+    author: '',
+    createdDate: '',
+    modifiedDate: '',
+  })
+
+  useEffect(() => {
+    if (!currentPreset) return
+
+    setFormData({
+      name: currentPreset.name,
+      filename: currentPreset.filename,
+      tags: currentPreset.tags.join(','),
+      description: currentPreset.description || '',
+      author: currentPreset.author || '',
+      createdDate: currentPreset.createdDate,
+      modifiedDate: currentPreset.modifiedDate,
+    })
+  }, [currentPreset])
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { id, value } = e.target
+    setFormData((prevData) => ({ ...prevData, [id]: value }))
+  }
+
+  const handleSave = async () => {
+    if (!currentPreset) return
+
+    const updatedPreset = {
+      ...currentPreset,
+      ...formData,
+      tags: formData.tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    }
+
+    await updatePreset(updatedPreset)
+    onPresetUpdated(updatedPreset)
+    setEditMode(false)
+  }
+
+  const handleCancel = () => {
+    if (currentPreset) {
+      setFormData({
+        name: currentPreset.name,
+        filename: currentPreset.filename,
+        tags: currentPreset.tags.join(','),
+        description: currentPreset.description || '',
+        author: currentPreset.author || '',
+        createdDate: currentPreset.createdDate,
+        modifiedDate: currentPreset.modifiedDate,
+      })
+    }
+
+    setEditMode(false)
+  }
+
   return (
     <div
       className={

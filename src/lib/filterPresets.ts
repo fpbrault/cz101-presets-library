@@ -1,0 +1,85 @@
+import type { Preset } from '@/lib/presetManager'
+
+export type FilterMode = 'inclusive' | 'exclusive'
+
+export interface FilterPresetsOptions {
+  sorting: any
+  searchTerm: string
+  selectedTags: string[]
+  filterMode: FilterMode
+  favoritesOnly: boolean
+  randomOrder: boolean
+  seed: number
+}
+
+export function filterPresets(
+  presets: Preset[],
+  options: FilterPresetsOptions,
+): { presets: Preset[]; totalCount: number } {
+  const {
+    sorting,
+    searchTerm,
+    selectedTags,
+    filterMode,
+    favoritesOnly,
+    randomOrder,
+    seed,
+  } = options
+
+  let filteredPresets = presets
+
+  if (favoritesOnly) {
+    filteredPresets = filteredPresets.filter((preset) => preset.favorite)
+  }
+
+  if (searchTerm) {
+    const normalizedSearchTerm = searchTerm.toLowerCase()
+    filteredPresets = filteredPresets.filter((preset) =>
+      preset.name.toLowerCase().includes(normalizedSearchTerm),
+    )
+  }
+
+  if (selectedTags.length > 0) {
+    filteredPresets = filteredPresets.filter((preset) => {
+      if (filterMode === 'inclusive') {
+        return selectedTags.every((tag) => preset.tags.includes(tag))
+      }
+
+      return selectedTags.some((tag) => preset.tags.includes(tag))
+    })
+  }
+
+  let sortedPresets = [...filteredPresets].sort((a, b) => {
+    if (sorting.length === 0) return 0
+    const { id, desc } = sorting[0]
+    const order = desc ? -1 : 1
+    if (a[id] < b[id]) return -1 * order
+    if (a[id] > b[id]) return 1 * order
+    return 0
+  })
+
+  if (randomOrder) {
+    sortedPresets = shuffleArray([...sortedPresets], seed)
+  }
+
+  return {
+    presets: sortedPresets,
+    totalCount: filteredPresets.length,
+  }
+}
+
+const shuffleArray = (array: Preset[], seed: number) => {
+  let m = array.length
+  while (m) {
+    const i = Math.floor(random(seed++) * m--)
+    const t = array[m]
+    array[m] = array[i]
+    array[i] = t
+  }
+  return array
+}
+
+const random = (seed: number) => {
+  const x = Math.sin(seed++) * 10000
+  return x - Math.floor(x)
+}

@@ -15,8 +15,6 @@ import {
   FaHeart,
   FaRegHeart,
   FaTimes,
-  FaStar,
-  FaRegStar,
 } from 'react-icons/fa'
 import useDragDrop from '@/useDragDrop'
 import {
@@ -36,6 +34,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import Button from '@/components/Button'
+import { getPresetQueryKey } from '@/lib/presetQueryKey'
 
 interface PresetListProps {
   currentPreset: Preset | null
@@ -54,58 +53,59 @@ const TagsCell = memo(({ tags }: { tags: string[] }) => (
   </div>
 ))
 
-const RatingCell = memo(
-  ({
-    rating,
-    handleSetRating,
-    preset,
-  }: {
-    rating: 1 | 2 | 3 | 4 | 5 | undefined
-    handleSetRating: (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => void
-    preset: Preset
-  }) => (
-    <div>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          onMouseEnter={(e) => {
-            const parent = e.currentTarget.parentElement
-            if (parent) {
-              const stars = parent.querySelectorAll('button')
-              stars.forEach((s, i) => {
-                if (i < star) s.classList.add('text-primary')
-                else s.classList.remove('text-primary')
-              })
-            }
-          }}
-          onMouseLeave={(e) => {
-            const parent = e.currentTarget.parentElement
-            if (parent) {
-              const stars = parent.querySelectorAll('button')
-              stars.forEach((s, i) => {
-                if (i < (rating || 0)) s.classList.add('text-primary')
-                else s.classList.remove('text-primary')
-              })
-            }
-          }}
-          onClick={(e) => {
-            e.stopPropagation()
-            handleSetRating(preset, star as 1 | 2 | 3 | 4 | 5)
-          }}
-          className={`hover:text-primary transition-colors ${
-            star <= (rating || 0) ? 'text-primary' : ''
-          }`}
-        >
-          {star <= (rating || 0) ? (
-            <FaStar size={16} />
-          ) : (
-            <FaRegStar size={16} />
-          )}
-        </button>
-      ))}
-    </div>
-  ),
-)
+// TODO: IMPLEMENT RATING FEATURE
+// const RatingCell = memo(
+//   ({
+//     rating,
+//     handleSetRating,
+//     preset,
+//   }: {
+//     rating: 1 | 2 | 3 | 4 | 5 | undefined
+//     handleSetRating: (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => void
+//     preset: Preset
+//   }) => (
+//     <div>
+//       {[1, 2, 3, 4, 5].map((star) => (
+//         <button
+//           key={star}
+//           onMouseEnter={(e) => {
+//             const parent = e.currentTarget.parentElement
+//             if (parent) {
+//               const stars = parent.querySelectorAll('button')
+//               stars.forEach((s, i) => {
+//                 if (i < star) s.classList.add('text-primary')
+//                 else s.classList.remove('text-primary')
+//               })
+//             }
+//           }}
+//           onMouseLeave={(e) => {
+//             const parent = e.currentTarget.parentElement
+//             if (parent) {
+//               const stars = parent.querySelectorAll('button')
+//               stars.forEach((s, i) => {
+//                 if (i < (rating || 0)) s.classList.add('text-primary')
+//                 else s.classList.remove('text-primary')
+//               })
+//             }
+//           }}
+//           onClick={(e) => {
+//             e.stopPropagation()
+//             handleSetRating(preset, star as 1 | 2 | 3 | 4 | 5)
+//           }}
+//           className={`hover:text-primary transition-colors ${
+//             star <= (rating || 0) ? 'text-primary' : ''
+//           }`}
+//         >
+//           {star <= (rating || 0) ? (
+//             <FaStar size={16} />
+//           ) : (
+//             <FaRegStar size={16} />
+//           )}
+//         </button>
+//       ))}
+//     </div>
+//   ),
+// )
 
 function PresetListTopBar(props: {
   searchTerm: string
@@ -219,15 +219,16 @@ const PresetList: React.FC<PresetListProps> = ({
   }
 
   const queryKey = useMemo(
-    () => [
-      'presets',
-      sorting,
-      searchTerm,
-      selectedTags,
-      filterMode,
-      randomOrder,
-      shuffleSeed,
-    ],
+    () =>
+      getPresetQueryKey({
+        sorting,
+        searchTerm,
+        selectedTags,
+        filterMode,
+        favoritesOnly: false,
+        randomOrder,
+        shuffleSeed,
+      }),
     [sorting, searchTerm, selectedTags, filterMode, randomOrder, shuffleSeed],
   )
 

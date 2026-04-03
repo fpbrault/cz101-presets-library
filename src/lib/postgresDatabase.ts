@@ -13,7 +13,7 @@ export class PostgresPresetDatabase implements PresetDatabase {
     return res.rows
   }
 
-  async addPreset(preset: Preset): Promise<void> {
+  async addPreset(preset: Preset): Promise<Preset> {
     await client.query(
       'INSERT INTO presets (id, name, createdDate, modifiedDate, filename, sysexData, tags, author, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
       [
@@ -28,6 +28,7 @@ export class PostgresPresetDatabase implements PresetDatabase {
         preset.description,
       ],
     )
+    return preset
   }
 
   async updatePreset(preset: Preset): Promise<void> {

@@ -28,11 +28,11 @@ export class PostgresPresetDatabaseWithFallback implements PresetDatabase {
     }
   }
 
-  async addPreset(preset: Preset): Promise<void> {
+  async addPreset(preset: Preset): Promise<Preset> {
     if (await this.isAvailable()) {
       await this.postgresDb.addPreset(preset)
     }
-    await this.localDb.addPreset(preset)
+    return this.localDb.addPreset(preset)
   }
 
   async updatePreset(preset: Preset): Promise<void> {

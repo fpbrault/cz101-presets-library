@@ -55,8 +55,9 @@ export class FakePresetDatabase implements PresetDatabase {
     return fakePresets
   }
 
-  async addPreset(preset: Preset): Promise<void> {
+  async addPreset(preset: Preset): Promise<Preset> {
     fakePresets.push(preset)
+    return preset
   }
 
   async updatePreset(preset: Preset): Promise<void> {

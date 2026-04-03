@@ -2,6 +2,7 @@ import { WebMidi, Output, Input } from 'webmidi'
 import natsort from 'natsort'
 //import { FakePresetDatabase } from './fakePresetDatabase'
 import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
+import { filterPresets } from '@/lib/filterPresets'
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
@@ -194,65 +195,25 @@ export async function fetchPresetData(
 ): Promise<{ presets: Preset[]; totalCount: number }> {
   const presets = (await getPresets()) ?? []
 
-  // Filter presets based on search term
-  let filteredPresets = presets
+  const { presets: filteredAndSortedPresets, totalCount } = filterPresets(
+    presets,
+    {
+      sorting,
+      searchTerm,
+      selectedTags,
+      filterMode,
+      favoritesOnly,
+      randomOrder,
+      seed,
+    },
+  )
 
-  if (favoritesOnly) {
-    filteredPresets = filteredPresets.filter((preset) => preset.favorite)
-  }
-  if (searchTerm) {
-    filteredPresets = filteredPresets.filter((preset) =>
-      preset.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-  }
+  const paginatedPresets =
+    size < 0
+      ? filteredAndSortedPresets.slice(start)
+      : filteredAndSortedPresets.slice(start, start + size)
 
-  // Filter presets based on selected tags
-  if (selectedTags.length > 0) {
-    filteredPresets = filteredPresets.filter((preset) => {
-      if (filterMode === 'inclusive') {
-        return selectedTags.every((tag) => preset.tags.includes(tag))
-      } else {
-        return selectedTags.some((tag) => preset.tags.includes(tag))
-      }
-    })
-  }
-
-  // Sort presets based on sorting state
-  let sortedPresets = filteredPresets.sort((a, b) => {
-    if (sorting.length === 0) return 0
-    const { id, desc } = sorting[0]
-    const order = desc ? -1 : 1
-    if (a[id] < b[id]) return -1 * order
-    if (a[id] > b[id]) return 1 * order
-    return 0
-  })
-
-  // Shuffle presets if randomOrder is enabled
-  if (randomOrder) {
-    sortedPresets = shuffleArray(sortedPresets, seed)
-  }
-
-  // Paginate presets
-  const paginatedPresets = sortedPresets.slice(start, start + size)
-  return { presets: paginatedPresets ?? [], totalCount: filteredPresets.length }
-}
-
-const shuffleArray = (array: any[], seed: number) => {
-  let m = array.length,
-    t,
-    i
-  while (m) {
-    i = Math.floor(random(seed++) * m--)
-    t = array[m]
-    array[m] = array[i]
-    array[i] = t
-  }
-  return array
-}
-
-const random = (seed: number) => {
-  const x = Math.sin(seed++) * 10000
-  return x - Math.floor(x)
+  return { presets: paginatedPresets ?? [], totalCount }
 }
 
 export async function restorePresetToBuffer(

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { fetchPresetData, Preset } from '@/lib/presetManager'
+import { useQuery } from '@tanstack/react-query'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
 import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import { useSearchFilter } from '@/SearchFilterContext'
 import Button from '@/components/Button'
+import { getPresetQueryKey } from '@/lib/presetQueryKey'
 
 type PerformanceModeProps = {
   currentPreset: Preset | null
@@ -18,7 +20,6 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
   const { selectedMidiChannel } = useMidiChannel()
   const { selectedMidiPort } = useMidiPort()
   const [currentBank, setCurrentBank] = useState(0)
-  const [presets, setPresets] = useState<Preset[]>([])
   const [isNumPadOpen, setIsNumPadOpen] = useState(false)
   const [bankInput, setBankInput] = useState('')
 
@@ -50,9 +51,19 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     }
   }
 
-  useEffect(() => {
-    const fetchPresets = async () => {
-      const data = await fetchPresetData(
+  const presetQueryKey = getPresetQueryKey({
+    sorting,
+    searchTerm,
+    selectedTags,
+    filterMode,
+    favoritesOnly,
+    randomOrder: false,
+  })
+
+  const { data } = useQuery({
+    queryKey: [...presetQueryKey, 'performance-mode'],
+    queryFn: async () => {
+      const result = await fetchPresetData(
         0,
         -1,
         sorting,
@@ -63,12 +74,23 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         false,
         0,
       )
+      return result.presets
+    },
+    refetchOnWindowFocus: false,
+  })
 
-      setPresets(data.presets)
-    }
+  const presets = data ?? []
 
-    fetchPresets()
+  useEffect(() => {
+    setCurrentBank(0)
   }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly])
+
+  useEffect(() => {
+    const totalBanks = Math.max(1, Math.ceil(presets.length / 8))
+    if (currentBank >= totalBanks) {
+      setCurrentBank(totalBanks - 1)
+    }
+  }, [currentBank, presets.length])
 
   const handleOpenNumPad = () => {
     setBankInput('')

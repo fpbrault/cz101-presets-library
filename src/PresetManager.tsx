@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { WebMidi } from 'webmidi'
 import {
   Preset,
   restorePresetToBuffer,
-  getIoportNames,
   deletePreset,
-  updatePreset,
   savePreset,
 } from '@/lib/presetManager'
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
@@ -19,21 +16,13 @@ import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import PerformanceMode from '@/PerformanceMode'
 import Button from '@/components/Button'
+import { useMidiSetup } from '@/useMidiSetup'
 
 export default function PresetManager() {
   const queryClient = useQueryClient()
   const [editMode, setEditMode] = useState(false)
   const [performanceMode, setPerformanceMode] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
-  const [formData, setFormData] = useState({
-    name: '',
-    filename: '',
-    tags: '',
-    description: '',
-    author: '',
-    createdDate: '',
-    modifiedDate: '',
-  })
   const [autoSend, setAutoSend] = useState(
     loadFromLocalStorage('autoSend', false),
   )
@@ -43,73 +32,7 @@ export default function PresetManager() {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  useEffect(() => {
-    const fetchIoportNames = async () => {
-      const ports = await getIoportNames()
-      setMidiPorts(ports)
-    }
-    fetchIoportNames()
-
-    const handlePortsChanged = async () => {
-      const ports = await getIoportNames()
-      setMidiPorts(ports)
-    }
-
-    WebMidi.addListener('portschanged', handlePortsChanged)
-
-    return () => {
-      WebMidi.removeListener('portschanged', handlePortsChanged)
-    }
-  }, [selectedMidiPort])
-
-  useEffect(() => {
-    if (currentPreset) {
-      setFormData({
-        name: currentPreset.name,
-        filename: currentPreset.filename,
-        tags: currentPreset.tags.join(','),
-        description: currentPreset.description || '',
-        author: currentPreset.author || '',
-        createdDate: currentPreset.createdDate,
-        modifiedDate: currentPreset.modifiedDate,
-      })
-    }
-  }, [currentPreset])
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { id, value } = e.target
-    setFormData((prevData) => ({ ...prevData, [id]: value }))
-  }
-
-  const handleSave = async () => {
-    if (currentPreset) {
-      const updatedPreset = {
-        ...currentPreset,
-        ...formData,
-        tags: formData.tags.split(','),
-      }
-      await updatePreset(updatedPreset)
-      setCurrentPreset(updatedPreset)
-      setEditMode(false)
-    }
-  }
-
-  const handleCancel = () => {
-    if (currentPreset) {
-      setFormData({
-        name: currentPreset.name,
-        filename: currentPreset.filename,
-        tags: currentPreset.tags.join(','),
-        description: currentPreset.description || '',
-        author: currentPreset.author || '',
-        createdDate: currentPreset.createdDate,
-        modifiedDate: currentPreset.modifiedDate,
-      })
-    }
-    setEditMode(false)
-  }
+  useMidiSetup(setMidiPorts)
 
   const handleDeletePreset = async (id: string) => {
     await deletePreset(id)
@@ -119,7 +42,7 @@ export default function PresetManager() {
   }
 
   const handleToggleAutoSend = () => {
-    setAutoSend((prevAutoSend: any) => {
+    setAutoSend((prevAutoSend: boolean) => {
       const newAutoSend = !prevAutoSend
       saveToLocalStorage('autoSend', newAutoSend)
       return newAutoSend
@@ -194,10 +117,7 @@ export default function PresetManager() {
             <PresetDetails
               editMode={editMode}
               currentPreset={currentPreset}
-              formData={formData}
-              handleInputChange={handleInputChange}
-              handleSave={handleSave}
-              handleCancel={handleCancel}
+              onPresetUpdated={setCurrentPreset}
               setShowDeleteModal={setShowDeleteModal}
               setEditMode={setEditMode}
             ></PresetDetails>
