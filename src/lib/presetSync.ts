@@ -1,63 +1,16 @@
 import type { Preset } from '@/lib/presetManager'
 
-export type PresetSyncOperation =
-  | {
-      type: 'upsert'
-      timestamp: string
-      preset: Preset
-    }
-  | {
-      type: 'delete'
-      timestamp: string
-      presetId: string
-    }
-  | {
-      type: 'replace-all'
-      timestamp: string
-      presets: Preset[]
-    }
-
 export interface RemotePresetSyncAdapter {
-  pushOperations(operations: PresetSyncOperation[]): Promise<void>
+  push(presets: Preset[]): Promise<void>
+  pull(): Promise<Preset[] | null>
   isAvailable?(): Promise<boolean>
 }
 
-const SYNC_QUEUE_STORAGE_KEY = 'cz101.preset-sync-queue.v1'
-
-function canUseLocalStorage(): boolean {
-  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
-}
-
-function loadQueue(): PresetSyncOperation[] {
-  if (!canUseLocalStorage()) {
-    return []
-  }
-
-  try {
-    const raw = window.localStorage.getItem(SYNC_QUEUE_STORAGE_KEY)
-    if (!raw) {
-      return []
-    }
-
-    const parsed = JSON.parse(raw) as PresetSyncOperation[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function saveQueue(queue: PresetSyncOperation[]): void {
-  if (!canUseLocalStorage()) {
-    return
-  }
-  window.localStorage.setItem(SYNC_QUEUE_STORAGE_KEY, JSON.stringify(queue))
-}
-
 class NoopRemotePresetSyncAdapter implements RemotePresetSyncAdapter {
-  async pushOperations(_operations: PresetSyncOperation[]): Promise<void> {
-    // No-op by default. Real adapters can be injected when online sync is configured.
+  async push(_presets: Preset[]): Promise<void> {}
+  async pull(): Promise<Preset[] | null> {
+    return null
   }
-
   async isAvailable(): Promise<boolean> {
     return false
   }
@@ -74,55 +27,26 @@ export class PresetSyncCoordinator {
     this.adapter = adapter
   }
 
-  enqueue(operation: PresetSyncOperation): void {
-    const nextQueue = [...loadQueue(), operation]
-    saveQueue(nextQueue)
-  }
-
-  enqueueUpsert(preset: Preset): void {
-    this.enqueue({
-      type: 'upsert',
-      timestamp: new Date().toISOString(),
-      preset,
-    })
-  }
-
-  enqueueDelete(presetId: string): void {
-    this.enqueue({
-      type: 'delete',
-      timestamp: new Date().toISOString(),
-      presetId,
-    })
-  }
-
-  enqueueReplaceAll(presets: Preset[]): void {
-    this.enqueue({
-      type: 'replace-all',
-      timestamp: new Date().toISOString(),
-      presets,
-    })
-  }
-
-  async flush(): Promise<boolean> {
-    const queue = loadQueue()
-    if (queue.length === 0) {
-      return true
-    }
-
+  async backup(presets: Preset[]): Promise<boolean> {
     if (this.adapter.isAvailable && !(await this.adapter.isAvailable())) {
       return false
     }
-
     try {
-      await this.adapter.pushOperations(queue)
-      saveQueue([])
+      await this.adapter.push(presets)
       return true
     } catch {
       return false
     }
   }
 
-  getQueueLength(): number {
-    return loadQueue().length
+  async restore(): Promise<Preset[] | null> {
+    if (this.adapter.isAvailable && !(await this.adapter.isAvailable())) {
+      return null
+    }
+    try {
+      return await this.adapter.pull()
+    } catch {
+      return null
+    }
   }
 }

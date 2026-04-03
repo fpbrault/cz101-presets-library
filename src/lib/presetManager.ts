@@ -28,21 +28,24 @@ export function setPresetSyncAdapter(adapter: RemotePresetSyncAdapter): void {
   presetSync.setAdapter(adapter)
 }
 
-export async function flushPresetSyncQueue(): Promise<boolean> {
-  return presetSync.flush()
-}
-
-export function getPresetSyncQueueLength(): number {
-  return presetSync.getQueueLength()
-}
-
-function enqueueSyncOperation(action: () => void): void {
+export async function cloudBackupPresets(): Promise<boolean> {
   if (!isOnlineSyncEnabled()) {
-    return
+    return false
   }
+  const presets = await presetDatabase.getPresets()
+  return presetSync.backup(presets)
+}
 
-  action()
-  void presetSync.flush()
+export async function cloudRestorePresets(): Promise<number | null> {
+  if (!isOnlineSyncEnabled()) {
+    return null
+  }
+  const presets = await presetSync.restore()
+  if (presets === null) {
+    return null
+  }
+  await presetDatabase.syncPresets(presets)
+  return presets.length
 }
 
 const REQUEST_COMMANDS = Array.from(
@@ -885,7 +888,6 @@ export async function addPreset(preset: Preset): Promise<Preset> {
     modifiedDate: new Date().toISOString(),
   }
   const savedPreset = await presetDatabase.addPreset(nextPreset)
-  enqueueSyncOperation(() => presetSync.enqueueUpsert(savedPreset))
   return savedPreset
 }
 
@@ -895,12 +897,10 @@ export async function updatePreset(preset: Preset): Promise<void> {
     modifiedDate: new Date().toISOString(),
   }
   await presetDatabase.updatePreset(nextPreset)
-  enqueueSyncOperation(() => presetSync.enqueueUpsert(nextPreset))
 }
 
 export async function deletePreset(id: string): Promise<void> {
   await presetDatabase.deletePreset(id)
-  enqueueSyncOperation(() => presetSync.enqueueDelete(id))
 }
 
 function normalizeTagValue(tag: string): string {
@@ -975,6 +975,4 @@ export async function exportPresets(): Promise<string> {
 
 export async function importPresets(json: string): Promise<void> {
   await presetDatabase.import(json)
-  const presets = await presetDatabase.getPresets()
-  enqueueSyncOperation(() => presetSync.enqueueReplaceAll(presets))
 }

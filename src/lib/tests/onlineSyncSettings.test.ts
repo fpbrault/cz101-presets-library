@@ -14,17 +14,13 @@ describe('onlineSyncSettings', () => {
     const settings = loadOnlineSyncSettings()
 
     expect(settings.enabled).toBe(false)
-    expect(settings.username).toBe('')
     expect(isOnlineSyncEnabled()).toBe(false)
   })
 
   it('persists enabled sync settings', () => {
-    saveOnlineSyncSettings({ enabled: true, username: 'artist01' })
+    saveOnlineSyncSettings({ enabled: true })
 
-    expect(loadOnlineSyncSettings()).toEqual({
-      enabled: true,
-      username: 'artist01',
-    })
+    expect(loadOnlineSyncSettings()).toEqual({ enabled: true })
     expect(isOnlineSyncEnabled()).toBe(true)
   })
 })

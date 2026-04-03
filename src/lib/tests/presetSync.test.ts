@@ -3,49 +3,77 @@ import {
   PresetSyncCoordinator,
   RemotePresetSyncAdapter,
 } from '@/lib/presetSync'
+import type { Preset } from '@/lib/presetManager'
+
+const makePreset = (id: string): Preset =>
+  ({
+    id,
+    name: 'Test',
+    createdDate: '',
+    modifiedDate: '',
+    filename: 'test.syx',
+    sysexData: new Uint8Array(),
+    tags: [],
+  }) as Preset
 
 describe('PresetSyncCoordinator', () => {
   beforeEach(() => {
     localStorage.clear()
   })
 
-  it('queues operations locally', () => {
-    const coordinator = new PresetSyncCoordinator()
-
-    coordinator.enqueueDelete('preset-1')
-
-    expect(coordinator.getQueueLength()).toBe(1)
-  })
-
-  it('flushes queued operations when adapter is available', async () => {
-    const pushOperations = vi.fn().mockResolvedValue(undefined)
-    const adapter: RemotePresetSyncAdapter = {
-      isAvailable: vi.fn().mockResolvedValue(true),
-      pushOperations,
-    }
-    const coordinator = new PresetSyncCoordinator(adapter)
-
-    coordinator.enqueueDelete('preset-1')
-    const flushed = await coordinator.flush()
-
-    expect(flushed).toBe(true)
-    expect(pushOperations).toHaveBeenCalledTimes(1)
-    expect(coordinator.getQueueLength()).toBe(0)
-  })
-
-  it('keeps queue when adapter is unavailable', async () => {
-    const pushOperations = vi.fn().mockResolvedValue(undefined)
+  it('returns false from backup when adapter is unavailable', async () => {
     const adapter: RemotePresetSyncAdapter = {
       isAvailable: vi.fn().mockResolvedValue(false),
-      pushOperations,
+      push: vi.fn(),
+      pull: vi.fn(),
     }
     const coordinator = new PresetSyncCoordinator(adapter)
 
-    coordinator.enqueueDelete('preset-2')
-    const flushed = await coordinator.flush()
+    const result = await coordinator.backup([makePreset('p1')])
 
-    expect(flushed).toBe(false)
-    expect(pushOperations).not.toHaveBeenCalled()
-    expect(coordinator.getQueueLength()).toBe(1)
+    expect(result).toBe(false)
+    expect(adapter.push).not.toHaveBeenCalled()
+  })
+
+  it('pushes presets when adapter is available', async () => {
+    const push = vi.fn().mockResolvedValue(undefined)
+    const adapter: RemotePresetSyncAdapter = {
+      isAvailable: vi.fn().mockResolvedValue(true),
+      push,
+      pull: vi.fn(),
+    }
+    const coordinator = new PresetSyncCoordinator(adapter)
+
+    const presets = [makePreset('p1'), makePreset('p2')]
+    const result = await coordinator.backup(presets)
+
+    expect(result).toBe(true)
+    expect(push).toHaveBeenCalledWith(presets)
+  })
+
+  it('returns null from restore when adapter is unavailable', async () => {
+    const adapter: RemotePresetSyncAdapter = {
+      isAvailable: vi.fn().mockResolvedValue(false),
+      push: vi.fn(),
+      pull: vi.fn(),
+    }
+    const coordinator = new PresetSyncCoordinator(adapter)
+
+    const result = await coordinator.restore()
+    expect(result).toBeNull()
+    expect(adapter.pull).not.toHaveBeenCalled()
+  })
+
+  it('pulls presets when adapter is available', async () => {
+    const presets = [makePreset('p1')]
+    const adapter: RemotePresetSyncAdapter = {
+      isAvailable: vi.fn().mockResolvedValue(true),
+      push: vi.fn(),
+      pull: vi.fn().mockResolvedValue(presets),
+    }
+    const coordinator = new PresetSyncCoordinator(adapter)
+
+    const result = await coordinator.restore()
+    expect(result).toEqual(presets)
   })
 })

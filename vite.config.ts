@@ -8,6 +8,9 @@ const host = process.env.TAURI_DEV_HOST
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [react()],
+  // Ensure .env is resolved relative to this config file even when launched via tauri tooling.
+  envDir: fileURLToPath(new URL('.', import.meta.url)),
+  envPrefix: ['VITE_', 'TAURI_ENV_'],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

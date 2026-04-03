@@ -4,12 +4,10 @@ const ONLINE_SYNC_SETTINGS_KEY = 'cz101.online-sync-settings.v1'
 
 export interface OnlineSyncSettings {
   enabled: boolean
-  username: string
 }
 
 const DEFAULT_ONLINE_SYNC_SETTINGS: OnlineSyncSettings = {
   enabled: false,
-  username: '',
 }
 
 export function loadOnlineSyncSettings(): OnlineSyncSettings {
@@ -24,7 +22,6 @@ export function loadOnlineSyncSettings(): OnlineSyncSettings {
 
   return {
     enabled: Boolean(stored.enabled),
-    username: String(stored.username ?? ''),
   }
 }
 
@@ -35,7 +32,6 @@ export function saveOnlineSyncSettings(settings: OnlineSyncSettings): void {
 
   saveToLocalStorage(ONLINE_SYNC_SETTINGS_KEY, {
     enabled: settings.enabled,
-    username: settings.username.trim(),
   })
 }
 
