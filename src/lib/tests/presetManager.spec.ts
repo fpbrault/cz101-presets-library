@@ -166,7 +166,7 @@ describe('createPresetData', () => {
     expect(presets[0]).toHaveProperty('filename', 'test.syx')
     expect(presets[0]).toHaveProperty('sysexData')
     expect(presets[0]).toHaveProperty('tags')
-    expect(presets[0]).toHaveProperty('author', 'Temple of CZ')
+    expect(presets[0]).toHaveProperty('author', 'User')
   })
 
   it('should preserve the original packet bytes when creating a standard preset', async () => {

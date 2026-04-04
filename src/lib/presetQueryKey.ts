@@ -5,6 +5,7 @@ type PresetQueryKeyParams = {
   searchTerm: string
   selectedTags: string[]
   filterMode: 'inclusive' | 'exclusive'
+  userPresetsOnly?: boolean
   favoritesOnly: boolean
   duplicatesOnly?: boolean
   randomOrder: boolean
@@ -16,6 +17,7 @@ export function getPresetQueryKey({
   searchTerm,
   selectedTags,
   filterMode,
+  userPresetsOnly,
   favoritesOnly,
   duplicatesOnly,
   randomOrder,
@@ -27,6 +29,7 @@ export function getPresetQueryKey({
     searchTerm,
     selectedTags,
     filterMode,
+    userPresetsOnly,
     favoritesOnly,
     duplicatesOnly,
     randomOrder,

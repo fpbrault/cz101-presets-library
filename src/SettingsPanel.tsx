@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { FaCog } from 'react-icons/fa'
 import {
+  addFactoryPresetsToLibrary,
   cloudBackupPresets,
   cloudRestorePresets,
   exportPresets,
@@ -124,6 +125,22 @@ const SettingsPanel: React.FC = () => {
       a.click()
       URL.revokeObjectURL(url)
     }
+  }
+
+  const handleAddFactoryPresets = () => {
+    void (async () => {
+      try {
+        const addedCount = await addFactoryPresetsToLibrary()
+        await queryClient.invalidateQueries({ queryKey: ['presets'] })
+        setSyncStatusMessage(
+          addedCount > 0
+            ? `Added ${addedCount} factory preset(s).`
+            : 'Factory presets are already in your library.',
+        )
+      } catch (error) {
+        setSyncStatusMessage((error as Error).message)
+      }
+    })()
   }
 
   const handleEnableOnlineSync = async () => {
@@ -251,6 +268,15 @@ const SettingsPanel: React.FC = () => {
                   onChange={handleImport}
                   tone="secondary"
                 />
+              </label>
+
+              <label className="w-full max-w-xs form-control">
+                <div className="label">
+                  <span className="label-text">Factory Preset Library</span>
+                </div>
+                <Button onClick={handleAddFactoryPresets} variant="neutral">
+                  Add Factory Presets
+                </Button>
               </label>
 
               <div className="w-full max-w-xs p-3 border rounded-lg border-base-content/15 bg-base-200/50">

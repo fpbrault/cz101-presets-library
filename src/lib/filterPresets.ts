@@ -1,4 +1,5 @@
 import type { Preset } from '@/lib/presetManager'
+import { isFactoryPresetIdentity } from '@/lib/factoryPresets'
 
 export type FilterMode = 'inclusive' | 'exclusive'
 
@@ -7,6 +8,7 @@ export interface FilterPresetsOptions {
   searchTerm: string
   selectedTags: string[]
   filterMode: FilterMode
+  userPresetsOnly: boolean
   favoritesOnly: boolean
   duplicatesOnly?: boolean
   randomOrder: boolean
@@ -26,6 +28,7 @@ export function filterPresets(
     searchTerm,
     selectedTags,
     filterMode,
+    userPresetsOnly,
     favoritesOnly,
     duplicatesOnly,
     randomOrder,
@@ -33,6 +36,12 @@ export function filterPresets(
   } = options
 
   let filteredPresets = presets
+
+  if (userPresetsOnly) {
+    filteredPresets = filteredPresets.filter(
+      (preset) => !isFactoryPresetIdentity(preset),
+    )
+  }
 
   if (favoritesOnly) {
     filteredPresets = filteredPresets.filter((preset) => preset.favorite)

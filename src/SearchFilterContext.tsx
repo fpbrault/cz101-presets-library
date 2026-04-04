@@ -1,5 +1,6 @@
 import { SortingState } from '@tanstack/react-table'
 import React, { createContext, useState, useContext, ReactNode } from 'react'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
 
 interface SearchFilterContextProps {
   sorting: SortingState | []
@@ -16,6 +17,8 @@ interface SearchFilterContextProps {
   setRandomOrder: (randomOrder: boolean) => void
   duplicatesOnly: boolean
   setDuplicatesOnly: (duplicatesOnly: boolean) => void
+  userPresetsOnly: boolean
+  setUserPresetsOnly: (userPresetsOnly: boolean) => void
 }
 
 const SearchFilterContext = createContext<SearchFilterContextProps | undefined>(
@@ -39,6 +42,14 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
   const [sorting, setSorting] = useState<SortingState | []>([])
   const [randomOrder, setRandomOrder] = useState(false)
   const [duplicatesOnly, setDuplicatesOnly] = useState(false)
+  const [userPresetsOnly, setUserPresetsOnlyState] = useState(
+    loadFromLocalStorage('userPresetsOnly', false),
+  )
+
+  const setUserPresetsOnly = (nextValue: boolean) => {
+    setUserPresetsOnlyState(nextValue)
+    saveToLocalStorage('userPresetsOnly', nextValue)
+  }
 
   return (
     <SearchFilterContext.Provider
@@ -57,6 +68,8 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
         setRandomOrder,
         duplicatesOnly,
         setDuplicatesOnly,
+        userPresetsOnly,
+        setUserPresetsOnly,
       }}
     >
       {children}

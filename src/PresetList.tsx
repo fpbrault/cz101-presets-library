@@ -151,6 +151,8 @@ function PresetListTopBar(props: {
   onOpenTagManager: () => void
   duplicateGroupCount: number
   onOpenDuplicateReview: () => void
+  userPresetsOnly: boolean
+  onToggleUserPresetsOnly: () => void
 }) {
   const [isTagsPanelOpen, setIsTagsPanelOpen] = useState(false)
 
@@ -187,6 +189,16 @@ function PresetListTopBar(props: {
           >
             <FaCopy size={12} />
             Duplicates
+          </button>
+
+          <button
+            className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
+              props.userPresetsOnly ? 'btn-primary' : 'btn-neutral'
+            }`}
+            onClick={props.onToggleUserPresetsOnly}
+            title="Hide Temple of CZ factory presets"
+          >
+            My Presets
           </button>
 
           <button
@@ -357,6 +369,8 @@ const PresetList: React.FC<PresetListProps> = ({
     setRandomOrder,
     duplicatesOnly,
     setDuplicatesOnly,
+    userPresetsOnly,
+    setUserPresetsOnly,
   } = useSearchFilter()
   const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now())
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange')
@@ -394,6 +408,7 @@ const PresetList: React.FC<PresetListProps> = ({
       randomOrder,
       shuffleSeed,
       duplicatesOnly,
+      userPresetsOnly,
     )
     return result
   }
@@ -405,6 +420,7 @@ const PresetList: React.FC<PresetListProps> = ({
         searchTerm,
         selectedTags,
         filterMode,
+        userPresetsOnly,
         favoritesOnly,
         duplicatesOnly,
         randomOrder,
@@ -415,6 +431,7 @@ const PresetList: React.FC<PresetListProps> = ({
       searchTerm,
       selectedTags,
       filterMode,
+      userPresetsOnly,
       favoritesOnly,
       duplicatesOnly,
       randomOrder,
@@ -574,6 +591,7 @@ const PresetList: React.FC<PresetListProps> = ({
         false,
         0,
         true,
+        false,
       )
       return result.presets
     },
@@ -633,6 +651,10 @@ const PresetList: React.FC<PresetListProps> = ({
   const handleToggleDuplicatesOnly = useCallback(() => {
     setDuplicatesOnly(!duplicatesOnly)
   }, [duplicatesOnly, setDuplicatesOnly])
+
+  const handleToggleUserPresetsOnly = useCallback(() => {
+    setUserPresetsOnly(!userPresetsOnly)
+  }, [setUserPresetsOnly, userPresetsOnly])
 
   const handleRenameOrMergeTag = useCallback(
     async (sourceTag: string, targetTag: string) => {
@@ -908,6 +930,8 @@ const PresetList: React.FC<PresetListProps> = ({
         availableTags={availableTags}
         duplicatesOnly={duplicatesOnly}
         onToggleDuplicatesOnly={handleToggleDuplicatesOnly}
+        userPresetsOnly={userPresetsOnly}
+        onToggleUserPresetsOnly={handleToggleUserPresetsOnly}
         onOpenTagManager={() => setIsTagManagerOpen(true)}
         duplicateGroupCount={duplicateGroups.length}
         onOpenDuplicateReview={() => setIsDuplicateReviewOpen(true)}

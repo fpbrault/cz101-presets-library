@@ -8,6 +8,12 @@ import {
   RemotePresetSyncAdapter,
 } from '@/lib/presetSync'
 import { isOnlineSyncEnabled } from '@/lib/onlineSyncSettings'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import {
+  FACTORY_PRESET_AUTHOR,
+  getFactoryPresetJson,
+  isFactoryPresetIdentity,
+} from '@/lib/factoryPresets'
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
@@ -15,6 +21,8 @@ import { SetlistEntry } from '@/lib/setlistManager'
 
 let presetDatabase: PresetDatabase
 const presetSync = new PresetSyncCoordinator()
+const DEFAULT_USER_PRESET_AUTHOR = 'User'
+const FACTORY_PRESETS_ONBOARDING_KEY = 'cz101.factory-presets.onboarding.v1'
 
 export function setPresetDatabase(database: PresetDatabase): void {
   presetDatabase = database
@@ -28,12 +36,86 @@ export function setPresetSyncAdapter(adapter: RemotePresetSyncAdapter): void {
   presetSync.setAdapter(adapter)
 }
 
+function isFactoryPreset(preset: Preset): boolean {
+  return isFactoryPresetIdentity(preset)
+}
+
+function loadFactoryPresetLibrary(): Preset[] {
+  const now = new Date().toISOString()
+  return getFactoryPresetJson().map((preset) => ({
+    id: String(preset.id ?? uuidv4()),
+    name: String(preset.name ?? 'Factory Preset'),
+    createdDate: String(preset.createdDate ?? now),
+    modifiedDate: String(preset.modifiedDate ?? now),
+    filename: String(preset.filename ?? 'factory_presets.json'),
+    sysexData: Uint8Array.from((preset.sysexData ?? []) as number[]),
+    tags: Array.isArray(preset.tags) ? preset.tags.map(String) : [],
+    author: FACTORY_PRESET_AUTHOR,
+    description: String(preset.description ?? ''),
+    favorite: Boolean(preset.favorite ?? false),
+    rating: preset.rating,
+    isFactoryPreset: true,
+  }))
+}
+
+export async function addFactoryPresetsToLibrary(): Promise<number> {
+  const existingPresets = await presetDatabase.getPresets()
+  const existingIds = new Set(existingPresets.map((preset) => preset.id))
+  const missingFactoryPresets = loadFactoryPresetLibrary().filter(
+    (preset) => !existingIds.has(preset.id),
+  )
+
+  if (missingFactoryPresets.length === 0) {
+    return 0
+  }
+
+  await presetDatabase.syncPresets([...existingPresets, ...missingFactoryPresets])
+  return missingFactoryPresets.length
+}
+
+export async function ensureFactoryPresetsOnFirstUse(): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const onboardingState = loadFromLocalStorage(
+    FACTORY_PRESETS_ONBOARDING_KEY,
+    null,
+  ) as string | null
+  if (onboardingState) {
+    return false
+  }
+
+  const existingPresets = await presetDatabase.getPresets()
+  if (existingPresets.length > 0) {
+    saveToLocalStorage(FACTORY_PRESETS_ONBOARDING_KEY, 'skipped')
+    return false
+  }
+
+  const shouldLoadFactoryPresets = window.confirm(
+    'Load factory presets (Temple of CZ) into your local library? You can add them later from Settings.',
+  )
+
+  saveToLocalStorage(
+    FACTORY_PRESETS_ONBOARDING_KEY,
+    shouldLoadFactoryPresets ? 'accepted' : 'declined',
+  )
+
+  if (!shouldLoadFactoryPresets) {
+    return false
+  }
+
+  const addedCount = await addFactoryPresetsToLibrary()
+  return addedCount > 0
+}
+
 export async function cloudBackupPresets(): Promise<boolean> {
   if (!isOnlineSyncEnabled()) {
     return false
   }
   const presets = await presetDatabase.getPresets()
-  return presetSync.backup(presets)
+  const userPresets = presets.filter((preset) => !isFactoryPreset(preset))
+  return presetSync.backup(userPresets)
 }
 
 export async function cloudRestorePresets(): Promise<number | null> {
@@ -44,8 +126,15 @@ export async function cloudRestorePresets(): Promise<number | null> {
   if (presets === null) {
     return null
   }
-  await presetDatabase.syncPresets(presets)
-  return presets.length
+
+  const currentPresets = await presetDatabase.getPresets()
+  const localFactoryPresets = currentPresets.filter((preset) =>
+    isFactoryPreset(preset),
+  )
+  const restoredUserPresets = presets.filter((preset) => !isFactoryPreset(preset))
+
+  await presetDatabase.syncPresets([...localFactoryPresets, ...restoredUserPresets])
+  return restoredUserPresets.length
 }
 
 const REQUEST_COMMANDS = Array.from(
@@ -570,6 +659,7 @@ export async function fetchPresetData(
   randomOrder: boolean,
   seed: number,
   duplicatesOnly: boolean = false,
+  userPresetsOnly: boolean = false,
 ): Promise<{ presets: Preset[]; totalCount: number }> {
   const presets = (await getPresets()) ?? []
 
@@ -580,6 +670,7 @@ export async function fetchPresetData(
       searchTerm,
       selectedTags,
       filterMode,
+      userPresetsOnly,
       favoritesOnly,
       duplicatesOnly,
       randomOrder,
@@ -722,6 +813,7 @@ export type Preset = {
   tags: string[]
   author?: string
   description?: string
+  isFactoryPreset?: boolean
   [key: string]: any
   favorite?: boolean
   rating?: 1 | 2 | 3 | 4 | 5
@@ -747,8 +839,9 @@ export function createPresetFromSysex(params: {
     filename: params.filename,
     sysexData: normalizedSysexData,
     tags: params.tags ?? determineTags(trimmedName),
-    author: params.author ?? 'Temple of CZ',
+    author: params.author ?? DEFAULT_USER_PRESET_AUTHOR,
     description: params.description ?? '',
+    isFactoryPreset: false,
   }
 }
 
@@ -852,8 +945,9 @@ export async function createPresetData(
         filename,
         sysexData: presetData,
         tags,
-        author: 'Temple of CZ',
+        author: DEFAULT_USER_PRESET_AUTHOR,
         description: '',
+        isFactoryPreset: false,
       })
     }
     startIndex = endIndex + 1

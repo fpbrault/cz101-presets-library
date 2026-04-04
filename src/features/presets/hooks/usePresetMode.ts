@@ -60,7 +60,7 @@ export function usePresetMode({
     })
 
     setSaveDraftName(matchingPreset?.name || suggestedName)
-    setSaveDraftAuthor(matchingPreset?.author || 'Temple of CZ')
+    setSaveDraftAuthor(matchingPreset?.author || 'User')
     setSaveDraftTags((matchingPreset?.tags || []).join(', '))
     setSaveDraftDescription(matchingPreset?.description || '')
   }
@@ -90,7 +90,7 @@ export function usePresetMode({
     const toSave: Preset = {
       ...preset,
       name: saveDraftName.trim() || preset.name,
-      author: saveDraftAuthor.trim() || 'Temple of CZ',
+      author: saveDraftAuthor.trim() || 'User',
       description: saveDraftDescription.trim(),
       tags: saveDraftTags
         .split(',')
