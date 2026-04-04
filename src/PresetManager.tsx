@@ -32,6 +32,7 @@ export default function PresetManager() {
   const { activePlaylistId, setActivePlaylistId } = useSearchFilter()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [dragOverPlaylistId, setDragOverPlaylistId] = useState<string | null>(null)
 
   useMidiSetup(setMidiPorts)
 
@@ -200,10 +201,26 @@ export default function PresetManager() {
                           className={`w-full text-left px-2 py-1 rounded transition-colors truncate ${
                             activePlaylistId === playlist.id
                               ? 'bg-accent text-accent-content font-semibold'
+                              : dragOverPlaylistId === playlist.id
+                              ? 'bg-success/30 ring-1 ring-success'
                               : 'hover:bg-base-200'
                           }`}
                           onClick={() => setActivePlaylistId(playlist.id)}
                           title={playlist.name}
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            e.dataTransfer.dropEffect = 'copy'
+                            setDragOverPlaylistId(playlist.id)
+                          }}
+                          onDragLeave={() => setDragOverPlaylistId(null)}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            setDragOverPlaylistId(null)
+                            const presetId = e.dataTransfer.getData('text/preset-id')
+                            if (presetId) {
+                              setlistMode.handleAddPreset(playlist.id, presetId)
+                            }
+                          }}
                         >
                           {playlist.name}
                           <span className="ml-1 opacity-60">({playlist.entries.length})</span>
