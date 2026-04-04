@@ -398,8 +398,13 @@ const PresetList: React.FC<PresetListProps> = ({
   }, [randomOrder, setSorting, sorting.length])
 
   const effectiveSorting = useMemo<SortingState>(
-    () => (sorting.length > 0 ? sorting : [{ id: 'name', desc: false }]),
-    [sorting],
+    () =>
+      sorting.length > 0
+        ? sorting
+        : activePlaylistId
+          ? []
+          : [{ id: 'name', desc: false }],
+    [sorting, activePlaylistId],
   )
   const favoriteSortEnabled = sorting[0]?.id === 'favorite'
 

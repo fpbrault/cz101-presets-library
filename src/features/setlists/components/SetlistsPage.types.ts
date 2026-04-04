@@ -18,4 +18,5 @@ export interface SetlistsPageProps {
   onStepQuickSend: (direction: 'prev' | 'next') => void
   onStopQuickSend: () => void
   onSendCurrentToBuffer: () => void
+  onPlayInPerformanceMode: (playlistId: string) => void
 }

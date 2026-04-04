@@ -22,6 +22,7 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
   onStepQuickSend,
   onStopQuickSend,
   onSendCurrentToBuffer,
+  onPlayInPerformanceMode,
 }) => {
   const [addPresetSearch, setAddPresetSearch] = useState('')
   const [showAddPresetModal, setShowAddPresetModal] = useState(false)
@@ -88,6 +89,15 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
                   onClick={() => setShowAddPresetModal(true)}
                 >
                   + Add Preset
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={selectedPlaylist.entries.length === 0}
+                  onClick={() => onPlayInPerformanceMode(selectedPlaylist.id)}
+                >
+                  🎹 Performance Mode
                 </Button>
 
                 {!isQuickSending ? (

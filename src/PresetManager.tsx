@@ -312,6 +312,11 @@ export default function PresetManager() {
                 onStepQuickSend={setlistMode.handleStepQuickSend}
                 onStopQuickSend={setlistMode.handleStopQuickSend}
                 onSendCurrentToBuffer={setlistMode.handleSendCurrentToBuffer}
+                onPlayInPerformanceMode={(playlistId) => {
+                  setActivePlaylistId(playlistId)
+                  setAppMode('presets')
+                  setPerformanceMode(true)
+                }}
               />
             )}
           </div>
