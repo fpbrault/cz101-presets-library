@@ -1,33 +1,33 @@
 import Button from '@/components/Button'
 import SelectInput from '@/components/SelectInput'
-import { Setlist } from '@/lib/setlistManager'
+import { SynthBackup } from '@/lib/synthBackupManager'
 
-interface SetlistDetailsHeaderProps {
-  selectedSetlist: Setlist
+interface SynthBackupDetailsHeaderProps {
+  selectedBackup: SynthBackup
   restoreBank: 'internal' | 'cartridge'
   isRestoring: boolean
   onRestoreBankChange: (bank: 'internal' | 'cartridge') => void
-  onRestoreSetlistToSynth: (setlistId: string, bank: 'internal' | 'cartridge') => void
-  onExportSetlist: (setlistId: string) => void
-  onDeleteSetlist: (setlistId: string) => void
+  onRestoreBackupToSynth: (backupId: string, bank: 'internal' | 'cartridge') => void
+  onExportBackup: (backupId: string) => void
+  onDeleteBackup: (backupId: string) => void
 }
 
-export default function SetlistDetailsHeader({
-  selectedSetlist,
+export default function SynthBackupDetailsHeader({
+  selectedBackup,
   restoreBank,
   isRestoring,
   onRestoreBankChange,
-  onRestoreSetlistToSynth,
-  onExportSetlist,
-  onDeleteSetlist,
-}: SetlistDetailsHeaderProps) {
+  onRestoreBackupToSynth,
+  onExportBackup,
+  onDeleteBackup,
+}: SynthBackupDetailsHeaderProps) {
   return (
     <div className="flex items-center justify-between p-4 border-b border-base-content/10 bg-base-200/50">
       <div>
-        <div className="text-lg font-bold">{selectedSetlist.name}</div>
+        <div className="text-lg font-bold">{selectedBackup.name}</div>
         <div className="text-xs opacity-70">
-          {new Date(selectedSetlist.createdAt).toLocaleString()} •{' '}
-          {selectedSetlist.entries.length} slots
+          {new Date(selectedBackup.createdAt).toLocaleString()} •{' '}
+          {selectedBackup.entries.length} slots
         </div>
       </div>
       <div className="flex gap-2">
@@ -47,21 +47,21 @@ export default function SetlistDetailsHeader({
           variant="accent"
           size="sm"
           disabled={isRestoring}
-          onClick={() => onRestoreSetlistToSynth(selectedSetlist.id, restoreBank)}
+          onClick={() => onRestoreBackupToSynth(selectedBackup.id, restoreBank)}
         >
           {isRestoring ? 'Restoring...' : 'Restore To Synth'}
         </Button>
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => onExportSetlist(selectedSetlist.id)}
+          onClick={() => onExportBackup(selectedBackup.id)}
         >
           Export JSON
         </Button>
         <Button
           variant="error"
           size="sm"
-          onClick={() => onDeleteSetlist(selectedSetlist.id)}
+          onClick={() => onDeleteBackup(selectedBackup.id)}
         >
           Delete
         </Button>

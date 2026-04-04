@@ -1,9 +1,14 @@
 import { exportPresets, importPresets } from '@/lib/presetManager'
 import {
-  exportAllSetlists,
-  importAllSetlists,
-  SerializedSetlist,
-} from '@/lib/setlistManager'
+  exportAllSynthBackups,
+  importAllSynthBackups,
+  SerializedSynthBackup,
+} from '@/lib/synthBackupManager'
+import {
+  exportAllPlaylists,
+  importAllPlaylists,
+  Playlist,
+} from '@/lib/playlistManager'
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
 
 const WORKSPACE_BACKUP_SCHEMA = 'cz101-workspace-backup'
@@ -77,9 +82,13 @@ export async function exportWorkspaceBackup(): Promise<string> {
         format: 'preset-database-json',
         data: parseJsonSafely(presetsJson),
       },
+      synthBackups: {
+        format: 'synth-backups-v1',
+        data: exportAllSynthBackups(),
+      },
       setlists: {
         format: 'setlists-v1',
-        data: exportAllSetlists(),
+        data: exportAllPlaylists(),
       },
       appSettings: {
         format: 'local-storage-v1',
@@ -103,10 +112,23 @@ export async function importWorkspaceBackup(json: string): Promise<void> {
     await importPresets(JSON.stringify(presetSection.data))
   }
 
+  const synthBackupSection = parsed.sections.synthBackups
+  if (synthBackupSection) {
+    importAllSynthBackups(synthBackupSection.data as SerializedSynthBackup[], 'replace')
+    window.dispatchEvent(new Event('synth-backups-updated'))
+  }
+
+  // Legacy: support old backup files that used 'setlists' for synth backups
+  const legacySynthBackupSection = parsed.sections.setlists
+  if (legacySynthBackupSection && !synthBackupSection) {
+    importAllSynthBackups(legacySynthBackupSection.data as SerializedSynthBackup[], 'replace')
+    window.dispatchEvent(new Event('synth-backups-updated'))
+  }
+
   const setlistSection = parsed.sections.setlists
-  if (setlistSection) {
-    importAllSetlists(setlistSection.data as SerializedSetlist[], 'replace')
-    window.dispatchEvent(new Event('setlists-updated'))
+  if (setlistSection && synthBackupSection) {
+    // New format: 'setlists' is now user playlists
+    importAllPlaylists(setlistSection.data as Playlist[], 'replace')
   }
 
   const appSettingsSection = parsed.sections.appSettings
