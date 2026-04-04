@@ -118,6 +118,13 @@ export function deleteSetlist(id: string): void {
   saveSerializedSetlists(current.filter((setlist) => setlist.id !== id))
 }
 
+export function clearAllSetlists(): void {
+  saveSerializedSetlists([])
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('setlists-updated'))
+  }
+}
+
 export function exportSetlist(setlistId: string): string {
   const setlist = getSetlistById(setlistId)
   if (!setlist) {

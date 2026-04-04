@@ -3,10 +3,12 @@ import { useQueryClient } from '@tanstack/react-query'
 import { FaCog } from 'react-icons/fa'
 import {
   addFactoryPresetsToLibrary,
+  clearCloudPresetBackup,
   cloudBackupPresets,
   cloudRestorePresets,
   exportPresets,
   importPresets,
+  resetLocalAppData,
 } from '@/lib/presetManager'
 import {
   exportWorkspaceBackup,
@@ -198,6 +200,37 @@ const SettingsPanel: React.FC = () => {
     })()
   }
 
+  const handleResetData = () => {
+    void (async () => {
+      const confirmedLocalReset = window.confirm(
+        'Reset all local data? This will delete all local presets and synth backups.',
+      )
+
+      if (!confirmedLocalReset) {
+        return
+      }
+
+      await resetLocalAppData()
+      await queryClient.invalidateQueries({ queryKey: ['presets'] })
+
+      const shouldClearCloud = window.confirm(
+        'Also clear your cloud preset backup?',
+      )
+
+      if (!shouldClearCloud) {
+        setSyncStatusMessage('Local data reset complete.')
+        return
+      }
+
+      const cloudCleared = await clearCloudPresetBackup()
+      setSyncStatusMessage(
+        cloudCleared
+          ? 'Local data reset complete. Cloud backup cleared.'
+          : 'Local data reset complete. Cloud backup was not cleared (sync disabled or unavailable).',
+      )
+    })()
+  }
+
   const handleSignIn = (provider: 'google' | 'apple') => {
     void (async () => {
       try {
@@ -276,6 +309,15 @@ const SettingsPanel: React.FC = () => {
                 </div>
                 <Button onClick={handleAddFactoryPresets} variant="neutral">
                   Add Factory Presets
+                </Button>
+              </label>
+
+              <label className="w-full max-w-xs form-control">
+                <div className="label">
+                  <span className="label-text">Reset Data</span>
+                </div>
+                <Button onClick={handleResetData} variant="error">
+                  Reset Local Data
                 </Button>
               </label>
 

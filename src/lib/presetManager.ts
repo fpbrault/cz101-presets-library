@@ -18,6 +18,7 @@ import {
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
 import { SetlistEntry } from '@/lib/setlistManager'
+import { clearAllSetlists } from '@/lib/setlistManager'
 
 let presetDatabase: PresetDatabase
 const presetSync = new PresetSyncCoordinator()
@@ -118,6 +119,13 @@ export async function cloudBackupPresets(): Promise<boolean> {
   return presetSync.backup(userPresets)
 }
 
+export async function clearCloudPresetBackup(): Promise<boolean> {
+  if (!isOnlineSyncEnabled()) {
+    return false
+  }
+  return presetSync.backup([])
+}
+
 export async function cloudRestorePresets(): Promise<number | null> {
   if (!isOnlineSyncEnabled()) {
     return null
@@ -135,6 +143,15 @@ export async function cloudRestorePresets(): Promise<number | null> {
 
   await presetDatabase.syncPresets([...localFactoryPresets, ...restoredUserPresets])
   return restoredUserPresets.length
+}
+
+export async function resetLocalAppData(): Promise<void> {
+  await presetDatabase.syncPresets([])
+  clearAllSetlists()
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(FACTORY_PRESETS_ONBOARDING_KEY)
+  }
 }
 
 const REQUEST_COMMANDS = Array.from(
