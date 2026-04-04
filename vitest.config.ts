@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath, URL } from 'node:url'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   resolve: {
@@ -31,8 +32,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             name: 'chromium',
-            provider: 'playwright',
-            headless: true,
+            provider: playwright({ launch: { headless: true } }),
           },
           include: ['src/**/*.browser.test.{ts,tsx}'],
           setupFiles: ['./setupBrowserTests.ts'],
