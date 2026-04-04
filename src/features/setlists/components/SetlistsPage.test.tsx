@@ -23,6 +23,7 @@ describe('SetlistsPage (user playlists)', () => {
         onStepQuickSend={vi.fn()}
         onStopQuickSend={vi.fn()}
         onSendCurrentToBuffer={vi.fn()}
+        onPlayInPerformanceMode={vi.fn()}
       />,
     )
 
