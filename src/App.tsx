@@ -19,7 +19,7 @@ import { ToastProvider, useToast } from '@/ToastContext'
 import Button from '@/components/Button'
 
 function AppInner() {
-  const { notifySuccess } = useToast()
+  const { notifySuccess, notifyInfo } = useToast()
   const [showOnboardingModal, setShowOnboardingModal] = useState(false)
 
   useEffect(() => {
@@ -54,6 +54,8 @@ function AppInner() {
       if (loaded) {
         await queryClient.invalidateQueries({ queryKey: ['presets'] })
         notifySuccess('Factory presets loaded into your library.')
+      } else {
+        notifyInfo('Factory presets are already in your library.')
       }
     })()
   }
