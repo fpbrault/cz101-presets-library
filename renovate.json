@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "schedule": ["before 5am on Monday"],
+  "timezone": "America/Montreal",
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Automerge non-major devDependency updates",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Group all non-major npm updates into a single PR",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm non-major dependencies",
+      "groupSlug": "npm-non-major"
+    },
+    {
+      "description": "Group all non-major Cargo updates into a single PR",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "cargo non-major dependencies",
+      "groupSlug": "cargo-non-major"
+    },
+    {
+      "description": "Separate major updates for individual review",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Group Tauri plugins and core together",
+      "matchPackagePrefixes": ["@tauri-apps/", "tauri", "tauri-"],
+      "groupName": "Tauri packages",
+      "groupSlug": "tauri"
+    },
+    {
+      "description": "Group Tanstack packages together",
+      "matchPackagePrefixes": ["@tanstack/"],
+      "groupName": "Tanstack packages",
+      "groupSlug": "tanstack"
+    }
+  ]
+}
