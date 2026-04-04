@@ -13,6 +13,7 @@ export interface FilterPresetsOptions {
   duplicatesOnly?: boolean
   randomOrder: boolean
   seed: number
+  playlistPresetIds?: string[] | null
 }
 
 function getPresetFingerprint(preset: Preset): string {
@@ -33,9 +34,15 @@ export function filterPresets(
     duplicatesOnly,
     randomOrder,
     seed,
+    playlistPresetIds,
   } = options
 
   let filteredPresets = presets
+
+  if (playlistPresetIds !== null && playlistPresetIds !== undefined) {
+    const idSet = new Set(playlistPresetIds)
+    filteredPresets = filteredPresets.filter((preset) => idSet.has(preset.id))
+  }
 
   if (userPresetsOnly) {
     filteredPresets = filteredPresets.filter(
@@ -81,7 +88,13 @@ export function filterPresets(
   }
 
   let sortedPresets = [...filteredPresets].sort((a, b) => {
-    if (sorting.length === 0) return 0
+    if (sorting.length === 0) {
+      if (playlistPresetIds && !randomOrder) {
+        const orderMap = new Map(playlistPresetIds.map((id, i) => [id, i]))
+        return (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
+      }
+      return 0
+    }
     const { id, desc } = sorting[0]
     const order = desc ? -1 : 1
 

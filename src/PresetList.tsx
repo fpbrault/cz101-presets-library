@@ -54,11 +54,14 @@ import TagManagerModal from '@/features/presets/components/TagManagerModal'
 import DuplicateReviewModal, {
   DuplicateGroup,
 } from '@/features/presets/components/DuplicateReviewModal'
+import { Playlist } from '@/lib/playlistManager'
 
 interface PresetListProps {
   currentPreset: Preset | null
   handleSelectPreset: (preset: Preset) => void
   handleActivatePreset?: (preset: Preset) => void
+  playlists?: Playlist[]
+  onAddPresetToPlaylist?: (playlistId: string, presetId: string) => void
 }
 
 const fetchSize = 50
@@ -348,9 +351,10 @@ function PresetListTopBar(props: {
 
 const PresetList: React.FC<PresetListProps> = ({
   currentPreset,
-
   handleSelectPreset,
   handleActivatePreset,
+  playlists = [],
+  onAddPresetToPlaylist,
 }) => {
   const queryClient = useQueryClient()
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -371,7 +375,14 @@ const PresetList: React.FC<PresetListProps> = ({
     setDuplicatesOnly,
     userPresetsOnly,
     setUserPresetsOnly,
+    activePlaylistId,
   } = useSearchFilter()
+
+  const playlistPresetIds = useMemo<string[] | null>(() => {
+    if (!activePlaylistId) return null
+    const playlist = playlists.find((p) => p.id === activePlaylistId)
+    return playlist ? playlist.entries.map((e) => e.presetId) : null
+  }, [activePlaylistId, playlists])
   const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now())
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange')
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false)
@@ -387,8 +398,13 @@ const PresetList: React.FC<PresetListProps> = ({
   }, [randomOrder, setSorting, sorting.length])
 
   const effectiveSorting = useMemo<SortingState>(
-    () => (sorting.length > 0 ? sorting : [{ id: 'name', desc: false }]),
-    [sorting],
+    () =>
+      sorting.length > 0
+        ? sorting
+        : activePlaylistId
+          ? []
+          : [{ id: 'name', desc: false }],
+    [sorting, activePlaylistId],
   )
   const favoriteSortEnabled = sorting[0]?.id === 'favorite'
 
@@ -409,13 +425,14 @@ const PresetList: React.FC<PresetListProps> = ({
       shuffleSeed,
       duplicatesOnly,
       userPresetsOnly,
+      playlistPresetIds,
     )
     return result
   }
 
   const queryKey = useMemo(
-    () =>
-      getPresetQueryKey({
+    () => [
+      ...getPresetQueryKey({
         sorting: randomOrder ? [] : effectiveSorting,
         searchTerm,
         selectedTags,
@@ -425,7 +442,10 @@ const PresetList: React.FC<PresetListProps> = ({
         duplicatesOnly,
         randomOrder,
         shuffleSeed,
+        activePlaylistId,
       }),
+      playlistPresetIds?.length ?? null,
+    ],
     [
       effectiveSorting,
       searchTerm,
@@ -436,6 +456,8 @@ const PresetList: React.FC<PresetListProps> = ({
       duplicatesOnly,
       randomOrder,
       shuffleSeed,
+      activePlaylistId,
+      playlistPresetIds,
     ],
   )
 
@@ -562,6 +584,41 @@ const PresetList: React.FC<PresetListProps> = ({
         size: 112,
         cell: () => null,
       },
+      ...(onAddPresetToPlaylist && playlists.length > 0
+        ? [
+            {
+              id: 'addToSetlist',
+              header: '',
+              enableSorting: false,
+              size: 120,
+              cell: ({ row }: { row: { original: Preset } }) => (
+                <select
+                  className="select select-xs select-accent w-full max-w-[7rem]"
+                  value=""
+                  title="Add to setlist"
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    e.stopPropagation()
+                    const playlistId = e.target.value
+                    if (playlistId && onAddPresetToPlaylist) {
+                      onAddPresetToPlaylist(playlistId, row.original.id)
+                      e.target.value = ''
+                    }
+                  }}
+                >
+                  <option value="" disabled>
+                    + Setlist
+                  </option>
+                  {playlists.map((playlist) => (
+                    <option key={playlist.id} value={playlist.id}>
+                      {playlist.name}
+                    </option>
+                  ))}
+                </select>
+              ),
+            } as ColumnDef<Preset>,
+          ]
+        : []),
       /*     {
         header: 'Rating',
         accessorKey: 'rating',
@@ -574,7 +631,7 @@ const PresetList: React.FC<PresetListProps> = ({
         ),
       }, */
     ],
-    [handleSetFavorite, handleSetRating, randomOrder, setRandomOrder],
+    [handleSetFavorite, handleSetRating, randomOrder, setRandomOrder, playlists, onAddPresetToPlaylist],
   )
 
   const { data: duplicatePresetsData } = useQuery({
@@ -1070,6 +1127,11 @@ const PresetList: React.FC<PresetListProps> = ({
                     data-index={virtualRow.index}
                     ref={(node) => rowVirtualizer.measureElement(node)}
                     key={row.id}
+                    draggable={playlists.length > 0}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('text/preset-id', row.original.id)
+                      e.dataTransfer.effectAllowed = 'copy'
+                    }}
                     className={
                       'justifybetween ' +
                       (visualSelectedId === row.original.id ||

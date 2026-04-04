@@ -10,6 +10,7 @@ type PresetQueryKeyParams = {
   duplicatesOnly?: boolean
   randomOrder: boolean
   shuffleSeed?: number
+  activePlaylistId?: string | null
 }
 
 export function getPresetQueryKey({
@@ -22,6 +23,7 @@ export function getPresetQueryKey({
   duplicatesOnly,
   randomOrder,
   shuffleSeed,
+  activePlaylistId,
 }: PresetQueryKeyParams) {
   return [
     'presets',
@@ -34,5 +36,6 @@ export function getPresetQueryKey({
     duplicatesOnly,
     randomOrder,
     shuffleSeed,
+    activePlaylistId,
   ]
 }
