@@ -15,13 +15,13 @@ import {
 } from '@/lib/presetManager'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
+import { useToast } from '@/ToastContext'
 
 type AppMode = 'presets' | 'synthBackups' | 'setlists'
 
 interface UseSynthBackupModeParams {
   selectedMidiPort: string
   selectedMidiChannel: number
-  setStatusMessage: (message: string) => void
   setAppMode: (mode: AppMode) => void
   openSaveDraftPresetModal: (
     sysexData: Uint8Array,
@@ -33,10 +33,10 @@ interface UseSynthBackupModeParams {
 export function useSynthBackupMode({
   selectedMidiPort,
   selectedMidiChannel,
-  setStatusMessage,
   setAppMode,
   openSaveDraftPresetModal,
 }: UseSynthBackupModeParams) {
+  const { notifySuccess, notifyInfo, notifyError } = useToast()
   const [backups, setBackups] = useState<SynthBackup[]>([])
   const [selectedBackupId, setSelectedBackupId] = useState<string | null>(null)
   const selectedBackupIdRef = useRef(selectedBackupId)
@@ -77,7 +77,7 @@ export function useSynthBackupMode({
 
   const handleCreateBackup = async () => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before creating synth backups.')
+      notifyInfo('Select a MIDI port before creating synth backups.')
       return
     }
 
@@ -104,11 +104,11 @@ export function useSynthBackupMode({
       setAppMode('synthBackups')
 
       const exactMatchCount = entries.filter((entry) => entry.isExactLibraryMatch).length
-      setStatusMessage(
+      notifySuccess(
         `Backup complete: ${entries.length}/16 slots retrieved, ${exactMatchCount} exact library matches.`,
       )
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      notifyError((error as Error).message)
     } finally {
       setIsBackingUp(false)
       setBackupProgress(null)
@@ -154,7 +154,7 @@ export function useSynthBackupMode({
     refreshBackups()
     setSelectedBackupId(importedBackup.id)
     setAppMode('synthBackups')
-    setStatusMessage(`Imported synth backup: ${importedBackup.name}.`)
+    notifySuccess(`Imported synth backup: ${importedBackup.name}.`)
   }
 
   const handleSaveBackupEntryAsPreset = async (
@@ -165,7 +165,7 @@ export function useSynthBackupMode({
     const entry = backup?.entries[entryIndex]
 
     if (!entry) {
-      setStatusMessage('Backup entry not found.')
+      notifyError('Backup entry not found.')
       return
     }
 
@@ -175,7 +175,7 @@ export function useSynthBackupMode({
       matchingPreset,
       `backup-${backup?.name || 'entry'}-${entry.slot}`,
     )
-    setStatusMessage('Prepared backup entry as a new preset draft.')
+    notifyInfo('Prepared backup entry as a new preset draft.')
   }
 
   const handleSendBackupEntryToSlot = async (
@@ -185,7 +185,7 @@ export function useSynthBackupMode({
     slot: number,
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before sending backup entries.')
+      notifyInfo('Select a MIDI port before sending backup entries.')
       return
     }
 
@@ -193,7 +193,7 @@ export function useSynthBackupMode({
     const entry = backup?.entries[entryIndex]
 
     if (!entry) {
-      setStatusMessage('Backup entry not found.')
+      notifyError('Backup entry not found.')
       return
     }
 
@@ -205,7 +205,7 @@ export function useSynthBackupMode({
       slot,
     )
 
-    setStatusMessage(
+    notifySuccess(
       `Sent backup entry ${entry.slot} to ${bank} slot ${slot}.`,
     )
   }
@@ -215,7 +215,7 @@ export function useSynthBackupMode({
     entryIndex: number,
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before previewing backup entries.')
+      notifyInfo('Select a MIDI port before previewing backup entries.')
       return
     }
 
@@ -223,7 +223,7 @@ export function useSynthBackupMode({
     const entry = backup?.entries[entryIndex]
 
     if (!entry) {
-      setStatusMessage('Backup entry not found.')
+      notifyError('Backup entry not found.')
       return
     }
 
@@ -233,7 +233,7 @@ export function useSynthBackupMode({
       selectedMidiChannel,
     )
 
-    setStatusMessage(
+    notifyInfo(
       `Previewed backup entry ${entry.slot} in temporary buffer (slot 0x60).`,
     )
   }
@@ -243,13 +243,13 @@ export function useSynthBackupMode({
     bank: 'internal' | 'cartridge',
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before restoring synth backups.')
+      notifyInfo('Select a MIDI port before restoring synth backups.')
       return
     }
 
     const backup = backups.find((item) => item.id === backupId)
     if (!backup) {
-      setStatusMessage('Synth backup not found.')
+      notifyError('Synth backup not found.')
       return
     }
 
@@ -308,11 +308,11 @@ export function useSynthBackupMode({
         })
       }
 
-      setStatusMessage(
+      notifySuccess(
         `Restore complete: ${backup.entries.length}/${backup.entries.length} entries sent to ${bank} slots.`,
       )
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      notifyError((error as Error).message)
     } finally {
       setIsRestoringBackup(false)
       setRestoreProgress(null)

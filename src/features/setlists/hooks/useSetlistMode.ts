@@ -11,21 +11,21 @@ import {
 } from '@/lib/playlistManager'
 import {
   getPresets,
+  Preset,
   writeSysexDataToTemporaryBuffer,
 } from '@/lib/presetManager'
-import { Preset } from '@/lib/presetManager'
+import { useToast } from '@/ToastContext'
 
 interface UseSetlistModeParams {
   selectedMidiPort: string
   selectedMidiChannel: number
-  setStatusMessage: (message: string) => void
 }
 
 export function useSetlistMode({
   selectedMidiPort,
   selectedMidiChannel,
-  setStatusMessage,
 }: UseSetlistModeParams) {
+  const { notifySuccess, notifyInfo, notifyError } = useToast()
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
   const [presets, setPresets] = useState<Preset[]>([])
@@ -124,7 +124,7 @@ export function useSetlistMode({
 
   const handleSendCurrentToBuffer = async () => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before sending presets.')
+      notifyInfo('Select a MIDI port before sending presets.')
       return
     }
 
@@ -136,7 +136,7 @@ export function useSetlistMode({
 
     const preset = presets.find((p) => p.id === entry.presetId)
     if (!preset) {
-      setStatusMessage('Preset not found in library.')
+      notifyError('Preset not found in library.')
       return
     }
 
@@ -146,7 +146,7 @@ export function useSetlistMode({
       selectedMidiChannel,
     )
 
-    setStatusMessage(`Sent "${preset.name}" to temporary buffer.`)
+    notifySuccess(`Sent "${preset.name}" to temporary buffer.`)
   }
 
   return {

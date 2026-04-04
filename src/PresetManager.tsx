@@ -8,7 +8,6 @@ import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import PerformanceMode from '@/PerformanceMode'
 import Button from '@/components/Button'
-import InlineNotice from '@/components/InlineNotice'
 import { useMidiSetup } from '@/useMidiSetup'
 import SynthBackupsPage from '@/features/synthBackups/components/SynthBackupsPage'
 import SetlistsPage from '@/features/setlists/components/SetlistsPage'
@@ -25,7 +24,6 @@ export default function PresetManager() {
   const [performanceMode, setPerformanceMode] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
   const [appMode, setAppMode] = useState<AppMode>('presets')
-  const [statusMessage, setStatusMessage] = useState<string>('')
 
   const { setMidiPorts, selectedMidiPort } = useMidiPort()
   const { selectedMidiChannel } = useMidiChannel()
@@ -39,7 +37,6 @@ export default function PresetManager() {
   const presetMode = usePresetMode({
     selectedMidiPort,
     selectedMidiChannel,
-    setStatusMessage,
     setCurrentPreset,
     setAppMode,
   })
@@ -47,7 +44,6 @@ export default function PresetManager() {
   const synthBackupMode = useSynthBackupMode({
     selectedMidiPort,
     selectedMidiChannel,
-    setStatusMessage,
     setAppMode,
     openSaveDraftPresetModal: presetMode.openSaveDraftPresetModal,
   })
@@ -55,7 +51,6 @@ export default function PresetManager() {
   const setlistMode = useSetlistMode({
     selectedMidiPort,
     selectedMidiChannel,
-    setStatusMessage,
   })
 
   const handleDeletePreset = async (id: string) => {
@@ -245,14 +240,6 @@ export default function PresetManager() {
                   <SettingsPanel></SettingsPanel>
                 </>
               )}
-
-              {!leftPanelCollapsed && statusMessage && (
-                <InlineNotice
-                  message={statusMessage}
-                  tone="info"
-                  className="mt-auto"
-                />
-              )}
             </div>
 
             {appMode === 'presets' && (
@@ -322,26 +309,29 @@ export default function PresetManager() {
           </div>
 
           {showDeleteModal && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="p-4 shadow-lg bg-base-100 rounded-xl">
-                <h2 className="mb-4 text-xl">Confirm Delete</h2>
-                <p>Are you sure you want to delete this preset?</p>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    variant="error"
-                    onClick={() => handleDeletePreset(currentPreset?.id || '')}
-                  >
-                    Delete
-                  </Button>
+            <dialog open className="modal modal-open">
+              <div className="modal-box">
+                <h3 className="text-lg font-bold">Confirm Delete</h3>
+                <p className="py-2 text-sm opacity-80">Are you sure you want to delete this preset?</p>
+                <div className="modal-action">
                   <Button
                     variant="secondary"
                     onClick={() => setShowDeleteModal(false)}
                   >
                     Cancel
                   </Button>
+                  <Button
+                    variant="error"
+                    onClick={() => handleDeletePreset(currentPreset?.id || '')}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
-            </div>
+              <form method="dialog" className="modal-backdrop">
+                <button onClick={() => setShowDeleteModal(false)}>close</button>
+              </form>
+            </dialog>
           )}
 
           <SaveDraftPresetModal

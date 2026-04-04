@@ -37,7 +37,7 @@ export default function TagManagerModal({
   }
 
   return (
-    <ModalShell panelClassName="w-full max-w-lg p-4 shadow-2xl bg-base-100 rounded-xl">
+    <ModalShell panelClassName="w-full max-w-lg" onClose={onClose}>
       <h2 className="mb-4 text-xl font-bold">Tag Management</h2>
 
       {!hasTags && <p className="mb-4 text-sm opacity-70">No tags to manage.</p>}

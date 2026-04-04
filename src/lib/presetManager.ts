@@ -74,7 +74,7 @@ export async function addFactoryPresetsToLibrary(): Promise<number> {
   return missingFactoryPresets.length
 }
 
-export async function ensureFactoryPresetsOnFirstUse(): Promise<boolean> {
+export async function ensureFactoryPresetsOnFirstUse(): Promise<'needs-confirmation' | false> {
   if (typeof window === 'undefined') {
     return false
   }
@@ -93,21 +93,17 @@ export async function ensureFactoryPresetsOnFirstUse(): Promise<boolean> {
     return false
   }
 
-  const shouldLoadFactoryPresets = window.confirm(
-    'Load factory presets (Temple of CZ) into your local library? You can add them later from Settings.',
-  )
+  return 'needs-confirmation'
+}
 
-  saveToLocalStorage(
-    FACTORY_PRESETS_ONBOARDING_KEY,
-    shouldLoadFactoryPresets ? 'accepted' : 'declined',
-  )
-
-  if (!shouldLoadFactoryPresets) {
-    return false
-  }
-
+export async function acceptFactoryPresetsOnboarding(): Promise<boolean> {
+  saveToLocalStorage(FACTORY_PRESETS_ONBOARDING_KEY, 'accepted')
   const addedCount = await addFactoryPresetsToLibrary()
   return addedCount > 0
+}
+
+export function declineFactoryPresetsOnboarding(): void {
+  saveToLocalStorage(FACTORY_PRESETS_ONBOARDING_KEY, 'declined')
 }
 
 export async function cloudBackupPresets(): Promise<boolean> {
