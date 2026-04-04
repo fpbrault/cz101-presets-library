@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createSynthBackup,
   deleteSynthBackup,
@@ -39,6 +39,8 @@ export function useSynthBackupMode({
 }: UseSynthBackupModeParams) {
   const [backups, setBackups] = useState<SynthBackup[]>([])
   const [selectedBackupId, setSelectedBackupId] = useState<string | null>(null)
+  const selectedBackupIdRef = useRef(selectedBackupId)
+  selectedBackupIdRef.current = selectedBackupId
   const [backupProgress, setBackupProgress] = useState<{
     completed: number
     total: number
@@ -51,33 +53,27 @@ export function useSynthBackupMode({
     attempts: number
   } | null>(null)
 
-  const refreshBackups = () => {
+  const refreshBackups = useCallback(() => {
+    const currentId = selectedBackupIdRef.current
     const nextBackups = getSynthBackups()
     setBackups(nextBackups)
-    if (
-      selectedBackupId &&
-      !nextBackups.some((backup) => backup.id === selectedBackupId)
-    ) {
+    if (currentId && !nextBackups.some((backup) => backup.id === currentId)) {
       setSelectedBackupId(nextBackups[0]?.id ?? null)
     }
-    if (!selectedBackupId && nextBackups.length > 0) {
+    if (!currentId && nextBackups.length > 0) {
       setSelectedBackupId(nextBackups[0].id)
     }
-  }
+  }, [])
 
   useEffect(() => {
     refreshBackups()
 
-    const handleBackupsUpdated = () => {
-      refreshBackups()
-    }
-
-    window.addEventListener('synth-backups-updated', handleBackupsUpdated)
+    window.addEventListener('synth-backups-updated', refreshBackups)
 
     return () => {
-      window.removeEventListener('synth-backups-updated', handleBackupsUpdated)
+      window.removeEventListener('synth-backups-updated', refreshBackups)
     }
-  }, [selectedBackupId])
+  }, [refreshBackups])
 
   const handleCreateBackup = async () => {
     if (!selectedMidiPort) {

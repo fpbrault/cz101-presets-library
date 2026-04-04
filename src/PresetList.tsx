@@ -584,36 +584,31 @@ const PresetList: React.FC<PresetListProps> = ({
               id: 'addToSetlist',
               header: '',
               enableSorting: false,
-              size: 48,
+              size: 120,
               cell: ({ row }: { row: { original: Preset } }) => (
-                <div className="dropdown dropdown-end">
-                  <button
-                    tabIndex={0}
-                    className="btn btn-xs btn-accent"
-                    title="Add to setlist"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    +
-                  </button>
-                  <ul
-                    tabIndex={0}
-                    className="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-40 text-xs"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {playlists.map((playlist) => (
-                      <li key={playlist.id}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onAddPresetToPlaylist(row.original.id, playlist.id)
-                          }}
-                        >
-                          {playlist.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <select
+                  className="select select-xs select-accent w-full max-w-[7rem]"
+                  value=""
+                  title="Add to setlist"
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    e.stopPropagation()
+                    const playlistId = e.target.value
+                    if (playlistId && onAddPresetToPlaylist) {
+                      onAddPresetToPlaylist(row.original.id, playlistId)
+                      e.target.value = ''
+                    }
+                  }}
+                >
+                  <option value="" disabled>
+                    + Setlist
+                  </option>
+                  {playlists.map((playlist) => (
+                    <option key={playlist.id} value={playlist.id}>
+                      {playlist.name}
+                    </option>
+                  ))}
+                </select>
               ),
             } as ColumnDef<Preset>,
           ]
