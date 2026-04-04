@@ -68,7 +68,8 @@ export async function startOnlineProviderSignIn(
     return
   }
 
-  await signInWithNeonProvider(provider, window.location.href)
+  // Use origin as callback to avoid malformed paths (e.g. accidental double slashes).
+  await signInWithNeonProvider(provider, window.location.origin)
 }
 
 export async function disconnectOnlineSession(): Promise<void> {

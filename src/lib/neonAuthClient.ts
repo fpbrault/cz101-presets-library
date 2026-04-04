@@ -108,7 +108,14 @@ export async function signInWithNeonProvider(
   const redirectUrl = response?.data?.url ?? response?.url
   if (typeof redirectUrl === 'string' && redirectUrl) {
     window.location.href = redirectUrl
+    return
   }
+
+  const errorMessage =
+    response?.error?.message ??
+    response?.message ??
+    'Neon social sign-in failed: missing redirect URL.'
+  throw new Error(errorMessage)
 }
 
 export async function signOutNeonSession(): Promise<void> {
