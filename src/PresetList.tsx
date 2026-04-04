@@ -161,14 +161,14 @@ function PresetListTopBar(props: {
 
   return (
     <div className="relative border-b bg-base-200 border-base-content/10">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2">
         <div className="relative inline-block">
           <input
             type="text"
             placeholder="Search..."
             value={props.searchTerm}
             onChange={(e) => props.setSearchTerm(e.target.value)}
-            className="pr-8 mx-4 my-2 input input-secondary input-md"
+            className="pr-8 input input-secondary input-md"
           />
           {props.searchTerm && (
             <button
@@ -180,9 +180,9 @@ function PresetListTopBar(props: {
           )}
         </div>
 
-        <span>{props.totalDBRowCount} Presets Found</span>
+        <span className="shrink-0">{props.totalDBRowCount} Presets Found</span>
 
-        <div className="flex items-center gap-2 mx-4 my-2">
+        <div className="flex items-center gap-2 ml-auto">
           <button
             className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
               props.duplicatesOnly ? 'btn-warning' : 'btn-neutral'
@@ -248,7 +248,7 @@ function PresetListTopBar(props: {
 
           <div
             id="drop-area"
-            className="hidden p-2 border-2 border-gray-400 border-dashed lg:block hover:bg-base-300 bg-base-100"
+            className="hidden p-2 border-2 border-gray-400 border-dashed xl:block hover:bg-base-300 bg-base-100"
           >
             <FaPlusSquare size={20} className="inline mr-2"></FaPlusSquare>
             Drag and drop a .syx file or click here to add a new preset
@@ -974,7 +974,7 @@ const PresetList: React.FC<PresetListProps> = ({
   })
 
   return (
-    <div className="flex flex-col flex-grow select-none bg-base-300">
+    <div className="flex flex-col flex-grow min-w-0 select-none bg-base-300">
       <PresetListTopBar
         totalDBRowCount={totalDBRowCount}
         searchTerm={searchTerm}
