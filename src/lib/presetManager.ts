@@ -677,6 +677,7 @@ export async function fetchPresetData(
   seed: number,
   duplicatesOnly: boolean = false,
   userPresetsOnly: boolean = false,
+  playlistPresetIds: string[] | null = null,
 ): Promise<{ presets: Preset[]; totalCount: number }> {
   const presets = (await getPresets()) ?? []
 
@@ -692,6 +693,7 @@ export async function fetchPresetData(
       duplicatesOnly,
       randomOrder,
       seed,
+      playlistPresetIds,
     },
   )
 

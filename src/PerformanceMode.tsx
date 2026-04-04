@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { fetchPresetData, Preset } from '@/lib/presetManager'
+import { getPlaylistById } from '@/lib/playlistManager'
 import { useQuery } from '@tanstack/react-query'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
 import { WebMidi } from 'webmidi'
@@ -47,7 +48,14 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     favoritesOnly,
     setFavoritesOnly,
     duplicatesOnly,
+    activePlaylistId,
   } = useSearchFilter()
+
+  const playlistPresetIds = useMemo<string[] | null>(() => {
+    if (!activePlaylistId) return null
+    const playlist = getPlaylistById(activePlaylistId)
+    return playlist ? playlist.entries.map((e) => e.presetId) : null
+  }, [activePlaylistId])
 
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -65,6 +73,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     favoritesOnly,
     duplicatesOnly,
     randomOrder: false,
+    activePlaylistId,
   })
 
   const { data } = useQuery({
@@ -81,6 +90,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         false,
         0,
         duplicatesOnly,
+        false,
+        playlistPresetIds,
       )
       return result.presets
     },
@@ -91,7 +102,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 
   useEffect(() => {
     setCurrentBank(0)
-  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly, duplicatesOnly])
+  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly, duplicatesOnly, activePlaylistId])
 
   useEffect(() => {
     const totalBanks = Math.max(1, Math.ceil(presets.length / 8))

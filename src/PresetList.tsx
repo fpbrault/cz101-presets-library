@@ -54,11 +54,15 @@ import TagManagerModal from '@/features/presets/components/TagManagerModal'
 import DuplicateReviewModal, {
   DuplicateGroup,
 } from '@/features/presets/components/DuplicateReviewModal'
+import { Playlist } from '@/lib/playlistManager'
+import { getPlaylistById } from '@/lib/playlistManager'
 
 interface PresetListProps {
   currentPreset: Preset | null
   handleSelectPreset: (preset: Preset) => void
   handleActivatePreset?: (preset: Preset) => void
+  playlists?: Playlist[]
+  onAddPresetToPlaylist?: (presetId: string, playlistId: string) => void
 }
 
 const fetchSize = 50
@@ -348,9 +352,10 @@ function PresetListTopBar(props: {
 
 const PresetList: React.FC<PresetListProps> = ({
   currentPreset,
-
   handleSelectPreset,
   handleActivatePreset,
+  playlists = [],
+  onAddPresetToPlaylist,
 }) => {
   const queryClient = useQueryClient()
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -371,7 +376,14 @@ const PresetList: React.FC<PresetListProps> = ({
     setDuplicatesOnly,
     userPresetsOnly,
     setUserPresetsOnly,
+    activePlaylistId,
   } = useSearchFilter()
+
+  const playlistPresetIds = useMemo<string[] | null>(() => {
+    if (!activePlaylistId) return null
+    const playlist = getPlaylistById(activePlaylistId)
+    return playlist ? playlist.entries.map((e) => e.presetId) : null
+  }, [activePlaylistId])
   const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now())
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange')
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false)
@@ -409,6 +421,7 @@ const PresetList: React.FC<PresetListProps> = ({
       shuffleSeed,
       duplicatesOnly,
       userPresetsOnly,
+      playlistPresetIds,
     )
     return result
   }
@@ -425,6 +438,7 @@ const PresetList: React.FC<PresetListProps> = ({
         duplicatesOnly,
         randomOrder,
         shuffleSeed,
+        activePlaylistId,
       }),
     [
       effectiveSorting,
@@ -436,6 +450,8 @@ const PresetList: React.FC<PresetListProps> = ({
       duplicatesOnly,
       randomOrder,
       shuffleSeed,
+      activePlaylistId,
+      playlistPresetIds,
     ],
   )
 
@@ -562,6 +578,46 @@ const PresetList: React.FC<PresetListProps> = ({
         size: 112,
         cell: () => null,
       },
+      ...(onAddPresetToPlaylist && playlists.length > 0
+        ? [
+            {
+              id: 'addToSetlist',
+              header: '',
+              enableSorting: false,
+              size: 48,
+              cell: ({ row }: { row: { original: Preset } }) => (
+                <div className="dropdown dropdown-end">
+                  <button
+                    tabIndex={0}
+                    className="btn btn-xs btn-accent"
+                    title="Add to setlist"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    +
+                  </button>
+                  <ul
+                    tabIndex={0}
+                    className="dropdown-content z-50 menu p-1 shadow bg-base-100 rounded-box w-40 text-xs"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {playlists.map((playlist) => (
+                      <li key={playlist.id}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onAddPresetToPlaylist(row.original.id, playlist.id)
+                          }}
+                        >
+                          {playlist.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ),
+            } as ColumnDef<Preset>,
+          ]
+        : []),
       /*     {
         header: 'Rating',
         accessorKey: 'rating',
@@ -574,7 +630,7 @@ const PresetList: React.FC<PresetListProps> = ({
         ),
       }, */
     ],
-    [handleSetFavorite, handleSetRating, randomOrder, setRandomOrder],
+    [handleSetFavorite, handleSetRating, randomOrder, setRandomOrder, playlists, onAddPresetToPlaylist],
   )
 
   const { data: duplicatePresetsData } = useQuery({

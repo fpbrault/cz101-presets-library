@@ -16,6 +16,7 @@ import SaveDraftPresetModal from '@/features/presets/components/SaveDraftPresetM
 import { usePresetMode } from '@/features/presets/hooks/usePresetMode'
 import { useSynthBackupMode } from '@/features/synthBackups/hooks/useSynthBackupMode'
 import { useSetlistMode } from '@/features/setlists/hooks/useSetlistMode'
+import { useSearchFilter } from '@/SearchFilterContext'
 
 type AppMode = 'presets' | 'synthBackups' | 'setlists'
 
@@ -28,6 +29,7 @@ export default function PresetManager() {
 
   const { setMidiPorts, selectedMidiPort } = useMidiPort()
   const { selectedMidiChannel } = useMidiChannel()
+  const { activePlaylistId, setActivePlaylistId } = useSearchFilter()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
@@ -179,6 +181,37 @@ export default function PresetManager() {
                     ></OptionPanel>
                   )}
 
+                  {appMode === 'presets' && setlistMode.playlists.length > 0 && (
+                    <div className="p-2 rounded-lg bg-base-300 text-xs overflow-y-auto max-h-48">
+                      <div className="font-bold mb-1 opacity-70 uppercase tracking-wide">Setlists</div>
+                      <button
+                        className={`w-full text-left px-2 py-1 rounded transition-colors ${
+                          !activePlaylistId
+                            ? 'bg-accent text-accent-content font-semibold'
+                            : 'hover:bg-base-200'
+                        }`}
+                        onClick={() => setActivePlaylistId(null)}
+                      >
+                        All Presets
+                      </button>
+                      {setlistMode.playlists.map((playlist) => (
+                        <button
+                          key={playlist.id}
+                          className={`w-full text-left px-2 py-1 rounded transition-colors truncate ${
+                            activePlaylistId === playlist.id
+                              ? 'bg-accent text-accent-content font-semibold'
+                              : 'hover:bg-base-200'
+                          }`}
+                          onClick={() => setActivePlaylistId(playlist.id)}
+                          title={playlist.name}
+                        >
+                          {playlist.name}
+                          <span className="ml-1 opacity-60">({playlist.entries.length})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {appMode === 'synthBackups' && (
                     <div className="p-2 rounded-lg bg-base-300 text-xs">
                       <div>Backups: {synthBackupMode.backupSummary.count}</div>
@@ -211,6 +244,8 @@ export default function PresetManager() {
                   handleSelectPreset={presetMode.handleSelectPreset}
                   handleActivatePreset={presetMode.handleActivatePreset}
                   currentPreset={currentPreset}
+                  playlists={setlistMode.playlists}
+                  onAddPresetToPlaylist={setlistMode.handleAddPreset}
                 ></PresetList>
                 <PresetDetails
                   editMode={presetMode.editMode}
