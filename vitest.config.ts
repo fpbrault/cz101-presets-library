@@ -9,11 +9,35 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'happy-dom',
     setupFiles: ['./setupTests.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'happy-dom',
+          include: ['src/**/*.{test,spec}.{ts,tsx}'],
+          exclude: ['src/**/*.browser.test.{ts,tsx}'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'browser',
+          browser: {
+            enabled: true,
+            name: 'chromium',
+            provider: 'playwright',
+            headless: true,
+          },
+          include: ['src/**/*.browser.test.{ts,tsx}'],
+          setupFiles: ['./setupBrowserTests.ts'],
+        },
+      },
+    ],
   },
 })
