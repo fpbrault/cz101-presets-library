@@ -62,7 +62,7 @@ export default function DuplicateReviewModal({
   }
 
   return (
-    <ModalShell panelClassName="w-full max-w-4xl p-4 shadow-2xl bg-base-100 rounded-xl">
+    <ModalShell panelClassName="w-full max-w-4xl" onClose={onClose}>
       <h2 className="mb-1 text-xl font-bold">Duplicate Preset Review</h2>
       <p className="mb-4 text-sm opacity-70">
         {groups.length} duplicate groups, {totalDuplicates} total duplicate presets.

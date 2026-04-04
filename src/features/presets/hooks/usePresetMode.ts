@@ -11,6 +11,7 @@ import {
   writePresetToSynthSlot,
 } from '@/lib/presetManager'
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import { useToast } from '@/ToastContext'
 
 type AppMode = 'presets' | 'setlists'
 
@@ -23,7 +24,6 @@ interface SaveDraftPresetState {
 interface UsePresetModeParams {
   selectedMidiPort: string
   selectedMidiChannel: number
-  setStatusMessage: (message: string) => void
   setCurrentPreset: (preset: Preset | null) => void
   setAppMode: (mode: AppMode) => void
 }
@@ -31,11 +31,11 @@ interface UsePresetModeParams {
 export function usePresetMode({
   selectedMidiPort,
   selectedMidiChannel,
-  setStatusMessage,
   setCurrentPreset,
   setAppMode,
 }: UsePresetModeParams) {
   const queryClient = useQueryClient()
+  const { notifySuccess, notifyInfo, notifyError } = useToast()
   const [editMode, setEditMode] = useState(false)
   const [autoSend, setAutoSend] = useState(
     loadFromLocalStorage('autoSend', false),
@@ -83,7 +83,7 @@ export function usePresetMode({
 
     const preset = draftPresets[0]
     if (!preset) {
-      setStatusMessage('Failed to create a preset from retrieved SysEx data.')
+      notifyError('Failed to create a preset from retrieved SysEx data.')
       return
     }
 
@@ -102,7 +102,7 @@ export function usePresetMode({
     await queryClient.invalidateQueries({ queryKey: ['presets'] })
     setCurrentPreset(saved)
     setAppMode('presets')
-    setStatusMessage('Retrieved preset saved to library.')
+    notifySuccess('Retrieved preset saved to library.')
     closeSaveDraftPresetModal()
   }
 
@@ -148,7 +148,7 @@ export function usePresetMode({
 
   const handleRetrieveCurrentPreset = async () => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before retrieving presets.')
+      notifyInfo('Select a MIDI port before retrieving presets.')
       return
     }
 
@@ -158,13 +158,13 @@ export function usePresetMode({
         selectedMidiChannel,
       )
       openSaveDraftPresetModal(sysexData, matchingPreset, 'retrieved-current')
-      setStatusMessage(
+      notifyInfo(
         matchingPreset
           ? `Retrieved current preset. Matched library preset: ${matchingPreset.name}.`
           : 'Retrieved current preset. No exact library match found.',
       )
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      notifyError((error as Error).message)
     }
   }
 
@@ -173,7 +173,7 @@ export function usePresetMode({
     slot: number,
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before retrieving presets.')
+      notifyInfo('Select a MIDI port before retrieving presets.')
       return
     }
 
@@ -185,13 +185,13 @@ export function usePresetMode({
         slot,
       )
       openSaveDraftPresetModal(sysexData, matchingPreset, `${bank}-${slot}`)
-      setStatusMessage(
+      notifyInfo(
         matchingPreset
           ? `Retrieved ${bank} slot ${slot}. Matched library preset: ${matchingPreset.name}.`
           : `Retrieved ${bank} slot ${slot}. No exact library match found.`,
       )
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      notifyError((error as Error).message)
     }
   }
 
@@ -201,12 +201,12 @@ export function usePresetMode({
     slot: number,
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before writing presets.')
+      notifyInfo('Select a MIDI port before writing presets.')
       return
     }
 
     if (!currentPreset) {
-      setStatusMessage('Select a preset before writing to synth slot.')
+      notifyInfo('Select a preset before writing to synth slot.')
       return
     }
 
@@ -218,9 +218,9 @@ export function usePresetMode({
         bank,
         slot,
       )
-      setStatusMessage(`Wrote preset ${currentPreset.name} to ${bank} slot ${slot}.`)
+      notifySuccess(`Wrote preset ${currentPreset.name} to ${bank} slot ${slot}.`)
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      notifyError((error as Error).message)
     }
   }
 
