@@ -49,6 +49,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     setFavoritesOnly,
     duplicatesOnly,
     activePlaylistId,
+    setActivePlaylistId,
   } = useSearchFilter()
 
   const playlistPresetIds = useMemo<string[] | null>(() => {
@@ -56,6 +57,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     const playlist = getPlaylistById(activePlaylistId)
     return playlist ? playlist.entries.map((e) => e.presetId) : null
   }, [activePlaylistId])
+
+  const activePlaylist = activePlaylistId ? getPlaylistById(activePlaylistId) : null
 
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -238,6 +241,20 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 {selectedMidiPort ? selectedMidiPort : 'No MIDI Port'} | Ch{' '}
                 {selectedMidiChannel}
               </span>
+              {activePlaylist && (
+                <span className="flex items-center gap-1 ml-2 mt-1">
+                  <span className="badge badge-accent badge-sm font-semibold">
+                    {activePlaylist.name}
+                  </span>
+                  <button
+                    className="btn btn-xs btn-ghost opacity-60 hover:opacity-100 px-1"
+                    title="Clear setlist filter"
+                    onClick={() => setActivePlaylistId(null)}
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
             </div>
           </div>
 
