@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { FaCog } from 'react-icons/fa'
+import { FaApple, FaCloudUploadAlt, FaCog, FaGoogle } from 'react-icons/fa'
+import { useToast } from '@/ToastContext'
 import {
   addFactoryPresetsToLibrary,
   clearCloudPresetBackup,
@@ -26,34 +27,45 @@ import {
   refreshOnlineAuthSession,
   startOnlineProviderSignIn,
 } from '@/lib/onlineAuthSession'
-import { getNeonAuthDiagnostics } from '@/lib/neonAuthClient'
 
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
 import Button from '@/components/Button'
 import FileInput from '@/components/FileInput'
-import InlineNotice from '@/components/InlineNotice'
 
 const SettingsPanel: React.FC = () => {
   const queryClient = useQueryClient()
+  const { notifySuccess, notifyInfo, notifyError } = useToast()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false)
+  const [resetCloudToo, setResetCloudToo] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
   const [onlineSyncSettings, setOnlineSyncSettings] = useState(
     loadOnlineSyncSettings(),
   )
   const [onlineAuthSession, setOnlineAuthSession] = useState(
     loadOnlineAuthSession(),
   )
-  const [syncStatusMessage, setSyncStatusMessage] = useState('')
-  const [authDiagnostics, setAuthDiagnostics] = useState(getNeonAuthDiagnostics())
+
+  const applySyncModeFromSession = (session: { userId: string } | null) => {
+    const nextSettings = { enabled: Boolean(session?.userId) }
+    saveOnlineSyncSettings(nextSettings)
+    setOnlineSyncSettings(nextSettings)
+    configurePresetSyncAdapterFromSettings()
+  }
 
   const handleOpenModal = () => {
     const loaded = loadOnlineSyncSettings()
     const loadedSession = loadOnlineAuthSession()
     setOnlineSyncSettings(loaded)
     setOnlineAuthSession(loadedSession)
-    setAuthDiagnostics(getNeonAuthDiagnostics())
-    setSyncStatusMessage('')
     setIsModalOpen(true)
+
+    void (async () => {
+      const nextSession = await refreshOnlineAuthSession()
+      setOnlineAuthSession(nextSession)
+      applySyncModeFromSession(nextSession)
+    })()
   }
   const handleCloseModal = () => setIsModalOpen(false)
 
@@ -71,6 +83,7 @@ const SettingsPanel: React.FC = () => {
       })
       if (filePath) {
         await writeTextFile(filePath, data)
+        notifySuccess('Preset export completed.')
       }
     } else {
       // Browser environment
@@ -81,6 +94,7 @@ const SettingsPanel: React.FC = () => {
       a.download = 'presets.json'
       a.click()
       URL.revokeObjectURL(url)
+      notifySuccess('Preset export completed.')
     }
   }
 
@@ -97,10 +111,12 @@ const SettingsPanel: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to import JSON file:', error)
+        notifyError('Import failed. Invalid JSON data.')
         return
       }
       handleCloseModal()
       await queryClient.invalidateQueries({ queryKey: ['presets'] })
+      notifySuccess('Import completed.')
     }
   }
 
@@ -117,6 +133,7 @@ const SettingsPanel: React.FC = () => {
       })
       if (filePath) {
         await writeTextFile(filePath, data)
+        notifySuccess('Workspace backup exported.')
       }
     } else {
       const blob = new Blob([data], { type: 'application/json' })
@@ -126,6 +143,7 @@ const SettingsPanel: React.FC = () => {
       a.download = 'workspace-backup.json'
       a.click()
       URL.revokeObjectURL(url)
+      notifySuccess('Workspace backup exported.')
     }
   }
 
@@ -134,52 +152,28 @@ const SettingsPanel: React.FC = () => {
       try {
         const addedCount = await addFactoryPresetsToLibrary()
         await queryClient.invalidateQueries({ queryKey: ['presets'] })
-        setSyncStatusMessage(
-          addedCount > 0
-            ? `Added ${addedCount} factory preset(s).`
-            : 'Factory presets are already in your library.',
-        )
+        if (addedCount > 0) {
+          notifySuccess(`Added ${addedCount} factory preset(s).`)
+        } else {
+          notifyInfo('Factory presets are already in your library.')
+        }
       } catch (error) {
-        setSyncStatusMessage((error as Error).message)
+        notifyError((error as Error).message)
       }
     })()
-  }
-
-  const handleEnableOnlineSync = async () => {
-    const session = loadOnlineAuthSession()
-    if (!session?.userId) {
-      setSyncStatusMessage(
-        'Sign in with Google or Apple first to enable online sync.',
-      )
-      return
-    }
-
-    const nextSettings = { enabled: true }
-    saveOnlineSyncSettings(nextSettings)
-    setOnlineSyncSettings(nextSettings)
-    setOnlineAuthSession(session)
-    configurePresetSyncAdapterFromSettings()
-    setSyncStatusMessage('Online sync enabled.')
-  }
-
-  const handleDisableOnlineSync = () => {
-    const nextSettings = {
-      enabled: false,
-    }
-
-    saveOnlineSyncSettings(nextSettings)
-    setOnlineSyncSettings(nextSettings)
-    configurePresetSyncAdapterFromSettings()
-    setSyncStatusMessage('Online sync disabled. App continues in local-only mode.')
   }
 
   const handleBackupNow = () => {
     void (async () => {
       try {
         const ok = await cloudBackupPresets()
-        setSyncStatusMessage(ok ? 'Backup saved to cloud.' : 'Backup failed — check connection.')
+        if (ok) {
+          notifySuccess('Backup saved to cloud.')
+        } else {
+          notifyError('Backup failed. Check connection and sync availability.')
+        }
       } catch (error) {
-        setSyncStatusMessage((error as Error).message)
+        notifyError((error as Error).message)
       }
     })()
   }
@@ -189,45 +183,55 @@ const SettingsPanel: React.FC = () => {
       try {
         const count = await cloudRestorePresets()
         if (count === null) {
-          setSyncStatusMessage('No backup found in the cloud.')
+          notifyInfo('No backup found in the cloud.')
         } else {
           await queryClient.invalidateQueries({ queryKey: ['presets'] })
-          handleCloseModal()
+          notifySuccess(`Restored ${count} user preset(s) from cloud backup.`)
         }
       } catch (error) {
-        setSyncStatusMessage((error as Error).message)
+        notifyError((error as Error).message)
       }
     })()
   }
 
-  const handleResetData = () => {
+  const handleOpenResetModal = () => {
+    setResetCloudToo(false)
+    setIsResetModalOpen(true)
+  }
+
+  const handleCloseResetModal = () => {
+    if (!isResetting) {
+      setIsResetModalOpen(false)
+    }
+  }
+
+  const handleConfirmResetData = () => {
     void (async () => {
-      const confirmedLocalReset = window.confirm(
-        'Reset all local data? This will delete all local presets and synth backups.',
-      )
+      setIsResetting(true)
+      try {
+        await resetLocalAppData()
+        await queryClient.invalidateQueries({ queryKey: ['presets'] })
 
-      if (!confirmedLocalReset) {
-        return
+        if (!resetCloudToo) {
+          notifySuccess('Local data reset complete.')
+          setIsResetModalOpen(false)
+          return
+        }
+
+        const cloudCleared = await clearCloudPresetBackup()
+        if (cloudCleared) {
+          notifySuccess('Local data reset and cloud backup cleared.')
+        } else {
+          notifyInfo(
+            'Local data reset complete. Cloud backup was not cleared (sync disabled or unavailable).',
+          )
+        }
+        setIsResetModalOpen(false)
+      } catch (error) {
+        notifyError((error as Error).message)
+      } finally {
+        setIsResetting(false)
       }
-
-      await resetLocalAppData()
-      await queryClient.invalidateQueries({ queryKey: ['presets'] })
-
-      const shouldClearCloud = window.confirm(
-        'Also clear your cloud preset backup?',
-      )
-
-      if (!shouldClearCloud) {
-        setSyncStatusMessage('Local data reset complete.')
-        return
-      }
-
-      const cloudCleared = await clearCloudPresetBackup()
-      setSyncStatusMessage(
-        cloudCleared
-          ? 'Local data reset complete. Cloud backup cleared.'
-          : 'Local data reset complete. Cloud backup was not cleared (sync disabled or unavailable).',
-      )
     })()
   }
 
@@ -235,33 +239,25 @@ const SettingsPanel: React.FC = () => {
     void (async () => {
       try {
         await startOnlineProviderSignIn(provider)
+        // Popup closed — refresh session and update sync state
+        const session = await refreshOnlineAuthSession()
+        setOnlineAuthSession(session)
+        applySyncModeFromSession(session)
+        if (session) {
+          notifySuccess(`Signed in as ${session.displayName || session.userId}`)
+        }
       } catch (error) {
-        setSyncStatusMessage((error as Error).message)
+        notifyError((error as Error).message)
       }
-    })()
-  }
-
-  const handleRefreshSession = () => {
-    void (async () => {
-      const nextSession = await refreshOnlineAuthSession()
-      setOnlineAuthSession(nextSession)
-      setSyncStatusMessage(
-        nextSession
-          ? `Connected as ${nextSession.displayName || nextSession.userId}.`
-          : 'No online session detected.',
-      )
     })()
   }
 
   const handleDisconnectAccount = () => {
     void (async () => {
       await disconnectOnlineSession()
-      const nextSettings = { enabled: false }
-      saveOnlineSyncSettings(nextSettings)
-      setOnlineSyncSettings(nextSettings)
       setOnlineAuthSession(null)
-      configurePresetSyncAdapterFromSettings()
-      setSyncStatusMessage('Disconnected account. Local-only mode enabled.')
+      applySyncModeFromSession(null)
+      notifyInfo('Disconnected account. Local-only mode enabled.')
     })()
   }
 
@@ -272,95 +268,42 @@ const SettingsPanel: React.FC = () => {
       </Button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-4 shadow-lg bg-base-100 rounded-xl">
-            <h2 className="mb-4 text-xl">Settings</h2>
-            <div className="flex flex-col justify-end gap-2 mt-4">
-              <label className="w-full max-w-xs form-control">
-                <div className="label">
-                  <span className="label-text">Export Full Workspace Backup</span>
+        <dialog open className="modal modal-open">
+          <div className="modal-box w-[min(96vw,840px)] max-w-none max-h-[90vh] overflow-y-auto p-6 shadow-xl bg-base-100 rounded-2xl">
+            <h2 className="mb-5 text-2xl font-semibold text-center">Settings</h2>
+            <div className="space-y-4">
+              <div className="p-4 border rounded-xl border-base-content/15 bg-base-200/40">
+                <div className="mb-3 text-base font-semibold">Online Sync</div>
+                <div className="mb-3 text-sm opacity-80">
+                  Connect an account to sync your user-created presets to the cloud.
                 </div>
-                <Button onClick={handleExportWorkspace} variant="accent">
-                  Export Full Backup
-                </Button>
-              </label>
-              <label className="w-full max-w-xs form-control">
-                <div className="label">
-                  <span className="label-text">Export Database</span>
-                </div>
-                <Button onClick={handleExport} variant="primary">
-                  Export
-                </Button>
-              </label>
-              <label className="w-full max-w-xs form-control">
-                <div className="label">
-                  <span className="label-text">Import Database</span>
-                </div>
-                <FileInput
-                  accept="application/json"
-                  onChange={handleImport}
-                  tone="secondary"
-                />
-              </label>
 
-              <label className="w-full max-w-xs form-control">
-                <div className="label">
-                  <span className="label-text">Factory Preset Library</span>
-                </div>
-                <Button onClick={handleAddFactoryPresets} variant="neutral">
-                  Add Factory Presets
-                </Button>
-              </label>
+                {!onlineAuthSession ? (
+                  <div className="grid grid-cols-1 gap-2 mb-3 sm:grid-cols-2">
+                    <Button
+                      variant="primary"
+                      className="justify-center gap-2"
+                      onClick={() => handleSignIn('google')}
+                    >
+                      <FaGoogle size={14} /> Continue with Google
+                    </Button>
+                    <Button
+                      variant="neutral"
+                      className="justify-center gap-2"
+                      onClick={() => handleSignIn('apple')}
+                    >
+                      <FaApple size={14} /> Continue with Apple
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <Button variant="error" onClick={handleDisconnectAccount}>
+                      Disconnect Account
+                    </Button>
+                  </div>
+                )}
 
-              <label className="w-full max-w-xs form-control">
-                <div className="label">
-                  <span className="label-text">Reset Data</span>
-                </div>
-                <Button onClick={handleResetData} variant="error">
-                  Reset Local Data
-                </Button>
-              </label>
-
-              <div className="w-full max-w-xs p-3 border rounded-lg border-base-content/15 bg-base-200/50">
-                <div className="mb-2 font-semibold">Online Sync (Optional)</div>
                 <div className="mb-3 text-xs opacity-80">
-                  Default is local-only. Sign in with a provider to optionally enable sync.
-                </div>
-
-                <div className="flex flex-wrap gap-2 mb-2">
-                  <Button variant="primary" onClick={() => handleSignIn('google')}>
-                    Continue With Google
-                  </Button>
-                  <Button variant="neutral" onClick={() => handleSignIn('apple')}>
-                    Continue With Apple
-                  </Button>
-                  <Button variant="secondary" onClick={handleRefreshSession}>
-                    Refresh Session
-                  </Button>
-                </div>
-
-                <Button variant="error" onClick={handleDisconnectAccount}>
-                  Disconnect Account
-                </Button>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="accent"
-                    onClick={handleEnableOnlineSync}
-                    disabled={onlineSyncSettings.enabled || !onlineAuthSession}
-                  >
-                    Enable Sync
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={handleDisableOnlineSync}
-                    disabled={!onlineSyncSettings.enabled}
-                  >
-                    Use Local Only
-                  </Button>
-                </div>
-
-                <div className="mt-2 text-xs opacity-80">
                   Status: {onlineSyncSettings.enabled ? 'Enabled' : 'Local-only'}
                 </div>
                 <div className="text-xs opacity-80">
@@ -371,43 +314,116 @@ const SettingsPanel: React.FC = () => {
                 </div>
 
                 {onlineSyncSettings.enabled && (
-                  <div className="flex gap-2 mt-2">
-                    <Button variant="primary" onClick={handleBackupNow}>
-                      Backup Now
+                  <div className="grid grid-cols-1 gap-2 mt-3 sm:grid-cols-2">
+                    <Button variant="primary" className="gap-2" onClick={handleBackupNow}>
+                      <FaCloudUploadAlt size={14} /> Backup Now
                     </Button>
                     <Button variant="secondary" onClick={handleRestoreFromBackup}>
                       Restore from Backup
                     </Button>
                   </div>
                 )}
-                <div className="mt-1 text-[11px] opacity-80">
-                  Neon Auth URL: {authDiagnostics.normalizedUrl || '(missing)'}
-                </div>
-                <div className="text-[11px] opacity-80">
-                  URL Valid: {authDiagnostics.isAbsoluteUrl ? 'yes' : 'no'}
-                </div>
-                {authDiagnostics.error && (
-                  <InlineNotice
-                    message={authDiagnostics.error}
-                    tone="warning"
-                    className="mt-2"
-                  />
-                )}
-                {syncStatusMessage && (
-                  <InlineNotice
-                    message={syncStatusMessage}
-                    tone={onlineSyncSettings.enabled ? 'info' : 'neutral'}
-                    className="mt-2"
-                  />
-                )}
               </div>
 
-              <Button variant="error" onClick={handleCloseModal}>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <label className="w-full form-control">
+                  <div className="label">
+                    <span className="label-text">Factory Preset Library</span>
+                  </div>
+                  <Button onClick={handleAddFactoryPresets} variant="neutral">
+                    Add Factory Presets
+                  </Button>
+                </label>
+
+                <label className="w-full form-control">
+                  <div className="label">
+                    <span className="label-text">Reset Data</span>
+                  </div>
+                  <Button onClick={handleOpenResetModal} variant="error">
+                    Reset Local Data
+                  </Button>
+                </label>
+              </div>
+
+              <div className="pt-2 border-t border-base-content/10">
+                <div className="mb-2 text-sm font-semibold opacity-80">Backup & Import</div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <label className="w-full form-control">
+                    <div className="label">
+                      <span className="label-text">Export Full Workspace Backup</span>
+                    </div>
+                    <Button onClick={handleExportWorkspace} variant="accent">
+                      Export Full Backup
+                    </Button>
+                  </label>
+
+                  <label className="w-full form-control">
+                    <div className="label">
+                      <span className="label-text">Export Database</span>
+                    </div>
+                    <Button onClick={handleExport} variant="primary">
+                      Export
+                    </Button>
+                  </label>
+
+                  <label className="w-full form-control md:col-span-2">
+                    <div className="label">
+                      <span className="label-text">Import Database</span>
+                    </div>
+                    <div className="max-w-md">
+                      <FileInput
+                        accept="application/json"
+                        onChange={handleImport}
+                        tone="secondary"
+                      />
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <Button className="w-full" variant="error" onClick={handleCloseModal}>
                 Close
               </Button>
             </div>
           </div>
-        </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={handleCloseModal}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {isResetModalOpen && (
+        <dialog open className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="text-lg font-bold">Reset Local Data</h3>
+            <p className="py-2 text-sm opacity-80">
+              This will permanently delete all local presets and synth backups on this device.
+            </p>
+
+            <label className="justify-start gap-3 cursor-pointer label">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-error"
+                checked={resetCloudToo}
+                onChange={(e) => setResetCloudToo(e.target.checked)}
+                disabled={isResetting}
+              />
+              <span className="label-text">Also clear cloud backup</span>
+            </label>
+
+            <div className="modal-action">
+              <Button variant="secondary" onClick={handleCloseResetModal}>
+                Cancel
+              </Button>
+              <Button variant="error" onClick={handleConfirmResetData} disabled={isResetting}>
+                {isResetting ? 'Resetting...' : 'Confirm Reset'}
+              </Button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={handleCloseResetModal}>close</button>
+          </form>
+        </dialog>
       )}
     </>
   )

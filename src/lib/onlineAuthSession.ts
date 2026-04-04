@@ -68,8 +68,37 @@ export async function startOnlineProviderSignIn(
     return
   }
 
-  // Use origin as callback to avoid malformed paths (e.g. accidental double slashes).
-  await signInWithNeonProvider(provider, window.location.origin)
+  const callbackUrl = `${window.location.origin}?auth_popup=1`
+  const redirectUrl = await signInWithNeonProvider(provider, callbackUrl)
+
+  const popup = window.open(redirectUrl, 'neon_auth', 'width=600,height=700,popup=yes')
+
+  if (!popup) {
+    // Fallback: full-page redirect if popup was blocked
+    window.location.href = redirectUrl
+    return
+  }
+
+  return new Promise((resolve) => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return
+      if ((event.data as { type?: string })?.type === 'auth_complete') {
+        window.removeEventListener('message', onMessage)
+        clearInterval(poll)
+        resolve()
+      }
+    }
+    window.addEventListener('message', onMessage)
+
+    // Fallback: resolve when user manually closes the popup
+    const poll = setInterval(() => {
+      if (popup.closed) {
+        window.removeEventListener('message', onMessage)
+        clearInterval(poll)
+        resolve()
+      }
+    }, 500)
+  })
 }
 
 export async function disconnectOnlineSession(): Promise<void> {

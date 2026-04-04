@@ -98,7 +98,7 @@ export async function getNeonOnlineSession(): Promise<OnlineAuthSession | null> 
 export async function signInWithNeonProvider(
   provider: OAuthProvider,
   callbackURL: string,
-): Promise<void> {
+): Promise<string> {
   const neonAuthClient = await getNeonAuthClient()
   const response = await (neonAuthClient as any).signIn.social({
     provider,
@@ -107,8 +107,7 @@ export async function signInWithNeonProvider(
 
   const redirectUrl = response?.data?.url ?? response?.url
   if (typeof redirectUrl === 'string' && redirectUrl) {
-    window.location.href = redirectUrl
-    return
+    return redirectUrl
   }
 
   const errorMessage =
