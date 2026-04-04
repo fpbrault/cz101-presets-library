@@ -15,13 +15,13 @@ import {
 } from '@/lib/presetManager'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
+import { useToast } from '@/ToastContext'
 
 type AppMode = 'presets' | 'setlists'
 
 interface UseSetlistModeParams {
   selectedMidiPort: string
   selectedMidiChannel: number
-  setStatusMessage: (message: string) => void
   setAppMode: (mode: AppMode) => void
   openSaveDraftPresetModal: (
     sysexData: Uint8Array,
@@ -33,10 +33,10 @@ interface UseSetlistModeParams {
 export function useSetlistMode({
   selectedMidiPort,
   selectedMidiChannel,
-  setStatusMessage,
   setAppMode,
   openSaveDraftPresetModal,
 }: UseSetlistModeParams) {
+  const { notifySuccess, notifyInfo, notifyError } = useToast()
   const [setlists, setSetlists] = useState<Setlist[]>([])
   const [selectedSetlistId, setSelectedSetlistId] = useState<string | null>(null)
   const [backupProgress, setBackupProgress] = useState<{
@@ -81,7 +81,7 @@ export function useSetlistMode({
 
   const handleCreateBackup = async () => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before creating backup setlists.')
+      notifyInfo('Select a MIDI port before creating backup setlists.')
       return
     }
 
@@ -108,11 +108,11 @@ export function useSetlistMode({
       setAppMode('setlists')
 
       const exactMatchCount = entries.filter((entry) => entry.isExactLibraryMatch).length
-      setStatusMessage(
+      notifySuccess(
         `Backup complete: ${entries.length}/16 slots retrieved, ${exactMatchCount} exact library matches.`,
       )
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      notifyError((error as Error).message)
     } finally {
       setIsBackingUp(false)
       setBackupProgress(null)
@@ -158,7 +158,7 @@ export function useSetlistMode({
     refreshSetlists()
     setSelectedSetlistId(importedSetlist.id)
     setAppMode('setlists')
-    setStatusMessage(`Imported setlist ${importedSetlist.name}.`)
+    notifySuccess(`Imported setlist ${importedSetlist.name}.`)
   }
 
   const handleSaveSetlistEntryAsPreset = async (
@@ -169,7 +169,7 @@ export function useSetlistMode({
     const entry = setlist?.entries[entryIndex]
 
     if (!entry) {
-      setStatusMessage('Setlist entry not found.')
+      notifyError('Setlist entry not found.')
       return
     }
 
@@ -179,7 +179,7 @@ export function useSetlistMode({
       matchingPreset,
       `setlist-${setlist?.name || 'entry'}-${entry.slot}`,
     )
-    setStatusMessage('Prepared setlist entry as a new preset draft.')
+    notifyInfo('Prepared setlist entry as a new preset draft.')
   }
 
   const handleSendSetlistEntryToSlot = async (
@@ -189,7 +189,7 @@ export function useSetlistMode({
     slot: number,
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before sending setlist entries.')
+      notifyInfo('Select a MIDI port before sending setlist entries.')
       return
     }
 
@@ -197,7 +197,7 @@ export function useSetlistMode({
     const entry = setlist?.entries[entryIndex]
 
     if (!entry) {
-      setStatusMessage('Setlist entry not found.')
+      notifyError('Setlist entry not found.')
       return
     }
 
@@ -209,9 +209,7 @@ export function useSetlistMode({
       slot,
     )
 
-    setStatusMessage(
-      `Sent setlist entry ${entry.slot} to ${bank} slot ${slot}.`,
-    )
+    notifySuccess(`Sent setlist entry ${entry.slot} to ${bank} slot ${slot}.`)
   }
 
   const handlePreviewSetlistEntryInBuffer = async (
@@ -219,7 +217,7 @@ export function useSetlistMode({
     entryIndex: number,
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before previewing setlist entries.')
+      notifyInfo('Select a MIDI port before previewing setlist entries.')
       return
     }
 
@@ -227,7 +225,7 @@ export function useSetlistMode({
     const entry = setlist?.entries[entryIndex]
 
     if (!entry) {
-      setStatusMessage('Setlist entry not found.')
+      notifyError('Setlist entry not found.')
       return
     }
 
@@ -237,9 +235,7 @@ export function useSetlistMode({
       selectedMidiChannel,
     )
 
-    setStatusMessage(
-      `Previewed setlist entry ${entry.slot} in temporary buffer (slot 0x60).`,
-    )
+    notifyInfo(`Previewed setlist entry ${entry.slot} in temporary buffer (slot 0x60).`)
   }
 
   const handleRestoreSetlistToSynth = async (
@@ -247,13 +243,13 @@ export function useSetlistMode({
     bank: 'internal' | 'cartridge',
   ) => {
     if (!selectedMidiPort) {
-      setStatusMessage('Select a MIDI port before restoring setlists.')
+      notifyInfo('Select a MIDI port before restoring setlists.')
       return
     }
 
     const setlist = setlists.find((item) => item.id === setlistId)
     if (!setlist) {
-      setStatusMessage('Setlist not found.')
+      notifyError('Setlist not found.')
       return
     }
 
@@ -312,11 +308,11 @@ export function useSetlistMode({
         })
       }
 
-      setStatusMessage(
+      notifySuccess(
         `Restore complete: ${setlist.entries.length}/${setlist.entries.length} entries sent to ${bank} slots.`,
       )
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      notifyError((error as Error).message)
     } finally {
       setIsRestoringSetlist(false)
       setRestoreProgress(null)

@@ -23,7 +23,7 @@ export default function SendEntryModal({
   onSendEntryToSlot,
 }: SendEntryModalProps) {
   return (
-    <ModalShell panelClassName="p-4 shadow-lg bg-base-100 rounded-xl w-[24rem]">
+    <ModalShell panelClassName="w-[24rem] max-w-none" onClose={() => setSendModalState(null)}>
         <h2 className="mb-4 text-xl">Send Entry To Slot</h2>
         <div className="flex flex-col gap-3">
           <label className="form-control">

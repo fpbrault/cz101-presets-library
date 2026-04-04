@@ -38,7 +38,7 @@ export default function SaveDraftPresetModal({
   }
 
   return (
-    <ModalShell panelClassName="w-full max-w-2xl p-4 shadow-2xl bg-base-100 rounded-xl">
+    <ModalShell panelClassName="w-full max-w-2xl" onClose={onCancel}>
         <h2 className="mb-3 text-xl font-bold">Save Retrieved Preset</h2>
 
         {matchingPresetName && (
