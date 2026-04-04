@@ -55,7 +55,7 @@ export function useSetlistMode({
     const handlePlaylistsUpdated = () => refreshPlaylists()
     window.addEventListener('playlists-updated', handlePlaylistsUpdated)
     return () => window.removeEventListener('playlists-updated', handlePlaylistsUpdated)
-  }, [])
+  }, [selectedPlaylistId])
 
   const handleCreatePlaylist = () => {
     const playlist = createPlaylist('New Setlist')

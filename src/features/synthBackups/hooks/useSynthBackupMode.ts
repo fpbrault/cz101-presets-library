@@ -77,7 +77,7 @@ export function useSynthBackupMode({
     return () => {
       window.removeEventListener('synth-backups-updated', handleBackupsUpdated)
     }
-  }, [])
+  }, [selectedBackupId])
 
   const handleCreateBackup = async () => {
     if (!selectedMidiPort) {
