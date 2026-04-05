@@ -76,7 +76,7 @@ describe('DuplicateReviewModal (browser)', () => {
         onDeletePresets={vi.fn()}
       />,
     )
-    await user.click(screen.getByRole('button', { name: /close/i }))
+    await user.click(screen.getByRole('button', { name: 'Close' }))
     expect(onClose).toHaveBeenCalledOnce()
   })
 

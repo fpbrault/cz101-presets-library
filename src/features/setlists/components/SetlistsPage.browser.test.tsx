@@ -65,7 +65,7 @@ describe('SynthBackupsPage (browser)', () => {
         selectedBackupId={backup.id}
       />,
     )
-    expect(screen.getByText('Live Gig 2024')).toBeTruthy()
+    expect(screen.getAllByText('Live Gig 2024').length).toBeGreaterThan(0)
   })
 
   it('renders multiple backups in the sidebar', () => {

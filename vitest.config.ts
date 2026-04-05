@@ -31,8 +31,9 @@ export default defineConfig({
           name: 'browser',
           browser: {
             enabled: true,
-            name: 'chromium',
-            provider: playwright({ launch: { headless: true } }),
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
           },
           include: ['src/**/*.browser.test.{ts,tsx}'],
           setupFiles: ['./setupBrowserTests.ts'],
