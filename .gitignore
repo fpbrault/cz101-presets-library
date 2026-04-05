@@ -27,3 +27,8 @@ dist-ssr
 *.sw?
 
 CZSYX/
+package-lock.json
+
+# Vitest browser test artifacts
+.vitest-attachments/
+src/**/__screenshots__/
