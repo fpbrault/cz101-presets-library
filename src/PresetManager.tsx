@@ -9,12 +9,15 @@ import { useMidiPort } from '@/MidiPortContext'
 import PerformanceMode from '@/PerformanceMode'
 import Button from '@/components/Button'
 import { useMidiSetup } from '@/useMidiSetup'
+import SynthBackupsPage from '@/features/synthBackups/components/SynthBackupsPage'
 import SetlistsPage from '@/features/setlists/components/SetlistsPage'
 import SaveDraftPresetModal from '@/features/presets/components/SaveDraftPresetModal'
 import { usePresetMode } from '@/features/presets/hooks/usePresetMode'
+import { useSynthBackupMode } from '@/features/synthBackups/hooks/useSynthBackupMode'
 import { useSetlistMode } from '@/features/setlists/hooks/useSetlistMode'
+import { useSearchFilter } from '@/SearchFilterContext'
 
-type AppMode = 'presets' | 'setlists'
+type AppMode = 'presets' | 'synthBackups' | 'setlists'
 
 export default function PresetManager() {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true)
@@ -24,8 +27,10 @@ export default function PresetManager() {
 
   const { setMidiPorts, selectedMidiPort } = useMidiPort()
   const { selectedMidiChannel } = useMidiChannel()
+  const { activePlaylistId, setActivePlaylistId } = useSearchFilter()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [dragOverPlaylistId, setDragOverPlaylistId] = useState<string | null>(null)
 
   useMidiSetup(setMidiPorts)
 
@@ -36,11 +41,16 @@ export default function PresetManager() {
     setAppMode,
   })
 
-  const setlistMode = useSetlistMode({
+  const synthBackupMode = useSynthBackupMode({
     selectedMidiPort,
     selectedMidiChannel,
     setAppMode,
     openSaveDraftPresetModal: presetMode.openSaveDraftPresetModal,
+  })
+
+  const setlistMode = useSetlistMode({
+    selectedMidiPort,
+    selectedMidiChannel,
   })
 
   const handleDeletePreset = async (id: string) => {
@@ -103,6 +113,15 @@ export default function PresetManager() {
                     P
                   </Button>
                   <Button
+                    variant={appMode === 'synthBackups' ? 'accent' : 'secondary'}
+                    size="sm"
+                    className="w-full text-[10px]"
+                    onClick={() => setAppMode('synthBackups')}
+                    title="Synth Backups"
+                  >
+                    B
+                  </Button>
+                  <Button
                     variant={appMode === 'setlists' ? 'accent' : 'secondary'}
                     size="sm"
                     className="w-full text-[10px]"
@@ -121,12 +140,18 @@ export default function PresetManager() {
                   >
                     Performance Mode
                   </Button>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     <Button
                       variant={appMode === 'presets' ? 'accent' : 'secondary'}
                       onClick={() => setAppMode('presets')}
                     >
                       Presets
+                    </Button>
+                    <Button
+                      variant={appMode === 'synthBackups' ? 'accent' : 'secondary'}
+                      onClick={() => setAppMode('synthBackups')}
+                    >
+                      Synth Backups
                     </Button>
                     <Button
                       variant={appMode === 'setlists' ? 'accent' : 'secondary'}
@@ -152,10 +177,63 @@ export default function PresetManager() {
                     ></OptionPanel>
                   )}
 
+                  {appMode === 'presets' && setlistMode.playlists.length > 0 && (
+                    <div className="p-2 rounded-lg bg-base-300 text-xs overflow-y-auto max-h-48">
+                      <div className="font-bold mb-1 opacity-70 uppercase tracking-wide">Setlists</div>
+                      <button
+                        className={`w-full text-left px-2 py-1 rounded transition-colors ${
+                          !activePlaylistId
+                            ? 'bg-accent text-accent-content font-semibold'
+                            : 'hover:bg-base-200'
+                        }`}
+                        onClick={() => setActivePlaylistId(null)}
+                      >
+                        All Presets
+                      </button>
+                      {setlistMode.playlists.map((playlist) => (
+                        <button
+                          key={playlist.id}
+                          className={`w-full text-left px-2 py-1 rounded transition-colors truncate ${
+                            activePlaylistId === playlist.id
+                              ? 'bg-accent text-accent-content font-semibold'
+                              : dragOverPlaylistId === playlist.id
+                              ? 'bg-success/30 ring-1 ring-success'
+                              : 'hover:bg-base-200'
+                          }`}
+                          onClick={() => setActivePlaylistId(playlist.id)}
+                          title={playlist.name}
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            e.dataTransfer.dropEffect = 'copy'
+                            setDragOverPlaylistId(playlist.id)
+                          }}
+                          onDragLeave={() => setDragOverPlaylistId(null)}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            setDragOverPlaylistId(null)
+                            const presetId = e.dataTransfer.getData('text/preset-id')
+                            if (presetId) {
+                              setlistMode.handleAddPreset(playlist.id, presetId)
+                            }
+                          }}
+                        >
+                          {playlist.name}
+                          <span className="ml-1 opacity-60">({playlist.entries.length})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {appMode === 'synthBackups' && (
+                    <div className="p-2 rounded-lg bg-base-300 text-xs">
+                      <div>Backups: {synthBackupMode.backupSummary.count}</div>
+                      <div>Entries: {synthBackupMode.backupSummary.entries}</div>
+                    </div>
+                  )}
+
                   {appMode === 'setlists' && (
                     <div className="p-2 rounded-lg bg-base-300 text-xs">
-                      <div>Setlists: {setlistMode.setlistSummary.count}</div>
-                      <div>Entries: {setlistMode.setlistSummary.entries}</div>
+                      <div>Setlists: {setlistMode.playlists.length}</div>
                     </div>
                   )}
 
@@ -170,6 +248,8 @@ export default function PresetManager() {
                   handleSelectPreset={presetMode.handleSelectPreset}
                   handleActivatePreset={presetMode.handleActivatePreset}
                   currentPreset={currentPreset}
+                  playlists={setlistMode.playlists}
+                  onAddPresetToPlaylist={setlistMode.handleAddPreset}
                 ></PresetList>
                 <PresetDetails
                   editMode={presetMode.editMode}
@@ -181,23 +261,49 @@ export default function PresetManager() {
               </>
             )}
 
+            {appMode === 'synthBackups' && (
+              <SynthBackupsPage
+                backups={synthBackupMode.backups}
+                selectedBackupId={synthBackupMode.selectedBackupId}
+                isBackingUp={synthBackupMode.isBackingUp}
+                backupProgress={synthBackupMode.backupProgress}
+                isRestoring={synthBackupMode.isRestoringBackup}
+                restoreProgress={synthBackupMode.restoreProgress}
+                onSelectBackup={synthBackupMode.setSelectedBackupId}
+                onCreateBackup={synthBackupMode.handleCreateBackup}
+                onRestoreBackupToSynth={synthBackupMode.handleRestoreBackupToSynth}
+                onDeleteBackup={synthBackupMode.handleDeleteBackup}
+                onExportBackup={synthBackupMode.handleExportBackup}
+                onImportBackup={synthBackupMode.handleImportBackup}
+                onSaveEntryAsPreset={synthBackupMode.handleSaveBackupEntryAsPreset}
+                onSendEntryToSlot={synthBackupMode.handleSendBackupEntryToSlot}
+                onPreviewEntryInBuffer={synthBackupMode.handlePreviewBackupEntryInBuffer}
+              />
+            )}
+
             {appMode === 'setlists' && (
               <SetlistsPage
-                setlists={setlistMode.setlists}
-                selectedSetlistId={setlistMode.selectedSetlistId}
-                isBackingUp={setlistMode.isBackingUp}
-                backupProgress={setlistMode.backupProgress}
-                isRestoring={setlistMode.isRestoringSetlist}
-                restoreProgress={setlistMode.restoreProgress}
-                onSelectSetlist={setlistMode.setSelectedSetlistId}
-                onCreateBackup={setlistMode.handleCreateBackup}
-                onRestoreSetlistToSynth={setlistMode.handleRestoreSetlistToSynth}
-                onDeleteSetlist={setlistMode.handleDeleteSetlist}
-                onExportSetlist={setlistMode.handleExportSetlist}
-                onImportSetlist={setlistMode.handleImportSetlist}
-                onSaveEntryAsPreset={setlistMode.handleSaveSetlistEntryAsPreset}
-                onSendEntryToSlot={setlistMode.handleSendSetlistEntryToSlot}
-                onPreviewEntryInBuffer={setlistMode.handlePreviewSetlistEntryInBuffer}
+                playlists={setlistMode.playlists}
+                selectedPlaylistId={setlistMode.selectedPlaylistId}
+                presets={setlistMode.presets}
+                quickSendIndex={setlistMode.quickSendIndex}
+                isQuickSending={setlistMode.isQuickSending}
+                onSelectPlaylist={setlistMode.setSelectedPlaylistId}
+                onCreatePlaylist={setlistMode.handleCreatePlaylist}
+                onRenamePlaylist={setlistMode.handleRenamePlaylist}
+                onDeletePlaylist={setlistMode.handleDeletePlaylist}
+                onAddPreset={setlistMode.handleAddPreset}
+                onRemoveEntry={setlistMode.handleRemoveEntry}
+                onReorderEntries={setlistMode.handleReorderEntries}
+                onStartQuickSend={setlistMode.handleStartQuickSend}
+                onStepQuickSend={setlistMode.handleStepQuickSend}
+                onStopQuickSend={setlistMode.handleStopQuickSend}
+                onSendCurrentToBuffer={setlistMode.handleSendCurrentToBuffer}
+                onPlayInPerformanceMode={(playlistId) => {
+                  setActivePlaylistId(playlistId)
+                  setAppMode('presets')
+                  setPerformanceMode(true)
+                }}
               />
             )}
           </div>

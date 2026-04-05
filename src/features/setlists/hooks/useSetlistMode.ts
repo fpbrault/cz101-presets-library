@@ -1,351 +1,170 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  createSetlist,
-  deleteSetlist,
-  exportSetlist,
-  getSetlists,
-  importSetlist,
-  Setlist,
-} from '@/lib/setlistManager'
+  addPresetToPlaylist,
+  createPlaylist,
+  deletePlaylist,
+  getPlaylists,
+  Playlist,
+  removePlaylistEntry,
+  renamePlaylist,
+  reorderPlaylistEntries,
+} from '@/lib/playlistManager'
 import {
-  getMatchingPresetBySysex,
-  retrieveInternalBackupFromSynth,
-  writeSysexDataToSynthSlot,
+  getPresets,
+  Preset,
   writeSysexDataToTemporaryBuffer,
 } from '@/lib/presetManager'
-import { save } from '@tauri-apps/plugin-dialog'
-import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { useToast } from '@/ToastContext'
-
-type AppMode = 'presets' | 'setlists'
 
 interface UseSetlistModeParams {
   selectedMidiPort: string
   selectedMidiChannel: number
-  setAppMode: (mode: AppMode) => void
-  openSaveDraftPresetModal: (
-    sysexData: Uint8Array,
-    matchingPresetName: Awaited<ReturnType<typeof getMatchingPresetBySysex>>,
-    suggestedName: string,
-  ) => void
 }
 
 export function useSetlistMode({
   selectedMidiPort,
   selectedMidiChannel,
-  setAppMode,
-  openSaveDraftPresetModal,
 }: UseSetlistModeParams) {
   const { notifySuccess, notifyInfo, notifyError } = useToast()
-  const [setlists, setSetlists] = useState<Setlist[]>([])
-  const [selectedSetlistId, setSelectedSetlistId] = useState<string | null>(null)
-  const [backupProgress, setBackupProgress] = useState<{
-    completed: number
-    total: number
-  } | null>(null)
-  const [isBackingUp, setIsBackingUp] = useState(false)
-  const [isRestoringSetlist, setIsRestoringSetlist] = useState(false)
-  const [restoreProgress, setRestoreProgress] = useState<{
-    completed: number
-    total: number
-    attempts: number
-  } | null>(null)
+  const [playlists, setPlaylists] = useState<Playlist[]>([])
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
+  const [presets, setPresets] = useState<Preset[]>([])
+  const [quickSendIndex, setQuickSendIndex] = useState<number | null>(null)
+  const [isQuickSending, setIsQuickSending] = useState(false)
 
-  const refreshSetlists = () => {
-    const nextSetlists = getSetlists()
-    setSetlists(nextSetlists)
-    if (
-      selectedSetlistId &&
-      !nextSetlists.some((setlist) => setlist.id === selectedSetlistId)
-    ) {
-      setSelectedSetlistId(nextSetlists[0]?.id ?? null)
+  const refreshPlaylists = () => {
+    const next = getPlaylists()
+    setPlaylists(next)
+    if (selectedPlaylistId && !next.some((p) => p.id === selectedPlaylistId)) {
+      setSelectedPlaylistId(next[0]?.id ?? null)
     }
-    if (!selectedSetlistId && nextSetlists.length > 0) {
-      setSelectedSetlistId(nextSetlists[0].id)
+    if (!selectedPlaylistId && next.length > 0) {
+      setSelectedPlaylistId(next[0].id)
     }
   }
 
   useEffect(() => {
-    refreshSetlists()
+    refreshPlaylists()
 
-    const handleSetlistsUpdated = () => {
-      refreshSetlists()
+    const refreshPresetsFromDb = async () => {
+      const allPresets = await getPresets()
+      setPresets(allPresets)
     }
+    refreshPresetsFromDb()
 
-    window.addEventListener('setlists-updated', handleSetlistsUpdated)
+    const handlePlaylistsUpdated = () => refreshPlaylists()
+    window.addEventListener('playlists-updated', handlePlaylistsUpdated)
+    return () => window.removeEventListener('playlists-updated', handlePlaylistsUpdated)
+  }, [selectedPlaylistId])
 
-    return () => {
-      window.removeEventListener('setlists-updated', handleSetlistsUpdated)
-    }
-  }, [])
-
-  const handleCreateBackup = async () => {
-    if (!selectedMidiPort) {
-      notifyInfo('Select a MIDI port before creating backup setlists.')
-      return
-    }
-
-    try {
-      setIsBackingUp(true)
-      setBackupProgress({ completed: 0, total: 16 })
-
-      const entries = await retrieveInternalBackupFromSynth(
-        selectedMidiPort,
-        selectedMidiChannel,
-        (completed, total) => {
-          setBackupProgress({ completed, total })
-        },
-      )
-
-      const setlist = createSetlist({
-        name: `Internal Backup ${new Date().toLocaleString()}`,
-        source: 'internal-16',
-        entries,
-      })
-
-      refreshSetlists()
-      setSelectedSetlistId(setlist.id)
-      setAppMode('setlists')
-
-      const exactMatchCount = entries.filter((entry) => entry.isExactLibraryMatch).length
-      notifySuccess(
-        `Backup complete: ${entries.length}/16 slots retrieved, ${exactMatchCount} exact library matches.`,
-      )
-    } catch (error) {
-      notifyError((error as Error).message)
-    } finally {
-      setIsBackingUp(false)
-      setBackupProgress(null)
-    }
+  const handleCreatePlaylist = () => {
+    const playlist = createPlaylist('New Setlist')
+    refreshPlaylists()
+    setSelectedPlaylistId(playlist.id)
   }
 
-  const handleDeleteSetlist = (setlistId: string) => {
-    deleteSetlist(setlistId)
-    refreshSetlists()
+  const handleRenamePlaylist = (playlistId: string, name: string) => {
+    renamePlaylist(playlistId, name)
+    refreshPlaylists()
   }
 
-  const handleExportSetlist = async (setlistId: string) => {
-    const json = exportSetlist(setlistId)
-
-    if ((window as any).__TAURI__) {
-      const filePath = await save({
-        filters: [
-          {
-            name: 'JSON',
-            extensions: ['json'],
-          },
-        ],
-      })
-
-      if (filePath) {
-        await writeTextFile(filePath, json)
-      }
-      return
+  const handleDeletePlaylist = (playlistId: string) => {
+    deletePlaylist(playlistId)
+    if (quickSendIndex !== null) {
+      setIsQuickSending(false)
+      setQuickSendIndex(null)
     }
-
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'setlist-backup.json'
-    a.click()
-    URL.revokeObjectURL(url)
+    refreshPlaylists()
   }
 
-  const handleImportSetlist = async (file: File) => {
-    const json = await file.text()
-    const importedSetlist = importSetlist(json)
-    refreshSetlists()
-    setSelectedSetlistId(importedSetlist.id)
-    setAppMode('setlists')
-    notifySuccess(`Imported setlist ${importedSetlist.name}.`)
+  const handleAddPreset = (playlistId: string, presetId: string) => {
+    addPresetToPlaylist(playlistId, presetId)
+    refreshPlaylists()
   }
 
-  const handleSaveSetlistEntryAsPreset = async (
-    setlistId: string,
-    entryIndex: number,
+  const handleRemoveEntry = (playlistId: string, entryId: string) => {
+    removePlaylistEntry(playlistId, entryId)
+    refreshPlaylists()
+  }
+
+  const handleReorderEntries = (
+    playlistId: string,
+    fromIndex: number,
+    toIndex: number,
   ) => {
-    const setlist = setlists.find((item) => item.id === setlistId)
-    const entry = setlist?.entries[entryIndex]
-
-    if (!entry) {
-      notifyError('Setlist entry not found.')
-      return
-    }
-
-    const matchingPreset = await getMatchingPresetBySysex(entry.sysexData)
-    openSaveDraftPresetModal(
-      entry.sysexData,
-      matchingPreset,
-      `setlist-${setlist?.name || 'entry'}-${entry.slot}`,
-    )
-    notifyInfo('Prepared setlist entry as a new preset draft.')
+    const playlist = playlists.find((p) => p.id === playlistId)
+    if (!playlist) return
+    const entries = [...playlist.entries]
+    const [moved] = entries.splice(fromIndex, 1)
+    entries.splice(toIndex, 0, moved)
+    reorderPlaylistEntries(playlistId, entries)
+    refreshPlaylists()
   }
 
-  const handleSendSetlistEntryToSlot = async (
-    setlistId: string,
-    entryIndex: number,
-    bank: 'internal' | 'cartridge',
-    slot: number,
-  ) => {
-    if (!selectedMidiPort) {
-      notifyInfo('Select a MIDI port before sending setlist entries.')
-      return
-    }
-
-    const setlist = setlists.find((item) => item.id === setlistId)
-    const entry = setlist?.entries[entryIndex]
-
-    if (!entry) {
-      notifyError('Setlist entry not found.')
-      return
-    }
-
-    await writeSysexDataToSynthSlot(
-      entry.sysexData,
-      selectedMidiPort,
-      selectedMidiChannel,
-      bank,
-      slot,
-    )
-
-    notifySuccess(`Sent setlist entry ${entry.slot} to ${bank} slot ${slot}.`)
+  const handleStartQuickSend = (playlistId: string) => {
+    setSelectedPlaylistId(playlistId)
+    setQuickSendIndex(0)
+    setIsQuickSending(true)
   }
 
-  const handlePreviewSetlistEntryInBuffer = async (
-    setlistId: string,
-    entryIndex: number,
-  ) => {
+  const handleStepQuickSend = (direction: 'prev' | 'next') => {
+    const playlist = playlists.find((p) => p.id === selectedPlaylistId)
+    if (!playlist || quickSendIndex === null) return
+    const next =
+      direction === 'next'
+        ? Math.min(quickSendIndex + 1, playlist.entries.length - 1)
+        : Math.max(quickSendIndex - 1, 0)
+    setQuickSendIndex(next)
+  }
+
+  const handleStopQuickSend = () => {
+    setIsQuickSending(false)
+    setQuickSendIndex(null)
+  }
+
+  const handleSendCurrentToBuffer = async () => {
     if (!selectedMidiPort) {
-      notifyInfo('Select a MIDI port before previewing setlist entries.')
+      notifyInfo('Select a MIDI port before sending presets.')
       return
     }
 
-    const setlist = setlists.find((item) => item.id === setlistId)
-    const entry = setlist?.entries[entryIndex]
+    const playlist = playlists.find((p) => p.id === selectedPlaylistId)
+    if (!playlist || quickSendIndex === null) return
 
-    if (!entry) {
-      notifyError('Setlist entry not found.')
+    const entry = playlist.entries[quickSendIndex]
+    if (!entry) return
+
+    const preset = presets.find((p) => p.id === entry.presetId)
+    if (!preset) {
+      notifyError('Preset not found in library.')
       return
     }
 
     await writeSysexDataToTemporaryBuffer(
-      entry.sysexData,
+      preset.sysexData,
       selectedMidiPort,
       selectedMidiChannel,
     )
 
-    notifyInfo(`Previewed setlist entry ${entry.slot} in temporary buffer (slot 0x60).`)
+    notifySuccess(`Sent "${preset.name}" to temporary buffer.`)
   }
-
-  const handleRestoreSetlistToSynth = async (
-    setlistId: string,
-    bank: 'internal' | 'cartridge',
-  ) => {
-    if (!selectedMidiPort) {
-      notifyInfo('Select a MIDI port before restoring setlists.')
-      return
-    }
-
-    const setlist = setlists.find((item) => item.id === setlistId)
-    if (!setlist) {
-      notifyError('Setlist not found.')
-      return
-    }
-
-    const maxAttemptsPerSlot = 3
-    let attempts = 0
-
-    try {
-      setIsRestoringSetlist(true)
-      setRestoreProgress({
-        completed: 0,
-        total: setlist.entries.length,
-        attempts: 0,
-      })
-
-      for (let i = 0; i < setlist.entries.length; i++) {
-        const entry = setlist.entries[i]
-        let success = false
-        let lastError: unknown
-
-        for (let attempt = 1; attempt <= maxAttemptsPerSlot; attempt++) {
-          attempts += 1
-          setRestoreProgress({
-            completed: i,
-            total: setlist.entries.length,
-            attempts,
-          })
-
-          try {
-            await writeSysexDataToSynthSlot(
-              entry.sysexData,
-              selectedMidiPort,
-              selectedMidiChannel,
-              bank,
-              entry.slot,
-            )
-            success = true
-            break
-          } catch (error) {
-            lastError = error
-            if (attempt < maxAttemptsPerSlot) {
-              await new Promise((resolve) => setTimeout(resolve, 180))
-            }
-          }
-        }
-
-        if (!success) {
-          throw new Error(
-            `Failed restoring slot ${entry.slot} after ${maxAttemptsPerSlot} attempts: ${(lastError as Error)?.message || 'unknown error'}`,
-          )
-        }
-
-        setRestoreProgress({
-          completed: i + 1,
-          total: setlist.entries.length,
-          attempts,
-        })
-      }
-
-      notifySuccess(
-        `Restore complete: ${setlist.entries.length}/${setlist.entries.length} entries sent to ${bank} slots.`,
-      )
-    } catch (error) {
-      notifyError((error as Error).message)
-    } finally {
-      setIsRestoringSetlist(false)
-      setRestoreProgress(null)
-    }
-  }
-
-  const setlistSummary = useMemo(() => {
-    return setlists.reduce(
-      (acc, setlist) => {
-        acc.count += 1
-        acc.entries += setlist.entries.length
-        return acc
-      },
-      { count: 0, entries: 0 },
-    )
-  }, [setlists])
 
   return {
-    setlists,
-    selectedSetlistId,
-    setSelectedSetlistId,
-    isBackingUp,
-    backupProgress,
-    isRestoringSetlist,
-    restoreProgress,
-    setlistSummary,
-    handleCreateBackup,
-    handleDeleteSetlist,
-    handleExportSetlist,
-    handleImportSetlist,
-    handleSaveSetlistEntryAsPreset,
-    handleSendSetlistEntryToSlot,
-    handlePreviewSetlistEntryInBuffer,
-    handleRestoreSetlistToSynth,
+    playlists,
+    selectedPlaylistId,
+    setSelectedPlaylistId,
+    presets,
+    quickSendIndex,
+    isQuickSending,
+    handleCreatePlaylist,
+    handleRenamePlaylist,
+    handleDeletePlaylist,
+    handleAddPreset,
+    handleRemoveEntry,
+    handleReorderEntries,
+    handleStartQuickSend,
+    handleStepQuickSend,
+    handleStopQuickSend,
+    handleSendCurrentToBuffer,
   }
 }

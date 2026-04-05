@@ -1,33 +1,22 @@
-import { Setlist } from '@/lib/setlistManager'
+import { Playlist } from '@/lib/playlistManager'
+import { Preset } from '@/lib/presetManager'
 
 export interface SetlistsPageProps {
-  setlists: Setlist[]
-  selectedSetlistId: string | null
-  isBackingUp: boolean
-  backupProgress: { completed: number; total: number } | null
-  isRestoring: boolean
-  restoreProgress: { completed: number; total: number; attempts: number } | null
-  onSelectSetlist: (setlistId: string) => void
-  onCreateBackup: () => void
-  onRestoreSetlistToSynth: (
-    setlistId: string,
-    bank: 'internal' | 'cartridge',
-  ) => void
-  onDeleteSetlist: (setlistId: string) => void
-  onExportSetlist: (setlistId: string) => void
-  onImportSetlist: (file: File) => void
-  onSaveEntryAsPreset: (setlistId: string, entryIndex: number) => void
-  onSendEntryToSlot: (
-    setlistId: string,
-    entryIndex: number,
-    bank: 'internal' | 'cartridge',
-    slot: number,
-  ) => void
-  onPreviewEntryInBuffer: (setlistId: string, entryIndex: number) => void
-}
-
-export interface SendModalState {
-  entryIndex: number
-  bank: 'internal' | 'cartridge'
-  slot: number
+  playlists: Playlist[]
+  selectedPlaylistId: string | null
+  presets: Preset[]
+  quickSendIndex: number | null
+  isQuickSending: boolean
+  onSelectPlaylist: (playlistId: string) => void
+  onCreatePlaylist: () => void
+  onRenamePlaylist: (playlistId: string, name: string) => void
+  onDeletePlaylist: (playlistId: string) => void
+  onAddPreset: (playlistId: string, presetId: string) => void
+  onRemoveEntry: (playlistId: string, entryId: string) => void
+  onReorderEntries: (playlistId: string, fromIndex: number, toIndex: number) => void
+  onStartQuickSend: (playlistId: string) => void
+  onStepQuickSend: (direction: 'prev' | 'next') => void
+  onStopQuickSend: () => void
+  onSendCurrentToBuffer: () => void
+  onPlayInPerformanceMode: (playlistId: string) => void
 }

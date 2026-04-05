@@ -19,6 +19,8 @@ interface SearchFilterContextProps {
   setDuplicatesOnly: (duplicatesOnly: boolean) => void
   userPresetsOnly: boolean
   setUserPresetsOnly: (userPresetsOnly: boolean) => void
+  activePlaylistId: string | null
+  setActivePlaylistId: (id: string | null) => void
 }
 
 const SearchFilterContext = createContext<SearchFilterContextProps | undefined>(
@@ -51,6 +53,8 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
     saveToLocalStorage('userPresetsOnly', nextValue)
   }
 
+  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null)
+
   return (
     <SearchFilterContext.Provider
       value={{
@@ -70,6 +74,8 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
         setDuplicatesOnly,
         userPresetsOnly,
         setUserPresetsOnly,
+        activePlaylistId,
+        setActivePlaylistId,
       }}
     >
       {children}

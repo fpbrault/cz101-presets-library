@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { fetchPresetData, Preset } from '@/lib/presetManager'
+import { getPlaylistById } from '@/lib/playlistManager'
 import { useQuery } from '@tanstack/react-query'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
 import { WebMidi } from 'webmidi'
@@ -47,7 +48,17 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     favoritesOnly,
     setFavoritesOnly,
     duplicatesOnly,
+    activePlaylistId,
+    setActivePlaylistId,
   } = useSearchFilter()
+
+  const playlistPresetIds = useMemo<string[] | null>(() => {
+    if (!activePlaylistId) return null
+    const playlist = getPlaylistById(activePlaylistId)
+    return playlist ? playlist.entries.map((e) => e.presetId) : null
+  }, [activePlaylistId])
+
+  const activePlaylist = activePlaylistId ? getPlaylistById(activePlaylistId) : null
 
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -65,6 +76,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     favoritesOnly,
     duplicatesOnly,
     randomOrder: false,
+    activePlaylistId,
   })
 
   const { data } = useQuery({
@@ -81,6 +93,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
         false,
         0,
         duplicatesOnly,
+        false,
+        playlistPresetIds,
       )
       return result.presets
     },
@@ -91,7 +105,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 
   useEffect(() => {
     setCurrentBank(0)
-  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly, duplicatesOnly])
+  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly, duplicatesOnly, activePlaylistId])
 
   useEffect(() => {
     const totalBanks = Math.max(1, Math.ceil(presets.length / 8))
@@ -227,6 +241,20 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 {selectedMidiPort ? selectedMidiPort : 'No MIDI Port'} | Ch{' '}
                 {selectedMidiChannel}
               </span>
+              {activePlaylist && (
+                <span className="flex items-center gap-1 ml-2 mt-1">
+                  <span className="badge badge-accent badge-sm font-semibold">
+                    {activePlaylist.name}
+                  </span>
+                  <button
+                    className="btn btn-xs btn-ghost opacity-60 hover:opacity-100 px-1"
+                    title="Clear setlist filter"
+                    onClick={() => setActivePlaylistId(null)}
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
             </div>
           </div>
 

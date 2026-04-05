@@ -1,15 +1,15 @@
 import Button from '@/components/Button'
 import SelectInput from '@/components/SelectInput'
 import ModalShell from '@/components/ModalShell'
-import { Setlist } from '@/lib/setlistManager'
-import { SendModalState } from '@/features/setlists/components/SetlistsPage.types'
+import { SynthBackup } from '@/lib/synthBackupManager'
+import { SendModalState } from '@/features/synthBackups/components/SynthBackupsPage.types'
 
 interface SendEntryModalProps {
-  selectedSetlist: Setlist
+  selectedBackup: SynthBackup
   sendModalState: SendModalState
   setSendModalState: (state: SendModalState | null) => void
   onSendEntryToSlot: (
-    setlistId: string,
+    backupId: string,
     entryIndex: number,
     bank: 'internal' | 'cartridge',
     slot: number,
@@ -17,7 +17,7 @@ interface SendEntryModalProps {
 }
 
 export default function SendEntryModal({
-  selectedSetlist,
+  selectedBackup,
   sendModalState,
   setSendModalState,
   onSendEntryToSlot,
@@ -73,7 +73,7 @@ export default function SendEntryModal({
             data-testid="send-entry-confirm"
             onClick={() => {
               onSendEntryToSlot(
-                selectedSetlist.id,
+                selectedBackup.id,
                 sendModalState.entryIndex,
                 sendModalState.bank,
                 sendModalState.slot,

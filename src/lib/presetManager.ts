@@ -17,8 +17,8 @@ import {
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
-import { SetlistEntry } from '@/lib/setlistManager'
-import { clearAllSetlists } from '@/lib/setlistManager'
+import { SynthBackupEntry } from '@/lib/synthBackupManager'
+import { clearAllSynthBackups } from '@/lib/synthBackupManager'
 
 let presetDatabase: PresetDatabase
 const presetSync = new PresetSyncCoordinator()
@@ -143,7 +143,7 @@ export async function cloudRestorePresets(): Promise<number | null> {
 
 export async function resetLocalAppData(): Promise<void> {
   await presetDatabase.syncPresets([])
-  clearAllSetlists()
+  clearAllSynthBackups()
 
   if (typeof window !== 'undefined') {
     window.localStorage.removeItem(FACTORY_PRESETS_ONBOARDING_KEY)
@@ -383,7 +383,7 @@ function mapToSetlistEntry(
   programByte: number,
   sysexData: Uint8Array,
   presetMatchIndex: Map<string, Preset>,
-): SetlistEntry {
+): SynthBackupEntry {
   const matchedPreset = presetMatchIndex.get(getPresetFingerprint(sysexData))
 
   return {
@@ -437,9 +437,9 @@ export async function retrieveInternalBackupFromSynth(
   portName: string,
   channel: number,
   onProgress?: (completed: number, total: number) => void,
-): Promise<SetlistEntry[]> {
+): Promise<SynthBackupEntry[]> {
   const presetMatchIndex = await buildPresetMatchIndex()
-  const results: SetlistEntry[] = []
+  const results: SynthBackupEntry[] = []
 
   for (let i = 0; i < 16; i++) {
     const slot = i + 1
@@ -673,6 +673,7 @@ export async function fetchPresetData(
   seed: number,
   duplicatesOnly: boolean = false,
   userPresetsOnly: boolean = false,
+  playlistPresetIds: string[] | null = null,
 ): Promise<{ presets: Preset[]; totalCount: number }> {
   const presets = (await getPresets()) ?? []
 
@@ -688,6 +689,7 @@ export async function fetchPresetData(
       duplicatesOnly,
       randomOrder,
       seed,
+      playlistPresetIds,
     },
   )
 

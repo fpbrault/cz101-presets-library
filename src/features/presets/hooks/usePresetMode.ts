@@ -13,7 +13,7 @@ import {
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
 import { useToast } from '@/ToastContext'
 
-type AppMode = 'presets' | 'setlists'
+type AppMode = 'presets' | 'synthBackups' | 'setlists'
 
 interface SaveDraftPresetState {
   sysexData: Uint8Array
