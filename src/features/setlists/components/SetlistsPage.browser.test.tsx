@@ -1,27 +1,27 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import SetlistsPage from '@/features/setlists/components/SetlistsPage'
+import SynthBackupsPage from '@/features/synthBackups/components/SynthBackupsPage'
 import { renderWithProviders } from '@/test/renderWithProviders'
-import type { Setlist } from '@/lib/setlistManager'
+import type { SynthBackup } from '@/lib/synthBackupManager'
 
 const noopProps = {
   isBackingUp: false,
   backupProgress: null,
   isRestoring: false,
   restoreProgress: null,
-  onSelectSetlist: vi.fn(),
+  onSelectBackup: vi.fn(),
   onCreateBackup: vi.fn(),
-  onRestoreSetlistToSynth: vi.fn(),
-  onDeleteSetlist: vi.fn(),
-  onExportSetlist: vi.fn(),
-  onImportSetlist: vi.fn(),
+  onRestoreBackupToSynth: vi.fn(),
+  onDeleteBackup: vi.fn(),
+  onExportBackup: vi.fn(),
+  onImportBackup: vi.fn(),
   onSaveEntryAsPreset: vi.fn(),
   onSendEntryToSlot: vi.fn(),
   onPreviewEntryInBuffer: vi.fn(),
 }
 
-function makeSetlist(overrides: Partial<Setlist> = {}): Setlist {
+function makeBackup(overrides: Partial<SynthBackup> = {}): SynthBackup {
   return {
     id: 'sl-1',
     name: 'Test Backup',
@@ -32,78 +32,78 @@ function makeSetlist(overrides: Partial<Setlist> = {}): Setlist {
   }
 }
 
-describe('SetlistsPage (browser)', () => {
-  it('shows a notice when no setlist is selected', () => {
+describe('SynthBackupsPage (browser)', () => {
+  it('shows a notice when no backup is selected', () => {
     renderWithProviders(
-      <SetlistsPage
+      <SynthBackupsPage
         {...noopProps}
-        setlists={[]}
-        selectedSetlistId={null}
+        backups={[]}
+        selectedBackupId={null}
       />,
     )
-    expect(screen.getByText(/select a setlist/i)).toBeTruthy()
+    expect(screen.getByText(/select a synth backup/i)).toBeTruthy()
   })
 
-  it('does not show the notice when a setlist is selected', () => {
-    const setlist = makeSetlist()
+  it('does not show the notice when a backup is selected', () => {
+    const backup = makeBackup()
     renderWithProviders(
-      <SetlistsPage
+      <SynthBackupsPage
         {...noopProps}
-        setlists={[setlist]}
-        selectedSetlistId={setlist.id}
+        backups={[backup]}
+        selectedBackupId={backup.id}
       />,
     )
-    expect(screen.queryByText(/select a setlist/i)).toBeNull()
+    expect(screen.queryByText(/select a synth backup/i)).toBeNull()
   })
 
-  it('renders the selected setlist name', () => {
-    const setlist = makeSetlist({ name: 'Live Gig 2024' })
+  it('renders the selected backup name', () => {
+    const backup = makeBackup({ name: 'Live Gig 2024' })
     renderWithProviders(
-      <SetlistsPage
+      <SynthBackupsPage
         {...noopProps}
-        setlists={[setlist]}
-        selectedSetlistId={setlist.id}
+        backups={[backup]}
+        selectedBackupId={backup.id}
       />,
     )
     expect(screen.getByText('Live Gig 2024')).toBeTruthy()
   })
 
-  it('renders multiple setlists in the sidebar', () => {
-    const setlists = [
-      makeSetlist({ id: 'sl-1', name: 'Backup One' }),
-      makeSetlist({ id: 'sl-2', name: 'Backup Two' }),
+  it('renders multiple backups in the sidebar', () => {
+    const backups = [
+      makeBackup({ id: 'sl-1', name: 'Backup One' }),
+      makeBackup({ id: 'sl-2', name: 'Backup Two' }),
     ]
     renderWithProviders(
-      <SetlistsPage
+      <SynthBackupsPage
         {...noopProps}
-        setlists={setlists}
-        selectedSetlistId={null}
+        backups={backups}
+        selectedBackupId={null}
       />,
     )
     expect(screen.getByText('Backup One')).toBeTruthy()
     expect(screen.getByText('Backup Two')).toBeTruthy()
   })
 
-  it('calls onSelectSetlist when a setlist item is clicked', async () => {
+  it('calls onSelectBackup when a backup item is clicked', async () => {
     const user = userEvent.setup()
-    const onSelectSetlist = vi.fn()
-    const setlist = makeSetlist({ id: 'sl-click', name: 'Click Me' })
+    const onSelectBackup = vi.fn()
+    const backup = makeBackup({ id: 'sl-click', name: 'Click Me' })
 
     renderWithProviders(
-      <SetlistsPage
+      <SynthBackupsPage
         {...noopProps}
-        setlists={[setlist]}
-        selectedSetlistId={null}
-        onSelectSetlist={onSelectSetlist}
+        backups={[backup]}
+        selectedBackupId={null}
+        onSelectBackup={onSelectBackup}
       />,
     )
 
     await user.click(screen.getByText('Click Me'))
-    expect(onSelectSetlist).toHaveBeenCalledWith('sl-click')
+    expect(onSelectBackup).toHaveBeenCalledWith('sl-click')
   })
 
-  it('shows entry count for a selected setlist with entries', () => {
-    const setlist = makeSetlist({
+  it('shows entry count for a selected backup with entries', () => {
+    const backup = makeBackup({
       id: 'sl-entries',
       entries: [
         {
@@ -123,10 +123,10 @@ describe('SetlistsPage (browser)', () => {
     })
 
     renderWithProviders(
-      <SetlistsPage
+      <SynthBackupsPage
         {...noopProps}
-        setlists={[setlist]}
-        selectedSetlistId={setlist.id}
+        backups={[backup]}
+        selectedBackupId={backup.id}
       />,
     )
 
