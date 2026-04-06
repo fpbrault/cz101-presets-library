@@ -1,5 +1,5 @@
-import type { Preset } from '@/lib/presetManager'
-import { isFactoryPresetIdentity } from '@/lib/factoryPresets'
+import type { Preset } from '@/lib/presets/presetManager'
+import { isFactoryPresetIdentity } from '@/lib/presets/factoryPresets'
 
 export type FilterMode = 'inclusive' | 'exclusive'
 

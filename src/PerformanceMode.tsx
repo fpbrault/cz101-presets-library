@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { fetchPresetData, Preset } from '@/lib/presetManager'
-import { getPlaylistById } from '@/lib/playlistManager'
+import { fetchPresetData, Preset } from '@/lib/presets/presetManager'
+import { getPlaylistById } from '@/lib/collections/playlistManager'
 import { useQuery } from '@tanstack/react-query'
 import { FaMagnifyingGlass, FaX } from 'react-icons/fa6'
 import { WebMidi } from 'webmidi'
@@ -8,7 +8,7 @@ import { useMidiChannel } from '@/MidiChannelContext'
 import { useMidiPort } from '@/MidiPortContext'
 import { useSearchFilter } from '@/SearchFilterContext'
 import Button from '@/components/Button'
-import { getPresetQueryKey } from '@/lib/presetQueryKey'
+import { getPresetQueryKey } from '@/lib/presets/presetQueryKey'
 
 type PerformanceModeProps = {
   currentPreset: Preset | null

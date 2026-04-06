@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   PresetSyncCoordinator,
   RemotePresetSyncAdapter,
-} from '@/lib/presetSync'
-import type { Preset } from '@/lib/presetManager'
+} from '@/lib/sync/presetSync'
+import type { Preset } from '@/lib/presets/presetManager'
 
 const makePreset = (id: string): Preset =>
   ({

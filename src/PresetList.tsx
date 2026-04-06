@@ -13,7 +13,7 @@ import {
   Preset,
   renameTagGlobally,
   updatePreset,
-} from '@/lib/presetManager'
+} from '@/lib/presets/presetManager'
 import {
   FaPlusSquare,
   FaSortUp,
@@ -49,12 +49,12 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { getPresetQueryKey } from '@/lib/presetQueryKey'
+import { getPresetQueryKey } from '@/lib/presets/presetQueryKey'
 import TagManagerModal from '@/features/presets/components/TagManagerModal'
 import DuplicateReviewModal, {
   DuplicateGroup,
 } from '@/features/presets/components/DuplicateReviewModal'
-import { Playlist } from '@/lib/playlistManager'
+import { Playlist } from '@/lib/collections/playlistManager'
 
 interface PresetListProps {
   currentPreset: Preset | null

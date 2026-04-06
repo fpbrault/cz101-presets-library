@@ -10,9 +10,9 @@ import {
   resetPresetDatabase,
   renameTagGlobally,
   setPresetDatabase,
-} from '@/lib/presetManager'
-import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
-import { FakePresetDatabase } from '@/lib/fakePresetDatabase'
+} from '@/lib/presets/presetManager'
+import { IndexedDbPresetDatabase } from '@/lib/db/browserDatabase'
+import { FakePresetDatabase } from '@/lib/db/fakePresetDatabase'
 
 describe('formatPresetData', () => {
   it('should format preset data with channel', () => {

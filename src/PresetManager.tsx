@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Preset } from '@/lib/presetManager'
+import { Preset } from '@/lib/presets/presetManager'
 import PresetDetails from '@/PresetDetails'
 import PresetList from '@/PresetList'
 import OptionPanel from '@/features/presets/components/OptionPanel'

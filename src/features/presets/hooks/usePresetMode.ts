@@ -9,7 +9,7 @@ import {
   retrieveCurrentPresetFromSynth,
   retrievePresetSlotFromSynth,
   writePresetToSynthSlot,
-} from '@/lib/presetManager'
+} from '@/lib/presets/presetManager'
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
 import { useToast } from '@/ToastContext'
 

@@ -4,7 +4,7 @@ import { useMidiPort } from '@/MidiPortContext'
 import { saveToLocalStorage } from '@/utils'
 import Button from '@/components/Button'
 import SelectInput from '@/components/SelectInput'
-import { Preset } from '@/lib/presetManager'
+import { Preset } from '@/lib/presets/presetManager'
 
 interface OptionPanelProps {
   autoSend: boolean

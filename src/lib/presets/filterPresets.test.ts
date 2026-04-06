@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { filterPresets } from '@/lib/filterPresets'
-import type { Preset } from '@/lib/presetManager'
+import { filterPresets } from '@/lib/presets/filterPresets'
+import type { Preset } from '@/lib/presets/presetManager'
 import { v4 as uuidv4 } from 'uuid'
 
 let _counter = 0

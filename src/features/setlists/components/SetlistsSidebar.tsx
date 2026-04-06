@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Button from '@/components/Button'
 import InlineNotice from '@/components/InlineNotice'
-import { Playlist } from '@/lib/playlistManager'
+import { Playlist } from '@/lib/collections/playlistManager'
 
 interface SetlistsSidebarProps {
   playlists: Playlist[]

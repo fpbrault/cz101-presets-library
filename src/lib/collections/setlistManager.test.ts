@@ -9,8 +9,8 @@ import {
   importAllSetlists,
   exportSetlist,
   importSetlist,
-} from '@/lib/setlistManager'
-import type { SetlistEntry } from '@/lib/setlistManager'
+} from '@/lib/collections/setlistManager'
+import type { SetlistEntry } from '@/lib/collections/setlistManager'
 
 function makeEntry(slot: number, data: number[] = [0xf0, 0x44, 0xf7]): SetlistEntry {
   return {

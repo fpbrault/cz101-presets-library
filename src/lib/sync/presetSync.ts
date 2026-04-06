@@ -1,4 +1,4 @@
-import type { Preset } from '@/lib/presetManager'
+import type { Preset } from '@/lib/presets/presetManager'
 
 export interface RemotePresetSyncAdapter {
   push(presets: Preset[]): Promise<void>

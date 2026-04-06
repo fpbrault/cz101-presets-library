@@ -10,23 +10,23 @@ import {
   exportPresets,
   importPresets,
   resetLocalAppData,
-} from '@/lib/presetManager'
+} from '@/lib/presets/presetManager'
 import {
   exportWorkspaceBackup,
   importWorkspaceBackup,
   isWorkspaceBackupEnvelope,
-} from '@/lib/workspaceBackup'
+} from '@/lib/backup/workspaceBackup'
 import {
   loadOnlineSyncSettings,
   saveOnlineSyncSettings,
-} from '@/lib/onlineSyncSettings'
-import { configurePresetSyncAdapterFromSettings } from '@/lib/remotePresetSyncAdapter'
+} from '@/lib/sync/onlineSyncSettings'
+import { configurePresetSyncAdapterFromSettings } from '@/lib/sync/remotePresetSyncAdapter'
 import {
   disconnectOnlineSession,
   loadOnlineAuthSession,
   refreshOnlineAuthSession,
   startOnlineProviderSignIn,
-} from '@/lib/onlineAuthSession'
+} from '@/lib/auth/onlineAuthSession'
 
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'

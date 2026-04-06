@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { v4 as uuidv4 } from 'uuid'
-import { Preset, updatePreset } from '@/lib/presetManager'
+import { Preset, updatePreset } from '@/lib/presets/presetManager'
 import { buf2hex } from '@/utils'
 import Button from '@/components/Button'
 import FormField from '@/components/FormField'

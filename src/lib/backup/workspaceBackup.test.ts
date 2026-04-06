@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isWorkspaceBackupEnvelope } from '@/lib/workspaceBackup'
+import { isWorkspaceBackupEnvelope } from '@/lib/backup/workspaceBackup'
 
 describe('workspace backup envelope', () => {
   it('recognizes valid workspace backup shape', () => {

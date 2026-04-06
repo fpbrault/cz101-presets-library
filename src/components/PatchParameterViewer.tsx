@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { decodeCzPatch, DecodedPatch } from '@/lib/czSysexDecoder'
+import { decodeCzPatch, DecodedPatch } from '@/lib/midi/czSysexDecoder'
 import EnvelopeChart from '@/components/EnvelopeChart'
 import WaveformDisplay from '@/components/WaveformDisplay'
 

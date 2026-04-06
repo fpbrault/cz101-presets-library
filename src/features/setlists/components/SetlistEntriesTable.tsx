@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import Button from '@/components/Button'
-import { Playlist, PlaylistEntry } from '@/lib/playlistManager'
-import { Preset } from '@/lib/presetManager'
+import { Playlist, PlaylistEntry } from '@/lib/collections/playlistManager'
+import { Preset } from '@/lib/presets/presetManager'
 
 interface SetlistEntriesTableProps {
   playlist: Playlist

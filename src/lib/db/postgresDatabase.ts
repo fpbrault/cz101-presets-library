@@ -1,4 +1,4 @@
-import { Preset, PresetDatabase } from '@/lib/presetManager'
+import { Preset, PresetDatabase } from '@/lib/presets/presetManager'
 import { Client } from 'pg'
 
 const client = new Client({

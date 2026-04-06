@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SynthBackupsPage from '@/features/synthBackups/components/SynthBackupsPage'
 import { renderWithProviders } from '@/test/renderWithProviders'
-import type { SynthBackup } from '@/lib/synthBackupManager'
+import type { SynthBackup } from '@/lib/collections/synthBackupManager'
 
 const noopProps = {
   isBackingUp: false,

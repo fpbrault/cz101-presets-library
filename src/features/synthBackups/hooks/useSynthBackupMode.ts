@@ -6,13 +6,13 @@ import {
   getSynthBackups,
   importSynthBackup,
   SynthBackup,
-} from '@/lib/synthBackupManager'
+} from '@/lib/collections/synthBackupManager'
 import {
   getMatchingPresetBySysex,
   retrieveInternalBackupFromSynth,
   writeSysexDataToSynthSlot,
   writeSysexDataToTemporaryBuffer,
-} from '@/lib/presetManager'
+} from '@/lib/presets/presetManager'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { useToast } from '@/ToastContext'

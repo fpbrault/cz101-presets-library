@@ -1,4 +1,4 @@
-import { SynthBackup } from '@/lib/synthBackupManager'
+import { SynthBackup } from '@/lib/collections/synthBackupManager'
 
 export interface SynthBackupsPageProps {
   backups: SynthBackup[]

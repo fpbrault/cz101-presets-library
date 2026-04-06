@@ -1,6 +1,6 @@
 import Button from '@/components/Button'
 import SelectInput from '@/components/SelectInput'
-import { SynthBackup } from '@/lib/synthBackupManager'
+import { SynthBackup } from '@/lib/collections/synthBackupManager'
 
 interface SynthBackupDetailsHeaderProps {
   selectedBackup: SynthBackup

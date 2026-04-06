@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import Button from '@/components/Button'
 import ModalShell from '@/components/ModalShell'
-import { Preset } from '@/lib/presetManager'
+import { Preset } from '@/lib/presets/presetManager'
 
 export interface DuplicateGroup {
   fingerprint: string

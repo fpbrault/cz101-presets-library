@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { WebMidi } from 'webmidi'
-import { getIoportNames } from '@/lib/presetManager'
+import { getIoportNames } from '@/lib/presets/presetManager'
 
 export function useMidiSetup(setMidiPorts: (ports: string[]) => void) {
   useEffect(() => {

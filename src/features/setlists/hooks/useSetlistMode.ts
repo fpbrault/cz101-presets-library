@@ -8,12 +8,12 @@ import {
   removePlaylistEntry,
   renamePlaylist,
   reorderPlaylistEntries,
-} from '@/lib/playlistManager'
+} from '@/lib/collections/playlistManager'
 import {
   getPresets,
   Preset,
   writeSysexDataToTemporaryBuffer,
-} from '@/lib/presetManager'
+} from '@/lib/presets/presetManager'
 import { useToast } from '@/ToastContext'
 
 interface UseSetlistModeParams {

@@ -1,5 +1,5 @@
 // src/lib/fakePresetDatabase.ts
-import { Preset, PresetDatabase } from '@/lib/presetManager'
+import { Preset, PresetDatabase } from '@/lib/presets/presetManager'
 import { v4 as uuidv4 } from 'uuid'
 
 let fakePresets: Preset[] = [

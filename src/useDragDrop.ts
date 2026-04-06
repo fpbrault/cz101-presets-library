@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
-import { createPresetData, addPreset } from '@/lib/presetManager'
+import { createPresetData, addPreset } from '@/lib/presets/presetManager'
 
 const useDragDrop = () => {
   const queryClient = useQueryClient()

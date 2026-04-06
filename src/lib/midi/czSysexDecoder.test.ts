@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { decodeCzPatch } from '@/lib/czSysexDecoder'
+import { decodeCzPatch } from '@/lib/midi/czSysexDecoder'
 
 /** Build a canonical CZ-101 SysEx packet with 256 nibble bytes all set to zero. */
 function makeZeroPacket(): Uint8Array {

@@ -1,14 +1,14 @@
-import { exportPresets, importPresets } from '@/lib/presetManager'
+import { exportPresets, importPresets } from '@/lib/presets/presetManager'
 import {
   exportAllSynthBackups,
   importAllSynthBackups,
   SerializedSynthBackup,
-} from '@/lib/synthBackupManager'
+} from '@/lib/collections/synthBackupManager'
 import {
   exportAllPlaylists,
   importAllPlaylists,
   Playlist,
-} from '@/lib/playlistManager'
+} from '@/lib/collections/playlistManager'
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
 
 const WORKSPACE_BACKUP_SCHEMA = 'cz101-workspace-backup'

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { FakePresetDatabase } from '@/lib/fakePresetDatabase'
-import { Preset } from '@/lib/presetManager'
+import { FakePresetDatabase } from '@/lib/db/fakePresetDatabase'
+import { Preset } from '@/lib/presets/presetManager'
 import { v4 as uuidv4 } from 'uuid'
 
 describe('FakePresetDatabase', () => {

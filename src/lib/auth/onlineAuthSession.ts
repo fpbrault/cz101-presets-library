@@ -4,7 +4,7 @@ import {
   OnlineAuthSession,
   signInWithNeonProvider,
   signOutNeonSession,
-} from '@/lib/neonAuthClient'
+} from '@/lib/auth/neonAuthClient'
 
 const ONLINE_AUTH_SESSION_KEY = 'cz101.online-auth-session.v1'
 

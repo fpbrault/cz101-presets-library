@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { WaveformConfig, WaveformId, WF_NAMES, ModulationType } from '@/lib/czSysexDecoder'
+import { WaveformConfig, WaveformId, WF_NAMES, ModulationType } from '@/lib/midi/czSysexDecoder'
 
 // ---------------------------------------------------------------------------
 // Mini SVG waveform icons

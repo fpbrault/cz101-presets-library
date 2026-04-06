@@ -1,5 +1,5 @@
-import { Playlist } from '@/lib/playlistManager'
-import { Preset } from '@/lib/presetManager'
+import { Playlist } from '@/lib/collections/playlistManager'
+import { Preset } from '@/lib/presets/presetManager'
 
 export interface SetlistsPageProps {
   playlists: Playlist[]

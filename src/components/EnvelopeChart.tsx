@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { EnvelopeStep } from '@/lib/czSysexDecoder'
+import { EnvelopeStep } from '@/lib/midi/czSysexDecoder'
 
 interface EnvelopeChartProps {
   steps: EnvelopeStep[]

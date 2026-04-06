@@ -1,7 +1,7 @@
 import Button from '@/components/Button'
 import FileInput from '@/components/FileInput'
 import InlineNotice from '@/components/InlineNotice'
-import { SynthBackup } from '@/lib/synthBackupManager'
+import { SynthBackup } from '@/lib/collections/synthBackupManager'
 
 interface SynthBackupsSidebarProps {
   backups: SynthBackup[]

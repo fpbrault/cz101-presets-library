@@ -3,7 +3,7 @@ import {
   isOnlineSyncEnabled,
   loadOnlineSyncSettings,
   saveOnlineSyncSettings,
-} from '@/lib/onlineSyncSettings'
+} from '@/lib/sync/onlineSyncSettings'
 
 describe('onlineSyncSettings', () => {
   beforeEach(() => {

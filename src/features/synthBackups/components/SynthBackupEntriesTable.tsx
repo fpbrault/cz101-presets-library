@@ -1,5 +1,5 @@
 import Button from '@/components/Button'
-import { SynthBackup } from '@/lib/synthBackupManager'
+import { SynthBackup } from '@/lib/collections/synthBackupManager'
 
 interface SynthBackupEntriesTableProps {
   selectedBackup: SynthBackup

@@ -7,14 +7,14 @@ import { MidiPortProvider } from '@/MidiPortContext'
 import PresetManager from '@/PresetManager'
 import { queryClient } from '@/queryClient'
 import { SearchFilterProvider } from '@/SearchFilterContext'
-import { configurePresetSyncAdapterFromSettings } from '@/lib/remotePresetSyncAdapter'
+import { configurePresetSyncAdapterFromSettings } from '@/lib/sync/remotePresetSyncAdapter'
 import {
   acceptFactoryPresetsOnboarding,
   declineFactoryPresetsOnboarding,
   ensureFactoryPresetsOnFirstUse,
-} from '@/lib/presetManager'
-import { refreshOnlineAuthSession } from '@/lib/onlineAuthSession'
-import { saveOnlineSyncSettings } from '@/lib/onlineSyncSettings'
+} from '@/lib/presets/presetManager'
+import { refreshOnlineAuthSession } from '@/lib/auth/onlineAuthSession'
+import { saveOnlineSyncSettings } from '@/lib/sync/onlineSyncSettings'
 import { ToastProvider, useToast } from '@/ToastContext'
 import Button from '@/components/Button'
 

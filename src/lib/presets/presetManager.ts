@@ -1,24 +1,24 @@
 import { WebMidi, Output, Input } from 'webmidi'
 import natsort from 'natsort'
 //import { FakePresetDatabase } from './fakePresetDatabase'
-import { IndexedDbPresetDatabase } from '@/lib/browserDatabase'
-import { filterPresets } from '@/lib/filterPresets'
+import { IndexedDbPresetDatabase } from '@/lib/db/browserDatabase'
+import { filterPresets } from '@/lib/presets/filterPresets'
 import {
   PresetSyncCoordinator,
   RemotePresetSyncAdapter,
-} from '@/lib/presetSync'
-import { isOnlineSyncEnabled } from '@/lib/onlineSyncSettings'
+} from '@/lib/sync/presetSync'
+import { isOnlineSyncEnabled } from '@/lib/sync/onlineSyncSettings'
 import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
 import {
   FACTORY_PRESET_AUTHOR,
   getFactoryPresetJson,
   isFactoryPresetIdentity,
-} from '@/lib/factoryPresets'
+} from '@/lib/presets/factoryPresets'
 
 import { exists, mkdir, readFile, readTextFile, writeFile, writeTextFile, BaseDirectory, readDir, DirEntry } from '@tauri-apps/plugin-fs'
 import { v4 as uuidv4 } from 'uuid'
-import { SynthBackupEntry } from '@/lib/synthBackupManager'
-import { clearAllSynthBackups } from '@/lib/synthBackupManager'
+import { SynthBackupEntry } from '@/lib/collections/synthBackupManager'
+import { clearAllSynthBackups } from '@/lib/collections/synthBackupManager'
 
 let presetDatabase: PresetDatabase
 const presetSync = new PresetSyncCoordinator()
