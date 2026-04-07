@@ -10,8 +10,8 @@ import {
   retrievePresetSlotFromSynth,
   writePresetToSynthSlot,
 } from '@/lib/presets/presetManager'
-import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
-import { useToast } from '@/ToastContext'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils/utils'
+import { useToast } from '@/context/ToastContext'
 
 type AppMode = 'presets' | 'synthBackups' | 'setlists'
 

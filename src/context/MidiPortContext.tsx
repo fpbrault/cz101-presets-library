@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
-import { loadFromLocalStorage } from '@/utils'
+import { loadFromLocalStorage } from '@/utils/utils'
 
 interface MidiPortContextType {
   midiPorts: string[]

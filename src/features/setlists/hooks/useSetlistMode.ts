@@ -14,7 +14,7 @@ import {
   Preset,
   writeSysexDataToTemporaryBuffer,
 } from '@/lib/presets/presetManager'
-import { useToast } from '@/ToastContext'
+import { useToast } from '@/context/ToastContext'
 
 interface UseSetlistModeParams {
   selectedMidiPort: string

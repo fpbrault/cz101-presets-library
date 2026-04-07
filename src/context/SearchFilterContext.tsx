@@ -1,6 +1,6 @@
 import { SortingState } from '@tanstack/react-table'
 import React, { createContext, useState, useContext, ReactNode } from 'react'
-import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils/utils'
 
 interface SearchFilterContextProps {
   sorting: SortingState | []

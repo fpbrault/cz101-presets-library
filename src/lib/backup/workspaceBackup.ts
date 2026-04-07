@@ -9,7 +9,7 @@ import {
   importAllPlaylists,
   Playlist,
 } from '@/lib/collections/playlistManager'
-import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils/utils'
 
 const WORKSPACE_BACKUP_SCHEMA = 'cz101-workspace-backup'
 const WORKSPACE_BACKUP_VERSION = 1

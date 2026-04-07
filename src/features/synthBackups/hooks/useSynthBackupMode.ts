@@ -15,7 +15,7 @@ import {
 } from '@/lib/presets/presetManager'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
-import { useToast } from '@/ToastContext'
+import { useToast } from '@/context/ToastContext'
 
 type AppMode = 'presets' | 'synthBackups' | 'setlists'
 
@@ -103,7 +103,9 @@ export function useSynthBackupMode({
       setSelectedBackupId(backup.id)
       setAppMode('synthBackups')
 
-      const exactMatchCount = entries.filter((entry) => entry.isExactLibraryMatch).length
+      const exactMatchCount = entries.filter(
+        (entry) => entry.isExactLibraryMatch,
+      ).length
       notifySuccess(
         `Backup complete: ${entries.length}/16 slots retrieved, ${exactMatchCount} exact library matches.`,
       )
@@ -205,9 +207,7 @@ export function useSynthBackupMode({
       slot,
     )
 
-    notifySuccess(
-      `Sent backup entry ${entry.slot} to ${bank} slot ${slot}.`,
-    )
+    notifySuccess(`Sent backup entry ${entry.slot} to ${bank} slot ${slot}.`)
   }
 
   const handlePreviewBackupEntryInBuffer = async (

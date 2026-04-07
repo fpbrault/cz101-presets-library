@@ -1,4 +1,4 @@
-import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils/utils'
 
 const ONLINE_SYNC_SETTINGS_KEY = 'cz101.online-sync-settings.v1'
 

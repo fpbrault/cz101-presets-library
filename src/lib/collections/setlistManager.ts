@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { saveToLocalStorage, loadFromLocalStorage } from '@/utils'
+import { saveToLocalStorage, loadFromLocalStorage } from '@/utils/utils'
 
 export type SetlistSource = 'internal-16' | 'manual'
 

@@ -8,7 +8,6 @@ import {
   RemotePresetSyncAdapter,
 } from '@/lib/sync/presetSync'
 import { isOnlineSyncEnabled } from '@/lib/sync/onlineSyncSettings'
-import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
 import {
   FACTORY_PRESET_AUTHOR,
   getFactoryPresetJson,
@@ -861,6 +860,7 @@ export function createPresetFromSysex(params: {
 }
 
 import { patches } from '@/assets/cznames'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils/utils'
 
 // Helper to parse preset names from cznames.json
 async function parsePresetNames(): Promise<{

@@ -2,21 +2,17 @@ import './App.css'
 import { useEffect, useState } from 'react'
 
 import { QueryClientProvider } from '@tanstack/react-query'
-import { MidiChannelProvider } from '@/MidiChannelContext'
-import { MidiPortProvider } from '@/MidiPortContext'
-import PresetManager from '@/PresetManager'
-import { queryClient } from '@/queryClient'
-import { SearchFilterProvider } from '@/SearchFilterContext'
-import { configurePresetSyncAdapterFromSettings } from '@/lib/sync/remotePresetSyncAdapter'
-import {
-  acceptFactoryPresetsOnboarding,
-  declineFactoryPresetsOnboarding,
-  ensureFactoryPresetsOnFirstUse,
-} from '@/lib/presets/presetManager'
+import { MidiChannelProvider } from '@/context/MidiChannelContext'
+import { MidiPortProvider } from '@/context/MidiPortContext'
+import PresetManager from '@/components/PresetManager'
+import { queryClient } from '@/utils/queryClient'
+import { SearchFilterProvider } from '@/context/SearchFilterContext'
+import { ToastProvider, useToast } from '@/context/ToastContext'
+import Button from '@/components/Button'
+import { acceptFactoryPresetsOnboarding, declineFactoryPresetsOnboarding, ensureFactoryPresetsOnFirstUse } from '@/lib/presets/presetManager'
 import { refreshOnlineAuthSession } from '@/lib/auth/onlineAuthSession'
 import { saveOnlineSyncSettings } from '@/lib/sync/onlineSyncSettings'
-import { ToastProvider, useToast } from '@/ToastContext'
-import Button from '@/components/Button'
+import { configurePresetSyncAdapterFromSettings } from '@/lib/sync/remotePresetSyncAdapter'
 
 function AppInner() {
   const { notifySuccess, notifyInfo } = useToast()
@@ -29,7 +25,10 @@ function AppInner() {
       new URLSearchParams(window.location.search).get('auth_popup') === '1'
     ) {
       try {
-        window.opener.postMessage({ type: 'auth_complete' }, window.location.origin)
+        window.opener.postMessage(
+          { type: 'auth_complete' },
+          window.location.origin,
+        )
       } catch {}
       window.close()
       return
@@ -72,10 +71,12 @@ function AppInner() {
       {showOnboardingModal && (
         <dialog open className="modal modal-open">
           <div className="modal-box">
-            <h3 className="text-lg font-bold">Welcome to CZ101 Presets Library</h3>
+            <h3 className="text-lg font-bold">
+              Welcome to CZ101 Presets Library
+            </h3>
             <p className="py-2 text-sm opacity-80">
-              Load factory presets (Temple of CZ) into your local library? You can add them later
-              from Settings.
+              Load factory presets (Temple of CZ) into your local library? You
+              can add them later from Settings.
             </p>
             <div className="modal-action">
               <Button variant="secondary" onClick={handleDeclineOnboarding}>

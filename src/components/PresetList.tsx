@@ -30,7 +30,7 @@ import {
   FaChevronUp,
   FaCopy,
 } from 'react-icons/fa'
-import useDragDrop from '@/useDragDrop'
+import useDragDrop from '@/hooks/useDragDrop'
 import {
   useReactTable,
   ColumnDef,
@@ -42,7 +42,7 @@ import {
   ColumnResizeMode,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useSearchFilter } from '@/SearchFilterContext'
+import { useSearchFilter } from '@/context/SearchFilterContext'
 import {
   keepPreviousData,
   useInfiniteQuery,

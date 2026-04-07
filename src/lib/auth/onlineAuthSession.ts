@@ -1,4 +1,4 @@
-import { loadFromLocalStorage, saveToLocalStorage } from '@/utils'
+import { loadFromLocalStorage, saveToLocalStorage } from '@/utils/utils'
 import {
   getNeonOnlineSession,
   OnlineAuthSession,
