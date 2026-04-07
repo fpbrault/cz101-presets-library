@@ -15,7 +15,7 @@ export default function SynthBackupEntriesTable({
 	onOpenSendModal,
 }: SynthBackupEntriesTableProps) {
 	return (
-		<div className="flex-grow overflow-auto">
+		<div className="grow overflow-auto">
 			<table className="table table-sm table-zebra">
 				<thead>
 					<tr>

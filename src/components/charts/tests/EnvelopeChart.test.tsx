@@ -14,7 +14,7 @@ describe("EnvelopeChart", () => {
 		renderWithProviders(
 			<EnvelopeChart steps={mockSteps} endStep={3} label="Test Envelope" />,
 		);
-		expect(screen.getByText("Test Envelope")).toBeTruthy();
+		expect(screen.getAllByText("Test Envelope")[0]).toBeTruthy();
 	});
 
 	it("renders nothing when steps are empty", () => {

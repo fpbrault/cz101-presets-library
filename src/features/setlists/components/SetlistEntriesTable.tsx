@@ -56,14 +56,14 @@ export default function SetlistEntriesTable({
 
 	if (playlist.entries.length === 0) {
 		return (
-			<div className="flex items-center justify-center flex-grow p-8 text-sm opacity-60">
+			<div className="flex items-center justify-center grow p-8 text-sm opacity-60">
 				No presets in this setlist. Add presets using the button above.
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex-grow overflow-auto">
+		<div className="grow overflow-auto">
 			<table className="table table-sm table-zebra">
 				<thead>
 					<tr>

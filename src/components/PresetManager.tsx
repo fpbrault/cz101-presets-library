@@ -1,8 +1,8 @@
 import { useState } from "react";
 import SettingsPanel from "@/components/layout/SettingsPanel";
 import PresetDetails from "@/components/PresetDetails";
-import PresetList from "@/components/PresetList";
 import PerformanceMode from "@/components/presets/PerformanceMode";
+import PresetList from "@/components/presets/PresetList";
 import Button from "@/components/ui/Button";
 import { useMidiChannel } from "@/context/MidiChannelContext";
 import { useMidiPort } from "@/context/MidiPortContext";

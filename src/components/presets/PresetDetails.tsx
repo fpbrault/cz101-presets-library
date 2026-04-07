@@ -111,7 +111,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 				(currentPreset ? " block" : " hidden")
 			}
 		>
-			<div className="flex flex-col flex-grow gap-2">
+			<div className="flex flex-col grow gap-2">
 				<div className="p-2 border rounded-lg border-base-content/10 bg-base-100/20">
 					<div className="flex items-center justify-between gap-2 mb-2">
 						<div className="text-xs font-bold tracking-wider uppercase text-base-content/60">
@@ -163,7 +163,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 										inputSize="sm"
 									/>
 								) : (
-									<div className="mt-1 text-lg font-bold leading-tight break-words">
+									<div className="mt-1 text-lg font-bold leading-tight wrap-break-word">
 										{formData.name || "-"}
 									</div>
 								)}
@@ -219,7 +219,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 											inputSize="sm"
 										/>
 									) : (
-										<div className="mt-1 text-xs font-semibold break-words">
+										<div className="mt-1 text-xs font-semibold wrap-break-word">
 											{formData.author || "-"}
 										</div>
 									)}
@@ -242,7 +242,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 										rows={4}
 									/>
 								) : (
-									<div className="mt-1 text-xs font-semibold whitespace-pre-wrap break-words">
+									<div className="mt-1 text-xs font-semibold whitespace-pre-wrap wrap-break-word">
 										{formData.description || "-"}
 									</div>
 								)}

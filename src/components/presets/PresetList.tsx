@@ -274,7 +274,7 @@ function PresetListTopBar(props: {
 						onClick={() => setIsTagsPanelOpen(false)}
 						aria-label="Close tag filters"
 					/>
-					<div className="absolute left-2 right-2 z-40 p-3 mt-2 border shadow-xl sm:left-4 sm:right-4 lg:left-auto lg:right-4 lg:w-[44rem] rounded-xl bg-base-100 border-base-content/20">
+					<div className="absolute left-2 right-2 z-40 p-3 mt-2 border shadow-xl sm:left-4 sm:right-4 lg:left-auto lg:right-4 lg:w-176 rounded-xl bg-base-100 border-base-content/20">
 						<div className="flex items-center justify-between gap-2 mb-3">
 							<h3 className="text-lg font-semibold">Tag Filters</h3>
 							<button
@@ -519,22 +519,6 @@ const PresetList: React.FC<PresetListProps> = ({
 		[updateQueryData],
 	);
 
-	const _handleSetRating = useCallback(
-		async (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => {
-			updateQueryData(preset, { rating });
-
-			try {
-				await updatePreset({
-					...preset,
-					rating,
-				});
-			} catch (_error) {
-				updateQueryData(preset, { rating: preset.rating });
-			}
-		},
-		[updateQueryData],
-	);
-
 	const columns = useMemo<ColumnDef<Preset>[]>(
 		() => [
 			{
@@ -611,7 +595,7 @@ const PresetList: React.FC<PresetListProps> = ({
 							size: 120,
 							cell: ({ row }: { row: { original: Preset } }) => (
 								<select
-									className="select select-xs select-accent w-full max-w-[7rem]"
+									className="select select-xs select-accent w-full max-w-28"
 									value=""
 									title="Add to setlist"
 									onClick={(e) => e.stopPropagation()}
@@ -1005,7 +989,7 @@ const PresetList: React.FC<PresetListProps> = ({
 	});
 
 	return (
-		<div className="flex flex-col flex-grow min-w-0 select-none bg-base-300">
+		<div className="flex flex-col grow min-w-0 select-none bg-base-300">
 			<PresetListTopBar
 				totalDBRowCount={totalDBRowCount}
 				searchTerm={searchTerm}

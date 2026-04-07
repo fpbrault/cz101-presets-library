@@ -72,7 +72,7 @@ const FilterPanel: React.FC = () => {
 					</>
 				)}
 			</Button>
-			<div className="flex flex-wrap content-start flex-grow gap-1 overflow-scroll ">
+			<div className="flex flex-wrap content-start grow gap-1 overflow-scroll ">
 				{Object.entries(
 					presets
 						.flatMap((preset) => preset.tags.map((tag) => tag.toLowerCase()))

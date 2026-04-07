@@ -323,7 +323,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 				</div>
 			</div>
 			<div className="flex h-full gap-4 pb-16">
-				<div className="grid flex-grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">
+				<div className="grid grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">
 					{currentPresets.map((preset) => (
 						<button
 							type="button"
@@ -336,7 +336,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									: " btn-secondary")
 							}
 						>
-							<span className="flex items-center flex-grow font-bold">
+							<span className="flex items-center grow font-bold">
 								{preset.name}
 							</span>
 
@@ -349,7 +349,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						type="button"
 						onClick={handlePreviousBank}
 						disabled={currentBank === 0}
-						className="flex-grow w-full text-2xl btn btn-lg btn-secondary"
+						className="grow w-full text-2xl btn btn-lg btn-secondary"
 					>
 						Previous Bank
 					</button>
@@ -374,7 +374,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						type="button"
 						onClick={handleNextBank}
 						disabled={(currentBank + 1) * 8 >= presets.length}
-						className="flex-grow text-2xl btn btn-lg btn-secondary"
+						className="grow text-2xl btn btn-lg btn-secondary"
 					>
 						Next Bank
 					</button>
