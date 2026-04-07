@@ -519,22 +519,6 @@ const PresetList: React.FC<PresetListProps> = ({
 		[updateQueryData],
 	);
 
-	const _handleSetRating = useCallback(
-		async (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => {
-			updateQueryData(preset, { rating });
-
-			try {
-				await updatePreset({
-					...preset,
-					rating,
-				});
-			} catch (_error) {
-				updateQueryData(preset, { rating: preset.rating });
-			}
-		},
-		[updateQueryData],
-	);
-
 	const columns = useMemo<ColumnDef<Preset>[]>(
 		() => [
 			{

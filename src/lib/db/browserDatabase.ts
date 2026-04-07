@@ -143,10 +143,13 @@ export class IndexedDbPresetDatabase implements PresetDatabase {
 		const serializedPresets: Array<
 			Omit<Preset, "sysexData"> & { sysexData: number[] }
 		> = JSON.parse(json);
-		const presets: Preset[] = serializedPresets.map((preset) => ({
-			...preset,
-			sysexData: Uint8Array.from(preset.sysexData),
-		}));
+		const presets: Preset[] = serializedPresets.map(
+			(preset) =>
+				({
+					...preset,
+					sysexData: Uint8Array.from(preset.sysexData),
+				}) as Preset,
+		);
 		await this.syncPresets(presets);
 	}
 }

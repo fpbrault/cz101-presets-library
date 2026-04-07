@@ -31,7 +31,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p1.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "2",
@@ -41,7 +41,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p2.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "3",
@@ -51,7 +51,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p3.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "4",
@@ -61,7 +61,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p4.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "5",
@@ -71,7 +71,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p5.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "6",
@@ -81,7 +81,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p6.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "7",
@@ -91,7 +91,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p7.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "8",
@@ -101,7 +101,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p8.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "9",
@@ -111,7 +111,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p9.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 	];
 
@@ -160,7 +160,6 @@ describe("PerformanceMode", () => {
 
 	it("toggles fullscreen", async () => {
 		// Mock requestFullscreen and exitFullscreen
-		const _requestFullscreen = vi.fn();
 		const exitFullscreen = vi.fn();
 
 		// Mocking the fullscreen element property correctly
@@ -202,7 +201,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p1.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "2",
@@ -212,7 +211,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p2.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "3",
@@ -222,7 +221,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p3.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "4",
@@ -232,7 +231,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p4.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "5",
@@ -242,7 +241,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p5.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "6",
@@ -252,7 +251,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p6.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "7",
@@ -262,7 +261,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p7.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "8",
@@ -272,7 +271,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p8.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 		{
 			id: "9",
@@ -282,7 +281,7 @@ describe("PerformanceMode", () => {
 			createdDate: new Date().toISOString(),
 			modifiedDate: new Date().toISOString(),
 			filename: "p9.syx",
-			sysexData: "",
+			sysexData: new Uint8Array(),
 		},
 	];
 
@@ -290,6 +289,7 @@ describe("PerformanceMode", () => {
 		vi.clearAllMocks();
 		vi.mocked(fetchPresetData).mockResolvedValue({
 			presets: mockPresets,
+			totalCount: mockPresets.length,
 		});
 	});
 
@@ -343,7 +343,6 @@ describe("PerformanceMode", () => {
 
 	it("toggles fullscreen", async () => {
 		// Mock requestFullscreen and exitFullscreen
-		const _requestFullscreen = vi.fn();
 		const exitFullscreen = vi.fn().mockResolvedValue(undefined);
 		vi.spyOn(document, "fullscreenElement", "get").mockReturnValue(null);
 		vi.spyOn(document, "exitFullscreen").mockImplementation(

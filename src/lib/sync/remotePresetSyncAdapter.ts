@@ -84,7 +84,7 @@ class NeonDataApiPresetSyncAdapter implements RemotePresetSyncAdapter {
 		const key = await deriveKeyFromSession(sessionToken, salt);
 		const base64Payload = await encryptPresetData(jsonString, key, salt);
 
-		const { error } = await (client as NeonDataApiClient)
+		const { error } = await (client as unknown as NeonDataApiClient)
 			.from("preset_library")
 			.upsert({
 				presets_encrypted: base64Payload,
@@ -104,7 +104,7 @@ class NeonDataApiPresetSyncAdapter implements RemotePresetSyncAdapter {
 		}
 		const sessionToken = session.userId;
 
-		const { data, error } = await (client as NeonDataApiClient)
+		const { data, error } = await (client as unknown as NeonDataApiClient)
 			.from("preset_library")
 			.select("presets_encrypted")
 			.single();
@@ -116,7 +116,7 @@ class NeonDataApiPresetSyncAdapter implements RemotePresetSyncAdapter {
 			throw new Error(`Restore failed: ${error.message}`);
 		}
 
-		const base64Payload = data?.presets_encrypted;
+		const base64Payload = data?.presets_encrypted as string | null | undefined;
 		if (!base64Payload) {
 			return [];
 		}

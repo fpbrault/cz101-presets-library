@@ -64,7 +64,7 @@ function loadFactoryPresetLibrary(): Preset[] {
 		author: FACTORY_PRESET_AUTHOR,
 		description: String(preset.description ?? ""),
 		favorite: Boolean(preset.favorite ?? false),
-		rating: preset.rating,
+		rating: preset.rating as 1 | 2 | 3 | 4 | 5 | undefined,
 		isFactoryPreset: true,
 	}));
 }

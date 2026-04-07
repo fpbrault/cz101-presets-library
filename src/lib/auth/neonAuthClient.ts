@@ -68,10 +68,13 @@ function getNeonAuthUrl(): string {
 async function getNeonAuthClient(): Promise<NeonAuthClient> {
 	if (!neonAuthClientPromise) {
 		const authUrl = getNeonAuthUrl();
-		neonAuthClientPromise = Promise.resolve(createAuthClient(authUrl));
+		neonAuthClientPromise = Promise.resolve(
+			createAuthClient(authUrl),
+		) as unknown as Promise<NeonAuthClient>;
 	}
 
-	return neonAuthClientPromise;
+	// biome-ignore lint/style/noNonNullAssertion: assigned above
+	return neonAuthClientPromise!;
 }
 
 type MaybeRecord = Record<string, unknown> | null | undefined;
