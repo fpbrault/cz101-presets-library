@@ -1,6 +1,6 @@
-import Button from '@/components/Button'
-import SelectInput from '@/components/SelectInput'
-import ModalShell from '@/components/ModalShell'
+import Button from '@/components/ui/Button'
+import SelectInput from '@/components/forms/SelectInput'
+import ModalShell from '@/components/ui/ModalShell'
 import { SynthBackup } from '@/lib/collections/synthBackupManager'
 import { SendModalState } from '@/features/synthBackups/components/SynthBackupsPage.types'
 

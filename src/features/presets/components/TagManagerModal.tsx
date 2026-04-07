@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import Button from '@/components/Button'
-import ModalShell from '@/components/ModalShell'
-import SelectInput from '@/components/SelectInput'
-import TextInput from '@/components/TextInput'
+import Button from '@/components/ui/Button'
+import ModalShell from '@/components/ui/ModalShell'
+import SelectInput from '@/components/forms/SelectInput'
+import TextInput from '@/components/forms/TextInput'
 
 interface TagManagerModalProps {
   isOpen: boolean

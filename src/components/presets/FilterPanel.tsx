@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FaCheckCircle, FaRegDotCircle, FaTrash } from 'react-icons/fa'
 import { fetchPresetData } from '@/lib/presets/presetManager'
 import { useSearchFilter } from '@/context/SearchFilterContext'
-import Button from '@/components/Button'
+import Button from '@/components/ui/Button'
 
 const FilterPanel: React.FC = () => {
   const { selectedTags, filterMode, setFilterMode, setSelectedTags } =

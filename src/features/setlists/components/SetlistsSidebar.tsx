@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import Button from '@/components/Button'
-import InlineNotice from '@/components/InlineNotice'
+import Button from '@/components/ui/Button'
+import InlineNotice from '@/components/feedback/InlineNotice'
 import { Playlist } from '@/lib/collections/playlistManager'
 
 interface SetlistsSidebarProps {

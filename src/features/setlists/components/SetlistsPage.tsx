@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import InlineNotice from '@/components/InlineNotice'
-import Button from '@/components/Button'
+import InlineNotice from '@/components/feedback/InlineNotice'
+import Button from '@/components/ui/Button'
 import SetlistsSidebar from '@/features/setlists/components/SetlistsSidebar'
 import SetlistEntriesTable from '@/features/setlists/components/SetlistEntriesTable'
 import { SetlistsPageProps } from '@/features/setlists/components/SetlistsPage.types'

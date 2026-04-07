@@ -1,5 +1,5 @@
-import Button from '@/components/Button'
-import SelectInput from '@/components/SelectInput'
+import Button from '@/components/ui/Button'
+import SelectInput from '@/components/forms/SelectInput'
 import { SynthBackup } from '@/lib/collections/synthBackupManager'
 
 interface SynthBackupDetailsHeaderProps {

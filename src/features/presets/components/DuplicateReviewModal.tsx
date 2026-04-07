@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import Button from '@/components/Button'
-import ModalShell from '@/components/ModalShell'
+import Button from '@/components/ui/Button'
+import ModalShell from '@/components/ui/ModalShell'
 import { Preset } from '@/lib/presets/presetManager'
 
 export interface DuplicateGroup {

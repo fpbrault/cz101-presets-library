@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import InlineNotice from '@/components/InlineNotice'
+import InlineNotice from '@/components/feedback/InlineNotice'
 import { renderWithProviders } from '@/test/renderWithProviders'
 
 describe('InlineNotice', () => {

@@ -30,8 +30,8 @@ import {
 
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
-import Button from '@/components/Button'
-import FileInput from '@/components/FileInput'
+import Button from '@/components/ui/Button'
+import FileInput from '@/components/forms/FileInput'
 
 const SettingsPanel: React.FC = () => {
   const queryClient = useQueryClient()
@@ -270,12 +270,15 @@ const SettingsPanel: React.FC = () => {
       {isModalOpen && (
         <dialog open className="modal modal-open">
           <div className="modal-box w-[min(96vw,840px)] max-w-none max-h-[90vh] overflow-y-auto p-6 shadow-xl bg-base-100 rounded-2xl">
-            <h2 className="mb-5 text-2xl font-semibold text-center">Settings</h2>
+            <h2 className="mb-5 text-2xl font-semibold text-center">
+              Settings
+            </h2>
             <div className="space-y-4">
               <div className="p-4 border rounded-xl border-base-content/15 bg-base-200/40">
                 <div className="mb-3 text-base font-semibold">Online Sync</div>
                 <div className="mb-3 text-sm opacity-80">
-                  Connect an account to sync your user-created presets to the cloud.
+                  Connect an account to sync your user-created presets to the
+                  cloud.
                 </div>
 
                 {!onlineAuthSession ? (
@@ -304,7 +307,8 @@ const SettingsPanel: React.FC = () => {
                 )}
 
                 <div className="mb-3 text-xs opacity-80">
-                  Status: {onlineSyncSettings.enabled ? 'Enabled' : 'Local-only'}
+                  Status:{' '}
+                  {onlineSyncSettings.enabled ? 'Enabled' : 'Local-only'}
                 </div>
                 <div className="text-xs opacity-80">
                   Account:{' '}
@@ -315,10 +319,17 @@ const SettingsPanel: React.FC = () => {
 
                 {onlineSyncSettings.enabled && (
                   <div className="grid grid-cols-1 gap-2 mt-3 sm:grid-cols-2">
-                    <Button variant="primary" className="gap-2" onClick={handleBackupNow}>
+                    <Button
+                      variant="primary"
+                      className="gap-2"
+                      onClick={handleBackupNow}
+                    >
                       <FaCloudUploadAlt size={14} /> Backup Now
                     </Button>
-                    <Button variant="secondary" onClick={handleRestoreFromBackup}>
+                    <Button
+                      variant="secondary"
+                      onClick={handleRestoreFromBackup}
+                    >
                       Restore from Backup
                     </Button>
                   </div>
@@ -346,11 +357,15 @@ const SettingsPanel: React.FC = () => {
               </div>
 
               <div className="pt-2 border-t border-base-content/10">
-                <div className="mb-2 text-sm font-semibold opacity-80">Backup & Import</div>
+                <div className="mb-2 text-sm font-semibold opacity-80">
+                  Backup & Import
+                </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <label className="w-full form-control">
                     <div className="label">
-                      <span className="label-text">Export Full Workspace Backup</span>
+                      <span className="label-text">
+                        Export Full Workspace Backup
+                      </span>
                     </div>
                     <Button onClick={handleExportWorkspace} variant="accent">
                       Export Full Backup
@@ -381,7 +396,11 @@ const SettingsPanel: React.FC = () => {
                 </div>
               </div>
 
-              <Button className="w-full" variant="error" onClick={handleCloseModal}>
+              <Button
+                className="w-full"
+                variant="error"
+                onClick={handleCloseModal}
+              >
                 Close
               </Button>
             </div>
@@ -397,7 +416,8 @@ const SettingsPanel: React.FC = () => {
           <div className="modal-box">
             <h3 className="text-lg font-bold">Reset Local Data</h3>
             <p className="py-2 text-sm opacity-80">
-              This will permanently delete all local presets and synth backups on this device.
+              This will permanently delete all local presets and synth backups
+              on this device.
             </p>
 
             <label className="justify-start gap-3 cursor-pointer label">
@@ -415,7 +435,11 @@ const SettingsPanel: React.FC = () => {
               <Button variant="secondary" onClick={handleCloseResetModal}>
                 Cancel
               </Button>
-              <Button variant="error" onClick={handleConfirmResetData} disabled={isResetting}>
+              <Button
+                variant="error"
+                onClick={handleConfirmResetData}
+                disabled={isResetting}
+              >
                 {isResetting ? 'Resetting...' : 'Confirm Reset'}
               </Button>
             </div>

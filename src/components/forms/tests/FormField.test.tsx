@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import FormField from '@/components/FormField'
+import FormField from '@/components/forms/FormField'
 import { renderWithProviders } from '@/test/renderWithProviders'
 
 describe('FormField', () => {
   it('renders label and child content', () => {
     renderWithProviders(
       <FormField label="Preset Name" htmlFor="preset-name">
-        <input id="preset-name" className="input input-bordered" value="CZ Pad" readOnly />
+        <input
+          id="preset-name"
+          className="input input-bordered"
+          value="CZ Pad"
+          readOnly
+        />
       </FormField>,
     )
 

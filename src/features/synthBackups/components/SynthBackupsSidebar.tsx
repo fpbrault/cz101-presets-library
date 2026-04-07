@@ -1,6 +1,6 @@
-import Button from '@/components/Button'
-import FileInput from '@/components/FileInput'
-import InlineNotice from '@/components/InlineNotice'
+import Button from '@/components/ui/Button'
+import FileInput from '@/components/forms/FileInput'
+import InlineNotice from '@/components/feedback/InlineNotice'
 import { SynthBackup } from '@/lib/collections/synthBackupManager'
 
 interface SynthBackupsSidebarProps {

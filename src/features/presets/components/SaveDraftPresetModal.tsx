@@ -1,8 +1,8 @@
-import Button from '@/components/Button'
-import FormField from '@/components/FormField'
-import ModalShell from '@/components/ModalShell'
-import TextInput from '@/components/TextInput'
-import TextAreaInput from '@/components/TextAreaInput'
+import Button from '@/components/ui/Button'
+import FormField from '@/components/forms/FormField'
+import ModalShell from '@/components/ui/ModalShell'
+import TextInput from '@/components/forms/TextInput'
+import TextAreaInput from '@/components/forms/TextAreaInput'
 
 interface SaveDraftPresetModalProps {
   isOpen: boolean

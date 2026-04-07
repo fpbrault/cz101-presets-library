@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { Preset } from '@/lib/presets/presetManager'
-import PresetDetails from '@/components/PresetDetails'
-import PresetList from '@/components/PresetList'
-import OptionPanel from '@/features/presets/components/OptionPanel'
-import { useMidiChannel } from '@/context/MidiChannelContext'
-import { useMidiPort } from '@/context/MidiPortContext'
+import PresetDetails from '@/components/presets/PresetDetails'
+import PresetList from '@/components/presets/PresetList'
+import SettingsPanel from '@/components/layout/SettingsPanel'
+import PerformanceMode from '@/components/presets/PerformanceMode'
 import Button from '@/components/ui/Button'
 import SynthBackupsPage from '@/features/synthBackups/components/SynthBackupsPage'
 import SetlistsPage from '@/features/setlists/components/SetlistsPage'
@@ -14,8 +13,9 @@ import { useSynthBackupMode } from '@/features/synthBackups/hooks/useSynthBackup
 import { useSetlistMode } from '@/features/setlists/hooks/useSetlistMode'
 import { useSearchFilter } from '@/context/SearchFilterContext'
 import { useMidiSetup } from '@/hooks/useMidiSetup'
-import PerformanceMode from '@/components/presets/PerformanceMode'
-import SettingsPanel from '@/components/layout/SettingsPanel'
+import { useMidiPort } from '@/context/MidiPortContext'
+import { useMidiChannel } from '@/context/MidiChannelContext'
+import OptionPanel from '@/features/presets/components/OptionPanel'
 
 type AppMode = 'presets' | 'synthBackups' | 'setlists'
 
@@ -30,7 +30,9 @@ export default function PresetManager() {
   const { activePlaylistId, setActivePlaylistId } = useSearchFilter()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [dragOverPlaylistId, setDragOverPlaylistId] = useState<string | null>(null)
+  const [dragOverPlaylistId, setDragOverPlaylistId] = useState<string | null>(
+    null,
+  )
 
   useMidiSetup(setMidiPorts)
 
@@ -113,7 +115,9 @@ export default function PresetManager() {
                     P
                   </Button>
                   <Button
-                    variant={appMode === 'synthBackups' ? 'accent' : 'secondary'}
+                    variant={
+                      appMode === 'synthBackups' ? 'accent' : 'secondary'
+                    }
                     size="sm"
                     className="w-full text-[10px]"
                     onClick={() => setAppMode('synthBackups')}
@@ -148,7 +152,9 @@ export default function PresetManager() {
                       Presets
                     </Button>
                     <Button
-                      variant={appMode === 'synthBackups' ? 'accent' : 'secondary'}
+                      variant={
+                        appMode === 'synthBackups' ? 'accent' : 'secondary'
+                      }
                       onClick={() => setAppMode('synthBackups')}
                     >
                       Synth Backups
@@ -169,65 +175,84 @@ export default function PresetManager() {
                       }
                       autoSend={presetMode.autoSend}
                       handleToggleAutoSend={presetMode.handleToggleAutoSend}
-                      handleRetrieveCurrentPreset={presetMode.handleRetrieveCurrentPreset}
-                      handleRetrievePresetSlot={presetMode.handleRetrievePresetSlot}
+                      handleRetrieveCurrentPreset={
+                        presetMode.handleRetrieveCurrentPreset
+                      }
+                      handleRetrievePresetSlot={
+                        presetMode.handleRetrievePresetSlot
+                      }
                       handleWritePresetSlot={(bank, slot) =>
-                        presetMode.handleWritePresetSlot(currentPreset, bank, slot)
+                        presetMode.handleWritePresetSlot(
+                          currentPreset,
+                          bank,
+                          slot,
+                        )
                       }
                     ></OptionPanel>
                   )}
 
-                  {appMode === 'presets' && setlistMode.playlists.length > 0 && (
-                    <div className="p-2 rounded-lg bg-base-300 text-xs overflow-y-auto max-h-48">
-                      <div className="font-bold mb-1 opacity-70 uppercase tracking-wide">Setlists</div>
-                      <button
-                        className={`w-full text-left px-2 py-1 rounded transition-colors ${
-                          !activePlaylistId
-                            ? 'bg-accent text-accent-content font-semibold'
-                            : 'hover:bg-base-200'
-                        }`}
-                        onClick={() => setActivePlaylistId(null)}
-                      >
-                        All Presets
-                      </button>
-                      {setlistMode.playlists.map((playlist) => (
+                  {appMode === 'presets' &&
+                    setlistMode.playlists.length > 0 && (
+                      <div className="p-2 rounded-lg bg-base-300 text-xs overflow-y-auto max-h-48">
+                        <div className="font-bold mb-1 opacity-70 uppercase tracking-wide">
+                          Setlists
+                        </div>
                         <button
-                          key={playlist.id}
-                          className={`w-full text-left px-2 py-1 rounded transition-colors truncate ${
-                            activePlaylistId === playlist.id
+                          className={`w-full text-left px-2 py-1 rounded transition-colors ${
+                            !activePlaylistId
                               ? 'bg-accent text-accent-content font-semibold'
-                              : dragOverPlaylistId === playlist.id
-                              ? 'bg-success/30 ring-1 ring-success'
                               : 'hover:bg-base-200'
                           }`}
-                          onClick={() => setActivePlaylistId(playlist.id)}
-                          title={playlist.name}
-                          onDragOver={(e) => {
-                            e.preventDefault()
-                            e.dataTransfer.dropEffect = 'copy'
-                            setDragOverPlaylistId(playlist.id)
-                          }}
-                          onDragLeave={() => setDragOverPlaylistId(null)}
-                          onDrop={(e) => {
-                            e.preventDefault()
-                            setDragOverPlaylistId(null)
-                            const presetId = e.dataTransfer.getData('text/preset-id')
-                            if (presetId) {
-                              setlistMode.handleAddPreset(playlist.id, presetId)
-                            }
-                          }}
+                          onClick={() => setActivePlaylistId(null)}
                         >
-                          {playlist.name}
-                          <span className="ml-1 opacity-60">({playlist.entries.length})</span>
+                          All Presets
                         </button>
-                      ))}
-                    </div>
-                  )}
+                        {setlistMode.playlists.map((playlist) => (
+                          <button
+                            key={playlist.id}
+                            className={`w-full text-left px-2 py-1 rounded transition-colors truncate ${
+                              activePlaylistId === playlist.id
+                                ? 'bg-accent text-accent-content font-semibold'
+                                : dragOverPlaylistId === playlist.id
+                                  ? 'bg-success/30 ring-1 ring-success'
+                                  : 'hover:bg-base-200'
+                            }`}
+                            onClick={() => setActivePlaylistId(playlist.id)}
+                            title={playlist.name}
+                            onDragOver={(e) => {
+                              e.preventDefault()
+                              e.dataTransfer.dropEffect = 'copy'
+                              setDragOverPlaylistId(playlist.id)
+                            }}
+                            onDragLeave={() => setDragOverPlaylistId(null)}
+                            onDrop={(e) => {
+                              e.preventDefault()
+                              setDragOverPlaylistId(null)
+                              const presetId =
+                                e.dataTransfer.getData('text/preset-id')
+                              if (presetId) {
+                                setlistMode.handleAddPreset(
+                                  playlist.id,
+                                  presetId,
+                                )
+                              }
+                            }}
+                          >
+                            {playlist.name}
+                            <span className="ml-1 opacity-60">
+                              ({playlist.entries.length})
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                   {appMode === 'synthBackups' && (
                     <div className="p-2 rounded-lg bg-base-300 text-xs">
                       <div>Backups: {synthBackupMode.backupSummary.count}</div>
-                      <div>Entries: {synthBackupMode.backupSummary.entries}</div>
+                      <div>
+                        Entries: {synthBackupMode.backupSummary.entries}
+                      </div>
                     </div>
                   )}
 
@@ -271,13 +296,19 @@ export default function PresetManager() {
                 restoreProgress={synthBackupMode.restoreProgress}
                 onSelectBackup={synthBackupMode.setSelectedBackupId}
                 onCreateBackup={synthBackupMode.handleCreateBackup}
-                onRestoreBackupToSynth={synthBackupMode.handleRestoreBackupToSynth}
+                onRestoreBackupToSynth={
+                  synthBackupMode.handleRestoreBackupToSynth
+                }
                 onDeleteBackup={synthBackupMode.handleDeleteBackup}
                 onExportBackup={synthBackupMode.handleExportBackup}
                 onImportBackup={synthBackupMode.handleImportBackup}
-                onSaveEntryAsPreset={synthBackupMode.handleSaveBackupEntryAsPreset}
+                onSaveEntryAsPreset={
+                  synthBackupMode.handleSaveBackupEntryAsPreset
+                }
                 onSendEntryToSlot={synthBackupMode.handleSendBackupEntryToSlot}
-                onPreviewEntryInBuffer={synthBackupMode.handlePreviewBackupEntryInBuffer}
+                onPreviewEntryInBuffer={
+                  synthBackupMode.handlePreviewBackupEntryInBuffer
+                }
               />
             )}
 
@@ -312,7 +343,9 @@ export default function PresetManager() {
             <dialog open className="modal modal-open">
               <div className="modal-box">
                 <h3 className="text-lg font-bold">Confirm Delete</h3>
-                <p className="py-2 text-sm opacity-80">Are you sure you want to delete this preset?</p>
+                <p className="py-2 text-sm opacity-80">
+                  Are you sure you want to delete this preset?
+                </p>
                 <div className="modal-action">
                   <Button
                     variant="secondary"
@@ -336,7 +369,9 @@ export default function PresetManager() {
 
           <SaveDraftPresetModal
             isOpen={Boolean(presetMode.saveDraftPresetState)}
-            matchingPresetName={presetMode.saveDraftPresetState?.matchingPreset?.name}
+            matchingPresetName={
+              presetMode.saveDraftPresetState?.matchingPreset?.name
+            }
             name={presetMode.saveDraftName}
             author={presetMode.saveDraftAuthor}
             tags={presetMode.saveDraftTags}

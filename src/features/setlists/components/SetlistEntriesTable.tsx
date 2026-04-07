@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import Button from '@/components/Button'
+import Button from '@/components/ui/Button'
 import { Playlist, PlaylistEntry } from '@/lib/collections/playlistManager'
 import { Preset } from '@/lib/presets/presetManager'
 

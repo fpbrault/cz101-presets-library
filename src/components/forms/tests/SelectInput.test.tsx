@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import SelectInput from '@/components/SelectInput'
+import SelectInput from '@/components/forms/SelectInput'
 import { renderWithProviders } from '@/test/renderWithProviders'
 
 describe('SelectInput', () => {

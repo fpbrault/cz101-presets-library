@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import FileInput from '@/components/FileInput'
+import FileInput from '@/components/forms/FileInput'
 import { renderWithProviders } from '@/test/renderWithProviders'
 
 describe('FileInput', () => {

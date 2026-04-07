@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import InlineNotice from '@/components/InlineNotice'
+import InlineNotice from '@/components/feedback/InlineNotice'
 
 describe('InlineNotice', () => {
   it('renders the message text', () => {
@@ -19,12 +19,16 @@ describe('InlineNotice', () => {
   })
 
   it('applies the success tone class', () => {
-    const { container } = render(<InlineNotice message="Done!" tone="success" />)
+    const { container } = render(
+      <InlineNotice message="Done!" tone="success" />,
+    )
     expect(container.querySelector('.alert-success')).toBeTruthy()
   })
 
   it('applies the warning tone class', () => {
-    const { container } = render(<InlineNotice message="Watch out" tone="warning" />)
+    const { container } = render(
+      <InlineNotice message="Watch out" tone="warning" />,
+    )
     expect(container.querySelector('.alert-warning')).toBeTruthy()
   })
 
@@ -34,7 +38,9 @@ describe('InlineNotice', () => {
   })
 
   it('applies the neutral tone class', () => {
-    const { container } = render(<InlineNotice message="Neutral" tone="neutral" />)
+    const { container } = render(
+      <InlineNotice message="Neutral" tone="neutral" />,
+    )
     expect(container.querySelector('.alert-neutral')).toBeTruthy()
   })
 
@@ -57,7 +63,9 @@ describe('InlineNotice', () => {
 
   it('renders ReactNode children as message', () => {
     render(
-      <InlineNotice message={<strong data-testid="bold-msg">Bold message</strong>} />,
+      <InlineNotice
+        message={<strong data-testid="bold-msg">Bold message</strong>}
+      />,
     )
     expect(screen.getByTestId('bold-msg')).toBeTruthy()
     expect(screen.getByTestId('bold-msg').tagName).toBe('STRONG')

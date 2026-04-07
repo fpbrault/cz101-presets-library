@@ -1,7 +1,7 @@
 import React, { memo } from 'react'
 import { decodeCzPatch, DecodedPatch } from '@/lib/midi/czSysexDecoder'
-import EnvelopeChart from '@/components/EnvelopeChart'
-import WaveformDisplay from '@/components/WaveformDisplay'
+import EnvelopeChart from '@/components/charts/EnvelopeChart'
+import WaveformDisplay from '@/components/charts/WaveformDisplay'
 
 interface PatchParameterViewerProps {
   sysexData: Uint8Array
@@ -11,29 +11,54 @@ interface PatchParameterViewerProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+const NOTE_NAMES = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+]
 
-const ParamRow: React.FC<{ label: string; value: React.ReactNode; mono?: boolean }> = ({
-  label, value, mono,
-}) => (
+const ParamRow: React.FC<{
+  label: string
+  value: React.ReactNode
+  mono?: boolean
+}> = ({ label, value, mono }) => (
   <div className="flex justify-between items-center gap-2 py-0.5">
-    <span className="text-[10px] uppercase tracking-wider text-base-content/40 shrink-0">{label}</span>
-    <span className={`text-xs font-semibold text-right ${mono ? 'font-mono' : ''}`}>{value}</span>
+    <span className="text-[10px] uppercase tracking-wider text-base-content/40 shrink-0">
+      {label}
+    </span>
+    <span
+      className={`text-xs font-semibold text-right ${mono ? 'font-mono' : ''}`}
+    >
+      {value}
+    </span>
   </div>
 )
 
-const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+const SectionTitle: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => (
   <div className="flex items-center gap-2 mt-3 mb-1">
-    <span className="text-[9px] uppercase tracking-widest font-bold text-primary/70">{children}</span>
+    <span className="text-[9px] uppercase tracking-widest font-bold text-primary/70">
+      {children}
+    </span>
     <div className="flex-1 h-px bg-primary/20" />
   </div>
 )
 
-const ValueBar: React.FC<{ value: number; max?: number; className?: string }> = ({
-  value,
-  max = 99,
-  className = 'progress-primary',
-}) => {
+const ValueBar: React.FC<{
+  value: number
+  max?: number
+  className?: string
+}> = ({ value, max = 99, className = 'progress-primary' }) => {
   const clamped = Math.max(0, Math.min(max, value))
   return (
     <div className="flex items-center justify-end gap-2 min-w-[120px]">
@@ -67,7 +92,9 @@ const EnvelopeGroup: React.FC<{
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2 mt-1">
-        <span className="badge badge-outline badge-xs text-[9px] font-mono">{lineId}</span>
+        <span className="badge badge-outline badge-xs text-[9px] font-mono">
+          {lineId}
+        </span>
       </div>
       <div className="flex flex-col gap-2">
         <EnvelopeChart
@@ -98,12 +125,21 @@ const CollapsibleSection: React.FC<{
   defaultOpen?: boolean
   children: React.ReactNode
 }> = ({ title, defaultOpen = true, children }) => (
-  <details open={defaultOpen} className="group rounded-lg border border-base-content/10 bg-base-300/20 overflow-hidden">
+  <details
+    open={defaultOpen}
+    className="group rounded-lg border border-base-content/10 bg-base-300/20 overflow-hidden"
+  >
     <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none hover:bg-base-300/40 transition-colors">
-      <span className="text-[10px] uppercase tracking-widest font-bold text-primary/80">{title}</span>
-      <span className="ml-auto text-xs text-base-content/35 group-open:rotate-90 transition-transform">▶</span>
+      <span className="text-[10px] uppercase tracking-widest font-bold text-primary/80">
+        {title}
+      </span>
+      <span className="ml-auto text-xs text-base-content/35 group-open:rotate-90 transition-transform">
+        ▶
+      </span>
     </summary>
-    <div className="px-3 pb-3 pt-1 border-t border-base-content/10">{children}</div>
+    <div className="px-3 pb-3 pt-1 border-t border-base-content/10">
+      {children}
+    </div>
   </details>
 )
 
@@ -111,23 +147,24 @@ const CollapsibleSection: React.FC<{
 // Main component
 // ---------------------------------------------------------------------------
 
-const PatchParameterViewer: React.FC<PatchParameterViewerProps> = memo(({ sysexData }) => {
-  const patch = decodeCzPatch(sysexData)
+const PatchParameterViewer: React.FC<PatchParameterViewerProps> = memo(
+  ({ sysexData }) => {
+    const patch = decodeCzPatch(sysexData)
 
-  if (!patch) {
+    if (!patch) {
+      return (
+        <div className="flex items-center justify-center h-16 text-xs text-base-content/30 italic">
+          No valid SysEx data
+        </div>
+      )
+    }
+
+    const hasDualLine =
+      patch.lineSelect === "L1+1'" || patch.lineSelect === "L1+2'"
+    const isLine2Only = patch.lineSelect === 'L2'
+
     return (
-      <div className="flex items-center justify-center h-16 text-xs text-base-content/30 italic">
-        No valid SysEx data
-      </div>
-    )
-  }
-
-  const hasDualLine = patch.lineSelect === 'L1+1\'' || patch.lineSelect === 'L1+2\''
-  const isLine2Only = patch.lineSelect === 'L2'
-
-  return (
-    <div className="flex flex-col gap-2 rounded-xl bg-base-300/40 border border-base-content/10 overflow-hidden">
-      
+      <div className="flex flex-col gap-2 rounded-xl bg-base-300/40 border border-base-content/10 overflow-hidden">
         <CollapsibleSection title="Core Params" defaultOpen>
           <div className="flex flex-col">
             <SectionTitle>Voice Setup</SectionTitle>
@@ -157,7 +194,13 @@ const PatchParameterViewer: React.FC<PatchParameterViewerProps> = memo(({ sysexD
             <ParamRow
               label="Direction"
               value={
-                <span className={patch.detuneDirection === '-' ? 'text-error' : 'text-success'}>
+                <span
+                  className={
+                    patch.detuneDirection === '-'
+                      ? 'text-error'
+                      : 'text-success'
+                  }
+                >
                   {patch.detuneDirection === '-' ? '▼ Down' : '▲ Up'}
                 </span>
               }
@@ -173,15 +216,30 @@ const PatchParameterViewer: React.FC<PatchParameterViewerProps> = memo(({ sysexD
             <ParamRow label="Wave" value={`Wave ${patch.vibratoWave}`} mono />
             <ParamRow
               label="Delay"
-              value={<ValueBar value={patch.vibratoDelay} className="progress-info" />}
+              value={
+                <ValueBar
+                  value={patch.vibratoDelay}
+                  className="progress-info"
+                />
+              }
             />
             <ParamRow
               label="Rate"
-              value={<ValueBar value={patch.vibratoRate} className="progress-secondary" />}
+              value={
+                <ValueBar
+                  value={patch.vibratoRate}
+                  className="progress-secondary"
+                />
+              }
             />
             <ParamRow
               label="Depth"
-              value={<ValueBar value={patch.vibratoDepth} className="progress-accent" />}
+              value={
+                <ValueBar
+                  value={patch.vibratoDepth}
+                  className="progress-accent"
+                />
+              }
             />
           </div>
         </CollapsibleSection>
@@ -211,9 +269,9 @@ const PatchParameterViewer: React.FC<PatchParameterViewerProps> = memo(({ sysexD
           </div>
         </CollapsibleSection>
       </div>
-  
-  )
-})
+    )
+  },
+)
 
 PatchParameterViewer.displayName = 'PatchParameterViewer'
 

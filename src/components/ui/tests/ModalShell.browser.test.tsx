@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import ModalShell from '@/components/ModalShell'
+import ModalShell from '@/components/ui/ModalShell'
 
 describe('ModalShell', () => {
   it('renders children inside the modal', () => {

@@ -7,7 +7,7 @@ import { WebMidi } from 'webmidi'
 import { useMidiChannel } from '@/context/MidiChannelContext'
 import { useMidiPort } from '@/context/MidiPortContext'
 import { useSearchFilter } from '@/context/SearchFilterContext'
-import Button from '@/components/Button'
+import Button from '@/components/ui/Button'
 import { getPresetQueryKey } from '@/lib/presets/presetQueryKey'
 
 type PerformanceModeProps = {
@@ -58,7 +58,9 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
     return playlist ? playlist.entries.map((e) => e.presetId) : null
   }, [activePlaylistId])
 
-  const activePlaylist = activePlaylistId ? getPlaylistById(activePlaylistId) : null
+  const activePlaylist = activePlaylistId
+    ? getPlaylistById(activePlaylistId)
+    : null
 
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -105,7 +107,15 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 
   useEffect(() => {
     setCurrentBank(0)
-  }, [searchTerm, selectedTags, filterMode, sorting, favoritesOnly, duplicatesOnly, activePlaylistId])
+  }, [
+    searchTerm,
+    selectedTags,
+    filterMode,
+    sorting,
+    favoritesOnly,
+    duplicatesOnly,
+    activePlaylistId,
+  ])
 
   useEffect(() => {
     const totalBanks = Math.max(1, Math.ceil(presets.length / 8))
@@ -153,7 +163,9 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 
   const sendControlChange = async (controller: number, value: number) => {
     if (!selectedMidiPort) {
-      setControlMessage('Select a MIDI port before sending performance controls.')
+      setControlMessage(
+        'Select a MIDI port before sending performance controls.',
+      )
       return
     }
 
@@ -167,7 +179,9 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
       return
     }
 
-    output.sendControlChange(controller, value, { channels: selectedMidiChannel })
+    output.sendControlChange(controller, value, {
+      channels: selectedMidiChannel,
+    })
   }
 
   const handleToggleVibrato = async () => {
@@ -294,7 +308,9 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 max={127}
                 value={portamentoTime}
                 className="range range-primary range-xs"
-                onChange={(e) => handlePortamentoTimeChange(Number(e.target.value))}
+                onChange={(e) =>
+                  handlePortamentoTimeChange(Number(e.target.value))
+                }
               />
             </label>
             {controlMessage && (
@@ -378,10 +394,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                   {num + 1}
                 </button>
               ))}
-              <button
-                onClick={handleClearNumPad}
-                className="btn btn-secondary"
-              >
+              <button onClick={handleClearNumPad} className="btn btn-secondary">
                 <FaX size={24} />
               </button>
               <button
@@ -398,10 +411,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
                 Select
               </button>
             </div>
-            <button
-              onClick={handleCloseNumPad}
-              className="mt-4 btn"
-            >
+            <button onClick={handleCloseNumPad} className="mt-4 btn">
               Close
             </button>
           </div>

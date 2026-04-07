@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import InlineNotice from '@/components/InlineNotice'
+import InlineNotice from '@/components/feedback/InlineNotice'
 import SynthBackupsSidebar from '@/features/synthBackups/components/SynthBackupsSidebar'
 import SynthBackupDetailsHeader from '@/features/synthBackups/components/SynthBackupDetailsHeader'
 import SynthBackupEntriesTable from '@/features/synthBackups/components/SynthBackupEntriesTable'

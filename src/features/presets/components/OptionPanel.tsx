@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { useMidiChannel } from '@/context/MidiChannelContext'
 import { useMidiPort } from '@/context/MidiPortContext'
 import { saveToLocalStorage } from '@/utils/utils'
-import Button from '@/components/Button'
-import SelectInput from '@/components/SelectInput'
+import Button from '@/components/ui/Button'
+import SelectInput from '@/components/forms/SelectInput'
 import { Preset } from '@/lib/presets/presetManager'
 
 interface OptionPanelProps {

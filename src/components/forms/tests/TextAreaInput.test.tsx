@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import TextAreaInput from '@/components/TextAreaInput'
+import TextAreaInput from '@/components/forms/TextAreaInput'
 import { renderWithProviders } from '@/test/renderWithProviders'
 
 describe('TextAreaInput', () => {
@@ -13,7 +13,12 @@ describe('TextAreaInput', () => {
 
   it('applies size and custom classes', () => {
     renderWithProviders(
-      <TextAreaInput value="Long tail" readOnly size="sm" className="min-h-20" />,
+      <TextAreaInput
+        value="Long tail"
+        readOnly
+        size="sm"
+        className="min-h-20"
+      />,
     )
 
     const textarea = screen.getByDisplayValue('Long tail')
