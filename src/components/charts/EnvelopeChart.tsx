@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: array keys used in stable maps */
 import type React from "react";
 import { memo } from "react";
 import type { EnvelopeStep } from "@/lib/midi/czSysexDecoder";
@@ -98,7 +99,9 @@ const EnvelopeChart: React.FC<EnvelopeChartProps> = memo(
 					preserveAspectRatio="none"
 					className="rounded overflow-hidden"
 					style={{ background: "rgba(0,0,0,0.25)" }}
+					aria-label={label}
 				>
+					<title>{label}</title>
 					{/* Grid lines */}
 					{[0, 33, 66, 99].map((level) => (
 						<line

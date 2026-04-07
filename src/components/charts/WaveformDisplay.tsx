@@ -1,3 +1,4 @@
+/** biome-ignore lint/a11y/noSvgWithoutTitle: Decorative icon */
 import type React from "react";
 import { memo } from "react";
 import {
@@ -21,7 +22,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 	const sw = 1.5;
 
 	const shapes: Record<WaveformId, React.ReactNode> = {
-		1: ( // Sawtooth
+		// Sawtooth
+		1: (
 			<polyline
 				points={`4,${s - 4} 4,4 ${s - 4},${s - 4} ${s - 4},4`}
 				fill="none"
@@ -30,7 +32,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 				strokeLinejoin="round"
 			/>
 		),
-		2: ( // Square
+		// Square
+		2: (
 			<polyline
 				points={`4,${s - 4} 4,4 ${mid},4 ${mid},${s - 4} ${s - 4},${s - 4} ${s - 4},4`}
 				fill="none"
@@ -39,7 +42,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 				strokeLinejoin="round"
 			/>
 		),
-		3: ( // Pulse (narrow square)
+		// Pulse (narrow square)
+		3: (
 			<polyline
 				points={`4,${s - 4} 4,4 ${mid - 4},4 ${mid - 4},${s - 4} ${s - 4},${s - 4} ${s - 4},4`}
 				fill="none"
@@ -48,7 +52,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 				strokeLinejoin="round"
 			/>
 		),
-		4: ( // Double Sine – two bumps
+		// Double Sine – two bumps
+		4: (
 			<path
 				d={`M 4,${mid} Q ${s / 4},4 ${mid},${mid} Q ${(3 * s) / 4},${s - 4} ${s - 4},${mid}`}
 				fill="none"
@@ -56,7 +61,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 				strokeWidth={sw}
 			/>
 		),
-		5: ( // Saw-Pulse
+		// Saw-Pulse
+		5: (
 			<polyline
 				points={`4,${s - 4} 4,4 ${mid - 4},${s - 4} ${mid - 4},4 ${s - 4},${s - 4}`}
 				fill="none"
@@ -65,7 +71,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 				strokeLinejoin="round"
 			/>
 		),
-		6: ( // Resonance 1 – sine with ripple
+		// Resonance 1 – sine with ripple
+		6: (
 			<path
 				d={`M 4,${mid} Q ${s / 5},4 ${mid},${mid} Q ${(4 * s) / 5},${s - 4} ${s - 4},${mid}`}
 				fill="none"
@@ -73,7 +80,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 				strokeWidth={sw}
 			/>
 		),
-		7: ( // Resonance 2
+		// Resonance 2
+		7: (
 			<path
 				d={`M 4,${mid} C ${s / 4},4 ${(3 * s) / 4},4 ${s - 4},${mid} C ${(3 * s) / 4},${s - 6} ${s / 4},${s - 6} 4,${mid}`}
 				fill="none"
@@ -81,7 +89,8 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 				strokeWidth={sw}
 			/>
 		),
-		8: ( // Resonance 3 – tighter
+		// Resonance 3 – tighter
+		8: (
 			<path
 				d={`M 4,${mid} C ${s / 3},2 ${(2 * s) / 3},2 ${s - 4},${mid} C ${(2 * s) / 3},${s - 2} ${s / 3},${s - 2} 4,${mid}`}
 				fill="none"

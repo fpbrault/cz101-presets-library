@@ -108,15 +108,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 
 	useEffect(() => {
 		setCurrentBank(0);
-	}, [
-		searchTerm,
-		selectedTags,
-		filterMode,
-		sorting,
-		favoritesOnly,
-		duplicatesOnly,
-		activePlaylistId,
-	]);
+	}, []);
 
 	useEffect(() => {
 		const totalBanks = Math.max(1, Math.ceil(presets.length / 8));
@@ -388,6 +380,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						<div className="grid grid-cols-3 gap-2">
 							{[...Array(9).keys()].map((num) => (
 								<button
+									type="button"
 									key={num + 1}
 									onClick={() => handleNumPadClick((num + 1).toString())}
 									className="text-3xl btn btn-primary"
@@ -396,17 +389,23 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									{num + 1}
 								</button>
 							))}
-							<button onClick={handleClearNumPad} className="btn btn-secondary">
+							<button
+								type="button"
+								onClick={handleClearNumPad}
+								className="btn btn-secondary"
+							>
 								<FaX size={24} />
 							</button>
 							<button
-								disabled={parseInt(bankInput + "0", 10) > totalBanks}
+								type="button"
+								disabled={parseInt(`${bankInput}0`, 10) > totalBanks}
 								onClick={() => handleNumPadClick("0")}
 								className="text-3xl btn btn-primary"
 							>
 								0
 							</button>
 							<button
+								type="button"
 								onClick={handleSelectBank}
 								className="col-span-1 text-xl btn btn-primary"
 							>

@@ -49,58 +49,58 @@ const FilterPanel: React.FC = () => {
 	};
 
 	const handleClearFilters = () => {
+		// biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
 		selectedTags.forEach((tag) => handleTagClick(tag));
 	};
 
 	return (
-		<>
-			<div className="flex flex-col h-full gap-2 overflow-auto">
-				<h3>Filters</h3>
-				<Button onClick={handleClearFilters} variant="error">
-					Clear Filters <FaTrash size={12} />
-				</Button>
-				<Button onClick={handleToggleFilterMode} variant="info">
-					{filterMode === "exclusive" ? (
-						<>
-							Match Any
-							<FaRegDotCircle size={16} />
-						</>
-					) : (
-						<>
-							Match All
-							<FaCheckCircle size={16} />
-						</>
-					)}
-				</Button>
-				<div className="flex flex-wrap content-start flex-grow gap-1 overflow-scroll ">
-					{Object.entries(
-						presets
-							.flatMap((preset) => preset.tags.map((tag) => tag.toLowerCase()))
-							.reduce(
-								(acc, tag) => {
-									if (acc[tag]) {
-										acc[tag]++;
-									} else {
-										acc[tag] = 1;
-									}
-									return acc;
-								},
-								{} as Record<string, number>,
-							),
-					).map(([tag, count]) => (
-						<div
-							key={tag}
-							className={`badge badge-lg text-lg p-3 font-bold capitalize badge-neutral ${
-								selectedTags.includes(tag) ? "badge-primary" : ""
-							}`}
-							onClick={() => handleTagClick(tag)}
-						>
-							{tag} ({count})
-						</div>
-					))}
-				</div>
+		<div className="flex flex-col h-full gap-2 overflow-auto">
+			<h3>Filters</h3>
+			<Button onClick={handleClearFilters} variant="error">
+				Clear Filters <FaTrash size={12} />
+			</Button>
+			<Button onClick={handleToggleFilterMode} variant="info">
+				{filterMode === "exclusive" ? (
+					<>
+						Match Any
+						<FaRegDotCircle size={16} />
+					</>
+				) : (
+					<>
+						Match All
+						<FaCheckCircle size={16} />
+					</>
+				)}
+			</Button>
+			<div className="flex flex-wrap content-start flex-grow gap-1 overflow-scroll ">
+				{Object.entries(
+					presets
+						.flatMap((preset) => preset.tags.map((tag) => tag.toLowerCase()))
+						.reduce(
+							(acc, tag) => {
+								if (acc[tag]) {
+									acc[tag]++;
+								} else {
+									acc[tag] = 1;
+								}
+								return acc;
+							},
+							{} as Record<string, number>,
+						),
+				).map(([tag, count]) => (
+					<button
+						key={tag}
+						className={`badge badge-lg text-lg p-3 font-bold capitalize badge-neutral ${
+							selectedTags.includes(tag) ? "badge-primary" : ""
+						}`}
+						onClick={() => handleTagClick(tag)}
+						type="button"
+					>
+						{tag} ({count})
+					</button>
+				))}
 			</div>
-		</>
+		</div>
 	);
 };
 

@@ -182,7 +182,6 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 							placeholder="Search by name or author…"
 							value={addPresetSearch}
 							onChange={(e) => setAddPresetSearch(e.target.value)}
-							autoFocus
 						/>
 						<div className="overflow-auto flex-grow">
 							<table className="table table-xs table-zebra w-full">

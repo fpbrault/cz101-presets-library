@@ -487,7 +487,7 @@ const PresetList: React.FC<PresetListProps> = ({
 				},
 			);
 		},
-		[queryKey],
+		[queryKey, queryClient.setQueryData],
 	);
 
 	const handleSetFavorite = useCallback(
@@ -500,14 +500,14 @@ const PresetList: React.FC<PresetListProps> = ({
 					...preset,
 					favorite: newFavorite,
 				});
-			} catch (error) {
+			} catch (_error) {
 				updateQueryData(preset, { favorite: preset.favorite });
 			}
 		},
 		[updateQueryData],
 	);
 
-	const handleSetRating = useCallback(
+	const _handleSetRating = useCallback(
 		async (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => {
 			updateQueryData(preset, { rating });
 
@@ -516,7 +516,7 @@ const PresetList: React.FC<PresetListProps> = ({
 					...preset,
 					rating,
 				});
-			} catch (error) {
+			} catch (_error) {
 				updateQueryData(preset, { rating: preset.rating });
 			}
 		},
@@ -637,7 +637,6 @@ const PresetList: React.FC<PresetListProps> = ({
 		],
 		[
 			handleSetFavorite,
-			handleSetRating,
 			randomOrder,
 			setRandomOrder,
 			playlists,
@@ -1077,13 +1076,11 @@ const PresetList: React.FC<PresetListProps> = ({
 											}`}
 										>
 											{column.column.id === "favorite" ? (
-												<>
-													{favoriteSortEnabled ? (
-														<FaHeart size={20} className="text-primary" />
-													) : (
-														<FaRegHeart size={20} className="opacity-70" />
-													)}
-												</>
+												favoriteSortEnabled ? (
+													<FaHeart size={20} className="text-primary" />
+												) : (
+													<FaRegHeart size={20} className="opacity-70" />
+												)
 											) : column.column.id === "randomOrder" ? (
 												flexRender(
 													column.column.columnDef.header,

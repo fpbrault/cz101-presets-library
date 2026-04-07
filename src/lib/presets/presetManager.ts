@@ -814,7 +814,7 @@ export async function savePreset(
 	);
 
 	const preset = (
-		await createPresetData("preset_" + presetNumber + ".syx", sysexData)
+		await createPresetData(`preset_${presetNumber}.syx`, sysexData)
 	)[0];
 
 	if (!preset) {
@@ -927,7 +927,7 @@ async function parsePresetNames(): Promise<{
 }> {
 	try {
 		return patches;
-	} catch (error) {
+	} catch (_error) {
 		return {}; // Return empty object if file not found or parsing fails
 	}
 }
@@ -1005,8 +1005,7 @@ export async function createPresetData(
 		if (presetData[0] === 0xf0 && presetData[presetData.length - 1] === 0xf7) {
 			const presetIndex = presets.length;
 			const presetName =
-				(presetNames[baseFilename] &&
-					presetNames[baseFilename][String(presetIndex + 1)]) ||
+				presetNames[baseFilename]?.[String(presetIndex + 1)] ||
 				`${baseFilename}_${presetIndex + 1}`;
 
 			const tags = determineTags(presetName);

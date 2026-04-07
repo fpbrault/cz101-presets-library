@@ -16,7 +16,9 @@ export default function ModalShell({
 			<div className={`modal-box ${panelClassName}`}>{children}</div>
 			{onClose && (
 				<form method="dialog" className="modal-backdrop">
-					<button onClick={onClose}>close</button>
+					<button type="button" onClick={onClose}>
+						close
+					</button>
 				</form>
 			)}
 		</dialog>

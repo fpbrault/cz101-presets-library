@@ -42,7 +42,7 @@ const useDragDrop = () => {
 				const files = e.target.files;
 				if (files) {
 					for (const file of files) {
-						if (file && file.name.toLowerCase().endsWith(".syx")) {
+						if (file?.name.toLowerCase().endsWith(".syx")) {
 							const sysexData = new Uint8Array(await file.arrayBuffer());
 							const presets = await createPresetData(file.name, sysexData);
 							for (const preset of presets) {
@@ -77,7 +77,7 @@ const useDragDrop = () => {
 			const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
 				e.preventDefault();
 				for (const file of e.dataTransfer.files) {
-					if (file && file.name.toLowerCase().endsWith(".syx")) {
+					if (file?.name.toLowerCase().endsWith(".syx")) {
 						const sysexData = new Uint8Array(await file.arrayBuffer());
 						const presets = await createPresetData(file.name, sysexData);
 
@@ -100,7 +100,7 @@ const useDragDrop = () => {
 				console.log(files);
 				if (files) {
 					for (const file of files) {
-						if (file && file.name.toLowerCase().endsWith(".syx")) {
+						if (file?.name.toLowerCase().endsWith(".syx")) {
 							console.log(file);
 							const sysexData = new Uint8Array(await file.arrayBuffer());
 							const presets = await createPresetData(file.name, sysexData);

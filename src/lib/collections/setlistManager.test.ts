@@ -116,7 +116,7 @@ describe("setlistManager", () => {
 			});
 			const found = getSetlistById(created.id);
 			expect(found).toBeDefined();
-			expect(found!.name).toBe("Find Me");
+			expect(found?.name).toBe("Find Me");
 		});
 
 		it("returns undefined for a non-existent id", () => {

@@ -65,7 +65,6 @@ export default function SetlistsSidebar({
 								<input
 									className="input input-xs flex-grow"
 									value={editingName}
-									autoFocus
 									onChange={(e) => setEditingName(e.target.value)}
 									onKeyDown={(e) => {
 										if (e.key === "Enter") commitEdit(playlist.id);

@@ -73,7 +73,7 @@ describe("buildRemotePresetSyncAdapterFromSettings", () => {
 		const adapter = buildRemotePresetSyncAdapterFromSettings();
 
 		expect(adapter.isAvailable).toBeTypeOf("function");
-		await expect(adapter.isAvailable!()).resolves.toBe(false);
+		await expect(adapter.isAvailable?.()).resolves.toBe(false);
 	});
 
 	it("returns enabled adapter when sync is enabled", async () => {
@@ -81,7 +81,7 @@ describe("buildRemotePresetSyncAdapterFromSettings", () => {
 		const adapter = buildRemotePresetSyncAdapterFromSettings();
 
 		expect(adapter.isAvailable).toBeTypeOf("function");
-		await expect(adapter.isAvailable!()).resolves.toBe(true);
+		await expect(adapter.isAvailable?.()).resolves.toBe(true);
 	});
 
 	it("push encrypts and upserts data correctly", async () => {

@@ -1,10 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import FilterPanel from "@/components/presets/FilterPanel";
-import {
-	SearchFilterProvider,
-	useSearchFilter,
-} from "@/context/SearchFilterContext";
+import { useSearchFilter } from "@/context/SearchFilterContext";
 import { fetchPresetData } from "@/lib/presets/presetManager";
 import { renderWithProviders } from "@/test/renderWithProviders";
 

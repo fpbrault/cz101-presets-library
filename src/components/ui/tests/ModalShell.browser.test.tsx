@@ -21,7 +21,7 @@ describe("ModalShell", () => {
 		);
 		const dialog = container.querySelector("dialog");
 		expect(dialog).toBeTruthy();
-		expect(dialog!.open).toBe(true);
+		expect(dialog?.open).toBe(true);
 	});
 
 	it("applies modal-open class to dialog", () => {
@@ -31,7 +31,7 @@ describe("ModalShell", () => {
 			</ModalShell>,
 		);
 		const dialog = container.querySelector("dialog");
-		expect(dialog!.className).toContain("modal-open");
+		expect(dialog?.className).toContain("modal-open");
 	});
 
 	it("applies custom panelClassName to modal-box", () => {
@@ -41,7 +41,7 @@ describe("ModalShell", () => {
 			</ModalShell>,
 		);
 		const box = container.querySelector(".modal-box");
-		expect(box!.className).toContain("max-w-4xl");
+		expect(box?.className).toContain("max-w-4xl");
 	});
 
 	it("does not render backdrop when onClose is not provided", () => {

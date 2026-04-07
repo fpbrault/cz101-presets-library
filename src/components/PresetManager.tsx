@@ -66,6 +66,7 @@ export default function PresetManager() {
 				<>
 					<div className="absolute translate-x-1/2 bottom-4 right-1/2">
 						<button
+							type="button"
 							className="text-xl shadow opacity-50 btn-md btn btn-neutral hover:opacity-100"
 							onClick={() => setPerformanceMode(false)}
 						>
@@ -198,6 +199,7 @@ export default function PresetManager() {
 													Setlists
 												</div>
 												<button
+													type="button"
 													className={`w-full text-left px-2 py-1 rounded transition-colors ${
 														!activePlaylistId
 															? "bg-accent text-accent-content font-semibold"
@@ -209,6 +211,7 @@ export default function PresetManager() {
 												</button>
 												{setlistMode.playlists.map((playlist) => (
 													<button
+														type="button"
 														key={playlist.id}
 														className={`w-full text-left px-2 py-1 rounded transition-colors truncate ${
 															activePlaylistId === playlist.id
@@ -362,7 +365,9 @@ export default function PresetManager() {
 								</div>
 							</div>
 							<form method="dialog" className="modal-backdrop">
-								<button onClick={() => setShowDeleteModal(false)}>close</button>
+								<button type="button" onClick={() => setShowDeleteModal(false)}>
+									close
+								</button>
 							</form>
 						</dialog>
 					)}

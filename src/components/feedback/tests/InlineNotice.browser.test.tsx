@@ -48,12 +48,12 @@ describe("InlineNotice", () => {
 
 	it("applies sm size class", () => {
 		const { container } = render(<InlineNotice message="Small" size="sm" />);
-		expect(container.querySelector(".alert")!.className).toContain("text-xs");
+		expect(container.querySelector(".alert")?.className).toContain("text-xs");
 	});
 
 	it("applies md size class", () => {
 		const { container } = render(<InlineNotice message="Medium" size="md" />);
-		expect(container.querySelector(".alert")!.className).toContain("text-sm");
+		expect(container.querySelector(".alert")?.className).toContain("text-sm");
 	});
 
 	it("supports additional className prop", () => {

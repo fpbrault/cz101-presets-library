@@ -5,11 +5,11 @@ export function buf2hex(buffer: Iterable<number>) {
 		.toUpperCase();
 }
 
-export const saveToLocalStorage = (key: string, value: any) => {
+export const saveToLocalStorage = <T>(key: string, value: T) => {
 	localStorage.setItem(key, JSON.stringify(value));
 };
 
-export const loadFromLocalStorage = (key: string, defaultValue: any) => {
+export const loadFromLocalStorage = <T>(key: string, defaultValue: T): T => {
 	const storedValue = localStorage.getItem(key);
 	return storedValue ? JSON.parse(storedValue) : defaultValue;
 };

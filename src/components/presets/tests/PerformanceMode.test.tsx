@@ -28,8 +28,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 1",
 			tags: ["tag1", "tag2"],
 			number: 1,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p1.syx",
 			sysexData: "",
 		},
@@ -38,8 +38,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 2",
 			tags: ["tag2", "tag3"],
 			number: 2,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p2.syx",
 			sysexData: "",
 		},
@@ -48,8 +48,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 3",
 			tags: ["tag1"],
 			number: 3,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p3.syx",
 			sysexData: "",
 		},
@@ -58,8 +58,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 4",
 			tags: ["tag3"],
 			number: 4,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p4.syx",
 			sysexData: "",
 		},
@@ -68,8 +68,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 5",
 			tags: ["tag1", "tag3"],
 			number: 5,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p5.syx",
 			sysexData: "",
 		},
@@ -78,8 +78,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 6",
 			tags: ["tag2"],
 			number: 6,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p6.syx",
 			sysexData: "",
 		},
@@ -88,8 +88,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 7",
 			tags: ["tag1", "tag2", "tag3"],
 			number: 7,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p7.syx",
 			sysexData: "",
 		},
@@ -98,8 +98,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 8",
 			tags: ["tag2"],
 			number: 8,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p8.syx",
 			sysexData: "",
 		},
@@ -108,8 +108,8 @@ describe("PerformanceMode", () => {
 			name: "Preset 9",
 			tags: ["tag1"],
 			number: 9,
-			createdDate: new Date(),
-			modifiedDate: new Date(),
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
 			filename: "p9.syx",
 			sysexData: "",
 		},
@@ -159,7 +159,7 @@ describe("PerformanceMode", () => {
 
 	it("toggles fullscreen", async () => {
 		// Mock requestFullscreen and exitFullscreen
-		const requestFullscreen = vi.fn();
+		const _requestFullscreen = vi.fn();
 		const exitFullscreen = vi.fn();
 
 		// Mocking the fullscreen element property correctly
@@ -193,22 +193,103 @@ vi.mock("webmidi", () => ({
 describe("PerformanceMode", () => {
 	const mockHandleSelectPreset = vi.fn();
 	const mockPresets = [
-		{ id: "1", name: "Preset 1", tags: ["tag1", "tag2"], number: 1 },
-		{ id: "2", name: "Preset 2", tags: ["tag2", "tag3"], number: 2 },
-		{ id: "3", name: "Preset 3", tags: ["tag1"], number: 3 },
-		{ id: "4", name: "Preset 4", tags: ["tag3"], number: 4 },
-		{ id: "5", name: "Preset 5", tags: ["tag1", "tag3"], number: 5 },
-		{ id: "6", name: "Preset 6", tags: ["tag2"], number: 6 },
-		{ id: "7", name: "Preset 7", tags: ["tag1", "tag2", "tag3"], number: 7 },
-		{ id: "8", name: "Preset 8", tags: ["tag2"], number: 8 },
-		{ id: "9", name: "Preset 9", tags: ["tag1"], number: 9 },
+		{
+			id: "1",
+			name: "Preset 1",
+			tags: ["tag1", "tag2"],
+			number: 1,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p1.syx",
+			sysexData: "",
+		},
+		{
+			id: "2",
+			name: "Preset 2",
+			tags: ["tag2", "tag3"],
+			number: 2,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p2.syx",
+			sysexData: "",
+		},
+		{
+			id: "3",
+			name: "Preset 3",
+			tags: ["tag1"],
+			number: 3,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p3.syx",
+			sysexData: "",
+		},
+		{
+			id: "4",
+			name: "Preset 4",
+			tags: ["tag3"],
+			number: 4,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p4.syx",
+			sysexData: "",
+		},
+		{
+			id: "5",
+			name: "Preset 5",
+			tags: ["tag1", "tag3"],
+			number: 5,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p5.syx",
+			sysexData: "",
+		},
+		{
+			id: "6",
+			name: "Preset 6",
+			tags: ["tag2"],
+			number: 6,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p6.syx",
+			sysexData: "",
+		},
+		{
+			id: "7",
+			name: "Preset 7",
+			tags: ["tag1", "tag2", "tag3"],
+			number: 7,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p7.syx",
+			sysexData: "",
+		},
+		{
+			id: "8",
+			name: "Preset 8",
+			tags: ["tag2"],
+			number: 8,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p8.syx",
+			sysexData: "",
+		},
+		{
+			id: "9",
+			name: "Preset 9",
+			tags: ["tag1"],
+			number: 9,
+			createdDate: new Date().toISOString(),
+			modifiedDate: new Date().toISOString(),
+			filename: "p9.syx",
+			sysexData: "",
+		},
 	];
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.mocked(fetchPresetData).mockResolvedValue({
 			presets: mockPresets,
-		} as any);
+		});
 	});
 
 	it("renders preset buttons", async () => {
@@ -261,11 +342,11 @@ describe("PerformanceMode", () => {
 
 	it("toggles fullscreen", async () => {
 		// Mock requestFullscreen and exitFullscreen
-		const requestFullscreen = vi.fn();
-		const exitFullscreen = vi.fn();
+		const _requestFullscreen = vi.fn();
+		const exitFullscreen = vi.fn().mockResolvedValue(undefined);
 		vi.spyOn(document, "fullscreenElement", "get").mockReturnValue(null);
 		vi.spyOn(document, "exitFullscreen").mockImplementation(
-			exitFullscreen as any,
+			exitFullscreen as () => Promise<void>,
 		);
 
 		// We need to mock the element's requestFullscreen
