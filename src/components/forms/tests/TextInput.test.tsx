@@ -20,4 +20,11 @@ describe('TextInput', () => {
     expect(input.className).toContain('input-sm')
     expect(input.className).toContain('w-full')
   })
+
+  it('applies large size class', () => {
+    renderWithProviders(<TextInput value="Test" readOnly inputSize="lg" />)
+
+    const input = screen.getByDisplayValue('Test')
+    expect(input.className).toContain('input-lg')
+  })
 })

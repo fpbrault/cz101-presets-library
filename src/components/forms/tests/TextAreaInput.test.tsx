@@ -25,4 +25,11 @@ describe('TextAreaInput', () => {
     expect(textarea.className).toContain('textarea-sm')
     expect(textarea.className).toContain('min-h-20')
   })
+
+  it('applies large size class', () => {
+    renderWithProviders(<TextAreaInput value="Test" readOnly size="lg" />)
+
+    const textarea = screen.getByDisplayValue('Test')
+    expect(textarea.className).toContain('textarea-lg')
+  })
 })

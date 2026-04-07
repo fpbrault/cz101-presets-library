@@ -33,4 +33,26 @@ describe('SelectInput', () => {
     expect(select.className).toContain('select-sm')
     expect(select.className).toContain('max-w-xs')
   })
+
+  it('applies large size class', () => {
+    renderWithProviders(
+      <SelectInput value="a" onChange={() => undefined} selectSize="lg">
+        <option value="a">A</option>
+      </SelectInput>,
+    )
+
+    const select = screen.getByRole('combobox')
+    expect(select.className).toContain('select-lg')
+  })
+
+  it('applies medium size class by default', () => {
+    renderWithProviders(
+      <SelectInput value="a" onChange={() => undefined}>
+        <option value="a">A</option>
+      </SelectInput>,
+    )
+
+    const select = screen.getByRole('combobox')
+    expect(select.className).toContain('select-md')
+  })
 })
