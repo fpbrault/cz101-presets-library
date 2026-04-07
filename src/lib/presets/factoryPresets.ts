@@ -23,6 +23,19 @@ export function isFactoryPresetIdentity(
 	return FACTORY_PRESET_IDS.has(String(preset.id));
 }
 
-export function getFactoryPresetJson(): any[] {
-	return factoryPresetsData as any[];
+interface RawFactoryPreset {
+	id?: string | number;
+	name?: string;
+	createdDate?: string;
+	modifiedDate?: string;
+	filename?: string;
+	sysexData?: number[];
+	tags?: unknown[];
+	description?: string;
+	favorite?: boolean;
+	rating?: number;
+}
+
+export function getFactoryPresetJson(): RawFactoryPreset[] {
+	return factoryPresetsData as RawFactoryPreset[];
 }

@@ -542,7 +542,7 @@ export async function writeSysexDataToTemporaryBuffer(
 	await delay(100);
 }
 
-if (typeof window !== "undefined" && (window as any).__TAURI__) {
+if (typeof window !== "undefined" && "__TAURI__" in window) {
 	console.log("Running in Tauri");
 	// Running in Tauri
 	resetPresetDatabase();
@@ -583,7 +583,7 @@ export async function backupPresets(portName: string): Promise<void> {
 		output.sendSysex([], command);
 
 		const response = await new Promise<Uint8Array | null>((resolve) => {
-			const listener = (e: any) => {
+			const listener = (e: { data: Uint8Array }) => {
 				input.removeListener("sysex", listener);
 				resolve(e.data);
 			};
@@ -712,10 +712,12 @@ export async function restoreToBuffer(
 	}
 }
 
+type SortingItem = { id: string; desc: boolean };
+
 export async function fetchPresetData(
 	start: number,
 	size: number,
-	sorting: any,
+	sorting: SortingItem[],
 	searchTerm: string,
 	selectedTags: string[],
 	filterMode: "inclusive" | "exclusive",
@@ -826,7 +828,7 @@ export async function savePreset(
 	return newPreset;
 }
 
-export async function loadSettings(): Promise<Record<string, any>> {
+export async function loadSettings(): Promise<Record<string, unknown>> {
 	const fileExists = await exists(CONFIG_FILE, {
 		baseDir: BaseDirectory.Document,
 	});
@@ -840,7 +842,7 @@ export async function loadSettings(): Promise<Record<string, any>> {
 }
 
 export async function saveSettings(
-	settings: Record<string, any>,
+	settings: Record<string, unknown>,
 ): Promise<void> {
 	await writeTextFile(CONFIG_FILE, JSON.stringify(settings, null, 2), {
 		baseDir: BaseDirectory.Document,
@@ -887,6 +889,7 @@ export type Preset = {
 	author?: string;
 	description?: string;
 	isFactoryPreset?: boolean;
+	// biome-ignore lint/suspicious/noExplicitAny: Preset supports arbitrary additional fields for column sorting
 	[key: string]: any;
 	favorite?: boolean;
 	rating?: 1 | 2 | 3 | 4 | 5;

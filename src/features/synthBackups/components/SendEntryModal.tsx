@@ -60,11 +60,13 @@ export default function SendEntryModal({
 							})
 						}
 					>
-						{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
-							<option key={`slot-${slot}`} value={slot}>
-								{slot}
-							</option>
-						))}
+						{[...Array(16)]
+							.map((_, i) => i + 1)
+							.map((slot) => (
+								<option key={`slot-${slot}`} value={slot}>
+									{slot}
+								</option>
+							))}
 					</SelectInput>
 				</label>
 			</div>

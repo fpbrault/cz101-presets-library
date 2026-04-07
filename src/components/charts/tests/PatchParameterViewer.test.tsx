@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PatchParameterViewer from "@/components/charts/PatchParameterViewer";
-// Mocking decodeCzPatch to control the patch data
+import type { DecodedPatch } from "@/lib/midi/czSysexDecoder";
 import * as decoder from "@/lib/midi/czSysexDecoder";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
@@ -14,10 +14,10 @@ vi.mock("@/lib/midi/czSysexDecoder", async () => {
 });
 
 describe("PatchParameterViewer", () => {
-	const mockPatch = {
-		lineSelect: "L1" as const,
-		octave: 0 as const,
-		detuneDirection: "+" as const,
+	const mockPatch: DecodedPatch = {
+		lineSelect: "L1",
+		octave: 0,
+		detuneDirection: "+",
 		detuneFine: 10,
 		detuneOctave: 1,
 		detuneNote: 5,
@@ -25,8 +25,8 @@ describe("PatchParameterViewer", () => {
 		vibratoDelay: 20,
 		vibratoRate: 30,
 		vibratoDepth: 40,
-		dco1: { firstWaveform: 1, secondWaveform: 2, modulation: "none" } as any,
-		dco2: { firstWaveform: 1, secondWaveform: null, modulation: "none" } as any,
+		dco1: { firstWaveform: 1, secondWaveform: 2, modulation: "none" },
+		dco2: { firstWaveform: 1, secondWaveform: null, modulation: "none" },
 		dca1KeyFollow: 5,
 		dcw1KeyFollow: 5,
 		dca2KeyFollow: 0,
@@ -46,7 +46,7 @@ describe("PatchParameterViewer", () => {
 	});
 
 	it("renders core parameters correctly", () => {
-		vi.mocked(decoder.decodeCzPatch).mockReturnValue(mockPatch as any);
+		vi.mocked(decoder.decodeCzPatch).mockReturnValue(mockPatch);
 		renderWithProviders(<PatchParameterViewer sysexData={new Uint8Array()} />);
 
 		expect(screen.getByText("L1")).toBeTruthy();
@@ -58,7 +58,7 @@ describe("PatchParameterViewer", () => {
 	});
 
 	it("renders progress bars for vibrato", () => {
-		vi.mocked(decoder.decodeCzPatch).mockReturnValue(mockPatch as any);
+		vi.mocked(decoder.decodeCzPatch).mockReturnValue(mockPatch);
 		renderWithProviders(<PatchParameterViewer sysexData={new Uint8Array()} />);
 
 		// Vibrato values: Delay 20, Rate 30, Depth 40
@@ -69,7 +69,7 @@ describe("PatchParameterViewer", () => {
 	});
 
 	it("renders envelope groups", () => {
-		vi.mocked(decoder.decodeCzPatch).mockReturnValue(mockPatch as any);
+		vi.mocked(decoder.decodeCzPatch).mockReturnValue(mockPatch);
 		renderWithProviders(<PatchParameterViewer sysexData={new Uint8Array()} />);
 
 		expect(screen.getByText(/DCA1/i)).toBeTruthy();

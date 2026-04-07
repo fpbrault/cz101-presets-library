@@ -17,14 +17,29 @@ function serializePresets(presets: Preset[]): SerializedPreset[] {
 	return presets.map((p) => ({
 		...p,
 		sysexData: Array.from(p.sysexData),
-	})) as any;
+	}));
 }
 
 function deserializePresets(rows: SerializedPreset[]): Preset[] {
 	return rows.map((p) => ({
 		...p,
-		sysexData: new Uint8Array(p.sysexData as any),
+		sysexData: new Uint8Array(p.sysexData),
 	})) as unknown as Preset[];
+}
+
+/** Shape of the Neon data API client used for preset synchronization via the Neon Data API. */
+interface NeonDataApiClient {
+	from(table: string): {
+		upsert(
+			data: Record<string, unknown>,
+		): Promise<{ error: { message: string } | null }>;
+		select(columns: string): {
+			single(): Promise<{
+				data: Record<string, unknown> | null;
+				error: { code?: string; message: string } | null;
+			}>;
+		};
+	};
 }
 
 function getNeonDataClient() {
@@ -69,10 +84,12 @@ class NeonDataApiPresetSyncAdapter implements RemotePresetSyncAdapter {
 		const key = await deriveKeyFromSession(sessionToken, salt);
 		const base64Payload = await encryptPresetData(jsonString, key, salt);
 
-		const { error } = await (client as any).from("preset_library").upsert({
-			presets_encrypted: base64Payload,
-			updated_at: new Date().toISOString(),
-		});
+		const { error } = await (client as NeonDataApiClient)
+			.from("preset_library")
+			.upsert({
+				presets_encrypted: base64Payload,
+				updated_at: new Date().toISOString(),
+			});
 
 		if (error) {
 			throw new Error(`Backup failed: ${error.message}`);
@@ -87,7 +104,7 @@ class NeonDataApiPresetSyncAdapter implements RemotePresetSyncAdapter {
 		}
 		const sessionToken = session.userId;
 
-		const { data, error } = await (client as any)
+		const { data, error } = await (client as NeonDataApiClient)
 			.from("preset_library")
 			.select("presets_encrypted")
 			.single();

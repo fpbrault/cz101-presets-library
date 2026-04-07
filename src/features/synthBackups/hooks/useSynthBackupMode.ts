@@ -125,7 +125,7 @@ export function useSynthBackupMode({
 	const handleExportBackup = async (backupId: string) => {
 		const json = exportSynthBackup(backupId);
 
-		if ((window as any).__TAURI__) {
+		if ("__TAURI__" in window) {
 			const filePath = await save({
 				filters: [
 					{

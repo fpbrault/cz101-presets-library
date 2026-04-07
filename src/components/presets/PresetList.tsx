@@ -482,7 +482,7 @@ const PresetList: React.FC<PresetListProps> = ({
 			queryClient.setQueryData(
 				queryKey,
 				(old: {
-					pageParams: any;
+					pageParams: unknown[];
 					pages: { presets: Preset[]; totalCount: number }[];
 				}) => {
 					if (!old?.pages) return old;
@@ -786,7 +786,7 @@ const PresetList: React.FC<PresetListProps> = ({
 	});
 
 	const flatData = React.useMemo(() => {
-		return data?.pages?.flatMap((page: { presets: any }) => page.presets) ?? [];
+		return data?.pages?.flatMap((page) => page.presets) ?? [];
 	}, [data]);
 
 	const availableTags = useMemo<[string, number][]>(() => {

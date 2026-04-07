@@ -8,7 +8,20 @@ export type OnlineAuthSession = {
 
 type OAuthProvider = "google" | "apple";
 
-let neonAuthClientPromise: Promise<any> | null = null;
+interface NeonAuthClient {
+	getSession(): Promise<unknown>;
+	signIn: {
+		social(opts: { provider: OAuthProvider; callbackURL: string }): Promise<{
+			data?: { url?: string };
+			url?: string;
+			error?: { message?: string };
+			message?: string;
+		}>;
+	};
+	signOut(): Promise<void>;
+}
+
+let neonAuthClientPromise: Promise<NeonAuthClient> | null = null;
 
 export function getNeonAuthDiagnostics(): {
 	rawValuePresent: boolean;
@@ -52,7 +65,7 @@ function getNeonAuthUrl(): string {
 	return diagnostics.normalizedUrl;
 }
 
-async function getNeonAuthClient(): Promise<any> {
+async function getNeonAuthClient(): Promise<NeonAuthClient> {
 	if (!neonAuthClientPromise) {
 		const authUrl = getNeonAuthUrl();
 		neonAuthClientPromise = Promise.resolve(createAuthClient(authUrl));
@@ -61,10 +74,22 @@ async function getNeonAuthClient(): Promise<any> {
 	return neonAuthClientPromise;
 }
 
-function parseSessionPayload(payload: any): OnlineAuthSession | null {
-	const data = payload?.data ?? payload;
-	const session = data?.session ?? data;
-	const user = data?.user ?? session?.user;
+type MaybeRecord = Record<string, unknown> | null | undefined;
+
+function parseSessionPayload(payload: unknown): OnlineAuthSession | null {
+	const p = payload as MaybeRecord;
+	const data = (p?.data ?? payload) as
+		| Record<string, unknown>
+		| null
+		| undefined;
+	const session = (data?.session ?? data) as
+		| Record<string, unknown>
+		| null
+		| undefined;
+	const user = (data?.user ?? session?.user) as
+		| Record<string, unknown>
+		| null
+		| undefined;
 	const userId = String(user?.id ?? session?.userId ?? "");
 
 	if (!userId) {
@@ -74,8 +99,9 @@ function parseSessionPayload(payload: any): OnlineAuthSession | null {
 	const displayName = String(
 		user?.name ?? user?.displayName ?? user?.email ?? userId,
 	);
+	const accounts = user?.accounts as Array<{ provider?: string }> | undefined;
 	const provider = String(
-		user?.accounts?.[0]?.provider ?? session?.provider ?? "neon",
+		accounts?.[0]?.provider ?? session?.provider ?? "neon",
 	);
 
 	return {
@@ -88,7 +114,7 @@ function parseSessionPayload(payload: any): OnlineAuthSession | null {
 export async function getNeonOnlineSession(): Promise<OnlineAuthSession | null> {
 	try {
 		const neonAuthClient = await getNeonAuthClient();
-		const payload = await (neonAuthClient as any).getSession();
+		const payload = await neonAuthClient.getSession();
 		return parseSessionPayload(payload);
 	} catch {
 		return null;
@@ -100,7 +126,7 @@ export async function signInWithNeonProvider(
 	callbackURL: string,
 ): Promise<string> {
 	const neonAuthClient = await getNeonAuthClient();
-	const response = await (neonAuthClient as any).signIn.social({
+	const response = await neonAuthClient.signIn.social({
 		provider,
 		callbackURL,
 	});
@@ -119,5 +145,5 @@ export async function signInWithNeonProvider(
 
 export async function signOutNeonSession(): Promise<void> {
 	const neonAuthClient = await getNeonAuthClient();
-	await (neonAuthClient as any).signOut();
+	await neonAuthClient.signOut();
 }

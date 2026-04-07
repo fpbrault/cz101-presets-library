@@ -3,8 +3,10 @@ import type { Preset } from "@/lib/presets/presetManager";
 
 export type FilterMode = "inclusive" | "exclusive";
 
+type SortingItem = { id: string; desc: boolean };
+
 export interface FilterPresetsOptions {
-	sorting: any;
+	sorting: SortingItem[];
 	searchTerm: string;
 	selectedTags: string[];
 	filterMode: FilterMode;

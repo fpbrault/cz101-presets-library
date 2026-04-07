@@ -81,11 +81,13 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 						saveToLocalStorage("selectedMidiChannel", channel);
 					}}
 				>
-					{Array.from({ length: 16 }, (_, i) => i + 1).map((ch) => (
-						<option key={`ch-${ch}`} value={ch}>
-							Channel {ch}
-						</option>
-					))}
+					{[...Array(16)]
+						.map((_, i) => i + 1)
+						.map((ch) => (
+							<option key={`ch-${ch}`} value={ch}>
+								Channel {ch}
+							</option>
+						))}
 				</SelectInput>
 				<Button onClick={handleRetrieveCurrentPreset} variant="accent">
 					Retrieve Current
@@ -127,19 +129,21 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 							</SelectInput>
 						</div>
 						<div className="grid grid-cols-4 gap-2">
-							{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
-								<Button
-									key={`slot-${slot}`}
-									onClick={() => {
-										handleRetrievePresetSlot(slotBank, slot);
-										handleCloseRetrieveModal();
-									}}
-									variant="primary"
-									className="text-2xl font-bold"
-								>
-									{slot}
-								</Button>
-							))}
+							{[...Array(16)]
+								.map((_, i) => i + 1)
+								.map((slot) => (
+									<Button
+										key={`slot-${slot}`}
+										onClick={() => {
+											handleRetrievePresetSlot(slotBank, slot);
+											handleCloseRetrieveModal();
+										}}
+										variant="primary"
+										className="text-2xl font-bold"
+									>
+										{slot}
+									</Button>
+								))}
 						</div>
 						<Button
 							onClick={handleCloseRetrieveModal}
@@ -172,19 +176,21 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 							</SelectInput>
 						</div>
 						<div className="grid grid-cols-4 gap-2">
-							{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
-								<Button
-									key={`slot-${slot}`}
-									onClick={() => {
-										handleWritePresetSlot(slotBank, slot);
-										handleCloseWriteModal();
-									}}
-									variant="primary"
-									className="text-2xl font-bold"
-								>
-									{slot}
-								</Button>
-							))}
+							{[...Array(16)]
+								.map((_, i) => i + 1)
+								.map((slot) => (
+									<Button
+										key={`slot-${slot}`}
+										onClick={() => {
+											handleWritePresetSlot(slotBank, slot);
+											handleCloseWriteModal();
+										}}
+										variant="primary"
+										className="text-2xl font-bold"
+									>
+										{slot}
+									</Button>
+								))}
 						</div>
 						<Button
 							onClick={handleCloseWriteModal}

@@ -119,7 +119,8 @@ describe("PerformanceMode", () => {
 		vi.clearAllMocks();
 		vi.mocked(fetchPresetData).mockResolvedValue({
 			presets: mockPresets,
-		} as any);
+			totalCount: mockPresets.length,
+		});
 
 		// Mock document.fullscreenElement if it doesn't exist
 		if (!Object.getOwnPropertyDescriptor(document, "fullscreenElement")) {
@@ -165,7 +166,7 @@ describe("PerformanceMode", () => {
 		// Mocking the fullscreen element property correctly
 		vi.spyOn(document, "fullscreenElement", "get").mockReturnValue(null);
 		vi.spyOn(document, "exitFullscreen").mockImplementation(
-			exitFullscreen as any,
+			exitFullscreen as () => Promise<void>,
 		);
 
 		// For requestFullscreen, we need to mock it on an element
