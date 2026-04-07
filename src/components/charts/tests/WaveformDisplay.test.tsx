@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import WaveformDisplay from "@/components/charts/WaveformDisplay";
 import type { WaveformConfig } from "@/lib/midi/czSysexDecoder";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("WaveformDisplay", () => {
@@ -16,6 +17,14 @@ describe("WaveformDisplay", () => {
 
 		expect(screen.getByText("DCO1")).toBeTruthy();
 		expect(screen.getByText("No Mod")).toBeTruthy();
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<WaveformDisplay line="DCO1" config={baseConfig} />,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("renders the primary waveform slot", () => {

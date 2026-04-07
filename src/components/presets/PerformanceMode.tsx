@@ -265,6 +265,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									<button
 										type="button"
 										className="btn btn-xs btn-ghost opacity-60 hover:opacity-100 px-1"
+										aria-label="Clear setlist filter"
 										title="Clear setlist filter"
 										onClick={() => setActivePlaylistId(null)}
 									>
@@ -365,6 +366,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						<button
 							type="button"
 							onClick={handleOpenNumPad}
+							aria-label="Open bank selector"
 							className="btn btn-square btn-xl btn-primary"
 						>
 							<FaMagnifyingGlass size={32} />
@@ -387,6 +389,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						<input
 							type="text"
 							value={bankInput}
+							aria-label="Selected bank number"
 							className="mb-2 text-xl form-input input input-primary w-fit"
 							readOnly
 						/>
@@ -405,6 +408,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 							<button
 								type="button"
 								onClick={handleClearNumPad}
+								aria-label="Clear bank selection"
 								className="btn btn-secondary"
 							>
 								<FaX size={24} />

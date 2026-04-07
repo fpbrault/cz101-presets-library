@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import SendEntryModal from "@/features/synthBackups/components/SendEntryModal";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 const selectedBackup = {
@@ -13,6 +14,19 @@ const selectedBackup = {
 };
 
 describe("SendEntryModal (Synth Backup)", () => {
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<SendEntryModal
+				selectedBackup={selectedBackup}
+				sendModalState={{ entryIndex: 2, bank: "internal", slot: 3 }}
+				setSendModalState={vi.fn()}
+				onSendEntryToSlot={vi.fn()}
+			/>,
+		);
+
+		await expectNoAxeViolations(container);
+	});
+
 	it("emits bank/slot changes and submits entry", async () => {
 		const user = userEvent.setup();
 		const onSendEntryToSlot = vi.fn();

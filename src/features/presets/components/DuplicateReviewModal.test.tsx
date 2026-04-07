@@ -4,9 +4,53 @@ import { describe, expect, it, vi } from "vitest";
 import DuplicateReviewModal, {
 	type DuplicateGroup,
 } from "@/features/presets/components/DuplicateReviewModal";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("DuplicateReviewModal", () => {
+	it("has no accessibility violations", async () => {
+		const groups: DuplicateGroup[] = [
+			{
+				fingerprint: "fp-1",
+				presets: [
+					{
+						id: "p1",
+						name: "Bass A",
+						createdDate: "2021-01-01",
+						modifiedDate: "2021-01-01",
+						filename: "a.syx",
+						sysexData: new Uint8Array([1, 2, 3]),
+						tags: ["bass"],
+						author: "Demo",
+						description: "",
+					},
+					{
+						id: "p2",
+						name: "Bass A Copy",
+						createdDate: "2021-01-01",
+						modifiedDate: "2021-01-01",
+						filename: "b.syx",
+						sysexData: new Uint8Array([1, 2, 3]),
+						tags: ["bass"],
+						author: "Demo",
+						description: "",
+					},
+				],
+			},
+		];
+
+		const { container } = renderWithProviders(
+			<DuplicateReviewModal
+				isOpen={true}
+				groups={groups}
+				onClose={vi.fn()}
+				onDeletePresets={vi.fn().mockResolvedValue(undefined)}
+			/>,
+		);
+
+		await expectNoAxeViolations(container);
+	});
+
 	it("selects all except suggested keep and deletes selected", async () => {
 		const user = userEvent.setup();
 		const onDeletePresets = vi.fn().mockResolvedValue(undefined);

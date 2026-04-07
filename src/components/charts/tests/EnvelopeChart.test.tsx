@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import EnvelopeChart from "@/components/charts/EnvelopeChart";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("EnvelopeChart", () => {
@@ -15,6 +16,14 @@ describe("EnvelopeChart", () => {
 			<EnvelopeChart steps={mockSteps} endStep={3} label="Test Envelope" />,
 		);
 		expect(screen.getAllByText("Test Envelope")[0]).toBeTruthy();
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<EnvelopeChart steps={mockSteps} endStep={3} label="Test Envelope" />,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("renders nothing when steps are empty", () => {

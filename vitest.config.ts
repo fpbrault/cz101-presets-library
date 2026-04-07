@@ -34,6 +34,9 @@ export default defineConfig({
 					name: "browser",
 					browser: {
 						enabled: true,
+						locators: {
+							testIdAttribute: "data-testid",
+						},
 						provider: playwright(),
 						instances: [{ browser: "chromium" }],
 					},

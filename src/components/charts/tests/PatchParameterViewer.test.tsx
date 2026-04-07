@@ -4,6 +4,7 @@ import PatchParameterViewer from "@/components/charts/PatchParameterViewer";
 // Mocking decodeCzPatch to control the patch data
 import type { DecodedPatch, WaveformConfig } from "@/lib/midi/czSysexDecoder";
 import * as decoder from "@/lib/midi/czSysexDecoder";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 vi.mock("@/lib/midi/czSysexDecoder", async () => {
@@ -52,6 +53,15 @@ describe("PatchParameterViewer", () => {
 		vi.mocked(decoder.decodeCzPatch).mockReturnValue(null);
 		renderWithProviders(<PatchParameterViewer sysexData={new Uint8Array()} />);
 		expect(screen.getByText(/No valid SysEx data/i)).toBeTruthy();
+	});
+
+	it("has no accessibility violations", async () => {
+		vi.mocked(decoder.decodeCzPatch).mockReturnValue(mockPatch as DecodedPatch);
+		const { container } = renderWithProviders(
+			<PatchParameterViewer sysexData={new Uint8Array()} />,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("renders core parameters correctly", () => {

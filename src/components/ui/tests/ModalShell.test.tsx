@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ModalShell from "@/components/ui/ModalShell";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("ModalShell", () => {
@@ -11,6 +12,16 @@ describe("ModalShell", () => {
 			</ModalShell>,
 		);
 		expect(screen.getByTestId("modal-content")).toBeTruthy();
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<ModalShell>
+				<div>Modal Content</div>
+			</ModalShell>,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("applies custom panelClassName", () => {

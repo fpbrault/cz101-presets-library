@@ -5,7 +5,7 @@ import type { Preset } from "@/lib/presets/presetManager";
 export type FilterMode = "inclusive" | "exclusive";
 
 export interface FilterPresetsOptions {
-	sorting: SortingState | [];
+	sorting: SortingState;
 	searchTerm: string;
 	selectedTags: string[];
 	filterMode: FilterMode;

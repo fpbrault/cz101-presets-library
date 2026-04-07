@@ -40,6 +40,7 @@ export default function SynthBackupsSidebar({
 				</Button>
 				<div className="w-full form-control">
 					<FileInput
+						aria-label="Import synth backup JSON"
 						accept="application/json"
 						inputSize="sm"
 						onChange={(event) => {

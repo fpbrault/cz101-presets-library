@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import FilterPanel from "@/components/presets/FilterPanel";
 import { useSearchFilter } from "@/context/SearchFilterContext";
 import { fetchPresetData } from "@/lib/presets/presetManager";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 // Mock the search filter context
@@ -42,6 +43,17 @@ describe("FilterPanel", () => {
 		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
 		renderWithProviders(<FilterPanel />);
 		expect(screen.getByText("Filters")).toBeTruthy();
+	});
+
+	it("has no accessibility violations", async () => {
+		vi.mocked(fetchPresetData).mockResolvedValue({
+			presets: [{ id: "1", name: "Preset 1", tags: ["tag1"] }],
+		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
+
+		const { container } = renderWithProviders(<FilterPanel />);
+		await screen.findByText(/tag1 \(1\)/i);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("toggles filter mode when the button is clicked", async () => {

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import PerformanceMode from "@/components/presets/PerformanceMode";
 import type { Preset } from "@/lib/presets/presetManager";
 import { fetchPresetData } from "@/lib/presets/presetManager";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 vi.mock("@/lib/presets/presetManager", async () => {
@@ -72,6 +73,18 @@ describe("PerformanceMode", () => {
 		expect(presetButton).toBeTruthy();
 	});
 
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<PerformanceMode
+				currentPreset={mockPresets[0]}
+				handleSelectPreset={mockHandleSelectPreset}
+			/>,
+		);
+
+		await screen.findByText("Preset 1");
+		await expectNoAxeViolations(container);
+	});
+
 	it("calls handleSelectPreset when a preset button is clicked", async () => {
 		renderWithProviders(
 			<PerformanceMode
@@ -104,7 +117,11 @@ describe("PerformanceMode", () => {
 		const exitFullscreen = vi.fn().mockResolvedValue(undefined);
 		vi.spyOn(document, "fullscreenElement", "get").mockReturnValue(null);
 		if (!document.exitFullscreen) {
-			(document as any).exitFullscreen = vi.fn().mockResolvedValue(undefined);
+			Object.defineProperty(document, "exitFullscreen", {
+				value: vi.fn().mockResolvedValue(undefined),
+				configurable: true,
+				writable: true,
+			});
 		} else {
 			vi.spyOn(document, "exitFullscreen").mockImplementation(
 				exitFullscreen as () => Promise<void>,

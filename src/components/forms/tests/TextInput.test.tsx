@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import TextInput from "@/components/forms/TextInput";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("TextInput", () => {
@@ -9,6 +10,14 @@ describe("TextInput", () => {
 
 		const input = screen.getByDisplayValue("CZ");
 		expect(input.className).toContain("input-md");
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<TextInput aria-label="Preset name" value="CZ" readOnly />,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("applies size and custom classes", () => {

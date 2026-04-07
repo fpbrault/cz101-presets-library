@@ -30,8 +30,11 @@ export default function SendEntryModal({
 			<h2 className="mb-4 text-xl">Send Entry To Slot</h2>
 			<div className="flex flex-col gap-3">
 				<div className="form-control">
-					<span className="label-text">Bank</span>
+					<label className="label-text" htmlFor="send-entry-bank">
+						Bank
+					</label>
 					<SelectInput
+						id="send-entry-bank"
 						data-testid="send-entry-bank"
 						value={sendModalState.bank}
 						onChange={(event) =>
@@ -47,8 +50,11 @@ export default function SendEntryModal({
 				</div>
 
 				<div className="form-control">
-					<span className="label-text">Slot</span>
+					<label className="label-text" htmlFor="send-entry-slot">
+						Slot
+					</label>
 					<SelectInput
+						id="send-entry-slot"
 						data-testid="send-entry-slot"
 						value={sendModalState.slot}
 						onChange={(event) =>

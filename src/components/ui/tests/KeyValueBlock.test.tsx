@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import KeyValueBlock from "@/components/ui/KeyValueBlock";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("KeyValueBlock", () => {
@@ -9,6 +10,14 @@ describe("KeyValueBlock", () => {
 
 		expect(screen.getByText("Name")).toBeTruthy();
 		expect(screen.getByText("Test Value")).toBeTruthy();
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<KeyValueBlock label="Name" value="Test Value" />,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("renders complex ReactNode as value", () => {
