@@ -75,6 +75,7 @@ export default function SetlistsSidebar({
 							</div>
 						) : (
 							<button
+								type="button"
 								className="w-full text-left"
 								onClick={() => onSelectPlaylist(playlist.id)}
 							>

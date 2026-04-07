@@ -27,8 +27,8 @@ export default function SynthBackupEntriesTable({
 					</tr>
 				</thead>
 				<tbody>
-					{selectedBackup.entries.map((entry, entryIndex) => (
-						<tr key={`${selectedBackup.id}-${entry.slot}-${entryIndex}`}>
+					{selectedBackup.entries.map((entry) => (
+						<tr key={`${selectedBackup.id}-${entry.slot}`}>
 							<td>{entry.slot}</td>
 							<td>
 								{entry.isExactLibraryMatch ? (

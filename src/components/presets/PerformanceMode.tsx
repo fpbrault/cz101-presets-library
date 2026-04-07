@@ -204,7 +204,11 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 			className="flex flex-col w-full h-full gap-4 p-2"
 		>
 			<div className="flex flex-wrap items-start gap-3">
-				<button onClick={toggleFullscreen} className="btn btn-primary">
+				<button
+					type="button"
+					onClick={toggleFullscreen}
+					className="btn btn-primary"
+				>
 					Toggle Fullscreen
 				</button>
 
@@ -228,7 +232,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									{} as Record<string, number>,
 								),
 						).map(([tag, count]) => (
-							<div
+							<button
+								type="button"
 								key={tag}
 								className={`badge badge-lg font-bold capitalize badge-neutral ${
 									selectedTags.includes(tag) ? "badge-primary" : ""
@@ -236,7 +241,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 								onClick={() => handleTagClick(tag)}
 							>
 								{tag} ({count})
-							</div>
+							</button>
 						))}
 					</div>
 
@@ -255,6 +260,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 										{activePlaylist.name}
 									</span>
 									<button
+										type="button"
 										className="btn btn-xs btn-ghost opacity-60 hover:opacity-100 px-1"
 										title="Clear setlist filter"
 										onClick={() => setActivePlaylistId(null)}
@@ -317,6 +323,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 				<div className="grid flex-grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">
 					{currentPresets.map((preset) => (
 						<button
+							type="button"
 							key={preset.id}
 							onClick={() => handleSelectPreset(preset)}
 							className={
@@ -336,6 +343,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 				</div>
 				<div className="flex flex-col w-full gap-4 max-w-48">
 					<button
+						type="button"
 						onClick={handlePreviousBank}
 						disabled={currentBank === 0}
 						className="flex-grow w-full text-2xl btn btn-lg btn-secondary"
@@ -352,6 +360,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 							</span>
 						</div>
 						<button
+							type="button"
 							onClick={handleOpenNumPad}
 							className="btn btn-square btn-xl btn-primary"
 						>
@@ -359,6 +368,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						</button>
 					</div>
 					<button
+						type="button"
 						onClick={handleNextBank}
 						disabled={(currentBank + 1) * 8 >= presets.length}
 						className="flex-grow text-2xl btn btn-lg btn-secondary"
@@ -412,7 +422,11 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 								Select
 							</button>
 						</div>
-						<button onClick={handleCloseNumPad} className="mt-4 btn">
+						<button
+							type="button"
+							onClick={handleCloseNumPad}
+							className="mt-4 btn"
+						>
 							Close
 						</button>
 					</div>

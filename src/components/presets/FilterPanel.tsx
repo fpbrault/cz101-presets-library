@@ -49,8 +49,9 @@ const FilterPanel: React.FC = () => {
 	};
 
 	const handleClearFilters = () => {
-		// biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
-		selectedTags.forEach((tag) => handleTagClick(tag));
+		for (const tag of selectedTags) {
+			handleTagClick(tag);
+		}
 	};
 
 	return (

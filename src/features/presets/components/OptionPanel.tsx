@@ -81,9 +81,9 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 						saveToLocalStorage("selectedMidiChannel", channel);
 					}}
 				>
-					{Array.from({ length: 16 }, (_, i) => (
-						<option key={i + 1} value={i + 1}>
-							Channel {i + 1}
+					{Array.from({ length: 16 }, (_, i) => i + 1).map((ch) => (
+						<option key={`ch-${ch}`} value={ch}>
+							Channel {ch}
 						</option>
 					))}
 				</SelectInput>
@@ -112,10 +112,11 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 					<div className="p-4 shadow-lg bg-base-100 rounded-xl">
 						<h2 className="mb-4 text-xl">Retrieve Preset Slot</h2>
 						<div className="mb-4">
-							<label className="label">
+							<label className="label" htmlFor="retrieve-slot-bank">
 								<span className="label-text">Bank</span>
 							</label>
 							<SelectInput
+								id="retrieve-slot-bank"
 								value={slotBank}
 								onChange={(e) =>
 									setSlotBank(e.target.value as "internal" | "cartridge")
@@ -126,17 +127,17 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 							</SelectInput>
 						</div>
 						<div className="grid grid-cols-4 gap-2">
-							{Array.from({ length: 16 }, (_, i) => (
+							{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
 								<Button
-									key={i + 1}
+									key={`slot-${slot}`}
 									onClick={() => {
-										handleRetrievePresetSlot(slotBank, i + 1);
+										handleRetrievePresetSlot(slotBank, slot);
 										handleCloseRetrieveModal();
 									}}
 									variant="primary"
 									className="text-2xl font-bold"
 								>
-									{i + 1}
+									{slot}
 								</Button>
 							))}
 						</div>
@@ -156,10 +157,11 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 					<div className="p-4 shadow-lg bg-base-100 rounded-xl">
 						<h2 className="mb-4 text-xl">Write Preset To Slot</h2>
 						<div className="mb-4">
-							<label className="label">
+							<label className="label" htmlFor="write-slot-bank">
 								<span className="label-text">Bank</span>
 							</label>
 							<SelectInput
+								id="write-slot-bank"
 								value={slotBank}
 								onChange={(e) =>
 									setSlotBank(e.target.value as "internal" | "cartridge")
@@ -170,17 +172,17 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 							</SelectInput>
 						</div>
 						<div className="grid grid-cols-4 gap-2">
-							{Array.from({ length: 16 }, (_, i) => (
+							{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
 								<Button
-									key={i + 1}
+									key={`slot-${slot}`}
 									onClick={() => {
-										handleWritePresetSlot(slotBank, i + 1);
+										handleWritePresetSlot(slotBank, slot);
 										handleCloseWriteModal();
 									}}
 									variant="primary"
 									className="text-2xl font-bold"
 								>
-									{i + 1}
+									{slot}
 								</Button>
 							))}
 						</div>

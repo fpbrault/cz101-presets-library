@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/context/ToastContext";
 import {
 	addPresetToPlaylist,
@@ -34,7 +34,7 @@ export function useSetlistMode({
 	const [quickSendIndex, setQuickSendIndex] = useState<number | null>(null);
 	const [isQuickSending, setIsQuickSending] = useState(false);
 
-	const refreshPlaylists = () => {
+	const refreshPlaylists = useCallback(() => {
 		const next = getPlaylists();
 		setPlaylists(next);
 		if (selectedPlaylistId && !next.some((p) => p.id === selectedPlaylistId)) {
@@ -43,7 +43,7 @@ export function useSetlistMode({
 		if (!selectedPlaylistId && next.length > 0) {
 			setSelectedPlaylistId(next[0].id);
 		}
-	};
+	}, [selectedPlaylistId]);
 
 	useEffect(() => {
 		refreshPlaylists();

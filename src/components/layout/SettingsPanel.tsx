@@ -71,8 +71,7 @@ const SettingsPanel: React.FC = () => {
 
 	const handleExport = async () => {
 		const data = await exportPresets();
-		if ((window as any).__TAURI__) {
-			// Tauri environment
+		if ("__TAURI__" in window) {
 			const filePath = await save({
 				filters: [
 					{
@@ -122,7 +121,7 @@ const SettingsPanel: React.FC = () => {
 
 	const handleExportWorkspace = async () => {
 		const data = await exportWorkspaceBackup();
-		if ((window as any).__TAURI__) {
+		if ("__TAURI__" in window) {
 			const filePath = await save({
 				filters: [
 					{
@@ -339,23 +338,23 @@ const SettingsPanel: React.FC = () => {
 							</div>
 
 							<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-								<label className="w-full form-control">
+								<div className="w-full form-control">
 									<div className="label">
 										<span className="label-text">Factory Preset Library</span>
 									</div>
 									<Button onClick={handleAddFactoryPresets} variant="neutral">
 										Add Factory Presets
 									</Button>
-								</label>
+								</div>
 
-								<label className="w-full form-control">
+								<div className="w-full form-control">
 									<div className="label">
 										<span className="label-text">Reset Data</span>
 									</div>
 									<Button onClick={handleOpenResetModal} variant="error">
 										Reset Local Data
 									</Button>
-								</label>
+								</div>
 							</div>
 
 							<div className="pt-2 border-t border-base-content/10">
@@ -363,7 +362,7 @@ const SettingsPanel: React.FC = () => {
 									Backup & Import
 								</div>
 								<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-									<label className="w-full form-control">
+									<div className="w-full form-control">
 										<div className="label">
 											<span className="label-text">
 												Export Full Workspace Backup
@@ -372,18 +371,18 @@ const SettingsPanel: React.FC = () => {
 										<Button onClick={handleExportWorkspace} variant="accent">
 											Export Full Backup
 										</Button>
-									</label>
+									</div>
 
-									<label className="w-full form-control">
+									<div className="w-full form-control">
 										<div className="label">
 											<span className="label-text">Export Database</span>
 										</div>
 										<Button onClick={handleExport} variant="primary">
 											Export
 										</Button>
-									</label>
+									</div>
 
-									<label className="w-full form-control md:col-span-2">
+									<div className="w-full form-control md:col-span-2">
 										<div className="label">
 											<span className="label-text">Import Database</span>
 										</div>
@@ -394,7 +393,7 @@ const SettingsPanel: React.FC = () => {
 												tone="secondary"
 											/>
 										</div>
-									</label>
+									</div>
 								</div>
 							</div>
 
@@ -408,7 +407,9 @@ const SettingsPanel: React.FC = () => {
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button onClick={handleCloseModal}>close</button>
+						<button type="button" onClick={handleCloseModal}>
+							close
+						</button>
 					</form>
 				</dialog>
 			)}
@@ -447,7 +448,9 @@ const SettingsPanel: React.FC = () => {
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button onClick={handleCloseResetModal}>close</button>
+						<button type="button" onClick={handleCloseResetModal}>
+							close
+						</button>
 					</form>
 				</dialog>
 			)}
