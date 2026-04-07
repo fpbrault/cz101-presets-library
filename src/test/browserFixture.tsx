@@ -25,7 +25,7 @@ export async function fixture(ui: ReactElement): Promise<HTMLDivElement> {
 	container.setAttribute("data-vitest-browser-fixture", "true");
 	document.body.appendChild(container);
 
-	render(<TestAppProviders>{ui}</TestAppProviders>, { container });
+	await render(<TestAppProviders>{ui}</TestAppProviders>, { container });
 
 	await new Promise((resolve) => requestAnimationFrame(resolve));
 
