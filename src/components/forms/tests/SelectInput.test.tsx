@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import SelectInput from "@/components/forms/SelectInput";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("SelectInput", () => {
@@ -15,6 +16,21 @@ describe("SelectInput", () => {
 		expect((screen.getByRole("combobox") as HTMLSelectElement).value).toBe(
 			"internal",
 		);
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<SelectInput
+				aria-label="Destination bank"
+				value="internal"
+				onChange={() => undefined}
+			>
+				<option value="internal">Internal</option>
+				<option value="cartridge">Cartridge</option>
+			</SelectInput>,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("applies size and custom classes", () => {

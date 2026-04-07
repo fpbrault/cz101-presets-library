@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import FileInput from "@/components/forms/FileInput";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("FileInput", () => {
@@ -11,6 +12,14 @@ describe("FileInput", () => {
 		expect(input.type).toBe("file");
 		expect(input.className).toContain("file-input-md");
 		expect(input.className).toContain("file-input-neutral");
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<FileInput aria-label="Upload file" />,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("applies tone and size variants", () => {

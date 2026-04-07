@@ -8,7 +8,9 @@ export type OnlineAuthSession = {
 
 type OAuthProvider = "google" | "apple";
 
-let neonAuthClientPromise: Promise<any> | null = null;
+type NeonAuthClient = ReturnType<typeof createAuthClient>;
+
+let neonAuthClientPromise: Promise<NeonAuthClient> | null = null;
 
 export function getNeonAuthDiagnostics(): {
 	rawValuePresent: boolean;
@@ -52,7 +54,7 @@ function getNeonAuthUrl(): string {
 	return diagnostics.normalizedUrl;
 }
 
-async function getNeonAuthClient(): Promise<any> {
+async function getNeonAuthClient(): Promise<NeonAuthClient> {
 	if (!neonAuthClientPromise) {
 		const authUrl = getNeonAuthUrl();
 		neonAuthClientPromise = Promise.resolve(createAuthClient(authUrl));
@@ -61,10 +63,17 @@ async function getNeonAuthClient(): Promise<any> {
 	return neonAuthClientPromise;
 }
 
-function parseSessionPayload(payload: any): OnlineAuthSession | null {
-	const data = payload?.data ?? payload;
-	const session = data?.session ?? data;
-	const user = data?.user ?? session?.user;
+function parseSessionPayload(payload: unknown): OnlineAuthSession | null {
+	const raw = payload as Record<string, unknown> | null | undefined;
+	const data = (raw?.data ?? raw) as Record<string, unknown> | null | undefined;
+	const session = (data?.session ?? data) as
+		| Record<string, unknown>
+		| null
+		| undefined;
+	const user = (data?.user ?? session?.user) as
+		| Record<string, unknown>
+		| null
+		| undefined;
 	const userId = String(user?.id ?? session?.userId ?? "");
 
 	if (!userId) {
@@ -74,8 +83,12 @@ function parseSessionPayload(payload: any): OnlineAuthSession | null {
 	const displayName = String(
 		user?.name ?? user?.displayName ?? user?.email ?? userId,
 	);
+	const accounts = user?.accounts as
+		| Array<Record<string, unknown>>
+		| null
+		| undefined;
 	const provider = String(
-		user?.accounts?.[0]?.provider ?? session?.provider ?? "neon",
+		accounts?.[0]?.provider ?? session?.provider ?? "neon",
 	);
 
 	return {
@@ -88,7 +101,9 @@ function parseSessionPayload(payload: any): OnlineAuthSession | null {
 export async function getNeonOnlineSession(): Promise<OnlineAuthSession | null> {
 	try {
 		const neonAuthClient = await getNeonAuthClient();
-		const payload = await (neonAuthClient as any).getSession();
+		const payload = await (
+			neonAuthClient as unknown as { getSession(): Promise<unknown> }
+		).getSession();
 		return parseSessionPayload(payload);
 	} catch {
 		return null;
@@ -100,24 +115,28 @@ export async function signInWithNeonProvider(
 	callbackURL: string,
 ): Promise<string> {
 	const neonAuthClient = await getNeonAuthClient();
-	const response = await (neonAuthClient as any).signIn.social({
-		provider,
-		callbackURL,
-	});
+	const client = neonAuthClient as unknown as {
+		signIn: {
+			social(args: { provider: string; callbackURL: string }): Promise<unknown>;
+		};
+	};
+	const response = await client.signIn.social({ provider, callbackURL });
+	const res = response as Record<string, unknown> | null | undefined;
 
-	const redirectUrl = response?.data?.url ?? response?.url;
+	const redirectUrl =
+		(res?.data as Record<string, unknown> | null | undefined)?.url ?? res?.url;
 	if (typeof redirectUrl === "string" && redirectUrl) {
 		return redirectUrl;
 	}
 
+	const error = res?.error as Record<string, unknown> | null | undefined;
 	const errorMessage =
-		response?.error?.message ??
-		response?.message ??
+		String(error?.message ?? res?.message ?? "") ||
 		"Neon social sign-in failed: missing redirect URL.";
 	throw new Error(errorMessage);
 }
 
 export async function signOutNeonSession(): Promise<void> {
 	const neonAuthClient = await getNeonAuthClient();
-	await (neonAuthClient as any).signOut();
+	await (neonAuthClient as unknown as { signOut(): Promise<void> }).signOut();
 }

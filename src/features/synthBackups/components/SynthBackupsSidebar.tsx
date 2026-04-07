@@ -38,8 +38,9 @@ export default function SynthBackupsSidebar({
 				>
 					{isBackingUp ? "Backing Up..." : "New Backup (16 Slots)"}
 				</Button>
-				<label className="w-full form-control">
+				<div className="w-full form-control">
 					<FileInput
+						aria-label="Import synth backup JSON"
 						accept="application/json"
 						inputSize="sm"
 						onChange={(event) => {
@@ -50,7 +51,7 @@ export default function SynthBackupsSidebar({
 							}
 						}}
 					/>
-				</label>
+				</div>
 				{backupProgress && (
 					<div className="text-xs opacity-80">
 						Backup Progress: {backupProgress.completed}/{backupProgress.total}
@@ -73,6 +74,7 @@ export default function SynthBackupsSidebar({
 				)}
 				{backups.map((backup) => (
 					<button
+						type="button"
 						key={backup.id}
 						className={
 							"w-full text-left p-3 rounded-lg border transition-colors " +

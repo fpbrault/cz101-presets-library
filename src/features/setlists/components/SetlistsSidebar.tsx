@@ -63,7 +63,7 @@ export default function SetlistsSidebar({
 						{editingId === playlist.id ? (
 							<div className="flex gap-1">
 								<input
-									className="input input-xs flex-grow"
+									className="input input-xs grow"
 									value={editingName}
 									onChange={(e) => setEditingName(e.target.value)}
 									onKeyDown={(e) => {
@@ -75,6 +75,7 @@ export default function SetlistsSidebar({
 							</div>
 						) : (
 							<button
+								type="button"
 								className="w-full text-left"
 								onClick={() => onSelectPlaylist(playlist.id)}
 							>

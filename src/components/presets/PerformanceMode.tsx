@@ -16,6 +16,8 @@ type PerformanceModeProps = {
 	handleSelectPreset: (preset: Preset) => void;
 };
 
+type NumberedPreset = Preset & { number: number };
+
 const PerformanceMode: React.FC<PerformanceModeProps> = ({
 	currentPreset,
 	handleSelectPreset,
@@ -144,7 +146,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 		}
 	};
 
-	const currentPresets = presets
+	const currentPresets: NumberedPreset[] = presets
 
 		.slice(currentBank * 8, (currentBank + 1) * 8)
 		.map((preset, index) => ({
@@ -204,7 +206,11 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 			className="flex flex-col w-full h-full gap-4 p-2"
 		>
 			<div className="flex flex-wrap items-start gap-3">
-				<button onClick={toggleFullscreen} className="btn btn-primary">
+				<button
+					type="button"
+					onClick={toggleFullscreen}
+					className="btn btn-primary"
+				>
 					Toggle Fullscreen
 				</button>
 
@@ -228,7 +234,8 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									{} as Record<string, number>,
 								),
 						).map(([tag, count]) => (
-							<div
+							<button
+								type="button"
 								key={tag}
 								className={`badge badge-lg font-bold capitalize badge-neutral ${
 									selectedTags.includes(tag) ? "badge-primary" : ""
@@ -236,14 +243,15 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 								onClick={() => handleTagClick(tag)}
 							>
 								{tag} ({count})
-							</div>
+							</button>
 						))}
 					</div>
 
 					<div className="flex items-center justify-center flex-1 min-w-[16rem] p-4 rounded-md shadow-md bg-base-300 max-w-96">
 						<div className="flex flex-col">
 							<span className="ml-2 text-2xl font-bold font-performanceMode">
-								{currentPreset?.number} | {currentPreset?.name || "None"}
+								{currentPresets.find((p) => p.id === currentPreset?.id)?.number}{" "}
+								| {currentPreset?.name || "None"}
 							</span>
 							<span className="ml-2 text-sm opacity-70">
 								{selectedMidiPort ? selectedMidiPort : "No MIDI Port"} | Ch{" "}
@@ -255,7 +263,9 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 										{activePlaylist.name}
 									</span>
 									<button
+										type="button"
 										className="btn btn-xs btn-ghost opacity-60 hover:opacity-100 px-1"
+										aria-label="Clear setlist filter"
 										title="Clear setlist filter"
 										onClick={() => setActivePlaylistId(null)}
 									>
@@ -314,9 +324,10 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 				</div>
 			</div>
 			<div className="flex h-full gap-4 pb-16">
-				<div className="grid flex-grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">
+				<div className="grid grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">
 					{currentPresets.map((preset) => (
 						<button
+							type="button"
 							key={preset.id}
 							onClick={() => handleSelectPreset(preset)}
 							className={
@@ -326,7 +337,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									: " btn-secondary")
 							}
 						>
-							<span className="flex items-center flex-grow font-bold">
+							<span className="flex items-center grow font-bold">
 								{preset.name}
 							</span>
 
@@ -336,9 +347,10 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 				</div>
 				<div className="flex flex-col w-full gap-4 max-w-48">
 					<button
+						type="button"
 						onClick={handlePreviousBank}
 						disabled={currentBank === 0}
-						className="flex-grow w-full text-2xl btn btn-lg btn-secondary"
+						className="grow w-full text-2xl btn btn-lg btn-secondary"
 					>
 						Previous Bank
 					</button>
@@ -352,16 +364,19 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 							</span>
 						</div>
 						<button
+							type="button"
 							onClick={handleOpenNumPad}
+							aria-label="Open bank selector"
 							className="btn btn-square btn-xl btn-primary"
 						>
 							<FaMagnifyingGlass size={32} />
 						</button>
 					</div>
 					<button
+						type="button"
 						onClick={handleNextBank}
 						disabled={(currentBank + 1) * 8 >= presets.length}
-						className="flex-grow text-2xl btn btn-lg btn-secondary"
+						className="grow text-2xl btn btn-lg btn-secondary"
 					>
 						Next Bank
 					</button>
@@ -374,6 +389,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						<input
 							type="text"
 							value={bankInput}
+							aria-label="Selected bank number"
 							className="mb-2 text-xl form-input input input-primary w-fit"
 							readOnly
 						/>
@@ -392,6 +408,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 							<button
 								type="button"
 								onClick={handleClearNumPad}
+								aria-label="Clear bank selection"
 								className="btn btn-secondary"
 							>
 								<FaX size={24} />
@@ -412,7 +429,11 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 								Select
 							</button>
 						</div>
-						<button onClick={handleCloseNumPad} className="mt-4 btn">
+						<button
+							type="button"
+							onClick={handleCloseNumPad}
+							className="mt-4 btn"
+						>
 							Close
 						</button>
 					</div>

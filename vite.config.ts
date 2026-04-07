@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -7,7 +8,7 @@ const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-	plugins: [react()],
+	plugins: [react(), tailwindcss()],
 	// Ensure .env is resolved relative to this config file even when launched via tauri tooling.
 	envDir: fileURLToPath(new URL(".", import.meta.url)),
 	envPrefix: ["VITE_", "TAURI_ENV_"],

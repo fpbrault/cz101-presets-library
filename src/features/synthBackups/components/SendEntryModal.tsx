@@ -29,9 +29,12 @@ export default function SendEntryModal({
 		>
 			<h2 className="mb-4 text-xl">Send Entry To Slot</h2>
 			<div className="flex flex-col gap-3">
-				<label className="form-control">
-					<span className="label-text">Bank</span>
+				<div className="form-control">
+					<label className="label-text" htmlFor="send-entry-bank">
+						Bank
+					</label>
 					<SelectInput
+						id="send-entry-bank"
 						data-testid="send-entry-bank"
 						value={sendModalState.bank}
 						onChange={(event) =>
@@ -44,11 +47,14 @@ export default function SendEntryModal({
 						<option value="internal">Internal</option>
 						<option value="cartridge">Cartridge</option>
 					</SelectInput>
-				</label>
+				</div>
 
-				<label className="form-control">
-					<span className="label-text">Slot</span>
+				<div className="form-control">
+					<label className="label-text" htmlFor="send-entry-slot">
+						Slot
+					</label>
 					<SelectInput
+						id="send-entry-slot"
 						data-testid="send-entry-slot"
 						value={sendModalState.slot}
 						onChange={(event) =>
@@ -58,13 +64,13 @@ export default function SendEntryModal({
 							})
 						}
 					>
-						{Array.from({ length: 16 }, (_, index) => (
-							<option key={index + 1} value={index + 1}>
-								{index + 1}
+						{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
+							<option key={slot} value={slot}>
+								{slot}
 							</option>
 						))}
 					</SelectInput>
-				</label>
+				</div>
 			</div>
 
 			<div className="flex justify-end gap-2 mt-4">

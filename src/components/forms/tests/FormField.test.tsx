@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import FormField from "@/components/forms/FormField";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("FormField", () => {
@@ -20,6 +21,21 @@ describe("FormField", () => {
 		expect((screen.getByDisplayValue("CZ Pad") as HTMLInputElement).id).toBe(
 			"preset-name",
 		);
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<FormField label="Preset Name" htmlFor="preset-name">
+				<input
+					id="preset-name"
+					className="input input-bordered"
+					value="CZ Pad"
+					readOnly
+				/>
+			</FormField>,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("supports custom label classes", () => {

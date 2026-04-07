@@ -50,7 +50,7 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 	}, [selectedPlaylist, quickSendIndex, presets]);
 
 	return (
-		<div className="flex flex-grow h-full overflow-hidden bg-base-300">
+		<div className="flex grow h-full overflow-hidden bg-base-300">
 			<SetlistsSidebar
 				playlists={playlists}
 				selectedPlaylistId={selectedPlaylistId}
@@ -60,9 +60,9 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 				onDeletePlaylist={onDeletePlaylist}
 			/>
 
-			<section className="flex flex-col flex-grow h-full overflow-hidden">
+			<section className="flex flex-col grow h-full overflow-hidden">
 				{!selectedPlaylist && (
-					<div className="flex items-center justify-center flex-grow px-4">
+					<div className="flex items-center justify-center grow px-4">
 						<InlineNotice
 							message="Select a setlist or create a new one."
 							tone="neutral"
@@ -175,7 +175,7 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 			{/* Add Preset Modal */}
 			{showAddPresetModal && selectedPlaylist && (
 				<div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-					<div className="bg-base-100 rounded-xl shadow-xl p-5 w-[32rem] max-h-[80vh] flex flex-col gap-3">
+					<div className="bg-base-100 rounded-xl shadow-xl p-5 w-lg max-h-[80vh] flex flex-col gap-3">
 						<h2 className="text-lg font-bold">Add Preset to Setlist</h2>
 						<input
 							className="input input-sm input-bordered w-full"
@@ -183,7 +183,7 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 							value={addPresetSearch}
 							onChange={(e) => setAddPresetSearch(e.target.value)}
 						/>
-						<div className="overflow-auto flex-grow">
+						<div className="overflow-auto grow">
 							<table className="table table-xs table-zebra w-full">
 								<thead>
 									<tr>

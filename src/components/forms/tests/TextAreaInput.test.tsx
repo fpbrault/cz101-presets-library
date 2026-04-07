@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import TextAreaInput from "@/components/forms/TextAreaInput";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("TextAreaInput", () => {
@@ -9,6 +10,14 @@ describe("TextAreaInput", () => {
 
 		const textarea = screen.getByDisplayValue("Warm brass");
 		expect(textarea.className).toContain("textarea-md");
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(
+			<TextAreaInput aria-label="Description" value="Warm brass" readOnly />,
+		);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("applies size and custom classes", () => {

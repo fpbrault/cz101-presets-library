@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import FilterPanel from "@/components/presets/FilterPanel";
 import { useSearchFilter } from "@/context/SearchFilterContext";
 import { fetchPresetData } from "@/lib/presets/presetManager";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 // Mock the search filter context
@@ -27,22 +28,39 @@ describe("FilterPanel", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		(useSearchFilter as any).mockReturnValue({
+		vi.mocked(useSearchFilter).mockReturnValue({
 			selectedTags: mockSelectedTags,
 			filterMode: "inclusive",
 			setFilterMode: mockSetFilterMode,
 			setSelectedTags: mockSetSelectedTags,
-		});
+		} as unknown as ReturnType<typeof useSearchFilter>);
 	});
 
 	it("renders the title", async () => {
-		(fetchPresetData as any).mockResolvedValue({ presets: [] });
+		vi.mocked(fetchPresetData).mockResolvedValue({
+			presets: [],
+			totalCount: 0,
+		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
 		renderWithProviders(<FilterPanel />);
 		expect(screen.getByText("Filters")).toBeTruthy();
 	});
 
+	it("has no accessibility violations", async () => {
+		vi.mocked(fetchPresetData).mockResolvedValue({
+			presets: [{ id: "1", name: "Preset 1", tags: ["tag1"] }],
+		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
+
+		const { container } = renderWithProviders(<FilterPanel />);
+		await screen.findByText(/tag1 \(1\)/i);
+
+		await expectNoAxeViolations(container);
+	});
+
 	it("toggles filter mode when the button is clicked", async () => {
-		(fetchPresetData as any).mockResolvedValue({ presets: [] });
+		vi.mocked(fetchPresetData).mockResolvedValue({
+			presets: [],
+			totalCount: 0,
+		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
 		renderWithProviders(<FilterPanel />);
 
 		const modeButton = screen.getByRole("button", { name: /Match All/i });
@@ -55,15 +73,17 @@ describe("FilterPanel", () => {
 		const presetsWithTags = [
 			{ id: "1", name: "Preset 1", tags: ["tag1", "tag2"] },
 		];
-		(fetchPresetData as any).mockResolvedValue({ presets: presetsWithTags });
+		vi.mocked(fetchPresetData).mockResolvedValue({
+			presets: presetsWithTags,
+		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
 
 		// Set up mock with existing selected tags
-		(useSearchFilter as any).mockReturnValue({
+		vi.mocked(useSearchFilter).mockReturnValue({
 			selectedTags: ["tag1"],
 			filterMode: "inclusive",
 			setFilterMode: mockSetFilterMode,
 			setSelectedTags: mockSetSelectedTags,
-		});
+		} as unknown as ReturnType<typeof useSearchFilter>);
 
 		renderWithProviders(<FilterPanel />);
 
@@ -75,7 +95,9 @@ describe("FilterPanel", () => {
 
 	it("toggles a tag when clicked", async () => {
 		const presetsWithTags = [{ id: "1", name: "Preset 1", tags: ["tag1"] }];
-		(fetchPresetData as any).mockResolvedValue({ presets: presetsWithTags });
+		vi.mocked(fetchPresetData).mockResolvedValue({
+			presets: presetsWithTags,
+		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
 
 		renderWithProviders(<FilterPanel />);
 
@@ -88,13 +110,15 @@ describe("FilterPanel", () => {
 
 	it("deselects a tag when it is already selected", async () => {
 		const presetsWithTags = [{ id: "1", name: "Preset 1", tags: ["tag1"] }];
-		(fetchPresetData as any).mockResolvedValue({ presets: presetsWithTags });
-		(useSearchFilter as any).mockReturnValue({
+		vi.mocked(fetchPresetData).mockResolvedValue({
+			presets: presetsWithTags,
+		} as unknown as Awaited<ReturnType<typeof fetchPresetData>>);
+		vi.mocked(useSearchFilter).mockReturnValue({
 			selectedTags: ["tag1"],
 			filterMode: "inclusive",
 			setFilterMode: mockSetFilterMode,
 			setSelectedTags: mockSetSelectedTags,
-		});
+		} as unknown as ReturnType<typeof useSearchFilter>);
 
 		renderWithProviders(<FilterPanel />);
 

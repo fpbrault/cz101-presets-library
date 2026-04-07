@@ -1,4 +1,3 @@
-/** biome-ignore lint/a11y/noSvgWithoutTitle: Decorative icon */
 import type React from "react";
 import { memo } from "react";
 import {
@@ -106,6 +105,7 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 			height={s}
 			viewBox={`0 0 ${s} ${s}`}
 			className="text-current shrink-0"
+			aria-hidden="true"
 		>
 			{shapes[id]}
 		</svg>

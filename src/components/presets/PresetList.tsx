@@ -172,6 +172,7 @@ function PresetListTopBar(props: {
 					/>
 					{props.searchTerm && (
 						<button
+							type="button"
 							className="absolute text-gray-500 -translate-y-1/2 right-6 top-1/2 hover:text-gray-700"
 							onClick={() => props.setSearchTerm("")}
 						>
@@ -184,6 +185,7 @@ function PresetListTopBar(props: {
 
 				<div className="flex items-center gap-2 ml-auto">
 					<button
+						type="button"
 						className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
 							props.duplicatesOnly ? "btn-warning" : "btn-neutral"
 						}`}
@@ -195,6 +197,7 @@ function PresetListTopBar(props: {
 					</button>
 
 					<button
+						type="button"
 						className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
 							props.userPresetsOnly ? "btn-primary" : "btn-neutral"
 						}`}
@@ -205,6 +208,7 @@ function PresetListTopBar(props: {
 					</button>
 
 					<button
+						type="button"
 						className="btn btn-sm sm:btn-md normal-case font-semibold shadow-md btn-neutral"
 						onClick={props.onOpenDuplicateReview}
 						title="Review and clean duplicate presets"
@@ -219,6 +223,7 @@ function PresetListTopBar(props: {
 					</button>
 
 					<button
+						type="button"
 						className="btn btn-sm sm:btn-md normal-case font-semibold shadow-md btn-neutral"
 						onClick={props.onOpenTagManager}
 						title="Rename, merge, or delete tags globally"
@@ -227,6 +232,7 @@ function PresetListTopBar(props: {
 					</button>
 
 					<button
+						type="button"
 						className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
 							isTagsPanelOpen
 								? "btn-primary ring-2 ring-primary/40"
@@ -263,14 +269,16 @@ function PresetListTopBar(props: {
 			{isTagsPanelOpen && (
 				<>
 					<button
+						type="button"
 						className="fixed inset-0 z-30 cursor-default bg-black/30"
 						onClick={() => setIsTagsPanelOpen(false)}
 						aria-label="Close tag filters"
 					/>
-					<div className="absolute left-2 right-2 z-40 p-3 mt-2 border shadow-xl sm:left-4 sm:right-4 lg:left-auto lg:right-4 lg:w-[44rem] rounded-xl bg-base-100 border-base-content/20">
+					<div className="absolute left-2 right-2 z-40 p-3 mt-2 border shadow-xl sm:left-4 sm:right-4 lg:left-auto lg:right-4 lg:w-176 rounded-xl bg-base-100 border-base-content/20">
 						<div className="flex items-center justify-between gap-2 mb-3">
 							<h3 className="text-lg font-semibold">Tag Filters</h3>
 							<button
+								type="button"
 								onClick={() => setIsTagsPanelOpen(false)}
 								className="btn btn-sm btn-ghost"
 								aria-label="Close tags panel"
@@ -281,6 +289,7 @@ function PresetListTopBar(props: {
 
 						<div className="flex flex-wrap items-center gap-2 mb-3">
 							<button
+								type="button"
 								onClick={props.onToggleFilterMode}
 								className="btn btn-sm btn-info"
 								title={
@@ -302,6 +311,7 @@ function PresetListTopBar(props: {
 								)}
 							</button>
 							<button
+								type="button"
 								onClick={props.onClearFilters}
 								className="btn btn-sm btn-error"
 								disabled={props.selectedTags.length === 0}
@@ -317,6 +327,7 @@ function PresetListTopBar(props: {
 									const selected = props.selectedTags.includes(tag);
 									return (
 										<button
+											type="button"
 											key={tag}
 											onClick={() => props.onToggleTag(tag)}
 											className={`badge badge-lg h-10 px-4 text-sm font-semibold capitalize ${
@@ -339,6 +350,7 @@ function PresetListTopBar(props: {
 				<div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto">
 					{props.selectedTags.map((tag) => (
 						<button
+							type="button"
 							key={tag}
 							onClick={() => props.onToggleTag(tag)}
 							className="badge badge-primary badge-lg h-8 capitalize"
@@ -470,7 +482,7 @@ const PresetList: React.FC<PresetListProps> = ({
 			queryClient.setQueryData(
 				queryKey,
 				(old: {
-					pageParams: any;
+					pageParams: number[];
 					pages: { presets: Preset[]; totalCount: number }[];
 				}) => {
 					if (!old?.pages) return old;
@@ -507,22 +519,6 @@ const PresetList: React.FC<PresetListProps> = ({
 		[updateQueryData],
 	);
 
-	const _handleSetRating = useCallback(
-		async (preset: Preset, rating: 1 | 2 | 3 | 4 | 5) => {
-			updateQueryData(preset, { rating });
-
-			try {
-				await updatePreset({
-					...preset,
-					rating,
-				});
-			} catch (_error) {
-				updateQueryData(preset, { rating: preset.rating });
-			}
-		},
-		[updateQueryData],
-	);
-
 	const columns = useMemo<ColumnDef<Preset>[]>(
 		() => [
 			{
@@ -533,6 +529,7 @@ const PresetList: React.FC<PresetListProps> = ({
 				minSize: 112,
 				cell: ({ row }) => (
 					<button
+						type="button"
 						onClick={(e) => {
 							e.stopPropagation();
 							handleSetFavorite(row.original);
@@ -569,6 +566,7 @@ const PresetList: React.FC<PresetListProps> = ({
 				id: "randomOrder",
 				header: () => (
 					<button
+						type="button"
 						onClick={(e) => {
 							e.stopPropagation();
 							setRandomOrder(!randomOrder);
@@ -597,7 +595,7 @@ const PresetList: React.FC<PresetListProps> = ({
 							size: 120,
 							cell: ({ row }: { row: { original: Preset } }) => (
 								<select
-									className="select select-xs select-accent w-full max-w-[7rem]"
+									className="select select-xs select-accent w-full max-w-28"
 									value=""
 									title="Add to setlist"
 									onClick={(e) => e.stopPropagation()}
@@ -772,7 +770,9 @@ const PresetList: React.FC<PresetListProps> = ({
 	});
 
 	const flatData = React.useMemo(() => {
-		return data?.pages?.flatMap((page: { presets: any }) => page.presets) ?? [];
+		return (
+			data?.pages?.flatMap((page: { presets: Preset[] }) => page.presets) ?? []
+		);
 	}, [data]);
 
 	const availableTags = useMemo<[string, number][]>(() => {
@@ -989,7 +989,7 @@ const PresetList: React.FC<PresetListProps> = ({
 	});
 
 	return (
-		<div className="flex flex-col flex-grow min-w-0 select-none bg-base-300">
+		<div className="flex flex-col grow min-w-0 select-none bg-base-300">
 			<PresetListTopBar
 				totalDBRowCount={totalDBRowCount}
 				searchTerm={searchTerm}
@@ -1104,8 +1104,11 @@ const PresetList: React.FC<PresetListProps> = ({
 												</>
 											)}
 										</div>
-										<div
+										<button
+											type="button"
+											aria-label="Resize column"
 											onClick={(e) => e.stopPropagation()}
+											onKeyDown={(e) => e.stopPropagation()}
 											onDoubleClick={() => column.column.resetSize()}
 											onMouseDown={column.getResizeHandler()}
 											onTouchStart={column.getResizeHandler()}

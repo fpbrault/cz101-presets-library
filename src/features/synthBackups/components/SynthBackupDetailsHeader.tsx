@@ -36,6 +36,7 @@ export default function SynthBackupDetailsHeader({
 			<div className="flex gap-2">
 				<div className="w-52">
 					<SelectInput
+						aria-label="Restore destination bank"
 						selectSize="sm"
 						value={restoreBank}
 						onChange={(event) =>

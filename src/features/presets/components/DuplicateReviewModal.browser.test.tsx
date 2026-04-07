@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import DuplicateReviewModal, {
 	type DuplicateGroup,
 } from "@/features/presets/components/DuplicateReviewModal";
-import { renderWithProviders } from "@/test/renderWithProviders";
+import { fixture } from "@/test/browserFixture";
 
 function makeDuplicateGroup(id: string, names: string[]): DuplicateGroup {
 	return {
@@ -24,8 +24,8 @@ function makeDuplicateGroup(id: string, names: string[]): DuplicateGroup {
 }
 
 describe("DuplicateReviewModal (browser)", () => {
-	it("renders nothing when isOpen is false", () => {
-		const { container } = renderWithProviders(
+	it("renders nothing when isOpen is false", async () => {
+		const container = await fixture(
 			<DuplicateReviewModal
 				isOpen={false}
 				groups={[]}
@@ -36,8 +36,8 @@ describe("DuplicateReviewModal (browser)", () => {
 		expect(container.firstChild).toBeNull();
 	});
 
-	it('shows "No duplicates found" when groups array is empty', () => {
-		renderWithProviders(
+	it('shows "No duplicates found" when groups array is empty', async () => {
+		await fixture(
 			<DuplicateReviewModal
 				isOpen={true}
 				groups={[]}
@@ -48,12 +48,12 @@ describe("DuplicateReviewModal (browser)", () => {
 		expect(screen.getByText(/no duplicates found/i)).toBeTruthy();
 	});
 
-	it("shows the correct group and preset counts", () => {
+	it("shows the correct group and preset counts", async () => {
 		const groups = [
 			makeDuplicateGroup("a", ["Bass A", "Bass A Copy"]),
 			makeDuplicateGroup("b", ["Pad", "Pad 2", "Pad 3"]),
 		];
-		renderWithProviders(
+		await fixture(
 			<DuplicateReviewModal
 				isOpen={true}
 				groups={groups}
@@ -68,7 +68,7 @@ describe("DuplicateReviewModal (browser)", () => {
 	it("calls onClose when Close button is clicked", async () => {
 		const user = userEvent.setup();
 		const onClose = vi.fn();
-		renderWithProviders(
+		await fixture(
 			<DuplicateReviewModal
 				isOpen={true}
 				groups={[]}
@@ -87,7 +87,7 @@ describe("DuplicateReviewModal (browser)", () => {
 			makeDuplicateGroup("g1", ["Preset A", "Preset B", "Preset C"]),
 		];
 
-		renderWithProviders(
+		await fixture(
 			<DuplicateReviewModal
 				isOpen={true}
 				groups={groups}
@@ -141,7 +141,7 @@ describe("DuplicateReviewModal (browser)", () => {
 			},
 		];
 
-		renderWithProviders(
+		await fixture(
 			<DuplicateReviewModal
 				isOpen={true}
 				groups={groups}
@@ -162,7 +162,7 @@ describe("DuplicateReviewModal (browser)", () => {
 		const user = userEvent.setup();
 		const groups = [makeDuplicateGroup("c1", ["Alpha", "Beta"])];
 
-		renderWithProviders(
+		await fixture(
 			<DuplicateReviewModal
 				isOpen={true}
 				groups={groups}
@@ -186,7 +186,7 @@ describe("DuplicateReviewModal (browser)", () => {
 		).toBeTruthy();
 	});
 
-	it("displays the Favorite badge next to favorited presets", () => {
+	it("displays the Favorite badge next to favorited presets", async () => {
 		const groups: DuplicateGroup[] = [
 			{
 				fingerprint: "fp-badge",
@@ -219,7 +219,7 @@ describe("DuplicateReviewModal (browser)", () => {
 			},
 		];
 
-		renderWithProviders(
+		await fixture(
 			<DuplicateReviewModal
 				isOpen={true}
 				groups={groups}

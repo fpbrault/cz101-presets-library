@@ -39,7 +39,7 @@ const SynthBackupsPage: React.FC<SynthBackupsPageProps> = ({
 	);
 
 	return (
-		<div className="flex flex-grow h-full overflow-hidden bg-base-300">
+		<div className="flex grow h-full overflow-hidden bg-base-300">
 			<SynthBackupsSidebar
 				backups={backups}
 				selectedBackupId={selectedBackupId}
@@ -51,9 +51,9 @@ const SynthBackupsPage: React.FC<SynthBackupsPageProps> = ({
 				onImportBackup={onImportBackup}
 			/>
 
-			<section className="flex flex-col flex-grow h-full overflow-hidden">
+			<section className="flex flex-col grow h-full overflow-hidden">
 				{!selectedBackup && (
-					<div className="flex items-center justify-center flex-grow px-4">
+					<div className="flex items-center justify-center grow px-4">
 						<InlineNotice
 							message="Select a synth backup to view its entries."
 							tone="neutral"

@@ -1,12 +1,19 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import Button from "@/components/ui/Button";
+import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 describe("Button", () => {
 	it("renders children", () => {
 		renderWithProviders(<Button>Click me</Button>);
 		expect(screen.getByText("Click me")).toBeTruthy();
+	});
+
+	it("has no accessibility violations", async () => {
+		const { container } = renderWithProviders(<Button>Click me</Button>);
+
+		await expectNoAxeViolations(container);
 	});
 
 	it("applies correct variant classes", () => {
