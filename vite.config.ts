@@ -1,41 +1,41 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from "node:url";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 // @ts-expect-error process is a nodejs global
-const host = process.env.TAURI_DEV_HOST
+const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
-  // Ensure .env is resolved relative to this config file even when launched via tauri tooling.
-  envDir: fileURLToPath(new URL('.', import.meta.url)),
-  envPrefix: ['VITE_', 'TAURI_ENV_'],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },
+	plugins: [react()],
+	// Ensure .env is resolved relative to this config file even when launched via tauri tooling.
+	envDir: fileURLToPath(new URL(".", import.meta.url)),
+	envPrefix: ["VITE_", "TAURI_ENV_"],
+	resolve: {
+		alias: {
+			"@": fileURLToPath(new URL("./src", import.meta.url)),
+		},
+	},
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent vite from obscuring rust errors
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
-  server: {
-    port: 1420,
-    strictPort: true,
-    host: host || false,
-    hmr: host
-      ? {
-          protocol: 'ws',
-          host,
-          port: 1421,
-        }
-      : undefined,
-    watch: {
-      // 3. tell vite to ignore watching `src-tauri`
-      ignored: ['**/src-tauri/**'],
-    },
-  },
-}))
+	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
+	//
+	// 1. prevent vite from obscuring rust errors
+	clearScreen: false,
+	// 2. tauri expects a fixed port, fail if that port is not available
+	server: {
+		port: 1420,
+		strictPort: true,
+		host: host || false,
+		hmr: host
+			? {
+					protocol: "ws",
+					host,
+					port: 1421,
+				}
+			: undefined,
+		watch: {
+			// 3. tell vite to ignore watching `src-tauri`
+			ignored: ["**/src-tauri/**"],
+		},
+	},
+}));

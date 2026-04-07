@@ -1,32 +1,32 @@
-import { describe, expect, it, vi } from 'vitest'
-import { screen } from '@testing-library/react'
-import SynthBackupsPage from '@/features/synthBackups/components/SynthBackupsPage'
-import { renderWithProviders } from '@/test/renderWithProviders'
+import { screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import SynthBackupsPage from "@/features/synthBackups/components/SynthBackupsPage";
+import { renderWithProviders } from "@/test/renderWithProviders";
 
-describe('SynthBackupsPage', () => {
-  it('shows a notice when no backup is selected', () => {
-    renderWithProviders(
-      <SynthBackupsPage
-        backups={[]}
-        selectedBackupId={null}
-        isBackingUp={false}
-        backupProgress={null}
-        isRestoring={false}
-        restoreProgress={null}
-        onSelectBackup={vi.fn()}
-        onCreateBackup={vi.fn()}
-        onRestoreBackupToSynth={vi.fn()}
-        onDeleteBackup={vi.fn()}
-        onExportBackup={vi.fn()}
-        onImportBackup={vi.fn()}
-        onSaveEntryAsPreset={vi.fn()}
-        onSendEntryToSlot={vi.fn()}
-        onPreviewEntryInBuffer={vi.fn()}
-      />,
-    )
+describe("SynthBackupsPage", () => {
+	it("shows a notice when no backup is selected", () => {
+		renderWithProviders(
+			<SynthBackupsPage
+				backups={[]}
+				selectedBackupId={null}
+				isBackingUp={false}
+				backupProgress={null}
+				isRestoring={false}
+				restoreProgress={null}
+				onSelectBackup={vi.fn()}
+				onCreateBackup={vi.fn()}
+				onRestoreBackupToSynth={vi.fn()}
+				onDeleteBackup={vi.fn()}
+				onExportBackup={vi.fn()}
+				onImportBackup={vi.fn()}
+				onSaveEntryAsPreset={vi.fn()}
+				onSendEntryToSlot={vi.fn()}
+				onPreviewEntryInBuffer={vi.fn()}
+			/>,
+		);
 
-    expect(
-      screen.getByText('Select a synth backup to view its entries.'),
-    ).toBeTruthy()
-  })
-})
+		expect(
+			screen.getByText("Select a synth backup to view its entries."),
+		).toBeTruthy();
+	});
+});

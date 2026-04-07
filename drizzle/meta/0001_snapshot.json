@@ -1,66 +1,64 @@
 {
-  "id": "85233e9b-271e-4fff-81aa-aaa8d00710ad",
-  "prevId": "b4c5e2b1-e9d9-43cd-bd7c-56eb310ea255",
-  "version": "7",
-  "dialect": "postgresql",
-  "tables": {
-    "public.preset_library": {
-      "name": "preset_library",
-      "schema": "",
-      "columns": {
-        "owner_id": {
-          "name": "owner_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "auth.user_id()"
-        },
-        "presets": {
-          "name": "presets",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
-        },
-        "presets_encrypted": {
-          "name": "presets_encrypted",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "preset_library_pkey": {
-          "name": "preset_library_pkey",
-          "columns": [
-            "owner_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    }
-  },
-  "enums": {},
-  "schemas": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
-  "views": {},
-  "_meta": {
-    "columns": {},
-    "schemas": {},
-    "tables": {}
-  }
+	"id": "85233e9b-271e-4fff-81aa-aaa8d00710ad",
+	"prevId": "b4c5e2b1-e9d9-43cd-bd7c-56eb310ea255",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.preset_library": {
+			"name": "preset_library",
+			"schema": "",
+			"columns": {
+				"owner_id": {
+					"name": "owner_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "auth.user_id()"
+				},
+				"presets": {
+					"name": "presets",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'[]'::jsonb"
+				},
+				"presets_encrypted": {
+					"name": "presets_encrypted",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {
+				"preset_library_pkey": {
+					"name": "preset_library_pkey",
+					"columns": ["owner_id"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
 }

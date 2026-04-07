@@ -1,47 +1,55 @@
-import { describe, expect, it, vi } from 'vitest'
-import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import SendEntryModal from '@/features/synthBackups/components/SendEntryModal'
-import { renderWithProviders } from '@/test/renderWithProviders'
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import SendEntryModal from "@/features/synthBackups/components/SendEntryModal";
+import { renderWithProviders } from "@/test/renderWithProviders";
 
 const selectedBackup = {
-  id: 'backup-1',
-  name: 'Demo Backup',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  source: 'internal-16' as const,
-  entries: [],
-}
+	id: "backup-1",
+	name: "Demo Backup",
+	createdAt: "2026-01-01T00:00:00.000Z",
+	source: "internal-16" as const,
+	entries: [],
+};
 
-describe('SendEntryModal (Synth Backup)', () => {
-  it('emits bank/slot changes and submits entry', async () => {
-    const user = userEvent.setup()
-    const onSendEntryToSlot = vi.fn()
-    const setSendModalState = vi.fn()
+describe("SendEntryModal (Synth Backup)", () => {
+	it("emits bank/slot changes and submits entry", async () => {
+		const user = userEvent.setup();
+		const onSendEntryToSlot = vi.fn();
+		const setSendModalState = vi.fn();
 
-    renderWithProviders(
-      <SendEntryModal
-        selectedBackup={selectedBackup}
-        sendModalState={{ entryIndex: 2, bank: 'internal', slot: 3 }}
-        setSendModalState={setSendModalState}
-        onSendEntryToSlot={onSendEntryToSlot}
-      />,
-    )
+		renderWithProviders(
+			<SendEntryModal
+				selectedBackup={selectedBackup}
+				sendModalState={{ entryIndex: 2, bank: "internal", slot: 3 }}
+				setSendModalState={setSendModalState}
+				onSendEntryToSlot={onSendEntryToSlot}
+			/>,
+		);
 
-    await user.selectOptions(screen.getByTestId('send-entry-bank'), 'cartridge')
-    await user.selectOptions(screen.getByTestId('send-entry-slot'), '7')
-    await user.click(screen.getByTestId('send-entry-confirm'))
+		await user.selectOptions(
+			screen.getByTestId("send-entry-bank"),
+			"cartridge",
+		);
+		await user.selectOptions(screen.getByTestId("send-entry-slot"), "7");
+		await user.click(screen.getByTestId("send-entry-confirm"));
 
-    expect(setSendModalState).toHaveBeenCalledWith({
-      entryIndex: 2,
-      bank: 'cartridge',
-      slot: 3,
-    })
-    expect(setSendModalState).toHaveBeenCalledWith({
-      entryIndex: 2,
-      bank: 'internal',
-      slot: 7,
-    })
-    expect(onSendEntryToSlot).toHaveBeenCalledWith('backup-1', 2, 'internal', 3)
-    expect(setSendModalState).toHaveBeenCalled()
-  })
-})
+		expect(setSendModalState).toHaveBeenCalledWith({
+			entryIndex: 2,
+			bank: "cartridge",
+			slot: 3,
+		});
+		expect(setSendModalState).toHaveBeenCalledWith({
+			entryIndex: 2,
+			bank: "internal",
+			slot: 7,
+		});
+		expect(onSendEntryToSlot).toHaveBeenCalledWith(
+			"backup-1",
+			2,
+			"internal",
+			3,
+		);
+		expect(setSendModalState).toHaveBeenCalled();
+	});
+});
