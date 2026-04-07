@@ -17,14 +17,17 @@ function serializePresets(presets: Preset[]): SerializedPreset[] {
 	return presets.map((p) => ({
 		...p,
 		sysexData: Array.from(p.sysexData),
-	})) as any;
+	}));
 }
 
 function deserializePresets(rows: SerializedPreset[]): Preset[] {
-	return rows.map((p) => ({
-		...p,
-		sysexData: new Uint8Array(p.sysexData as any),
-	})) as unknown as Preset[];
+	return rows.map(
+		(p) =>
+			({
+				...p,
+				sysexData: new Uint8Array(p.sysexData),
+			}) as Preset,
+	);
 }
 
 function getNeonDataClient() {
@@ -69,7 +72,7 @@ class NeonDataApiPresetSyncAdapter implements RemotePresetSyncAdapter {
 		const key = await deriveKeyFromSession(sessionToken, salt);
 		const base64Payload = await encryptPresetData(jsonString, key, salt);
 
-		const { error } = await (client as any).from("preset_library").upsert({
+		const { error } = await client.from("preset_library").upsert({
 			presets_encrypted: base64Payload,
 			updated_at: new Date().toISOString(),
 		});
@@ -87,7 +90,7 @@ class NeonDataApiPresetSyncAdapter implements RemotePresetSyncAdapter {
 		}
 		const sessionToken = session.userId;
 
-		const { data, error } = await (client as any)
+		const { data, error } = await client
 			.from("preset_library")
 			.select("presets_encrypted")
 			.single();

@@ -19,7 +19,7 @@ describe("EnvelopeChart", () => {
 
 	it("renders nothing when steps are empty", () => {
 		const { container } = renderWithProviders(
-			<EnvelopeChart steps={[] as any} endStep={0} label="Empty" />,
+			<EnvelopeChart steps={[]} endStep={0} label="Empty" />,
 		);
 		expect(container.firstChild).toBeNull();
 	});

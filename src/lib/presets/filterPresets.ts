@@ -1,10 +1,11 @@
+import type { SortingState } from "@tanstack/react-table";
 import { isFactoryPresetIdentity } from "@/lib/presets/factoryPresets";
 import type { Preset } from "@/lib/presets/presetManager";
 
 export type FilterMode = "inclusive" | "exclusive";
 
 export interface FilterPresetsOptions {
-	sorting: any;
+	sorting: SortingState | [];
 	searchTerm: string;
 	selectedTags: string[];
 	filterMode: FilterMode;
@@ -106,8 +107,10 @@ export function filterPresets(
 			return 0;
 		}
 
-		if (a[id] < b[id]) return -1 * order;
-		if (a[id] > b[id]) return 1 * order;
+		const aVal = a[id as keyof Preset] ?? "";
+		const bVal = b[id as keyof Preset] ?? "";
+		if (aVal < (bVal as typeof aVal)) return -1 * order;
+		if (aVal > (bVal as typeof aVal)) return 1 * order;
 		return 0;
 	});
 

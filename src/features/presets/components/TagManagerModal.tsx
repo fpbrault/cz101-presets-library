@@ -48,7 +48,7 @@ export default function TagManagerModal({
 
 			{hasTags && (
 				<div className="grid grid-cols-1 gap-3">
-					<label className="form-control">
+					<div className="form-control">
 						<span className="label-text">Source tag</span>
 						<SelectInput
 							value={sourceTag}
@@ -66,16 +66,16 @@ export default function TagManagerModal({
 								</option>
 							))}
 						</SelectInput>
-					</label>
+					</div>
 
-					<label className="form-control">
+					<div className="form-control">
 						<span className="label-text">Target tag (for rename/merge)</span>
 						<TextInput
 							value={targetTag}
 							placeholder="e.g. bass"
 							onChange={(e) => setTargetTag(e.target.value.toLowerCase())}
 						/>
-					</label>
+					</div>
 				</div>
 			)}
 

@@ -7,7 +7,10 @@ const useDragDrop = () => {
 	const queryClient = useQueryClient();
 
 	useEffect(() => {
-		if (typeof window !== "undefined" && (window as any).__TAURI__) {
+		if (
+			typeof window !== "undefined" &&
+			(window as Window & { __TAURI__?: unknown }).__TAURI__
+		) {
 			// Tauri environment
 			console.log("Tauri environment");
 			const setupTauriDragDrop = async () => {

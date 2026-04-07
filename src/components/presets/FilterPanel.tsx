@@ -49,7 +49,7 @@ const FilterPanel: React.FC = () => {
 	};
 
 	const handleClearFilters = () => {
-		// biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
+		// biome-ignore lint/suspicious/useIterableCallbackReturn: side-effect forEach intentional
 		selectedTags.forEach((tag) => handleTagClick(tag));
 	};
 

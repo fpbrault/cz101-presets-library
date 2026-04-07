@@ -140,11 +140,15 @@ export class IndexedDbPresetDatabase implements PresetDatabase {
 	}
 
 	async import(json: string): Promise<void> {
-		const serializedPresets: any[] = JSON.parse(json);
-		const presets: Preset[] = serializedPresets.map((preset) => ({
-			...preset,
-			sysexData: Uint8Array.from(preset.sysexData),
-		}));
+		type SerializedPreset = Omit<Preset, "sysexData"> & { sysexData: number[] };
+		const serializedPresets: SerializedPreset[] = JSON.parse(json);
+		const presets: Preset[] = serializedPresets.map(
+			(preset) =>
+				({
+					...preset,
+					sysexData: Uint8Array.from(preset.sysexData),
+				}) as Preset,
+		);
 		await this.syncPresets(presets);
 	}
 }
