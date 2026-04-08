@@ -87,17 +87,39 @@ export default function PresetManager() {
 								(leftPanelCollapsed ? "w-14 min-w-14" : "w-64 min-w-64")
 							}
 						>
-							<Button
-								variant="secondary"
-								size="sm"
-								className="w-full"
-								onClick={() => setLeftPanelCollapsed((prev) => !prev)}
-							>
-								{leftPanelCollapsed ? ">" : "<"}
-							</Button>
+							<div className="mb-2 flex justify-center">
+								<button
+									type="button"
+									onClick={() => setLeftPanelCollapsed((prev) => !prev)}
+									className="transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]"
+									aria-label={leftPanelCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+									title={leftPanelCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+								>
+									<div
+									className={
+										"grid place-items-center rounded-xl border border-warning/40 bg-linear-to-br from-warning/25 via-accent/20 to-primary/25 p-0.5 shadow-sm shadow-base-content/10 " +
+										(leftPanelCollapsed
+											? "size-8"
+											: "size-10")
+									}
+								>
+									<div
+										className={
+											"flex size-full flex-col items-center justify-center rounded-[0.65rem] bg-base-200 font-black italic uppercase leading-none text-warning " +
+											(leftPanelCollapsed
+												? "text-[0.54rem]"
+												: "text-[0.66rem]")
+										}
+									>
+										<span className="translate-x-[0.08em] tracking-[0.16em]">CZX</span>
+									</div>
+									</div>
+								</button>
+							</div>
 
 							{leftPanelCollapsed ? (
 								<div className="flex flex-col items-center gap-2 pt-1">
+									
 									<Button
 										variant="secondary"
 										size="sm"
