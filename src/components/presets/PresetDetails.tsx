@@ -11,6 +11,7 @@ import TextAreaInput from "@/components/forms/TextAreaInput";
 import TextInput from "@/components/forms/TextInput";
 import Button from "@/components/ui/Button";
 import KeyValueBlock from "@/components/ui/KeyValueBlock";
+import Modal from "@/components/ui/Modal";
 import { type Preset, updatePreset } from "@/lib/presets/presetManager";
 import { buf2hex } from "@/utils/utils";
 
@@ -315,47 +316,49 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 			</div>
 
 			{isWriteModalOpen && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-					<div className="rounded-xl bg-base-100 p-4 shadow-lg">
-						<h2 className="mb-4 text-xl">Write current preset to slot</h2>
-						<div className="mb-4">
-							<div className="label">
-								<span className="label-text">Bank</span>
-							</div>
-							<SelectInput
-								value={slotBank}
-								onChange={(e) =>
-									setSlotBank(e.target.value as "internal" | "cartridge")
-								}
+				<Modal
+					panelClassName="w-full max-w-sm"
+					onClose={() => setIsWriteModalOpen(false)}
+				>
+					<h2 className="mb-4 text-xl">Write current preset to slot</h2>
+					<div className="mb-4">
+						<div className="label">
+							<span className="label-text">Bank</span>
+						</div>
+						<SelectInput
+							value={slotBank}
+							onChange={(e) =>
+								setSlotBank(e.target.value as "internal" | "cartridge")
+							}
+						>
+							<option value="internal">Internal</option>
+							<option value="cartridge">Cartridge</option>
+						</SelectInput>
+					</div>
+					<div className="grid grid-cols-4 gap-2">
+						{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
+							<Button
+								key={`details-write-slot-${slot}`}
+								onClick={() => {
+									onWritePresetSlot(slotBank, slot);
+									setIsWriteModalOpen(false);
+								}}
+								variant="primary"
+								className="text-2xl font-bold"
 							>
-								<option value="internal">Internal</option>
-								<option value="cartridge">Cartridge</option>
-							</SelectInput>
-						</div>
-						<div className="grid grid-cols-4 gap-2">
-							{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
-								<Button
-									key={`details-write-slot-${slot}`}
-									onClick={() => {
-										onWritePresetSlot(slotBank, slot);
-										setIsWriteModalOpen(false);
-									}}
-									variant="primary"
-									className="text-2xl font-bold"
-								>
-									{slot}
-								</Button>
-							))}
-						</div>
+								{slot}
+							</Button>
+						))}
+					</div>
+					<div className="flex justify-end mt-4">
 						<Button
 							onClick={() => setIsWriteModalOpen(false)}
 							variant="error"
-							className="mt-4"
 						>
 							Close
 						</Button>
 					</div>
-				</div>
+				</Modal>
 			)}
 		</div>
 	);
