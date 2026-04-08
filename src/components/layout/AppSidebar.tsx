@@ -67,7 +67,7 @@ export default function AppSidebar({
 				/* Collapsed: icon-only navigation */
 				<div className="flex flex-col items-center gap-2 pt-1">
 					<Button
-						variant={performanceMode ? "warning" : "secondary"}
+						variant={performanceMode ? "accent" : "secondary"}
 						size="sm"
 						className="w-full text-[10px]"
 						onClick={() => setPerformanceMode((prev) => !prev)}
@@ -115,7 +115,7 @@ export default function AppSidebar({
 				/* Expanded: full navigation + page-specific slot */
 				<>
 					<Button
-						variant={performanceMode ? "warning" : "secondary"}
+						variant={performanceMode ? "accent" : "secondary"}
 						size="lg"
 						onClick={() => setPerformanceMode((prev) => !prev)}
 					>
