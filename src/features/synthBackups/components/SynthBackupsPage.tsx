@@ -1,7 +1,6 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import InlineNotice from "@/components/feedback/InlineNotice";
-import { useSidebarContent } from "@/hooks/useSidebarContent";
 import SendEntryModal from "@/features/synthBackups/components/SendEntryModal";
 import SynthBackupDetailsHeader from "@/features/synthBackups/components/SynthBackupDetailsHeader";
 import SynthBackupEntriesTable from "@/features/synthBackups/components/SynthBackupEntriesTable";
@@ -10,6 +9,7 @@ import type {
 	SynthBackupsPageProps,
 } from "@/features/synthBackups/components/SynthBackupsPage.types";
 import SynthBackupsSidebar from "@/features/synthBackups/components/SynthBackupsSidebar";
+import { useSidebarContent } from "@/hooks/useSidebarContent";
 
 const SynthBackupsPage: React.FC<SynthBackupsPageProps> = ({
 	backups,

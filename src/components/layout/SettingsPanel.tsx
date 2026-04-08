@@ -336,7 +336,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						(triggerType === "login" && onlineAuthSession ? "text-warning" : "")
 					}
 				>
-					{triggerType === "login" ? renderAccountTriggerIcon() : <FaCog size={16} />}
+					{triggerType === "login" ? (
+						renderAccountTriggerIcon()
+					) : (
+						<FaCog size={16} />
+					)}
 				</Button>
 			) : triggerType === "login" ? (
 				<Button
@@ -371,7 +375,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						<div className="space-y-4">
 							{triggerType === "login" ? (
 								<div className="p-4 border rounded-xl border-base-content/15 bg-base-200/40">
-									<div className="mb-3 text-base font-semibold">Online Sync</div>
+									<div className="mb-3 text-base font-semibold">
+										Online Sync
+									</div>
 									<div className="mb-3 text-sm opacity-80">
 										Connect an account to sync your user-created presets to the
 										cloud.
@@ -436,9 +442,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 									<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 										<div className="w-full form-control">
 											<div className="label">
-												<span className="label-text">Factory Preset Library</span>
+												<span className="label-text">
+													Factory Preset Library
+												</span>
 											</div>
-											<Button onClick={handleAddFactoryPresets} variant="neutral">
+											<Button
+												onClick={handleAddFactoryPresets}
+												variant="neutral"
+											>
 												Add Factory Presets
 											</Button>
 										</div>
@@ -464,7 +475,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 														Export Full Workspace Backup
 													</span>
 												</div>
-												<Button onClick={handleExportWorkspace} variant="accent">
+												<Button
+													onClick={handleExportWorkspace}
+													variant="accent"
+												>
 													Export Full Backup
 												</Button>
 											</div>

@@ -83,15 +83,21 @@ export default function MidiQuickSettings({
 										saveToLocalStorage("selectedMidiChannel", channel);
 									}}
 								>
-									{Array.from({ length: 16 }, (_, i) => i + 1).map((channel) => (
-										<option key={`midi-channel-${channel}`} value={channel}>
-											Channel {channel}
-										</option>
-									))}
+									{Array.from({ length: 16 }, (_, i) => i + 1).map(
+										(channel) => (
+											<option key={`midi-channel-${channel}`} value={channel}>
+												Channel {channel}
+											</option>
+										),
+									)}
 								</SelectInput>
 							</div>
 
-							<Button className="w-full" variant="primary" onClick={() => setIsOpen(false)}>
+							<Button
+								className="w-full"
+								variant="primary"
+								onClick={() => setIsOpen(false)}
+							>
 								Done
 							</Button>
 						</div>

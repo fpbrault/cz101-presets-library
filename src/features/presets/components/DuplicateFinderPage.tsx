@@ -53,9 +53,7 @@ export default function DuplicateFinderPage() {
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [previewingGroupFingerprint, setPreviewingGroupFingerprint] = useState<
 		string | null
-	>(
-		null,
-	);
+	>(null);
 
 	const { data: duplicatePresets = [] } = useQuery({
 		queryKey: ["presets", "duplicate-review"],
@@ -173,85 +171,86 @@ export default function DuplicateFinderPage() {
 					<div className="mt-6 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
 						{groups.length === 0 ? (
 							<div>
-							<InlineNotice
-								message="No duplicates found."
-								tone="success"
-								size="md"
-							/>
+								<InlineNotice
+									message="No duplicates found."
+									tone="success"
+									size="md"
+								/>
 							</div>
 						) : (
 							<div className="space-y-3 min-w-0 overflow-x-hidden">
-							{groups.map((group, groupIndex) => {
-								const keepIndex = getSuggestedKeepIndex(group.presets);
-								const previewPreset =
-									group.presets[keepIndex] ?? group.presets[0];
-								const isPreviewing =
-									previewingGroupFingerprint === group.fingerprint;
+								{groups.map((group, groupIndex) => {
+									const keepIndex = getSuggestedKeepIndex(group.presets);
+									const previewPreset =
+										group.presets[keepIndex] ?? group.presets[0];
+									const isPreviewing =
+										previewingGroupFingerprint === group.fingerprint;
 
-								return (
-									<div
-										key={group.fingerprint}
-										className="p-3 border rounded-lg border-base-content/15 min-w-0 overflow-x-hidden"
-									>
-										<div className="mb-2 flex items-center justify-between gap-3">
-											<div className="min-w-0 text-sm font-semibold">
-												Group {groupIndex + 1} ({group.presets.length} presets)
+									return (
+										<div
+											key={group.fingerprint}
+											className="p-3 border rounded-lg border-base-content/15 min-w-0 overflow-x-hidden"
+										>
+											<div className="mb-2 flex items-center justify-between gap-3">
+												<div className="min-w-0 text-sm font-semibold">
+													Group {groupIndex + 1} ({group.presets.length}{" "}
+													presets)
+												</div>
+												<Button
+													variant="info"
+													size="sm"
+													className="btn btn-xs shrink-0"
+													onClick={() => void handlePreviewGroup(group)}
+													disabled={isPreviewing || !previewPreset}
+													title="Preview this duplicate group in synth buffer"
+												>
+													<FaPlay size={10} />
+													{isPreviewing ? "Sending" : "Preview group"}
+												</Button>
 											</div>
-											<Button
-												variant="info"
-												size="sm"
-												className="btn btn-xs shrink-0"
-												onClick={() => void handlePreviewGroup(group)}
-												disabled={isPreviewing || !previewPreset}
-												title="Preview this duplicate group in synth buffer"
-											>
-												<FaPlay size={10} />
-												{isPreviewing ? "Sending" : "Preview group"}
-											</Button>
-										</div>
 
-										<div className="space-y-2 min-w-0 overflow-x-hidden">
-											{group.presets.map((preset, presetIndex) => {
-												const checked = selectedIds.includes(preset.id);
+											<div className="space-y-2 min-w-0 overflow-x-hidden">
+												{group.presets.map((preset, presetIndex) => {
+													const checked = selectedIds.includes(preset.id);
 
-												return (
-													<div
-														key={preset.id}
-														className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-2 rounded-md bg-base-200/60 min-w-0 overflow-hidden"
-													>
-														<label className="flex items-center gap-2 min-w-0 overflow-hidden cursor-pointer">
-															<input
-																type="checkbox"
-																className="checkbox checkbox-sm"
-																checked={checked}
-																onChange={() => togglePreset(preset.id)}
-															/>
-															<span className="font-medium truncate min-w-0">
-																{preset.name}
-															</span>
-															{preset.favorite && (
-																<span className="badge badge-warning badge-sm">
-																	Favorite
+													return (
+														<div
+															key={preset.id}
+															className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-2 rounded-md bg-base-200/60 min-w-0 overflow-hidden"
+														>
+															<label className="flex items-center gap-2 min-w-0 overflow-hidden cursor-pointer">
+																<input
+																	type="checkbox"
+																	className="checkbox checkbox-sm"
+																	checked={checked}
+																	onChange={() => togglePreset(preset.id)}
+																/>
+																<span className="font-medium truncate min-w-0">
+																	{preset.name}
 																</span>
-															)}
-															<span className="text-xs opacity-70 truncate min-w-0">
-																by {preset.author || "Unknown"}
-															</span>
-														</label>
-														<div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2 shrink-0">
-															{presetIndex === keepIndex && (
-																<span className="badge badge-success badge-sm">
-																	Suggested keep
+																{preset.favorite && (
+																	<span className="badge badge-warning badge-sm">
+																		Favorite
+																	</span>
+																)}
+																<span className="text-xs opacity-70 truncate min-w-0">
+																	by {preset.author || "Unknown"}
 																</span>
-															)}
+															</label>
+															<div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2 shrink-0">
+																{presetIndex === keepIndex && (
+																	<span className="badge badge-success badge-sm">
+																		Suggested keep
+																	</span>
+																)}
+															</div>
 														</div>
-													</div>
-												);
-											})}
+													);
+												})}
+											</div>
 										</div>
-									</div>
-								);
-							})}
+									);
+								})}
 							</div>
 						)}
 					</div>

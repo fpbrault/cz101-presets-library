@@ -356,16 +356,15 @@ function normalizePresetForComparison(data: Uint8Array): Uint8Array {
 	return canonicalizePresetForLibrary(data);
 }
 
-function extractNibblePayloadForComparison(data: Uint8Array): Uint8Array | null {
+function extractNibblePayloadForComparison(
+	data: Uint8Array,
+): Uint8Array | null {
 	const normalized = normalizeSysexForLibrary(data);
 	const framed = ensureSysexFraming(normalized);
 
 	if (framed.length >= 264) {
 		const canonicalPayload = framed.slice(7, 7 + 256);
-		if (
-			canonicalPayload.length === 256 &&
-			isNibblePayload(canonicalPayload)
-		) {
+		if (canonicalPayload.length === 256 && isNibblePayload(canonicalPayload)) {
 			return canonicalPayload;
 		}
 	}

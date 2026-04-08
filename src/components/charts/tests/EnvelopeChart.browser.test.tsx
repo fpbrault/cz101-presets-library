@@ -20,7 +20,9 @@ describe("EnvelopeChart (Browser Mode)", () => {
 		);
 
 		// Verify the label exists in the DOM
-		expect(screen.getAllByText("Browser Test Envelope").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("Browser Test Envelope").length).toBeGreaterThan(
+			0,
+		);
 
 		// Verify the SVG is actually rendered in the container
 		const svg = container.querySelector("svg");
