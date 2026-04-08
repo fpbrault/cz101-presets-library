@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import { MidiChannelProvider } from "@/context/MidiChannelContext";
 import { MidiPortProvider } from "@/context/MidiPortContext";
 import { SearchFilterProvider } from "@/context/SearchFilterContext";
+import { SidebarProvider } from "@/context/SidebarContext";
 import { ToastProvider, useToast } from "@/context/ToastContext";
 import { refreshOnlineAuthSession } from "@/lib/auth/onlineAuthSession";
 import {
@@ -104,7 +105,9 @@ export default function App() {
 				<MidiPortProvider>
 					<MidiChannelProvider>
 						<SearchFilterProvider>
-							<AppInner />
+							<SidebarProvider>
+								<AppInner />
+							</SidebarProvider>
 						</SearchFilterProvider>
 					</MidiChannelProvider>
 				</MidiPortProvider>

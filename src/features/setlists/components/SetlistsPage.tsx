@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button";
 import SetlistEntriesTable from "@/features/setlists/components/SetlistEntriesTable";
 import type { SetlistsPageProps } from "@/features/setlists/components/SetlistsPage.types";
 import SetlistsSidebar from "@/features/setlists/components/SetlistsSidebar";
+import { useSidebarContent } from "@/hooks/useSidebarContent";
 
 const SetlistsPage: React.FC<SetlistsPageProps> = ({
 	playlists,
@@ -48,6 +49,12 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 		if (!entry) return null;
 		return presets.find((p) => p.id === entry.presetId) ?? null;
 	}, [selectedPlaylist, quickSendIndex, presets]);
+
+	useSidebarContent(
+		<div className="p-2 rounded-lg bg-base-300 text-xs">
+			<div>Setlists: {playlists.length}</div>
+		</div>,
+	);
 
 	return (
 		<div className="flex grow h-full overflow-hidden bg-base-300">
