@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { MidiChannelProvider } from "@/context/MidiChannelContext";
 import { MidiPortProvider } from "@/context/MidiPortContext";
 import { SearchFilterProvider } from "@/context/SearchFilterContext";
+import { SidebarProvider } from "@/context/SidebarContext";
 
 function createTestQueryClient() {
 	return new QueryClient({
@@ -28,7 +29,9 @@ export function TestAppProviders({ children }: TestAppProvidersProps) {
 		<QueryClientProvider client={queryClient}>
 			<MidiPortProvider>
 				<MidiChannelProvider>
-					<SearchFilterProvider>{children}</SearchFilterProvider>
+					<SearchFilterProvider>
+						<SidebarProvider>{children}</SidebarProvider>
+					</SearchFilterProvider>
 				</MidiChannelProvider>
 			</MidiPortProvider>
 		</QueryClientProvider>

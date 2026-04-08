@@ -1,6 +1,7 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import InlineNotice from "@/components/feedback/InlineNotice";
+import { useSidebarContent } from "@/hooks/useSidebarContent";
 import SendEntryModal from "@/features/synthBackups/components/SendEntryModal";
 import SynthBackupDetailsHeader from "@/features/synthBackups/components/SynthBackupDetailsHeader";
 import SynthBackupEntriesTable from "@/features/synthBackups/components/SynthBackupEntriesTable";
@@ -36,6 +37,18 @@ const SynthBackupsPage: React.FC<SynthBackupsPageProps> = ({
 	const selectedBackup = useMemo(
 		() => backups.find((backup) => backup.id === selectedBackupId) ?? null,
 		[backups, selectedBackupId],
+	);
+
+	const totalEntries = useMemo(
+		() => backups.reduce((sum, b) => sum + b.entries.length, 0),
+		[backups],
+	);
+
+	useSidebarContent(
+		<div className="p-2 rounded-lg bg-base-300 text-xs">
+			<div>Backups: {backups.length}</div>
+			<div>Entries: {totalEntries}</div>
+		</div>,
 	);
 
 	return (
