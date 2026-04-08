@@ -51,7 +51,9 @@ export default function DuplicateFinderPage() {
 	const { notifyInfo, notifyError } = useToast();
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [previewingPresetId, setPreviewingPresetId] = useState<string | null>(
+	const [previewingGroupFingerprint, setPreviewingGroupFingerprint] = useState<
+		string | null
+	>(
 		null,
 	);
 
@@ -125,13 +127,19 @@ export default function DuplicateFinderPage() {
 		setSelectedIds(nextIds);
 	};
 
-	const handlePreviewPreset = async (preset: Preset) => {
+	const handlePreviewGroup = async (group: DuplicateGroup) => {
 		if (!selectedMidiPort) {
 			notifyInfo("Select a MIDI port before previewing presets.");
 			return;
 		}
 
-		setPreviewingPresetId(preset.id);
+		const keepIndex = getSuggestedKeepIndex(group.presets);
+		const preset = group.presets[keepIndex] ?? group.presets[0];
+		if (!preset) {
+			return;
+		}
+
+		setPreviewingGroupFingerprint(group.fingerprint);
 		try {
 			await restorePresetToBuffer(
 				preset,
@@ -141,7 +149,7 @@ export default function DuplicateFinderPage() {
 		} catch (error) {
 			notifyError((error as Error).message);
 		} finally {
-			setPreviewingPresetId(null);
+			setPreviewingGroupFingerprint(null);
 		}
 	};
 
@@ -154,38 +162,58 @@ export default function DuplicateFinderPage() {
 
 	return (
 		<div className="flex grow min-w-0 h-full overflow-hidden bg-base-300">
-			<section className="flex grow min-w-0 overflow-y-auto overflow-x-hidden p-4 lg:p-6">
-				<div className="mx-auto w-full max-w-5xl min-w-0 overflow-x-hidden rounded-xl border border-base-content/15 bg-base-100 p-4 lg:p-6">
+			<section className="flex grow min-w-0 overflow-hidden p-4 lg:p-6">
+				<div className="mx-auto flex h-full w-full max-w-5xl min-w-0 flex-col overflow-hidden rounded-xl border border-base-content/15 bg-base-100 p-4 lg:p-6">
 					<h1 className="text-2xl font-bold">Duplicate Finder</h1>
 					<p className="mt-1 text-sm opacity-70">
 						{groups.length} duplicate groups, {totalDuplicates} total duplicate
 						presets.
 					</p>
 
-					{groups.length === 0 ? (
-						<div className="mt-6">
+					<div className="mt-6 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
+						{groups.length === 0 ? (
+							<div>
 							<InlineNotice
 								message="No duplicates found."
 								tone="success"
 								size="md"
 							/>
-						</div>
-					) : (
-						<div className="mt-6 space-y-3 min-w-0 overflow-x-hidden">
-							{groups.map((group, groupIndex) => (
-								<div
-									key={group.fingerprint}
-									className="p-3 border rounded-lg border-base-content/15 min-w-0 overflow-x-hidden"
-								>
-									<div className="mb-2 text-sm font-semibold">
-										Group {groupIndex + 1} ({group.presets.length} presets)
-									</div>
-									<div className="space-y-2 min-w-0 overflow-x-hidden">
-										{(() => {
-											const keepIndex = getSuggestedKeepIndex(group.presets);
-											return group.presets.map((preset, presetIndex) => {
+							</div>
+						) : (
+							<div className="space-y-3 min-w-0 overflow-x-hidden">
+							{groups.map((group, groupIndex) => {
+								const keepIndex = getSuggestedKeepIndex(group.presets);
+								const previewPreset =
+									group.presets[keepIndex] ?? group.presets[0];
+								const isPreviewing =
+									previewingGroupFingerprint === group.fingerprint;
+
+								return (
+									<div
+										key={group.fingerprint}
+										className="p-3 border rounded-lg border-base-content/15 min-w-0 overflow-x-hidden"
+									>
+										<div className="mb-2 flex items-center justify-between gap-3">
+											<div className="min-w-0 text-sm font-semibold">
+												Group {groupIndex + 1} ({group.presets.length} presets)
+											</div>
+											<Button
+												variant="info"
+												size="sm"
+												className="btn btn-xs shrink-0"
+												onClick={() => void handlePreviewGroup(group)}
+												disabled={isPreviewing || !previewPreset}
+												title="Preview this duplicate group in synth buffer"
+											>
+												<FaPlay size={10} />
+												{isPreviewing ? "Sending" : "Preview group"}
+											</Button>
+										</div>
+
+										<div className="space-y-2 min-w-0 overflow-x-hidden">
+											{group.presets.map((preset, presetIndex) => {
 												const checked = selectedIds.includes(preset.id);
-												const isPreviewing = previewingPresetId === preset.id;
+
 												return (
 													<div
 														key={preset.id}
@@ -211,21 +239,6 @@ export default function DuplicateFinderPage() {
 															</span>
 														</label>
 														<div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2 shrink-0">
-															<Button
-																variant="info"
-																size="sm"
-																className="btn btn-xs"
-																onClick={(e) => {
-																	e.preventDefault();
-																	e.stopPropagation();
-																	void handlePreviewPreset(preset);
-																}}
-																disabled={isPreviewing}
-																title="Preview in synth buffer"
-															>
-																<FaPlay size={10} />
-																{isPreviewing ? "Sending" : "Preview"}
-															</Button>
 															{presetIndex === keepIndex && (
 																<span className="badge badge-success badge-sm">
 																	Suggested keep
@@ -234,15 +247,16 @@ export default function DuplicateFinderPage() {
 														</div>
 													</div>
 												);
-											});
-										})()}
+											})}
+										</div>
 									</div>
-								</div>
-							))}
-						</div>
-					)}
+								);
+							})}
+							</div>
+						)}
+					</div>
 
-					<div className="flex flex-wrap justify-end gap-2 mt-6">
+					<div className="mt-4 flex shrink-0 flex-wrap justify-end gap-2 border-t border-base-content/10 pt-4">
 						<Button
 							variant="neutral"
 							onClick={() => setSelectedIds([])}
