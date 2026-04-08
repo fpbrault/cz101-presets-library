@@ -276,7 +276,7 @@ export function normalizeSysexForLibrary(data: Uint8Array): Uint8Array {
 	}
 
 	// Tolerate command/program variations shifting payload start.
-	for (let offset = 7; offset <= 16; offset++) {
+	for (let offset = 5; offset <= 16; offset++) {
 		if (framed.length >= offset + 256 + 1) {
 			const payload = framed.slice(offset, offset + 256);
 			if (payload.length === 256 && isNibblePayload(payload)) {
@@ -286,7 +286,7 @@ export function normalizeSysexForLibrary(data: Uint8Array): Uint8Array {
 	}
 
 	// Some dumps may carry 128 logical bytes; re-encode to canonical nibble stream.
-	for (let offset = 7; offset <= 16; offset++) {
+	for (let offset = 5; offset <= 16; offset++) {
 		if (framed.length >= offset + 128 + 1) {
 			const payload = framed.slice(offset, offset + 128);
 			if (payload.length === 128) {
@@ -356,8 +356,40 @@ function normalizePresetForComparison(data: Uint8Array): Uint8Array {
 	return canonicalizePresetForLibrary(data);
 }
 
+function extractNibblePayloadForComparison(data: Uint8Array): Uint8Array | null {
+	const normalized = normalizeSysexForLibrary(data);
+	const framed = ensureSysexFraming(normalized);
+
+	if (framed.length >= 264) {
+		const canonicalPayload = framed.slice(7, 7 + 256);
+		if (
+			canonicalPayload.length === 256 &&
+			isNibblePayload(canonicalPayload)
+		) {
+			return canonicalPayload;
+		}
+	}
+
+	for (let offset = 5; offset <= 16; offset++) {
+		if (framed.length >= offset + 256 + 1) {
+			const payload = framed.slice(offset, offset + 256);
+			if (payload.length === 256 && isNibblePayload(payload)) {
+				return payload;
+			}
+		}
+	}
+
+	return null;
+}
+
 function getPresetFingerprint(data: Uint8Array): string {
-	return Array.from(normalizePresetForComparison(data)).join(",");
+	const payload = extractNibblePayloadForComparison(data);
+	if (payload) {
+		// Compare on patch payload bytes only so slot/program header differences are ignored.
+		return `payload:${Array.from(payload).join(",")}`;
+	}
+
+	return `canonical:${Array.from(normalizePresetForComparison(data)).join(",")}`;
 }
 
 async function buildPresetMatchIndex(): Promise<Map<string, Preset>> {

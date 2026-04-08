@@ -17,7 +17,12 @@ import { useSynthBackupMode } from "@/features/synthBackups/hooks/useSynthBackup
 import { useMidiSetup } from "@/hooks/useMidiSetup";
 import type { Preset } from "@/lib/presets/presetManager";
 
-type AppMode = "presets" | "synthBackups" | "setlists";
+type AppMode =
+	| "presets"
+	| "synthBackups"
+	| "setlists"
+	| "tagManager"
+	| "duplicateFinder";
 
 export default function PresetManager() {
 	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
@@ -276,6 +281,17 @@ export default function PresetManager() {
 									handleSelectPreset={presetMode.handleSelectPreset}
 									handleActivatePreset={presetMode.handleActivatePreset}
 									currentPreset={currentPreset}
+									autoSend={presetMode.autoSend}
+									onToggleAutoSend={presetMode.handleToggleAutoSend}
+									onSendCurrentPreset={() =>
+										presetMode.handleSendCurrentPreset(currentPreset)
+									}
+									onRetrieveCurrentPreset={
+										presetMode.handleRetrieveCurrentPreset
+									}
+									onRetrievePresetSlot={
+										presetMode.handleRetrievePresetSlot
+									}
 									playlists={setlistMode.playlists}
 									onAddPresetToPlaylist={setlistMode.handleAddPreset}
 								></PresetList>

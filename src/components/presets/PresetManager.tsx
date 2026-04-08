@@ -1,6 +1,6 @@
 import { useState } from "react";
-import AppSidebar from "@/components/layout/AppSidebar";
 import type { AppMode } from "@/components/layout/AppSidebar";
+import AppSidebar from "@/components/layout/AppSidebar";
 import PerformanceMode from "@/components/presets/PerformanceMode";
 import PresetDetails from "@/components/presets/PresetDetails";
 import PresetList from "@/components/presets/PresetList";
@@ -17,6 +17,8 @@ import SynthBackupsPage from "@/features/synthBackups/components/SynthBackupsPag
 import { useSynthBackupMode } from "@/features/synthBackups/hooks/useSynthBackupMode";
 import { useMidiSetup } from "@/hooks/useMidiSetup";
 import type { Preset } from "@/lib/presets/presetManager";
+import DuplicateFinderPage from "../../features/presets/components/DuplicateFinderPage";
+import TagManagerPage from "../../features/presets/components/TagManagerPage";
 
 export default function PresetManager() {
 	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
@@ -80,17 +82,6 @@ export default function PresetManager() {
 				 */}
 				{appMode === "presets" && !performanceMode && (
 					<PresetsSidebarContent
-						currentPreset={currentPreset}
-						autoSend={presetMode.autoSend}
-						onSendCurrentPreset={() =>
-							presetMode.handleSendCurrentPreset(currentPreset)
-						}
-						onToggleAutoSend={presetMode.handleToggleAutoSend}
-						onRetrieveCurrentPreset={presetMode.handleRetrieveCurrentPreset}
-						onRetrievePresetSlot={presetMode.handleRetrievePresetSlot}
-						onWritePresetSlot={(bank, slot) =>
-							presetMode.handleWritePresetSlot(currentPreset, bank, slot)
-						}
 						playlists={setlistMode.playlists}
 						dragOverPlaylistId={dragOverPlaylistId}
 						setDragOverPlaylistId={setDragOverPlaylistId}
@@ -112,6 +103,15 @@ export default function PresetManager() {
 									handleSelectPreset={presetMode.handleSelectPreset}
 									handleActivatePreset={presetMode.handleActivatePreset}
 									currentPreset={currentPreset}
+									autoSend={presetMode.autoSend}
+									onToggleAutoSend={presetMode.handleToggleAutoSend}
+									onSendCurrentPreset={() =>
+										presetMode.handleSendCurrentPreset(currentPreset)
+									}
+									onRetrieveCurrentPreset={
+										presetMode.handleRetrieveCurrentPreset
+									}
+									onRetrievePresetSlot={presetMode.handleRetrievePresetSlot}
 									playlists={setlistMode.playlists}
 									onAddPresetToPlaylist={setlistMode.handleAddPreset}
 								/>
@@ -121,6 +121,9 @@ export default function PresetManager() {
 									onPresetUpdated={setCurrentPreset}
 									setShowDeleteModal={setShowDeleteModal}
 									setEditMode={presetMode.setEditMode}
+									onWritePresetSlot={(bank, slot) =>
+										presetMode.handleWritePresetSlot(currentPreset, bank, slot)
+									}
 								/>
 							</>
 						)}
@@ -176,6 +179,10 @@ export default function PresetManager() {
 								}}
 							/>
 						)}
+
+						{appMode === "tagManager" && <TagManagerPage />}
+
+						{appMode === "duplicateFinder" && <DuplicateFinderPage />}
 					</>
 				)}
 			</div>

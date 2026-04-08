@@ -13,7 +13,12 @@ import {
 } from "@/lib/presets/presetManager";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
 
-type AppMode = "presets" | "synthBackups" | "setlists";
+type AppMode =
+	| "presets"
+	| "synthBackups"
+	| "setlists"
+	| "tagManager"
+	| "duplicateFinder";
 
 interface SaveDraftPresetState {
 	sysexData: Uint8Array;

@@ -177,6 +177,67 @@ describe("filterPresets", () => {
 		expect(result.every((p) => p.name.startsWith("Dup"))).toBe(true);
 	});
 
+	it("treats slot/program header differences as duplicates when payload matches", () => {
+		const payload = new Array(256).fill(0);
+		payload[8] = 0x07;
+		payload[9] = 0x03;
+
+		const slotA = makePreset({
+			name: "Dup Slot A",
+			sysexData: new Uint8Array([
+				0xf0,
+				0x44,
+				0x00,
+				0x00,
+				0x70,
+				0x21,
+				0x20,
+				...payload,
+				0xf7,
+			]),
+		});
+
+		const slotB = makePreset({
+			name: "Dup Slot B",
+			sysexData: new Uint8Array([
+				0xf0,
+				0x44,
+				0x00,
+				0x00,
+				0x70,
+				0x21,
+				0x2f,
+				...payload,
+				0xf7,
+			]),
+		});
+
+		const unique = makePreset({
+			name: "Unique Payload",
+			sysexData: new Uint8Array([
+				0xf0,
+				0x44,
+				0x00,
+				0x00,
+				0x70,
+				0x21,
+				0x20,
+				...new Array(256).fill(1),
+				0xf7,
+			]),
+		});
+
+		const { presets: result } = filterPresets([slotA, slotB, unique], {
+			...baseOptions,
+			duplicatesOnly: true,
+		});
+
+		expect(result).toHaveLength(2);
+		expect(result.map((p) => p.name)).toEqual(
+			expect.arrayContaining(["Dup Slot A", "Dup Slot B"]),
+		);
+	});
+
 	it("returns no results when duplicatesOnly but no duplicates", () => {
 		// presets each have unique sysexData (from the counter-based makePreset)
 		const { presets: result } = filterPresets(presets, {

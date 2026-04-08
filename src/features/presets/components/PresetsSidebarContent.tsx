@@ -1,20 +1,8 @@
 import { useSearchFilter } from "@/context/SearchFilterContext";
-import OptionPanel from "@/features/presets/components/OptionPanel";
 import { useSidebarContent } from "@/hooks/useSidebarContent";
 import type { Playlist } from "@/lib/collections/playlistManager";
-import type { Preset } from "@/lib/presets/presetManager";
 
 interface PresetsSidebarContentProps {
-	currentPreset: Preset | null;
-	autoSend: boolean;
-	onSendCurrentPreset: () => void;
-	onToggleAutoSend: () => void;
-	onRetrieveCurrentPreset: () => void;
-	onRetrievePresetSlot: (
-		bank: "internal" | "cartridge",
-		slot: number,
-	) => void;
-	onWritePresetSlot: (bank: "internal" | "cartridge", slot: number) => void;
 	playlists: Playlist[];
 	dragOverPlaylistId: string | null;
 	setDragOverPlaylistId: (id: string | null) => void;
@@ -27,13 +15,6 @@ interface PresetsSidebarContentProps {
  * presets mode is active; it cleans up automatically on unmount.
  */
 export default function PresetsSidebarContent({
-	currentPreset,
-	autoSend,
-	onSendCurrentPreset,
-	onToggleAutoSend,
-	onRetrieveCurrentPreset,
-	onRetrievePresetSlot,
-	onWritePresetSlot,
 	playlists,
 	dragOverPlaylistId,
 	setDragOverPlaylistId,
@@ -42,18 +23,7 @@ export default function PresetsSidebarContent({
 	const { activePlaylistId, setActivePlaylistId } = useSearchFilter();
 
 	useSidebarContent(
-		<>
-			<OptionPanel
-				currentPreset={currentPreset}
-				autoSend={autoSend}
-				handleSendCurrentPreset={onSendCurrentPreset}
-				handleToggleAutoSend={onToggleAutoSend}
-				handleRetrieveCurrentPreset={onRetrieveCurrentPreset}
-				handleRetrievePresetSlot={onRetrievePresetSlot}
-				handleWritePresetSlot={onWritePresetSlot}
-			/>
-
-			{playlists.length > 0 && (
+		playlists.length > 0 && (
 				<div className="p-2 rounded-lg bg-base-300 text-xs overflow-y-auto max-h-48">
 					<div className="font-bold mb-1 opacity-70 uppercase tracking-wide">
 						Setlists
@@ -102,8 +72,7 @@ export default function PresetsSidebarContent({
 						</button>
 					))}
 				</div>
-			)}
-		</>,
+			),
 	);
 
 	// This component has no visual output of its own. It exists solely to

@@ -1,7 +1,6 @@
 import {
 	keepPreviousData,
 	useInfiniteQuery,
-	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
 import {
@@ -27,9 +26,8 @@ import {
 	FaCheckCircle,
 	FaChevronDown,
 	FaChevronUp,
-	FaCopy,
+	FaDownload,
 	FaHeart,
-	FaPlusSquare,
 	FaRandom,
 	FaRegDotCircle,
 	FaRegHeart,
@@ -38,20 +36,15 @@ import {
 	FaTags,
 	FaTimes,
 	FaTrash,
+	FaUpload,
 } from "react-icons/fa";
+import SelectInput from "@/components/forms/SelectInput";
+import Button from "@/components/ui/Button";
 import { useSearchFilter } from "@/context/SearchFilterContext";
-import DuplicateReviewModal, {
-	type DuplicateGroup,
-} from "@/features/presets/components/DuplicateReviewModal";
-import TagManagerModal from "@/features/presets/components/TagManagerModal";
-import useDragDrop from "@/hooks/useDragDrop";
 import type { Playlist } from "@/lib/collections/playlistManager";
 import {
-	deletePreset,
-	deleteTagGlobally,
 	fetchPresetData,
 	type Preset,
-	renameTagGlobally,
 	updatePreset,
 } from "@/lib/presets/presetManager";
 import { getPresetQueryKey } from "@/lib/presets/presetQueryKey";
@@ -60,6 +53,11 @@ interface PresetListProps {
 	currentPreset: Preset | null;
 	handleSelectPreset: (preset: Preset) => void;
 	handleActivatePreset?: (preset: Preset) => void;
+	autoSend: boolean;
+	onToggleAutoSend: () => void;
+	onSendCurrentPreset: () => void;
+	onRetrieveCurrentPreset: () => void;
+	onRetrievePresetSlot: (bank: "internal" | "cartridge", slot: number) => void;
 	playlists?: Playlist[];
 	onAddPresetToPlaylist?: (playlistId: string, presetId: string) => void;
 }
@@ -140,20 +138,21 @@ const TagsCell = memo(({ tags }: { tags: string[] }) => (
 // )
 
 function PresetListTopBar(props: {
+	currentPreset: Preset | null;
 	searchTerm: string;
 	setSearchTerm: (arg0: string) => void;
 	totalDBRowCount: number;
+	autoSend: boolean;
+	onToggleAutoSend: () => void;
+	onSendCurrentPreset: () => void;
+	onRetrieveCurrentPreset: () => void;
+	onOpenRetrieve: () => void;
 	selectedTags: string[];
 	filterMode: "inclusive" | "exclusive";
 	onToggleFilterMode: () => void;
 	onClearFilters: () => void;
 	onToggleTag: (tag: string) => void;
 	availableTags: [string, number][];
-	duplicatesOnly: boolean;
-	onToggleDuplicatesOnly: () => void;
-	onOpenTagManager: () => void;
-	duplicateGroupCount: number;
-	onOpenDuplicateReview: () => void;
 	userPresetsOnly: boolean;
 	onToggleUserPresetsOnly: () => void;
 }) {
@@ -181,21 +180,45 @@ function PresetListTopBar(props: {
 					)}
 				</div>
 
-				<span className="shrink-0">{props.totalDBRowCount} Presets Found</span>
+				<span className="ml-1 text-xs font-semibold tracking-wide uppercase opacity-65">
+					{props.totalDBRowCount} presets
+				</span>
 
-				<div className="flex items-center gap-2 ml-auto">
+				<div className="flex flex-wrap items-center gap-2">
 					<button
 						type="button"
-						className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
-							props.duplicatesOnly ? "btn-warning" : "btn-neutral"
-						}`}
-						onClick={props.onToggleDuplicatesOnly}
-						title="Show only duplicate SysEx presets"
+						className="btn btn-sm btn-primary btn-square"
+						onClick={props.onSendCurrentPreset}
+						disabled={!props.currentPreset}
+						title={
+							props.currentPreset
+								? "Send current preset"
+								: "Select a preset to send"
+						}
 					>
-						<FaCopy size={12} />
-						Duplicates
+						<FaUpload size={12} />
+					</button>
+					<button
+						type="button"
+						className="btn btn-sm btn-secondary btn-square"
+						onClick={props.onOpenRetrieve}
+						title="Retrieve preset (current or slot)"
+					>
+						<FaDownload size={12} />
 					</button>
 
+					<label className="label cursor-pointer gap-2 p-0 pl-1">
+						<span className="label-text text-xs">Auto Send</span>
+						<input
+							type="checkbox"
+							className="toggle toggle-secondary toggle-sm"
+							checked={props.autoSend}
+							onChange={props.onToggleAutoSend}
+						/>
+					</label>
+				</div>
+
+				<div className="flex items-center gap-2 ml-auto">
 					<button
 						type="button"
 						className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
@@ -205,30 +228,6 @@ function PresetListTopBar(props: {
 						title="Hide Temple of CZ factory presets"
 					>
 						My Presets
-					</button>
-
-					<button
-						type="button"
-						className="btn btn-sm sm:btn-md normal-case font-semibold shadow-md btn-neutral"
-						onClick={props.onOpenDuplicateReview}
-						title="Review and clean duplicate presets"
-						disabled={props.duplicateGroupCount === 0}
-					>
-						Review Duplicates
-						{props.duplicateGroupCount > 0 && (
-							<span className="badge badge-warning badge-sm">
-								{props.duplicateGroupCount}
-							</span>
-						)}
-					</button>
-
-					<button
-						type="button"
-						className="btn btn-sm sm:btn-md normal-case font-semibold shadow-md btn-neutral"
-						onClick={props.onOpenTagManager}
-						title="Rename, merge, or delete tags globally"
-					>
-						Manage Tags
 					</button>
 
 					<button
@@ -256,13 +255,6 @@ function PresetListTopBar(props: {
 						)}
 					</button>
 
-					<div
-						id="drop-area"
-						className="hidden p-2 border-2 border-gray-400 border-dashed xl:block hover:bg-base-300 bg-base-100"
-					>
-						<FaPlusSquare size={20} className="inline mr-2"></FaPlusSquare>
-						Drag and drop a .syx file or click here to add a new preset
-					</div>
 				</div>
 			</div>
 
@@ -369,6 +361,11 @@ const PresetList: React.FC<PresetListProps> = ({
 	currentPreset,
 	handleSelectPreset,
 	handleActivatePreset,
+	autoSend,
+	onToggleAutoSend,
+	onSendCurrentPreset,
+	onRetrieveCurrentPreset,
+	onRetrievePresetSlot,
 	playlists = [],
 	onAddPresetToPlaylist,
 }) => {
@@ -388,7 +385,6 @@ const PresetList: React.FC<PresetListProps> = ({
 		randomOrder,
 		setRandomOrder,
 		duplicatesOnly,
-		setDuplicatesOnly,
 		userPresetsOnly,
 		setUserPresetsOnly,
 		activePlaylistId,
@@ -401,8 +397,10 @@ const PresetList: React.FC<PresetListProps> = ({
 	}, [activePlaylistId, playlists]);
 	const [shuffleSeed, setShuffleSeed] = useState<number>(Date.now());
 	const [columnResizeMode] = useState<ColumnResizeMode>("onChange");
-	const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
-	const [isDuplicateReviewOpen, setIsDuplicateReviewOpen] = useState(false);
+	const [isRetrieveModalOpen, setIsRetrieveModalOpen] = useState(false);
+	const [slotBank, setSlotBank] = useState<"internal" | "cartridge">(
+		"internal",
+	);
 
 	useEffect(() => {
 		if (randomOrder) {
@@ -642,55 +640,6 @@ const PresetList: React.FC<PresetListProps> = ({
 		],
 	);
 
-	const { data: duplicatePresetsData } = useQuery({
-		queryKey: ["presets", "duplicate-review"],
-		queryFn: async () => {
-			const result = await fetchPresetData(
-				0,
-				Number.MAX_SAFE_INTEGER,
-				[],
-				"",
-				[],
-				"inclusive",
-				false,
-				false,
-				0,
-				true,
-				false,
-			);
-			return result.presets;
-		},
-		refetchOnWindowFocus: false,
-	});
-
-	const duplicateGroups = useMemo<DuplicateGroup[]>(() => {
-		const presets = duplicatePresetsData ?? [];
-		const grouped = presets.reduce(
-			(acc, preset) => {
-				const key = Array.from(preset.sysexData).join(",");
-				if (!acc[key]) {
-					acc[key] = [];
-				}
-				acc[key].push(preset);
-				return acc;
-			},
-			{} as Record<string, Preset[]>,
-		);
-
-		return Object.entries(grouped).map(([fingerprint, groupedPresets]) => ({
-			fingerprint,
-			presets: [...groupedPresets].sort((a, b) => {
-				const favoriteDelta =
-					Number(Boolean(b.favorite)) - Number(Boolean(a.favorite));
-				if (favoriteDelta !== 0) {
-					return favoriteDelta;
-				}
-
-				return a.name.localeCompare(b.name);
-			}),
-		}));
-	}, [duplicatePresetsData]);
-
 	const handleToggleFilterMode = useCallback(() => {
 		if (filterMode === "inclusive") {
 			setFilterMode("exclusive");
@@ -716,42 +665,9 @@ const PresetList: React.FC<PresetListProps> = ({
 		setSelectedTags([]);
 	}, [setSelectedTags]);
 
-	const handleToggleDuplicatesOnly = useCallback(() => {
-		setDuplicatesOnly(!duplicatesOnly);
-	}, [duplicatesOnly, setDuplicatesOnly]);
-
 	const handleToggleUserPresetsOnly = useCallback(() => {
 		setUserPresetsOnly(!userPresetsOnly);
 	}, [setUserPresetsOnly, userPresetsOnly]);
-
-	const handleRenameOrMergeTag = useCallback(
-		async (sourceTag: string, targetTag: string) => {
-			await renameTagGlobally(sourceTag, targetTag);
-			await queryClient.invalidateQueries({ queryKey: ["presets"] });
-		},
-		[queryClient],
-	);
-
-	const handleDeleteTag = useCallback(
-		async (tag: string) => {
-			await deleteTagGlobally(tag);
-			await queryClient.invalidateQueries({ queryKey: ["presets"] });
-			if (selectedTags.includes(tag)) {
-				setSelectedTags(
-					selectedTags.filter((selectedTag) => selectedTag !== tag),
-				);
-			}
-		},
-		[queryClient, selectedTags, setSelectedTags],
-	);
-
-	const handleDeleteDuplicatePresets = useCallback(
-		async (ids: string[]) => {
-			await Promise.all(ids.map((id) => deletePreset(id)));
-			await queryClient.invalidateQueries({ queryKey: ["presets"] });
-		},
-		[queryClient],
-	);
 
 	const { data, fetchNextPage, isFetching } = useInfiniteQuery<{
 		presets: Preset[];
@@ -818,8 +734,6 @@ const PresetList: React.FC<PresetListProps> = ({
 
 	const totalDBRowCount = data?.pages?.[0]?.totalCount ?? 0;
 	const totalFetched = flatData.length;
-
-	useDragDrop();
 
 	const [visualSelectedId, setVisualSelectedId] = useState<string | null>(null);
 
@@ -991,36 +905,83 @@ const PresetList: React.FC<PresetListProps> = ({
 	return (
 		<div className="flex flex-col grow min-w-0 select-none bg-base-300">
 			<PresetListTopBar
+				currentPreset={currentPreset}
 				totalDBRowCount={totalDBRowCount}
 				searchTerm={searchTerm}
 				setSearchTerm={setSearchTerm}
+				autoSend={autoSend}
+				onToggleAutoSend={onToggleAutoSend}
+				onSendCurrentPreset={onSendCurrentPreset}
+				onRetrieveCurrentPreset={onRetrieveCurrentPreset}
+				onOpenRetrieve={() => setIsRetrieveModalOpen(true)}
 				selectedTags={selectedTags}
 				filterMode={filterMode}
 				onToggleFilterMode={handleToggleFilterMode}
 				onClearFilters={handleClearFilters}
 				onToggleTag={handleToggleTag}
 				availableTags={availableTags}
-				duplicatesOnly={duplicatesOnly}
-				onToggleDuplicatesOnly={handleToggleDuplicatesOnly}
 				userPresetsOnly={userPresetsOnly}
 				onToggleUserPresetsOnly={handleToggleUserPresetsOnly}
-				onOpenTagManager={() => setIsTagManagerOpen(true)}
-				duplicateGroupCount={duplicateGroups.length}
-				onOpenDuplicateReview={() => setIsDuplicateReviewOpen(true)}
 			></PresetListTopBar>
-			<TagManagerModal
-				isOpen={isTagManagerOpen}
-				availableTags={availableTags}
-				onClose={() => setIsTagManagerOpen(false)}
-				onRenameOrMerge={handleRenameOrMergeTag}
-				onDeleteTag={handleDeleteTag}
-			/>
-			<DuplicateReviewModal
-				isOpen={isDuplicateReviewOpen}
-				groups={duplicateGroups}
-				onClose={() => setIsDuplicateReviewOpen(false)}
-				onDeletePresets={handleDeleteDuplicatePresets}
-			/>
+			{isRetrieveModalOpen && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+					<div className="rounded-xl bg-base-100 p-4 shadow-lg">
+						<h2 className="mb-4 text-xl">Retrieve Preset</h2>
+						<div className="mb-4">
+							<Button
+								variant="accent"
+								className="w-full"
+								onClick={() => {
+									onRetrieveCurrentPreset();
+									setIsRetrieveModalOpen(false);
+								}}
+							>
+								Retrieve current preset
+							</Button>
+						</div>
+						<div className="mb-2 text-xs font-semibold tracking-wide uppercase opacity-60">
+							Or retrieve from slot
+						</div>
+						<div className="mb-4">
+							<div className="label">
+								<span className="label-text">Bank</span>
+							</div>
+							<SelectInput
+								value={slotBank}
+								onChange={(e) =>
+									setSlotBank(e.target.value as "internal" | "cartridge")
+								}
+							>
+								<option value="internal">Internal</option>
+								<option value="cartridge">Cartridge</option>
+							</SelectInput>
+						</div>
+						<div className="grid grid-cols-4 gap-2">
+							{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
+								<Button
+									key={`retrieve-slot-${slot}`}
+									onClick={() => {
+										onRetrievePresetSlot(slotBank, slot);
+										setIsRetrieveModalOpen(false);
+									}}
+									variant="primary"
+									className="text-2xl font-bold"
+								>
+									{slot}
+								</Button>
+							))}
+						</div>
+						<Button
+							onClick={() => setIsRetrieveModalOpen(false)}
+							variant="error"
+							className="mt-4"
+						>
+							Close
+						</Button>
+					</div>
+				</div>
+			)}
+
 			<div
 				className="relative max-h-full overflow-auto"
 				onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)}

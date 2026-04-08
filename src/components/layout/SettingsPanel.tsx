@@ -62,7 +62,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 	const [onlineAuthSession, setOnlineAuthSession] = useState(
 		loadOnlineAuthSession(),
 	);
-/* 	const [avatarLoadFailed, setAvatarLoadFailed] = useState(false); */
+	const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
 
 	const applySyncModeFromSession = (session: { userId: string } | null) => {
 		const nextSettings = { enabled: Boolean(session?.userId) };
@@ -76,13 +76,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		const loadedSession = loadOnlineAuthSession();
 		setOnlineSyncSettings(loaded);
 		setOnlineAuthSession(loadedSession);
-		/* setAvatarLoadFailed(false); */
+		setAvatarLoadFailed(false);
 		setIsModalOpen(true);
 
 		void (async () => {
 			const nextSession = await refreshOnlineAuthSession();
 			setOnlineAuthSession(nextSession);
-			/* setAvatarLoadFailed(false); */
+			setAvatarLoadFailed(false);
 			applySyncModeFromSession(nextSession);
 		})();
 	};
@@ -261,7 +261,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 				// Popup closed — refresh session and update sync state
 				const session = await refreshOnlineAuthSession();
 				setOnlineAuthSession(session);
-				/* setAvatarLoadFailed(false); */
+				setAvatarLoadFailed(false);
 				applySyncModeFromSession(session);
 				if (session) {
 					notifySuccess(
@@ -278,14 +278,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		void (async () => {
 			await disconnectOnlineSession();
 			setOnlineAuthSession(null);
-			/* setAvatarLoadFailed(false); */
+			setAvatarLoadFailed(false);
 			applySyncModeFromSession(null);
 			notifyInfo("Disconnected account. Local-only mode enabled.");
 		})();
 	};
 
 	const renderAccountTriggerIcon = () => {
-		/* if (onlineAuthSession?.avatarUrl && !avatarLoadFailed) {
+		if (onlineAuthSession?.avatarUrl && !avatarLoadFailed) {
 			return (
 				<img
 					src={onlineAuthSession.avatarUrl}
@@ -295,7 +295,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 					referrerPolicy="no-referrer"
 				/>
 			);
-		} */
+		}
 
 		if (onlineAuthSession) {
 			const accountLabel =

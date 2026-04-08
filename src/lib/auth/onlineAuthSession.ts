@@ -27,6 +27,10 @@ export function loadOnlineAuthSession(): OnlineAuthSession | null {
 		userId: String(session.userId),
 		displayName: String(session.displayName ?? ""),
 		provider: String(session.provider ?? "unknown"),
+		avatarUrl:
+			typeof session.avatarUrl === "string" && session.avatarUrl.trim()
+				? session.avatarUrl.trim()
+				: undefined,
 	};
 }
 
@@ -39,6 +43,7 @@ export function saveOnlineAuthSession(session: OnlineAuthSession): void {
 		userId: session.userId,
 		displayName: session.displayName,
 		provider: session.provider,
+		avatarUrl: session.avatarUrl,
 	});
 }
 
