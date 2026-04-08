@@ -8,8 +8,10 @@ import Button from "@/components/ui/Button";
 import { useMidiChannel } from "@/context/MidiChannelContext";
 import { useMidiPort } from "@/context/MidiPortContext";
 import { useSearchFilter } from "@/context/SearchFilterContext";
+import DuplicateFinderPage from "@/features/presets/components/DuplicateFinderPage";
 import PresetsSidebarContent from "@/features/presets/components/PresetsSidebarContent";
 import SaveDraftPresetModal from "@/features/presets/components/SaveDraftPresetModal";
+import TagManagerPage from "@/features/presets/components/TagManagerPage";
 import { usePresetMode } from "@/features/presets/hooks/usePresetMode";
 import SetlistsPage from "@/features/setlists/components/SetlistsPage";
 import { useSetlistMode } from "@/features/setlists/hooks/useSetlistMode";
@@ -17,8 +19,6 @@ import SynthBackupsPage from "@/features/synthBackups/components/SynthBackupsPag
 import { useSynthBackupMode } from "@/features/synthBackups/hooks/useSynthBackupMode";
 import { useMidiSetup } from "@/hooks/useMidiSetup";
 import type { Preset } from "@/lib/presets/presetManager";
-import DuplicateFinderPage from "../../features/presets/components/DuplicateFinderPage";
-import TagManagerPage from "../../features/presets/components/TagManagerPage";
 
 export default function PresetManager() {
 	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
@@ -210,9 +210,13 @@ export default function PresetManager() {
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button type="button" onClick={() => setShowDeleteModal(false)}>
+						<Button
+							type="button"
+							onClick={() => setShowDeleteModal(false)}
+							unstyled
+						>
 							close
-						</button>
+						</Button>
 					</form>
 				</dialog>
 			)}

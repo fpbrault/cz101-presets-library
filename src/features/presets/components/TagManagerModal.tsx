@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import SelectInput from "@/components/forms/SelectInput";
 import TextInput from "@/components/forms/TextInput";
 import Button from "@/components/ui/Button";
-import ModalShell from "@/components/ui/ModalShell";
+import Modal from "@/components/ui/Modal";
 
 interface TagManagerModalProps {
 	isOpen: boolean;
@@ -39,7 +39,7 @@ export default function TagManagerModal({
 	}
 
 	return (
-		<ModalShell panelClassName="w-full max-w-lg" onClose={onClose}>
+		<Modal panelClassName="w-full max-w-lg" onClose={onClose}>
 			<h2 className="mb-4 text-xl font-bold">Tag Management</h2>
 
 			{!hasTags && (
@@ -116,6 +116,6 @@ export default function TagManagerModal({
 					{actionLabel}
 				</Button>
 			</div>
-		</ModalShell>
+		</Modal>
 	);
 }

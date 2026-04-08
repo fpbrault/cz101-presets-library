@@ -20,14 +20,15 @@ export default function MidiQuickSettings({
 	return (
 		<>
 			{minimalTrigger ? (
-				<button
+				<Button
 					type="button"
+					unstyled
 					onClick={() => setIsOpen(true)}
 					title="MIDI Quick Settings"
 					className="grid size-9 place-items-center text-base-content/55 transition-colors hover:text-warning"
 				>
 					<FaBroadcastTower size={16} />
-				</button>
+				</Button>
 			) : (
 				<Button
 					onClick={() => setIsOpen(true)}
@@ -96,9 +97,9 @@ export default function MidiQuickSettings({
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button type="button" onClick={() => setIsOpen(false)}>
+						<Button type="button" onClick={() => setIsOpen(false)} unstyled>
 							close
-						</button>
+						</Button>
 					</form>
 				</dialog>
 			)}

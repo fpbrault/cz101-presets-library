@@ -96,7 +96,7 @@ const TagsCell = memo(({ tags }: { tags: string[] }) => (
 //   }) => (
 //     <div>
 //       {[1, 2, 3, 4, 5].map((star) => (
-//         <button
+//         <Button
 //           key={star}
 //           onMouseEnter={(e) => {
 //             const parent = e.currentTarget.parentElement
@@ -131,7 +131,7 @@ const TagsCell = memo(({ tags }: { tags: string[] }) => (
 //           ) : (
 //             <FaRegStar size={16} />
 //           )}
-//         </button>
+//         </Button>
 //       ))}
 //     </div>
 //   ),
@@ -170,13 +170,14 @@ function PresetListTopBar(props: {
 						className="pr-8 input input-secondary input-md"
 					/>
 					{props.searchTerm && (
-						<button
+						<Button
 							type="button"
+							unstyled
 							className="absolute text-gray-500 -translate-y-1/2 right-6 top-1/2 hover:text-gray-700"
 							onClick={() => props.setSearchTerm("")}
 						>
 							<FaTimes size={20} />
-						</button>
+						</Button>
 					)}
 				</div>
 
@@ -185,7 +186,7 @@ function PresetListTopBar(props: {
 				</span>
 
 				<div className="flex flex-wrap items-center gap-2">
-					<button
+					<Button
 						type="button"
 						className="btn btn-sm btn-primary btn-square"
 						onClick={props.onSendCurrentPreset}
@@ -197,15 +198,15 @@ function PresetListTopBar(props: {
 						}
 					>
 						<FaUpload size={12} />
-					</button>
-					<button
+					</Button>
+					<Button
 						type="button"
 						className="btn btn-sm btn-secondary btn-square"
 						onClick={props.onOpenRetrieve}
 						title="Retrieve preset (current or slot)"
 					>
 						<FaDownload size={12} />
-					</button>
+					</Button>
 
 					<label className="label cursor-pointer gap-2 p-0 pl-1">
 						<span className="label-text text-xs">Auto Send</span>
@@ -219,7 +220,7 @@ function PresetListTopBar(props: {
 				</div>
 
 				<div className="flex items-center gap-2 ml-auto">
-					<button
+					<Button
 						type="button"
 						className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
 							props.userPresetsOnly ? "btn-primary" : "btn-neutral"
@@ -228,9 +229,9 @@ function PresetListTopBar(props: {
 						title="Hide Temple of CZ factory presets"
 					>
 						My Presets
-					</button>
+					</Button>
 
-					<button
+					<Button
 						type="button"
 						className={`btn btn-sm sm:btn-md normal-case font-semibold shadow-md ${
 							isTagsPanelOpen
@@ -253,15 +254,16 @@ function PresetListTopBar(props: {
 						) : (
 							<FaChevronDown size={12} />
 						)}
-					</button>
+					</Button>
 
 				</div>
 			</div>
 
 			{isTagsPanelOpen && (
 				<>
-					<button
+					<Button
 						type="button"
+						unstyled
 						className="fixed inset-0 z-30 cursor-default bg-black/30"
 						onClick={() => setIsTagsPanelOpen(false)}
 						aria-label="Close tag filters"
@@ -269,18 +271,18 @@ function PresetListTopBar(props: {
 					<div className="absolute left-2 right-2 z-40 p-3 mt-2 border shadow-xl sm:left-4 sm:right-4 lg:left-auto lg:right-4 lg:w-176 rounded-xl bg-base-100 border-base-content/20">
 						<div className="flex items-center justify-between gap-2 mb-3">
 							<h3 className="text-lg font-semibold">Tag Filters</h3>
-							<button
+							<Button
 								type="button"
 								onClick={() => setIsTagsPanelOpen(false)}
 								className="btn btn-sm btn-ghost"
 								aria-label="Close tags panel"
 							>
 								<FaTimes size={14} />
-							</button>
+							</Button>
 						</div>
 
 						<div className="flex flex-wrap items-center gap-2 mb-3">
-							<button
+							<Button
 								type="button"
 								onClick={props.onToggleFilterMode}
 								className="btn btn-sm btn-info"
@@ -301,8 +303,8 @@ function PresetListTopBar(props: {
 										<FaCheckCircle size={14} />
 									</>
 								)}
-							</button>
-							<button
+							</Button>
+							<Button
 								type="button"
 								onClick={props.onClearFilters}
 								className="btn btn-sm btn-error"
@@ -310,7 +312,7 @@ function PresetListTopBar(props: {
 							>
 								Clear
 								<FaTrash size={12} />
-							</button>
+							</Button>
 						</div>
 
 						<div className="max-h-[50vh] overflow-y-auto pr-1">
@@ -318,8 +320,9 @@ function PresetListTopBar(props: {
 								{props.availableTags.map(([tag, count]) => {
 									const selected = props.selectedTags.includes(tag);
 									return (
-										<button
+										<Button
 											type="button"
+											unstyled
 											key={tag}
 											onClick={() => props.onToggleTag(tag)}
 											className={`badge badge-lg h-10 px-4 text-sm font-semibold capitalize ${
@@ -329,7 +332,7 @@ function PresetListTopBar(props: {
 											}`}
 										>
 											{tag} ({count})
-										</button>
+										</Button>
 									);
 								})}
 							</div>
@@ -341,15 +344,16 @@ function PresetListTopBar(props: {
 			{props.selectedTags.length > 0 && (
 				<div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto">
 					{props.selectedTags.map((tag) => (
-						<button
+						<Button
 							type="button"
+							unstyled
 							key={tag}
 							onClick={() => props.onToggleTag(tag)}
 							className="badge badge-primary badge-lg h-8 capitalize"
 							title="Tap to remove"
 						>
 							{tag}
-						</button>
+						</Button>
 					))}
 				</div>
 			)}
@@ -526,8 +530,9 @@ const PresetList: React.FC<PresetListProps> = ({
 				size: 96,
 				minSize: 112,
 				cell: ({ row }) => (
-					<button
+					<Button
 						type="button"
+						unstyled
 						onClick={(e) => {
 							e.stopPropagation();
 							handleSetFavorite(row.original);
@@ -541,7 +546,7 @@ const PresetList: React.FC<PresetListProps> = ({
 						) : (
 							<FaRegHeart size={20} className="hover:text-primary" />
 						)}
-					</button>
+					</Button>
 				),
 			},
 			{
@@ -563,7 +568,7 @@ const PresetList: React.FC<PresetListProps> = ({
 			{
 				id: "randomOrder",
 				header: () => (
-					<button
+					<Button
 						type="button"
 						onClick={(e) => {
 							e.stopPropagation();
@@ -578,7 +583,7 @@ const PresetList: React.FC<PresetListProps> = ({
 						}
 					>
 						<FaRandom size={16} />
-					</button>
+					</Button>
 				),
 				enableSorting: false,
 				size: 112,
@@ -1065,8 +1070,9 @@ const PresetList: React.FC<PresetListProps> = ({
 												</>
 											)}
 										</div>
-										<button
+										<Button
 											type="button"
+											unstyled
 											aria-label="Resize column"
 											onClick={(e) => e.stopPropagation()}
 											onKeyDown={(e) => e.stopPropagation()}

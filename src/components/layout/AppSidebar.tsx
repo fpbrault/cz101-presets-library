@@ -12,6 +12,7 @@ import {
 } from "react-icons/fa";
 import MidiQuickSettings from "@/components/layout/MidiQuickSettings";
 import SettingsPanel from "@/components/layout/SettingsPanel";
+import Button from "@/components/ui/Button";
 import { useSidebarContentSlot } from "@/context/SidebarContext";
 import {
 	fetchPresetData,
@@ -112,8 +113,9 @@ export default function AppSidebar({
 		>
 			{/* Logo */}
 			<div className="mb-1 flex items-center justify-start gap-2 pl-1">
-				<button
+				<Button
 					type="button"
+					unstyled
 					onClick={() => setLeftPanelCollapsed((prev) => !prev)}
 					className="transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]"
 					aria-label={
@@ -138,7 +140,7 @@ export default function AppSidebar({
 							</span>
 						</div>
 					</div>
-				</button>
+				</Button>
 				{!leftPanelCollapsed && (
 					<span className="text-sm font-extrabold tracking-wide text-base-content">
 						CZ Explorer
@@ -147,8 +149,9 @@ export default function AppSidebar({
 			</div>
 
 			{/* Edge chevron indicates collapsible behavior */}
-			<button
+			<Button
 				type="button"
+				unstyled
 				onClick={() => setLeftPanelCollapsed((prev) => !prev)}
 				className="absolute -right-3 top-12 z-10 grid size-7 place-items-center rounded-full border border-base-content/20 bg-base-100 text-base-content/70 shadow transition-colors hover:bg-base-300 hover:text-base-content"
 				aria-label={leftPanelCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -159,14 +162,15 @@ export default function AppSidebar({
 				) : (
 					<FaChevronLeft size={12} />
 				)}
-			</button>
+			</Button>
 
 			{leftPanelCollapsed ? (
 				/* Collapsed: icon-only navigation */
 				<>
 					<div className="flex flex-col items-center gap-3 pt-3">
-						<button
+						<Button
 							type="button"
+							unstyled
 							className={`${iconNavButtonClass} ${
 								performanceMode ? activeIconNavButtonClass : ""
 							}`}
@@ -174,9 +178,10 @@ export default function AppSidebar({
 							title="Performance Mode"
 						>
 							<FaBolt size={16} />
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${iconNavButtonClass} ${
 								appMode === "presets" && !performanceMode
 									? activeIconNavButtonClass
@@ -186,9 +191,10 @@ export default function AppSidebar({
 							title="Preset Library"
 						>
 							<FaFolderOpen size={16} />
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${iconNavButtonClass} ${
 								appMode === "synthBackups" && !performanceMode
 									? activeIconNavButtonClass
@@ -198,9 +204,10 @@ export default function AppSidebar({
 							title="Synth Backup Manager"
 						>
 							<FaDatabase size={16} />
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${iconNavButtonClass} ${
 								appMode === "setlists" && !performanceMode
 									? activeIconNavButtonClass
@@ -210,9 +217,10 @@ export default function AppSidebar({
 							title="Setlist Manager"
 						>
 							<FaListUl size={16} />
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${iconNavButtonClass} ${
 								appMode === "tagManager" && !performanceMode
 									? activeIconNavButtonClass
@@ -222,9 +230,10 @@ export default function AppSidebar({
 							title="Tag Manager"
 						>
 							<FaTags size={16} />
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${iconNavButtonClass} ${
 								appMode === "duplicateFinder" && !performanceMode
 									? activeIconNavButtonClass
@@ -237,7 +246,7 @@ export default function AppSidebar({
 							{hasDuplicates && (
 								<span className="badge badge-error badge-xs absolute -right-1 -top-1 min-h-0 h-3 w-3 p-0" />
 							)}
-						</button>
+						</Button>
 					</div>
 
 					<div className="mt-auto flex flex-col items-center gap-3 pb-1">
@@ -250,8 +259,9 @@ export default function AppSidebar({
 				/* Expanded: full navigation + page-specific slot */
 				<>
 					<div className="grid grid-cols-1 gap-2 pt-1">
-						<button
+						<Button
 							type="button"
+							unstyled
 							className={`${expandedNavButtonClass} ${
 								performanceMode ? activeExpandedNavButtonClass : ""
 							}`}
@@ -260,9 +270,10 @@ export default function AppSidebar({
 						>
 							<FaBolt size={16} />
 							<span>Performance</span>
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${expandedNavButtonClass} ${
 								appMode === "presets" && !performanceMode
 									? activeExpandedNavButtonClass
@@ -273,9 +284,10 @@ export default function AppSidebar({
 						>
 							<FaFolderOpen size={16} />
 							<span>Preset Library</span>
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${expandedNavButtonClass} ${
 								appMode === "synthBackups" && !performanceMode
 									? activeExpandedNavButtonClass
@@ -286,9 +298,10 @@ export default function AppSidebar({
 						>
 							<FaDatabase size={16} />
 							<span>Synth Backup Manager</span>
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${expandedNavButtonClass} ${
 								appMode === "setlists" && !performanceMode
 									? activeExpandedNavButtonClass
@@ -299,9 +312,10 @@ export default function AppSidebar({
 						>
 							<FaListUl size={16} />
 							<span>Setlist Manager</span>
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${expandedNavButtonClass} ${
 								appMode === "tagManager" && !performanceMode
 									? activeExpandedNavButtonClass
@@ -312,9 +326,10 @@ export default function AppSidebar({
 						>
 							<FaTags size={16} />
 							<span>Tag Manager</span>
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							unstyled
 							className={`${expandedNavButtonClass} ${
 								appMode === "duplicateFinder" && !performanceMode
 									? activeExpandedNavButtonClass
@@ -330,7 +345,7 @@ export default function AppSidebar({
 									{duplicateGroupCount}
 								</span>
 							)}
-						</button>
+						</Button>
 					</div>
 
 					{/* Page-specific sidebar content slot */}

@@ -2,7 +2,7 @@ import FormField from "@/components/forms/FormField";
 import TextAreaInput from "@/components/forms/TextAreaInput";
 import TextInput from "@/components/forms/TextInput";
 import Button from "@/components/ui/Button";
-import ModalShell from "@/components/ui/ModalShell";
+import Modal from "@/components/ui/Modal";
 
 interface SaveDraftPresetModalProps {
 	isOpen: boolean;
@@ -38,7 +38,7 @@ export default function SaveDraftPresetModal({
 	}
 
 	return (
-		<ModalShell panelClassName="w-full max-w-2xl" onClose={onCancel}>
+		<Modal panelClassName="w-full max-w-2xl" onClose={onCancel}>
 			<h2 className="mb-3 text-xl font-bold">Save Retrieved Preset</h2>
 
 			{matchingPresetName && (
@@ -85,6 +85,6 @@ export default function SaveDraftPresetModal({
 					Save New Preset
 				</Button>
 			</div>
-		</ModalShell>
+		</Modal>
 	);
 }

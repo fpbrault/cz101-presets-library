@@ -320,8 +320,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		<>
 			{/* Sidebar icon-only style without button chrome */}
 			{minimalTrigger ? (
-				<button
+				<Button
 					type="button"
+					unstyled
 					onClick={handleOpenModal}
 					title={
 						triggerType === "login"
@@ -336,7 +337,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 					}
 				>
 					{triggerType === "login" ? renderAccountTriggerIcon() : <FaCog size={16} />}
-				</button>
+				</Button>
 			) : triggerType === "login" ? (
 				<Button
 					onClick={handleOpenModal}
@@ -504,9 +505,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button type="button" onClick={handleCloseModal}>
+						<Button type="button" onClick={handleCloseModal} unstyled>
 							close
-						</button>
+						</Button>
 					</form>
 				</dialog>
 			)}
@@ -545,9 +546,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button type="button" onClick={handleCloseResetModal}>
+						<Button type="button" onClick={handleCloseResetModal} unstyled>
 							close
-						</button>
+						</Button>
 					</form>
 				</dialog>
 			)}

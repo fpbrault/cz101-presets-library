@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import Button from "@/components/ui/Button";
-import ModalShell from "@/components/ui/ModalShell";
+import Modal from "@/components/ui/Modal";
 import type { Preset } from "@/lib/presets/presetManager";
 
 export interface DuplicateGroup {
@@ -62,7 +62,7 @@ export default function DuplicateReviewModal({
 	}
 
 	return (
-		<ModalShell panelClassName="w-full max-w-4xl" onClose={onClose}>
+		<Modal panelClassName="w-full max-w-4xl" onClose={onClose}>
 			<h2 className="mb-1 text-xl font-bold">Duplicate Preset Review</h2>
 			<p className="mb-4 text-sm opacity-70">
 				{groups.length} duplicate groups, {totalDuplicates} total duplicate
@@ -157,6 +157,6 @@ export default function DuplicateReviewModal({
 					Delete Selected ({selectedIds.length})
 				</Button>
 			</div>
-		</ModalShell>
+		</Modal>
 	);
 }

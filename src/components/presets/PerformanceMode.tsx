@@ -206,13 +206,13 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 			className="flex flex-col w-full h-full gap-4 p-2"
 		>
 			<div className="flex flex-wrap items-start gap-3">
-				<button
+				<Button
 					type="button"
 					onClick={toggleFullscreen}
 					className="btn btn-primary"
 				>
 					Toggle Fullscreen
-				</button>
+				</Button>
 
 				<div className="flex flex-wrap items-start flex-1 gap-3 min-w-0">
 					<div className="flex flex-wrap content-start flex-1 min-w-[16rem] max-h-24 gap-2 overflow-auto">
@@ -234,8 +234,9 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									{} as Record<string, number>,
 								),
 						).map(([tag, count]) => (
-							<button
+							<Button
 								type="button"
+								unstyled
 								key={tag}
 								className={`badge badge-lg font-bold capitalize badge-neutral ${
 									selectedTags.includes(tag) ? "badge-primary" : ""
@@ -243,7 +244,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 								onClick={() => handleTagClick(tag)}
 							>
 								{tag} ({count})
-							</button>
+							</Button>
 						))}
 					</div>
 
@@ -262,15 +263,16 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									<span className="badge badge-accent badge-sm font-semibold">
 										{activePlaylist.name}
 									</span>
-									<button
+									<Button
 										type="button"
+										unstyled
 										className="btn btn-xs btn-ghost opacity-60 hover:opacity-100 px-1"
 										aria-label="Clear setlist filter"
 										title="Clear setlist filter"
 										onClick={() => setActivePlaylistId(null)}
 									>
 										✕
-									</button>
+									</Button>
 								</span>
 							)}
 						</div>
@@ -326,7 +328,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 			<div className="flex h-full gap-4 pb-16">
 				<div className="grid grow grid-cols-2 grid-rows-4 gap-4 w-ful lg:grid-cols-4 lg:grid-rows-2 font-performanceMode">
 					{currentPresets.map((preset) => (
-						<button
+						<Button
 							type="button"
 							key={preset.id}
 							onClick={() => handleSelectPreset(preset)}
@@ -342,18 +344,18 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 							</span>
 
 							<span className="text-4xl">{preset.number}</span>
-						</button>
+						</Button>
 					))}
 				</div>
 				<div className="flex flex-col w-full gap-4 max-w-48">
-					<button
+					<Button
 						type="button"
 						onClick={handlePreviousBank}
 						disabled={currentBank === 0}
 						className="grow w-full text-2xl btn btn-lg btn-secondary"
 					>
 						Previous Bank
-					</button>
+					</Button>
 					<div className="flex justify-evenly">
 						<div className="flex flex-col items-center gap-2">
 							<span>
@@ -363,23 +365,23 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 								Presets: {currentBank * 8 + 1}/{presets.length}{" "}
 							</span>
 						</div>
-						<button
+						<Button
 							type="button"
 							onClick={handleOpenNumPad}
 							aria-label="Open bank selector"
 							className="btn btn-square btn-xl btn-primary"
 						>
 							<FaMagnifyingGlass size={32} />
-						</button>
+						</Button>
 					</div>
-					<button
+					<Button
 						type="button"
 						onClick={handleNextBank}
 						disabled={(currentBank + 1) * 8 >= presets.length}
 						className="grow text-2xl btn btn-lg btn-secondary"
 					>
 						Next Bank
-					</button>
+					</Button>
 				</div>
 			</div>
 			{isNumPadOpen && (
@@ -395,7 +397,7 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 						/>
 						<div className="grid grid-cols-3 gap-2">
 							{[...Array(9).keys()].map((num) => (
-								<button
+								<Button
 									type="button"
 									key={num + 1}
 									onClick={() => handleNumPadClick((num + 1).toString())}
@@ -403,39 +405,39 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 									disabled={parseInt(bankInput + (num + 1), 10) > totalBanks}
 								>
 									{num + 1}
-								</button>
+								</Button>
 							))}
-							<button
+							<Button
 								type="button"
 								onClick={handleClearNumPad}
 								aria-label="Clear bank selection"
 								className="btn btn-secondary"
 							>
 								<FaX size={24} />
-							</button>
-							<button
+							</Button>
+							<Button
 								type="button"
 								disabled={parseInt(`${bankInput}0`, 10) > totalBanks}
 								onClick={() => handleNumPadClick("0")}
 								className="text-3xl btn btn-primary"
 							>
 								0
-							</button>
-							<button
+							</Button>
+							<Button
 								type="button"
 								onClick={handleSelectBank}
 								className="col-span-1 text-xl btn btn-primary"
 							>
 								Select
-							</button>
+							</Button>
 						</div>
-						<button
+						<Button
 							type="button"
 							onClick={handleCloseNumPad}
 							className="mt-4 btn"
 						>
 							Close
-						</button>
+						</Button>
 					</div>
 				</div>
 			)}
