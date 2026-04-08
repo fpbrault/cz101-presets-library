@@ -1,5 +1,6 @@
 import type { SortingState } from "@tanstack/react-table";
 import { isFactoryPresetIdentity } from "@/lib/presets/factoryPresets";
+import { getPresetFingerprint } from "@/lib/presets/presetFingerprint";
 import type { Preset } from "@/lib/presets/presetManager";
 
 export type FilterMode = "inclusive" | "exclusive";
@@ -15,40 +16,6 @@ export interface FilterPresetsOptions {
 	randomOrder: boolean;
 	seed: number;
 	playlistPresetIds?: string[] | null;
-}
-
-function ensureSysexFraming(data: Uint8Array): Uint8Array {
-	if (data.length === 0) return data;
-	if (data[0] === 0xf0 && data[data.length - 1] === 0xf7) {
-		return data;
-	}
-	return new Uint8Array([0xf0, ...data, 0xf7]);
-}
-
-function isNibblePayload(payload: Uint8Array): boolean {
-	return payload.every((byte) => byte >= 0x00 && byte <= 0x0f);
-}
-
-function getPresetFingerprint(preset: Preset): string {
-	const framed = ensureSysexFraming(preset.sysexData);
-
-	for (let offset = 5; offset <= 16; offset++) {
-		if (framed.length >= offset + 256 + 1) {
-			const payload = framed.slice(offset, offset + 256);
-			if (payload.length === 256 && isNibblePayload(payload)) {
-				return `payload:${Array.from(payload).join(",")}`;
-			}
-		}
-	}
-
-	const canonical = new Uint8Array(framed);
-	if (canonical.length > 7) {
-		canonical[4] = 0x70;
-		canonical[5] = 0x20;
-		canonical[6] = 0x60;
-	}
-
-	return `canonical:${Array.from(canonical).join(",")}`;
 }
 
 export function filterPresets(
@@ -105,7 +72,7 @@ export function filterPresets(
 	if (duplicatesOnly) {
 		const fingerprintCounts = filteredPresets.reduce(
 			(acc, preset) => {
-				const key = getPresetFingerprint(preset);
+				const key = getPresetFingerprint(preset.sysexData);
 				acc[key] = (acc[key] ?? 0) + 1;
 				return acc;
 			},
@@ -113,7 +80,7 @@ export function filterPresets(
 		);
 
 		filteredPresets = filteredPresets.filter((preset) => {
-			const key = getPresetFingerprint(preset);
+			const key = getPresetFingerprint(preset.sysexData);
 			return (fingerprintCounts[key] ?? 0) > 1;
 		});
 	}

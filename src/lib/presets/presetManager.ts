@@ -25,6 +25,7 @@ import {
 	isFactoryPresetIdentity,
 } from "@/lib/presets/factoryPresets";
 import { filterPresets } from "@/lib/presets/filterPresets";
+import { getPresetFingerprint } from "@/lib/presets/presetFingerprint";
 import { isOnlineSyncEnabled } from "@/lib/sync/onlineSyncSettings";
 import {
 	PresetSyncCoordinator,
@@ -325,20 +326,6 @@ function normalizePresetPacketForStorage(data: Uint8Array): Uint8Array {
 	return data;
 }
 
-function canonicalizePresetForLibrary(data: Uint8Array): Uint8Array {
-	const normalized = normalizeSysexForLibrary(data);
-	const formatted = formatPresetData(ensureSysexFraming(normalized), 1);
-	const canonical = new Uint8Array(formatted);
-
-	if (canonical.length > 7) {
-		canonical[4] = 0x70;
-		canonical[5] = 0x20;
-		canonical[6] = 0x60;
-	}
-
-	return canonical;
-}
-
 function getProgramByteForSlot(
 	bank: "internal" | "cartridge",
 	slot: number,
@@ -350,45 +337,6 @@ function getProgramByteForSlot(
 		return 0x20 + (slot - 1);
 	}
 	return slot - 1;
-}
-
-function normalizePresetForComparison(data: Uint8Array): Uint8Array {
-	return canonicalizePresetForLibrary(data);
-}
-
-function extractNibblePayloadForComparison(
-	data: Uint8Array,
-): Uint8Array | null {
-	const normalized = normalizeSysexForLibrary(data);
-	const framed = ensureSysexFraming(normalized);
-
-	if (framed.length >= 264) {
-		const canonicalPayload = framed.slice(7, 7 + 256);
-		if (canonicalPayload.length === 256 && isNibblePayload(canonicalPayload)) {
-			return canonicalPayload;
-		}
-	}
-
-	for (let offset = 5; offset <= 16; offset++) {
-		if (framed.length >= offset + 256 + 1) {
-			const payload = framed.slice(offset, offset + 256);
-			if (payload.length === 256 && isNibblePayload(payload)) {
-				return payload;
-			}
-		}
-	}
-
-	return null;
-}
-
-function getPresetFingerprint(data: Uint8Array): string {
-	const payload = extractNibblePayloadForComparison(data);
-	if (payload) {
-		// Compare on patch payload bytes only so slot/program header differences are ignored.
-		return `payload:${Array.from(payload).join(",")}`;
-	}
-
-	return `canonical:${Array.from(normalizePresetForComparison(data)).join(",")}`;
 }
 
 async function buildPresetMatchIndex(): Promise<Map<string, Preset>> {

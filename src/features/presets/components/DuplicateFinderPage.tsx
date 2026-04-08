@@ -7,10 +7,10 @@ import { useMidiChannel } from "@/context/MidiChannelContext";
 import { useMidiPort } from "@/context/MidiPortContext";
 import { useToast } from "@/context/ToastContext";
 import { useSidebarContent } from "@/hooks/useSidebarContent";
+import { getPresetFingerprint } from "@/lib/presets/presetFingerprint";
 import {
 	deletePreset,
 	fetchPresetData,
-	normalizeSysexForLibrary,
 	type Preset,
 	restorePresetToBuffer,
 } from "@/lib/presets/presetManager";
@@ -23,25 +23,6 @@ interface DuplicateGroup {
 function getSuggestedKeepIndex(presets: Preset[]): number {
 	const favoriteIndex = presets.findIndex((preset) => Boolean(preset.favorite));
 	return favoriteIndex >= 0 ? favoriteIndex : 0;
-}
-
-function getPresetFingerprint(preset: Preset): string {
-	const normalized = normalizeSysexForLibrary(preset.sysexData);
-	const framed =
-		normalized[0] === 0xf0 && normalized[normalized.length - 1] === 0xf7
-			? normalized
-			: new Uint8Array([0xf0, ...normalized, 0xf7]);
-
-	for (let offset = 5; offset <= 16; offset++) {
-		if (framed.length >= offset + 256 + 1) {
-			const payload = framed.slice(offset, offset + 256);
-			if (payload.every((byte) => byte >= 0x00 && byte <= 0x0f)) {
-				return `payload:${Array.from(payload).join(",")}`;
-			}
-		}
-	}
-
-	return `canonical:${Array.from(framed).join(",")}`;
 }
 
 export default function DuplicateFinderPage() {
@@ -79,7 +60,7 @@ export default function DuplicateFinderPage() {
 	const groups = useMemo<DuplicateGroup[]>(() => {
 		const grouped = duplicatePresets.reduce(
 			(acc, preset) => {
-				const key = getPresetFingerprint(preset);
+				const key = getPresetFingerprint(preset.sysexData);
 				if (!acc[key]) {
 					acc[key] = [];
 				}

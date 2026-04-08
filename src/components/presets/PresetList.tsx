@@ -40,6 +40,7 @@ import {
 } from "react-icons/fa";
 import SelectInput from "@/components/forms/SelectInput";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 import { useSearchFilter } from "@/context/SearchFilterContext";
 import type { Playlist } from "@/lib/collections/playlistManager";
 import {
@@ -928,62 +929,64 @@ const PresetList: React.FC<PresetListProps> = ({
 				onToggleUserPresetsOnly={handleToggleUserPresetsOnly}
 			></PresetListTopBar>
 			{isRetrieveModalOpen && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-					<div className="rounded-xl bg-base-100 p-4 shadow-lg">
-						<h2 className="mb-4 text-xl">Retrieve Preset</h2>
-						<div className="mb-4">
+				<Modal
+					panelClassName="w-full max-w-sm"
+					onClose={() => setIsRetrieveModalOpen(false)}
+				>
+					<h2 className="mb-4 text-xl">Retrieve Preset</h2>
+					<div className="mb-4">
+						<Button
+							variant="accent"
+							className="w-full"
+							onClick={() => {
+								onRetrieveCurrentPreset();
+								setIsRetrieveModalOpen(false);
+							}}
+						>
+							Retrieve current preset
+						</Button>
+					</div>
+					<div className="mb-2 text-xs font-semibold tracking-wide uppercase opacity-60">
+						Or retrieve from slot
+					</div>
+					<div className="mb-4">
+						<div className="label">
+							<span className="label-text">Bank</span>
+						</div>
+						<SelectInput
+							value={slotBank}
+							onChange={(e) =>
+								setSlotBank(e.target.value as "internal" | "cartridge")
+							}
+						>
+							<option value="internal">Internal</option>
+							<option value="cartridge">Cartridge</option>
+						</SelectInput>
+					</div>
+					<div className="grid grid-cols-4 gap-2">
+						{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
 							<Button
-								variant="accent"
-								className="w-full"
+								key={`retrieve-slot-${slot}`}
 								onClick={() => {
-									onRetrieveCurrentPreset();
+									onRetrievePresetSlot(slotBank, slot);
 									setIsRetrieveModalOpen(false);
 								}}
+								variant="primary"
+								className="text-2xl font-bold"
 							>
-								Retrieve current preset
+								{slot}
 							</Button>
-						</div>
-						<div className="mb-2 text-xs font-semibold tracking-wide uppercase opacity-60">
-							Or retrieve from slot
-						</div>
-						<div className="mb-4">
-							<div className="label">
-								<span className="label-text">Bank</span>
-							</div>
-							<SelectInput
-								value={slotBank}
-								onChange={(e) =>
-									setSlotBank(e.target.value as "internal" | "cartridge")
-								}
-							>
-								<option value="internal">Internal</option>
-								<option value="cartridge">Cartridge</option>
-							</SelectInput>
-						</div>
-						<div className="grid grid-cols-4 gap-2">
-							{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
-								<Button
-									key={`retrieve-slot-${slot}`}
-									onClick={() => {
-										onRetrievePresetSlot(slotBank, slot);
-										setIsRetrieveModalOpen(false);
-									}}
-									variant="primary"
-									className="text-2xl font-bold"
-								>
-									{slot}
-								</Button>
-							))}
-						</div>
+						))}
+					</div>
+					<div className="flex justify-end mt-4">
 						<Button
 							onClick={() => setIsRetrieveModalOpen(false)}
 							variant="error"
-							className="mt-4"
 						>
 							Close
 						</Button>
 					</div>
-				</div>
+				</Modal>
 			)}
 
 			<div
