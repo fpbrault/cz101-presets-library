@@ -22,6 +22,11 @@ export function useSidebarContent(content: ReactNode) {
 	// Push the latest content into the sidebar after every render.
 	// Using useLayoutEffect so the sidebar updates before the browser paints,
 	// preventing a flash of empty content on mode switches.
+	//
+	// No dependency array is intentional: we want to sync content after every
+	// render of the calling component. This is safe because setSidebarContent
+	// uses a pub-sub pattern — it only triggers AppSidebar to re-render, NOT
+	// the calling component, so there is no infinite-render loop.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentionally runs after every render
 	useLayoutEffect(() => {
 		setSidebarContent(contentRef.current);

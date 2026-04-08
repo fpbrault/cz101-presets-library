@@ -106,5 +106,8 @@ export default function PresetsSidebarContent({
 		</>,
 	);
 
+	// This component has no visual output of its own. It exists solely to
+	// register the presets-mode content into the shared sidebar slot via
+	// useSidebarContent, and cleans up automatically when it unmounts.
 	return null;
 }
