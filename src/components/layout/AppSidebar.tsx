@@ -32,7 +32,7 @@ interface AppSidebarProps {
 	performanceMode: boolean;
 	setPerformanceMode: React.Dispatch<React.SetStateAction<boolean>>;
 	appMode: AppMode;
-	setAppMode: React.Dispatch<React.SetStateAction<AppMode>>;
+	onNavigate?: (mode: AppMode) => void;
 }
 
 export default function AppSidebar({
@@ -41,7 +41,7 @@ export default function AppSidebar({
 	performanceMode,
 	setPerformanceMode,
 	appMode,
-	setAppMode,
+	onNavigate,
 }: AppSidebarProps) {
 	const sidebarContent = useSidebarContentSlot();
 
@@ -101,7 +101,9 @@ export default function AppSidebar({
 
 	const switchMode = (mode: AppMode) => {
 		setPerformanceMode(false);
-		setAppMode(mode);
+		if (onNavigate) {
+			onNavigate(mode);
+		}
 	};
 
 	return (

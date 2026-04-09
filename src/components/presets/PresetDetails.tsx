@@ -351,10 +351,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 						))}
 					</div>
 					<div className="flex justify-end mt-4">
-						<Button
-							onClick={() => setIsWriteModalOpen(false)}
-							variant="error"
-						>
+						<Button onClick={() => setIsWriteModalOpen(false)} variant="error">
 							Close
 						</Button>
 					</div>

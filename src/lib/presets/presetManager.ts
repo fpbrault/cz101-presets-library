@@ -1031,6 +1031,11 @@ export async function getPresets(): Promise<Preset[]> {
 	});
 }
 
+export async function getPresetById(id: string): Promise<Preset | null> {
+	const presets = await getPresets();
+	return presets.find((p) => p.id === id) ?? null;
+}
+
 export async function addPreset(preset: Preset): Promise<Preset> {
 	const nextPreset: Preset = {
 		...preset,
