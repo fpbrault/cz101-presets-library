@@ -1,10 +1,14 @@
-import { afterAll, beforeAll } from "vitest";
+import { beforeAll, vi } from "vitest";
+
+vi.mock("webmidi", () => ({
+	WebMidi: {
+		enabled: false,
+		enable: vi.fn().mockResolvedValue(undefined),
+		addListener: vi.fn(),
+		removeListener: vi.fn(),
+	},
+}));
 
 beforeAll(() => {
-	// Any global setup for browser tests
 	console.log("Browser testing environment initialized");
-});
-
-afterAll(() => {
-	// Any global teardown
 });
