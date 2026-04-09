@@ -9,7 +9,7 @@ export const STORAGE_KEYS = {
 	PLAYLISTS: "cz101Playlists",
 	SETLISTS: "cz101Setlists",
 	SYNTH_BACKUPS: "cz101SynthBackups",
-	CZ101_SETLISTS: "cz101Setlists",
+	CZ101_SETLISTS: "cz101SetlistsLegacy",
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

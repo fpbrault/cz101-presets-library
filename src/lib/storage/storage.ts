@@ -21,9 +21,17 @@ export function setItem<T>(key: StorageKey, value: T): void {
 }
 
 export function removeItem(key: StorageKey): void {
-	localStorage.removeItem(key);
+	try {
+		localStorage.removeItem(key);
+	} catch (error) {
+		console.error(`Failed to remove ${key} from localStorage:`, error);
+	}
 }
 
 export function clear(): void {
-	localStorage.clear();
+	try {
+		localStorage.clear();
+	} catch (error) {
+		console.error("Failed to clear localStorage:", error);
+	}
 }
