@@ -4,21 +4,22 @@ import {
 	signInWithNeonProvider,
 	signOutNeonSession,
 } from "@/lib/auth/neonAuthClient";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
-
-const ONLINE_AUTH_SESSION_KEY = "cz101.online-auth-session.v1";
+import { getItem, removeItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 export function loadOnlineAuthSession(): OnlineAuthSession | null {
 	if (typeof window === "undefined") {
 		return null;
 	}
 
-	const stored = loadFromLocalStorage(ONLINE_AUTH_SESSION_KEY, null);
+	const stored = getItem<Partial<OnlineAuthSession> | null>(
+		STORAGE_KEYS.ONLINE_AUTH_SESSION,
+		null,
+	);
 	if (!stored || typeof stored !== "object") {
 		return null;
 	}
 
-	const session = stored as Partial<OnlineAuthSession>;
+	const session = stored;
 	if (!session.userId) {
 		return null;
 	}
@@ -39,7 +40,7 @@ export function saveOnlineAuthSession(session: OnlineAuthSession): void {
 		return;
 	}
 
-	saveToLocalStorage(ONLINE_AUTH_SESSION_KEY, {
+	setItem(STORAGE_KEYS.ONLINE_AUTH_SESSION, {
 		userId: session.userId,
 		displayName: session.displayName,
 		provider: session.provider,
@@ -52,7 +53,7 @@ export function clearOnlineAuthSession(): void {
 		return;
 	}
 
-	window.localStorage.removeItem(ONLINE_AUTH_SESSION_KEY);
+	removeItem(STORAGE_KEYS.ONLINE_AUTH_SESSION);
 }
 
 export async function refreshOnlineAuthSession(): Promise<OnlineAuthSession | null> {

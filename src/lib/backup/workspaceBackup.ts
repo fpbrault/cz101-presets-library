@@ -9,16 +9,16 @@ import {
 	type SerializedSynthBackup,
 } from "@/lib/collections/synthBackupManager";
 import { exportPresets, importPresets } from "@/lib/presets/presetManager";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 const WORKSPACE_BACKUP_SCHEMA = "cz101-workspace-backup";
 const WORKSPACE_BACKUP_VERSION = 1;
 
 const APP_SETTINGS_KEYS = [
-	"selectedMidiPort",
-	"selectedMidiChannel",
-	"autoSend",
-];
+	STORAGE_KEYS.SELECTED_MIDI_PORT,
+	STORAGE_KEYS.SELECTED_MIDI_CHANNEL,
+	STORAGE_KEYS.AUTO_SEND,
+] as const;
 
 type WorkspaceBackupSection = {
 	format: string;
@@ -60,7 +60,7 @@ export function isWorkspaceBackupEnvelope(
 function getAppSettingsSnapshot() {
 	return APP_SETTINGS_KEYS.reduce(
 		(acc, key) => {
-			acc[key] = loadFromLocalStorage(key, null);
+			acc[key] = getItem(key, null);
 			return acc;
 		},
 		{} as Record<string, unknown>,
@@ -70,7 +70,7 @@ function getAppSettingsSnapshot() {
 function applyAppSettingsSnapshot(snapshot: Record<string, unknown>) {
 	APP_SETTINGS_KEYS.forEach((key) => {
 		if (Object.hasOwn(snapshot, key)) {
-			saveToLocalStorage(key, snapshot[key]);
+			setItem(key, snapshot[key]);
 		}
 	});
 }

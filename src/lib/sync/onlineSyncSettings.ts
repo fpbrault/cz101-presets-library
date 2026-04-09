@@ -1,6 +1,4 @@
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
-
-const ONLINE_SYNC_SETTINGS_KEY = "cz101.online-sync-settings.v1";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 export interface OnlineSyncSettings {
 	enabled: boolean;
@@ -15,10 +13,10 @@ export function loadOnlineSyncSettings(): OnlineSyncSettings {
 		return DEFAULT_ONLINE_SYNC_SETTINGS;
 	}
 
-	const stored = loadFromLocalStorage(
-		ONLINE_SYNC_SETTINGS_KEY,
+	const stored = getItem<Partial<OnlineSyncSettings>>(
+		STORAGE_KEYS.ONLINE_SYNC_SETTINGS,
 		DEFAULT_ONLINE_SYNC_SETTINGS,
-	) as Partial<OnlineSyncSettings>;
+	);
 
 	return {
 		enabled: Boolean(stored.enabled),
@@ -30,7 +28,7 @@ export function saveOnlineSyncSettings(settings: OnlineSyncSettings): void {
 		return;
 	}
 
-	saveToLocalStorage(ONLINE_SYNC_SETTINGS_KEY, {
+	setItem(STORAGE_KEYS.ONLINE_SYNC_SETTINGS, {
 		enabled: settings.enabled,
 	});
 }

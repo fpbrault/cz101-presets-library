@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 export interface PlaylistEntry {
 	id: string;
@@ -13,14 +13,12 @@ export interface Playlist {
 	entries: PlaylistEntry[];
 }
 
-const PLAYLIST_STORAGE_KEY = "cz101Playlists";
-
 function loadPlaylists(): Playlist[] {
-	return loadFromLocalStorage(PLAYLIST_STORAGE_KEY, []) as Playlist[];
+	return getItem<Playlist[]>(STORAGE_KEYS.PLAYLISTS, []);
 }
 
 function savePlaylists(playlists: Playlist[]): void {
-	saveToLocalStorage(PLAYLIST_STORAGE_KEY, playlists);
+	setItem(STORAGE_KEYS.PLAYLISTS, playlists);
 }
 
 export function exportAllPlaylists(): Playlist[] {
