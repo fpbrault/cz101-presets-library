@@ -1,8 +1,8 @@
 import SelectInput from "@/components/forms/SelectInput";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
-import type { SendModalState } from "@/routes/SynthBackupsPage";
 import type { SynthBackup } from "@/lib/collections/synthBackupManager";
+import type { SendModalState } from "@/routes/SynthBackupsPage";
 
 interface SendEntryModalProps {
 	selectedBackup: SynthBackup;
