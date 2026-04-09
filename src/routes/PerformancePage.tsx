@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import type { AppMode } from "@/components/layout/AppSidebar";
 import AppSidebar from "@/components/layout/AppSidebar";
 import PerformanceMode from "@/components/presets/PerformanceMode";
 import { useMidiChannel } from "@/context/MidiChannelContext";
@@ -39,22 +40,27 @@ export default function PerformanceRoutePage() {
 		selectedMidiPort,
 		selectedMidiChannel,
 		setCurrentPreset: setInitialPreset,
-		setAppMode: (mode) => {
-			const route = mode === "synthBackups" ? "synth-backups" : mode;
-			navigate(`/${route}`);
+		setAppMode: (mode: AppMode) => {
+			const routeMap: Record<AppMode, string> = {
+				presets: "presets",
+				synthBackups: "synth-backups",
+				setlists: "setlists",
+				tagManager: "tags",
+				duplicateFinder: "duplicates",
+			};
+			navigate(`/${routeMap[mode]}`);
 		},
 	});
 
-	const handleNavigate = (
-		mode:
-			| "presets"
-			| "synthBackups"
-			| "setlists"
-			| "tagManager"
-			| "duplicateFinder",
-	) => {
-		const route = mode === "synthBackups" ? "synth-backups" : mode;
-		navigate(`/${route}`);
+	const handleNavigate = (mode: AppMode) => {
+		const routeMap: Record<AppMode, string> = {
+			presets: "presets",
+			synthBackups: "synth-backups",
+			setlists: "setlists",
+			tagManager: "tags",
+			duplicateFinder: "duplicates",
+		};
+		navigate(`/${routeMap[mode]}`);
 	};
 
 	return (

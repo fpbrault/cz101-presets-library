@@ -27,8 +27,14 @@ export default function SetlistsRoutePage() {
 
 	const handleNavigate = (mode: AppMode) => {
 		setPerformanceMode(false);
-		const route = mode === "synthBackups" ? "synth-backups" : mode;
-		navigate(`/${route}`);
+		const routeMap: Record<AppMode, string> = {
+			presets: "presets",
+			synthBackups: "synth-backups",
+			setlists: "setlists",
+			tagManager: "tags",
+			duplicateFinder: "duplicates",
+		};
+		navigate(`/${routeMap[mode]}`);
 	};
 
 	return (

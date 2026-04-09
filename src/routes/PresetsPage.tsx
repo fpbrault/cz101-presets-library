@@ -34,8 +34,14 @@ export default function PresetsPage() {
 		selectedMidiChannel,
 		setCurrentPreset,
 		setAppMode: (mode: AppMode) => {
-			const route = mode === "synthBackups" ? "synth-backups" : mode;
-			navigate(`/${route}`);
+			const routeMap: Record<AppMode, string> = {
+				presets: "presets",
+				synthBackups: "synth-backups",
+				setlists: "setlists",
+				tagManager: "tags",
+				duplicateFinder: "duplicates",
+			};
+			navigate(`/${routeMap[mode]}`);
 		},
 	});
 
@@ -50,8 +56,14 @@ export default function PresetsPage() {
 	};
 
 	const handleNavigate = (mode: AppMode) => {
-		const route = mode === "synthBackups" ? "synth-backups" : mode;
-		navigate(`/${route}`);
+		const routeMap: Record<AppMode, string> = {
+			presets: "presets",
+			synthBackups: "synth-backups",
+			setlists: "setlists",
+			tagManager: "tags",
+			duplicateFinder: "duplicates",
+		};
+		navigate(`/${routeMap[mode]}`);
 	};
 
 	return (
