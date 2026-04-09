@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 export type SynthBackupSource = "internal-16" | "manual";
 
@@ -30,8 +30,6 @@ export interface SerializedSynthBackup extends Omit<SynthBackup, "entries"> {
 	entries: SerializedSynthBackupEntry[];
 }
 
-const SYNTH_BACKUP_STORAGE_KEY = "cz101SynthBackups";
-
 function serializeSynthBackup(backup: SynthBackup): SerializedSynthBackup {
 	return {
 		...backup,
@@ -53,20 +51,19 @@ function deserializeSynthBackup(backup: SerializedSynthBackup): SynthBackup {
 }
 
 function loadSerializedSynthBackups(): SerializedSynthBackup[] {
-	// Migrate from old key if present
-	const legacy = loadFromLocalStorage("cz101Setlists", null);
+	const legacy = getItem<SerializedSynthBackup[] | null>(
+		STORAGE_KEYS.CZ101_SETLISTS,
+		null,
+	);
 	if (legacy !== null) {
-		saveToLocalStorage(SYNTH_BACKUP_STORAGE_KEY, legacy);
-		saveToLocalStorage("cz101Setlists", null);
+		setItem(STORAGE_KEYS.SYNTH_BACKUPS, legacy);
+		setItem(STORAGE_KEYS.CZ101_SETLISTS, null);
 	}
-	return loadFromLocalStorage(
-		SYNTH_BACKUP_STORAGE_KEY,
-		[],
-	) as SerializedSynthBackup[];
+	return getItem<SerializedSynthBackup[]>(STORAGE_KEYS.SYNTH_BACKUPS, []);
 }
 
 function saveSerializedSynthBackups(backups: SerializedSynthBackup[]) {
-	saveToLocalStorage(SYNTH_BACKUP_STORAGE_KEY, backups);
+	setItem(STORAGE_KEYS.SYNTH_BACKUPS, backups);
 }
 
 export function exportAllSynthBackups(): SerializedSynthBackup[] {

@@ -4,7 +4,6 @@ import SelectInput from "@/components/forms/SelectInput";
 import Button from "@/components/ui/Button";
 import { useMidiChannel } from "@/context/MidiChannelContext";
 import { useMidiPort } from "@/context/MidiPortContext";
-import { saveToLocalStorage } from "@/utils/utils";
 
 interface MidiQuickSettingsProps {
 	minimalTrigger?: boolean;
@@ -56,7 +55,6 @@ export default function MidiQuickSettings({
 									value={selectedMidiPort}
 									onChange={(e) => {
 										setSelectedMidiPort(e.target.value);
-										saveToLocalStorage("selectedMidiPort", e.target.value);
 									}}
 								>
 									{midiPorts.length === 0 ? (
@@ -80,7 +78,6 @@ export default function MidiQuickSettings({
 									onChange={(e) => {
 										const channel = parseInt(e.target.value, 10);
 										setSelectedMidiChannel(channel);
-										saveToLocalStorage("selectedMidiChannel", channel);
 									}}
 								>
 									{Array.from({ length: 16 }, (_, i) => i + 1).map(

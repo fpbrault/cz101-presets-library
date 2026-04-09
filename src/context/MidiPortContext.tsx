@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, useContext, useState } from "react";
-import { loadFromLocalStorage } from "@/utils/utils";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 interface MidiPortContextType {
 	midiPorts: string[];
@@ -15,12 +15,22 @@ const MidiPortContext = createContext<MidiPortContextType | undefined>(
 export const MidiPortProvider = ({ children }: { children: ReactNode }) => {
 	const [midiPorts, setMidiPorts] = useState<string[]>([]);
 	const [selectedMidiPort, setSelectedMidiPort] = useState<string>(
-		loadFromLocalStorage("selectedMidiPort", ""),
+		getItem(STORAGE_KEYS.SELECTED_MIDI_PORT, ""),
 	);
+
+	const handleSetSelectedMidiPort = (port: string) => {
+		setItem(STORAGE_KEYS.SELECTED_MIDI_PORT, port);
+		setSelectedMidiPort(port);
+	};
 
 	return (
 		<MidiPortContext.Provider
-			value={{ midiPorts, setMidiPorts, selectedMidiPort, setSelectedMidiPort }}
+			value={{
+				midiPorts,
+				setMidiPorts,
+				selectedMidiPort,
+				setSelectedMidiPort: handleSetSelectedMidiPort,
+			}}
 		>
 			{children}
 		</MidiPortContext.Provider>

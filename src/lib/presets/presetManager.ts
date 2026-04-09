@@ -26,6 +26,7 @@ import {
 } from "@/lib/presets/factoryPresets";
 import { filterPresets } from "@/lib/presets/filterPresets";
 import { getPresetFingerprint } from "@/lib/presets/presetFingerprint";
+import { getItem, removeItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 import { isOnlineSyncEnabled } from "@/lib/sync/onlineSyncSettings";
 import {
 	PresetSyncCoordinator,
@@ -35,7 +36,6 @@ import {
 let presetDatabase: PresetDatabase;
 const presetSync = new PresetSyncCoordinator();
 const DEFAULT_USER_PRESET_AUTHOR = "User";
-const FACTORY_PRESETS_ONBOARDING_KEY = "cz101.factory-presets.onboarding.v1";
 
 export function setPresetDatabase(database: PresetDatabase): void {
 	presetDatabase = database;
@@ -96,17 +96,17 @@ export async function ensureFactoryPresetsOnFirstUse(): Promise<
 		return false;
 	}
 
-	const onboardingState = loadFromLocalStorage(
-		FACTORY_PRESETS_ONBOARDING_KEY,
+	const onboardingState = getItem<string | null>(
+		STORAGE_KEYS.FACTORY_PRESETS_ONBOARDING,
 		null,
-	) as string | null;
+	);
 	if (onboardingState) {
 		return false;
 	}
 
 	const existingPresets = await presetDatabase.getPresets();
 	if (existingPresets.length > 0) {
-		saveToLocalStorage(FACTORY_PRESETS_ONBOARDING_KEY, "skipped");
+		setItem(STORAGE_KEYS.FACTORY_PRESETS_ONBOARDING, "skipped");
 		return false;
 	}
 
@@ -114,13 +114,13 @@ export async function ensureFactoryPresetsOnFirstUse(): Promise<
 }
 
 export async function acceptFactoryPresetsOnboarding(): Promise<boolean> {
-	saveToLocalStorage(FACTORY_PRESETS_ONBOARDING_KEY, "accepted");
+	setItem(STORAGE_KEYS.FACTORY_PRESETS_ONBOARDING, "accepted");
 	const addedCount = await addFactoryPresetsToLibrary();
 	return addedCount > 0;
 }
 
 export function declineFactoryPresetsOnboarding(): void {
-	saveToLocalStorage(FACTORY_PRESETS_ONBOARDING_KEY, "declined");
+	setItem(STORAGE_KEYS.FACTORY_PRESETS_ONBOARDING, "declined");
 }
 
 export async function cloudBackupPresets(): Promise<boolean> {
@@ -168,7 +168,7 @@ export async function resetLocalAppData(): Promise<void> {
 	clearAllSynthBackups();
 
 	if (typeof window !== "undefined") {
-		window.localStorage.removeItem(FACTORY_PRESETS_ONBOARDING_KEY);
+		removeItem(STORAGE_KEYS.FACTORY_PRESETS_ONBOARDING);
 	}
 }
 
@@ -901,7 +901,6 @@ export function createPresetFromSysex(params: {
 }
 
 import { patches } from "@/assets/cznames";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
 
 // Helper to parse preset names from cznames.json
 async function parsePresetNames(): Promise<{

@@ -1,7 +1,7 @@
 import type { SortingState } from "@tanstack/react-table";
 import type React from "react";
 import { createContext, type ReactNode, useContext, useState } from "react";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 interface SearchFilterContextProps {
 	sorting: SortingState | [];
@@ -46,12 +46,12 @@ export const SearchFilterProvider: React.FC<SearchFilterProviderProps> = ({
 	const [randomOrder, setRandomOrder] = useState(false);
 	const [duplicatesOnly, setDuplicatesOnly] = useState(false);
 	const [userPresetsOnly, setUserPresetsOnlyState] = useState(
-		loadFromLocalStorage("userPresetsOnly", false),
+		getItem(STORAGE_KEYS.USER_PRESETS_ONLY, false),
 	);
 
 	const setUserPresetsOnly = (nextValue: boolean) => {
+		setItem(STORAGE_KEYS.USER_PRESETS_ONLY, nextValue);
 		setUserPresetsOnlyState(nextValue);
-		saveToLocalStorage("userPresetsOnly", nextValue);
 	};
 
 	const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);

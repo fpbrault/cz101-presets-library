@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 export type SetlistSource = "internal-16" | "manual";
 
@@ -29,8 +29,6 @@ export interface SerializedSetlist extends Omit<Setlist, "entries"> {
 	entries: SerializedSetlistEntry[];
 }
 
-const SETLIST_STORAGE_KEY = "cz101Setlists";
-
 function serializeSetlist(setlist: Setlist): SerializedSetlist {
 	return {
 		...setlist,
@@ -52,11 +50,11 @@ function deserializeSetlist(setlist: SerializedSetlist): Setlist {
 }
 
 function loadSerializedSetlists(): SerializedSetlist[] {
-	return loadFromLocalStorage(SETLIST_STORAGE_KEY, []) as SerializedSetlist[];
+	return getItem<SerializedSetlist[]>(STORAGE_KEYS.SETLISTS, []);
 }
 
 function saveSerializedSetlists(setlists: SerializedSetlist[]) {
-	saveToLocalStorage(SETLIST_STORAGE_KEY, setlists);
+	setItem(STORAGE_KEYS.SETLISTS, setlists);
 }
 
 export function exportAllSetlists(): SerializedSetlist[] {
