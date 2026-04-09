@@ -108,7 +108,7 @@ export default function AppSidebar({
 
 	const switchMode = (mode: AppMode) => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		navigate({ to: modeToRoute[mode] as any });
+		navigate({ to: modeToRoute[mode] });
 	};
 
 	const iconNavButtonClass =

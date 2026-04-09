@@ -8,15 +8,10 @@ import SynthBackupDetailsHeader from "@/features/synthBackups/components/SynthBa
 import SynthBackupEntriesTable from "@/features/synthBackups/components/SynthBackupEntriesTable";
 import SynthBackupsSidebar from "@/features/synthBackups/components/SynthBackupsSidebar";
 import { useSynthBackupMode } from "@/features/synthBackups/hooks/useSynthBackupMode";
+import type { SendModalState } from "@/features/synthBackups/types";
 import { useMidiSetup } from "@/hooks/useMidiSetup";
 import { useSidebarContent } from "@/hooks/useSidebarContent";
 import type { SynthBackup } from "@/lib/collections/synthBackupManager";
-
-export interface SendModalState {
-	entryIndex: number;
-	bank: "internal" | "cartridge";
-	slot: number;
-}
 
 export interface SynthBackupsPageViewProps {
 	backups: SynthBackup[];

@@ -43,6 +43,23 @@ export class IndexedDbPresetDatabase implements PresetDatabase {
 		});
 	}
 
+	async getPresetById(id: string): Promise<Preset | null> {
+		const db = await openDatabase();
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction(STORE_NAME, "readonly");
+			const store = transaction.objectStore(STORE_NAME);
+			const request = store.get(id);
+
+			request.onsuccess = () => {
+				resolve((request.result as Preset) ?? null);
+			};
+
+			request.onerror = () => {
+				reject(request.error);
+			};
+		});
+	}
+
 	async addPreset(preset: Preset): Promise<Preset> {
 		const db = await openDatabase();
 		return new Promise((resolve, reject) => {

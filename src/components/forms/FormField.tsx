@@ -1,9 +1,10 @@
 import type React from "react";
+import type { ReactNode } from "react";
 
 interface FormFieldProps {
 	label: string;
 	htmlFor?: string;
-	children: React.ReactNode;
+	children: ReactNode;
 	className?: string;
 	labelClassName?: string;
 	contentClassName?: string;

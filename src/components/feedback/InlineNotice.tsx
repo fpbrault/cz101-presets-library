@@ -1,9 +1,10 @@
 import type React from "react";
+import type { ReactNode } from "react";
 
 type InlineNoticeTone = "info" | "success" | "warning" | "error" | "neutral";
 
 interface InlineNoticeProps {
-	message: React.ReactNode;
+	message: ReactNode;
 	tone?: InlineNoticeTone;
 	size?: "sm" | "md";
 	className?: string;

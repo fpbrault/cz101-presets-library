@@ -1,5 +1,10 @@
-import type React from "react";
-import { createContext, useCallback, useContext, useState } from "react";
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useState,
+} from "react";
 
 type ToastType = "success" | "info" | "error" | "warning";
 
@@ -26,7 +31,7 @@ const typeClass: Record<ToastType, string> = {
 	warning: "alert-warning",
 };
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
+export function ToastProvider({ children }: { children: ReactNode }) {
 	const [toasts, setToasts] = useState<ToastItem[]>([]);
 
 	const add = useCallback((message: string, type: ToastType) => {

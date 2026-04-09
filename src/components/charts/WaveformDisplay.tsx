@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import {
 	type ModulationType,
 	type WaveformConfig,
@@ -20,7 +20,7 @@ const WaveIcon: React.FC<{ id: WaveformId; size?: number }> = ({
 	const stroke = "currentColor";
 	const sw = 1.5;
 
-	const shapes: Record<WaveformId, React.ReactNode> = {
+	const shapes: Record<WaveformId, ReactNode> = {
 		// Sawtooth
 		1: (
 			<polyline

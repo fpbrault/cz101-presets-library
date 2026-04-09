@@ -1,6 +1,6 @@
-import type React from "react";
 import {
 	createContext,
+	type ReactNode,
 	useCallback,
 	useContext,
 	useEffect,
@@ -8,19 +8,19 @@ import {
 	useState,
 } from "react";
 
-type SidebarListener = (content: React.ReactNode) => void;
+type SidebarListener = (content: ReactNode) => void;
 
 interface SidebarContextValue {
-	setSidebarContent: (content: React.ReactNode) => void;
+	setSidebarContent: (content: ReactNode) => void;
 	subscribe: (listener: SidebarListener) => () => void;
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
-export function SidebarProvider({ children }: { children: React.ReactNode }) {
+export function SidebarProvider({ children }: { children: ReactNode }) {
 	const listenersRef = useRef<Set<SidebarListener>>(new Set());
 
-	const setSidebarContent = useCallback((content: React.ReactNode) => {
+	const setSidebarContent = useCallback((content: ReactNode) => {
 		listenersRef.current.forEach((listener) => {
 			listener(content);
 		});
@@ -48,9 +48,9 @@ export function useSidebarContext() {
 }
 
 /** Used by AppSidebar to read the currently registered page content. */
-export function useSidebarContentSlot(): React.ReactNode {
+export function useSidebarContentSlot(): ReactNode {
 	const { subscribe } = useSidebarContext();
-	const [content, setContent] = useState<React.ReactNode>(null);
+	const [content, setContent] = useState<ReactNode>(null);
 
 	useEffect(() => {
 		return subscribe(setContent);

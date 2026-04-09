@@ -28,6 +28,14 @@ export class PostgresPresetDatabaseWithFallback implements PresetDatabase {
 		}
 	}
 
+	async getPresetById(id: string): Promise<Preset | null> {
+		if (await this.isAvailable()) {
+			return this.postgresDb.getPresetById(id);
+		} else {
+			return this.localDb.getPresetById(id);
+		}
+	}
+
 	async addPreset(preset: Preset): Promise<Preset> {
 		if (await this.isAvailable()) {
 			await this.postgresDb.addPreset(preset);

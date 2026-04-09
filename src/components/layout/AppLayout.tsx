@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import AppSidebar from "@/components/layout/AppSidebar";
 
 interface AppLayoutProps {
-	children: React.ReactNode;
+	children: ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {

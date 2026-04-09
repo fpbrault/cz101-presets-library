@@ -56,6 +56,10 @@ export class FakePresetDatabase implements PresetDatabase {
 		return fakePresets;
 	}
 
+	async getPresetById(id: string): Promise<Preset | null> {
+		return fakePresets.find((p) => p.id === id) ?? null;
+	}
+
 	async addPreset(preset: Preset): Promise<Preset> {
 		fakePresets.push(preset);
 		return preset;

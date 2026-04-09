@@ -1012,6 +1012,7 @@ export async function createPresetData(
 }
 export interface PresetDatabase {
 	getPresets(): Promise<Preset[]>;
+	getPresetById(id: string): Promise<Preset | null>;
 	addPreset(preset: Preset): Promise<Preset>;
 	updatePreset(preset: Preset): Promise<void>;
 	deletePreset(id: string): Promise<void>;
@@ -1032,8 +1033,7 @@ export async function getPresets(): Promise<Preset[]> {
 }
 
 export async function getPresetById(id: string): Promise<Preset | null> {
-	const presets = await getPresets();
-	return presets.find((p) => p.id === id) ?? null;
+	return presetDatabase.getPresetById(id);
 }
 
 export async function addPreset(preset: Preset): Promise<Preset> {

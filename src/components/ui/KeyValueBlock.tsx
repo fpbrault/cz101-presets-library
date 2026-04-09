@@ -1,8 +1,9 @@
 import type React from "react";
+import type { ReactNode } from "react";
 
 interface KeyValueBlockProps {
 	label: string;
-	value: React.ReactNode;
+	value: ReactNode;
 	className?: string;
 }
 

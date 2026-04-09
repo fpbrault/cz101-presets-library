@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-	RouterProvider,
 	createMemoryHistory,
 	createRouter,
+	RouterProvider,
 } from "@tanstack/react-router";
 import { render } from "vitest-browser-react";
 import { MidiChannelProvider } from "@/context/MidiChannelContext";
@@ -60,8 +60,8 @@ export async function routerFixture(initialPath = "/presets") {
 		{ container },
 	);
 
-	// Wait for async route loading (lazy imports)
-	await new Promise((resolve) => setTimeout(resolve, 100));
+	// Wait for async route loading (lazy imports) deterministically.  
+    await router.load();  
 
 	return { container, router };
 }
