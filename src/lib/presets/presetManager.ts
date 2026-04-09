@@ -19,6 +19,11 @@ import {
 } from "@/lib/collections/synthBackupManager";
 //import { FakePresetDatabase } from './fakePresetDatabase'
 import { IndexedDbPresetDatabase } from "@/lib/db/browserDatabase";
+import type { PresetDatabase } from "@/lib/db/PresetDatabase";
+import type { Preset } from "@/lib/presets/types";
+
+export type { Preset, PresetDatabase };
+
 import {
 	FACTORY_PRESET_AUTHOR,
 	getFactoryPresetJson,
@@ -33,16 +38,16 @@ import {
 	type RemotePresetSyncAdapter,
 } from "@/lib/sync/presetSync";
 
-let presetDatabase: PresetDatabase;
+let presetDatabase: PresetDatabase = new IndexedDbPresetDatabase();
 const presetSync = new PresetSyncCoordinator();
 const DEFAULT_USER_PRESET_AUTHOR = "User";
 
-export function setPresetDatabase(database: PresetDatabase): void {
-	presetDatabase = database;
-}
-
 export function resetPresetDatabase(): void {
 	presetDatabase = new IndexedDbPresetDatabase();
+}
+
+export function setPresetDatabase(database: PresetDatabase): void {
+	presetDatabase = database;
 }
 
 export function setPresetSyncAdapter(adapter: RemotePresetSyncAdapter): void {
@@ -858,22 +863,6 @@ export async function getBackupFiles(): Promise<string[]> {
 	return fileList.sort(natsort());
 }
 
-export type Preset = {
-	id: string;
-	name: string;
-	createdDate: string;
-	modifiedDate: string;
-	slot?: number;
-	filename: string;
-	sysexData: Uint8Array;
-	tags: string[];
-	author?: string;
-	description?: string;
-	isFactoryPreset?: boolean;
-	favorite?: boolean;
-	rating?: 1 | 2 | 3 | 4 | 5;
-};
-
 export function createPresetFromSysex(params: {
 	filename: string;
 	name: string;
@@ -1008,17 +997,6 @@ export async function createPresetData(
 	}
 
 	return presets;
-}
-export interface PresetDatabase {
-	getPresets(): Promise<Preset[]>;
-	getPresetById(id: string): Promise<Preset | null>;
-	addPreset(preset: Preset): Promise<Preset>;
-	updatePreset(preset: Preset): Promise<void>;
-	deletePreset(id: string): Promise<void>;
-	syncPresets(localPresets: Preset[]): Promise<void>;
-	isAvailable(): Promise<boolean>;
-	import(json: string): Promise<void>;
-	export(): Promise<string>;
 }
 
 export async function getPresets(): Promise<Preset[]> {

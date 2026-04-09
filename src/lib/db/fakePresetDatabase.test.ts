@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { beforeEach, describe, expect, it } from "vitest";
 import { FakePresetDatabase } from "@/lib/db/fakePresetDatabase";
-import type { Preset } from "@/lib/presets/presetManager";
+import type { Preset } from "@/lib/presets/types";
 
 describe("FakePresetDatabase", () => {
 	let db: FakePresetDatabase;

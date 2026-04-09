@@ -1,7 +1,8 @@
 // src/lib/fakePresetDatabase.ts
 
 import { v4 as uuidv4 } from "uuid";
-import type { Preset, PresetDatabase } from "@/lib/presets/presetManager";
+import type { PresetDatabase } from "@/lib/db/PresetDatabase";
+import type { Preset } from "@/lib/presets/types";
 
 let fakePresets: Preset[] = [
 	{

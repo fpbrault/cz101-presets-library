@@ -5,14 +5,17 @@ import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import { MidiChannelProvider } from "@/context/MidiChannelContext";
 import { MidiPortProvider } from "@/context/MidiPortContext";
+import { PresetDatabaseProvider } from "@/context/PresetDatabaseContext";
 import { SearchFilterProvider } from "@/context/SearchFilterContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { ToastProvider, useToast } from "@/context/ToastContext";
 import { refreshOnlineAuthSession } from "@/lib/auth/onlineAuthSession";
+import { IndexedDbPresetDatabase } from "@/lib/db/browserDatabase";
 import {
 	acceptFactoryPresetsOnboarding,
 	declineFactoryPresetsOnboarding,
 	ensureFactoryPresetsOnFirstUse,
+	setPresetDatabase,
 } from "@/lib/presets/presetManager";
 import { saveOnlineSyncSettings } from "@/lib/sync/onlineSyncSettings";
 import { configurePresetSyncAdapterFromSettings } from "@/lib/sync/remotePresetSyncAdapter";
@@ -98,18 +101,26 @@ function AppInner() {
 }
 
 export default function App() {
+	const [presetDatabase] = useState(() => {
+		const db = new IndexedDbPresetDatabase();
+		setPresetDatabase(db);
+		return db;
+	});
+
 	return (
 		<ToastProvider>
 			<QueryClientProvider client={queryClient}>
-				<MidiPortProvider>
-					<MidiChannelProvider>
-						<SearchFilterProvider>
-							<SidebarProvider>
-								<AppInner />
-							</SidebarProvider>
-						</SearchFilterProvider>
-					</MidiChannelProvider>
-				</MidiPortProvider>
+				<PresetDatabaseProvider database={presetDatabase}>
+					<MidiPortProvider>
+						<MidiChannelProvider>
+							<SearchFilterProvider>
+								<SidebarProvider>
+									<AppInner />
+								</SidebarProvider>
+							</SearchFilterProvider>
+						</MidiChannelProvider>
+					</MidiPortProvider>
+				</PresetDatabaseProvider>
 			</QueryClientProvider>
 		</ToastProvider>
 	);

@@ -1,4 +1,5 @@
-import type { Preset, PresetDatabase } from "@/lib/presets/presetManager";
+import type { PresetDatabase } from "@/lib/db/PresetDatabase";
+import type { Preset } from "@/lib/presets/types";
 
 const DB_NAME = "PresetDatabase";
 const STORE_NAME = "presets";
