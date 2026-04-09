@@ -1,6 +1,7 @@
 import { IndexedDbPresetDatabase } from "@/lib/db/browserDatabase";
+import type { PresetDatabase } from "@/lib/db/PresetDatabase";
 import { PostgresPresetDatabase } from "@/lib/db/postgresDatabase";
-import type { Preset, PresetDatabase } from "@/lib/presets/presetManager";
+import type { Preset } from "@/lib/presets/types";
 
 export class PostgresPresetDatabaseWithFallback implements PresetDatabase {
 	private postgresDb: PostgresPresetDatabase;

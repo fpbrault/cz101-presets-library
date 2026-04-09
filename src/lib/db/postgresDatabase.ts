@@ -1,5 +1,6 @@
 import { Client } from "pg";
-import type { Preset, PresetDatabase } from "@/lib/presets/presetManager";
+import type { PresetDatabase } from "@/lib/db/PresetDatabase";
+import type { Preset } from "@/lib/presets/types";
 
 const client = new Client({
 	connectionString: "postgresql://user:password@localhost:5432/presets",

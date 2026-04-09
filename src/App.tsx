@@ -15,6 +15,7 @@ import {
 	acceptFactoryPresetsOnboarding,
 	declineFactoryPresetsOnboarding,
 	ensureFactoryPresetsOnFirstUse,
+	setPresetDatabase,
 } from "@/lib/presets/presetManager";
 import { saveOnlineSyncSettings } from "@/lib/sync/onlineSyncSettings";
 import { configurePresetSyncAdapterFromSettings } from "@/lib/sync/remotePresetSyncAdapter";
@@ -100,7 +101,11 @@ function AppInner() {
 }
 
 export default function App() {
-	const presetDatabase = new IndexedDbPresetDatabase();
+	const [presetDatabase] = useState(() => {
+		const db = new IndexedDbPresetDatabase();
+		setPresetDatabase(db);
+		return db;
+	});
 
 	return (
 		<ToastProvider>
