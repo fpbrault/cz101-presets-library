@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import EnvelopeChart from "@/components/charts/EnvelopeChart";
 import WaveformDisplay from "@/components/charts/WaveformDisplay";
 import { type DecodedPatch, decodeCzPatch } from "@/lib/midi/czSysexDecoder";
@@ -29,7 +29,7 @@ const NOTE_NAMES = [
 
 const ParamRow: React.FC<{
 	label: string;
-	value: React.ReactNode;
+	value: ReactNode;
 	mono?: boolean;
 }> = ({ label, value, mono }) => (
 	<div className="flex justify-between items-center gap-2 py-0.5">
@@ -44,9 +44,7 @@ const ParamRow: React.FC<{
 	</div>
 );
 
-const SectionTitle: React.FC<{ children: React.ReactNode }> = ({
-	children,
-}) => (
+const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
 	<div className="flex items-center gap-2 mt-3 mb-1">
 		<span className="text-[9px] uppercase tracking-widest font-bold text-primary/70">
 			{children}
@@ -124,7 +122,7 @@ const EnvelopeGroup: React.FC<{
 const CollapsibleSection: React.FC<{
 	title: string;
 	defaultOpen?: boolean;
-	children: React.ReactNode;
+	children: ReactNode;
 }> = ({ title, defaultOpen = true, children }) => (
 	<details
 		open={defaultOpen}

@@ -1,17 +1,49 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import InlineNotice from "@/components/feedback/InlineNotice";
+import { useMidiChannel } from "@/context/MidiChannelContext";
+import { useMidiPort } from "@/context/MidiPortContext";
 import SendEntryModal from "@/features/synthBackups/components/SendEntryModal";
 import SynthBackupDetailsHeader from "@/features/synthBackups/components/SynthBackupDetailsHeader";
 import SynthBackupEntriesTable from "@/features/synthBackups/components/SynthBackupEntriesTable";
-import type {
-	SendModalState,
-	SynthBackupsPageProps,
-} from "@/features/synthBackups/components/SynthBackupsPage.types";
 import SynthBackupsSidebar from "@/features/synthBackups/components/SynthBackupsSidebar";
+import { useSynthBackupMode } from "@/features/synthBackups/hooks/useSynthBackupMode";
+import type { SendModalState } from "@/features/synthBackups/types";
+import { useMidiSetup } from "@/hooks/useMidiSetup";
 import { useSidebarContent } from "@/hooks/useSidebarContent";
+import type { SynthBackup } from "@/lib/collections/synthBackupManager";
 
-const SynthBackupsPage: React.FC<SynthBackupsPageProps> = ({
+export interface SynthBackupsPageViewProps {
+	backups: SynthBackup[];
+	selectedBackupId: string | null;
+	isBackingUp: boolean;
+	backupProgress: { completed: number; total: number } | null;
+	isRestoring: boolean;
+	restoreProgress: {
+		completed: number;
+		total: number;
+		attempts: number;
+	} | null;
+	onSelectBackup: (backupId: string) => void;
+	onCreateBackup: () => void;
+	onRestoreBackupToSynth: (
+		backupId: string,
+		bank: "internal" | "cartridge",
+	) => void;
+	onDeleteBackup: (backupId: string) => void;
+	onExportBackup: (backupId: string) => void;
+	onImportBackup: (file: File) => void;
+	onSaveEntryAsPreset: (backupId: string, entryIndex: number) => void;
+	onSendEntryToSlot: (
+		backupId: string,
+		entryIndex: number,
+		bank: "internal" | "cartridge",
+		slot: number,
+	) => void;
+	onPreviewEntryInBuffer: (backupId: string, entryIndex: number) => void;
+}
+
+export const SynthBackupsPageView: React.FC<SynthBackupsPageViewProps> = ({
 	backups,
 	selectedBackupId,
 	isBackingUp,
@@ -116,4 +148,35 @@ const SynthBackupsPage: React.FC<SynthBackupsPageProps> = ({
 	);
 };
 
-export default SynthBackupsPage;
+export default function SynthBackupsRoutePage() {
+	const { setMidiPorts, selectedMidiPort } = useMidiPort();
+	const { selectedMidiChannel } = useMidiChannel();
+
+	useMidiSetup(setMidiPorts);
+
+	const synthBackupMode = useSynthBackupMode({
+		selectedMidiPort,
+		selectedMidiChannel,
+		openSaveDraftPresetModal: () => {},
+	});
+
+	return (
+		<SynthBackupsPageView
+			backups={synthBackupMode.backups}
+			selectedBackupId={synthBackupMode.selectedBackupId}
+			isBackingUp={synthBackupMode.isBackingUp}
+			backupProgress={synthBackupMode.backupProgress}
+			isRestoring={synthBackupMode.isRestoringBackup}
+			restoreProgress={synthBackupMode.restoreProgress}
+			onSelectBackup={synthBackupMode.setSelectedBackupId}
+			onCreateBackup={synthBackupMode.handleCreateBackup}
+			onRestoreBackupToSynth={synthBackupMode.handleRestoreBackupToSynth}
+			onDeleteBackup={synthBackupMode.handleDeleteBackup}
+			onExportBackup={synthBackupMode.handleExportBackup}
+			onImportBackup={synthBackupMode.handleImportBackup}
+			onSaveEntryAsPreset={synthBackupMode.handleSaveBackupEntryAsPreset}
+			onSendEntryToSlot={synthBackupMode.handleSendBackupEntryToSlot}
+			onPreviewEntryInBuffer={synthBackupMode.handlePreviewBackupEntryInBuffer}
+		/>
+	);
+}

@@ -2,12 +2,40 @@ import type React from "react";
 import { useMemo, useState } from "react";
 import InlineNotice from "@/components/feedback/InlineNotice";
 import Button from "@/components/ui/Button";
+import { useMidiChannel } from "@/context/MidiChannelContext";
+import { useMidiPort } from "@/context/MidiPortContext";
 import SetlistEntriesTable from "@/features/setlists/components/SetlistEntriesTable";
-import type { SetlistsPageProps } from "@/features/setlists/components/SetlistsPage.types";
 import SetlistsSidebar from "@/features/setlists/components/SetlistsSidebar";
+import { useSetlistMode } from "@/features/setlists/hooks/useSetlistMode";
+import { useMidiSetup } from "@/hooks/useMidiSetup";
 import { useSidebarContent } from "@/hooks/useSidebarContent";
+import type { Playlist } from "@/lib/collections/playlistManager";
+import type { Preset } from "@/lib/presets/presetManager";
 
-const SetlistsPage: React.FC<SetlistsPageProps> = ({
+export interface SetlistsPageViewProps {
+	playlists: Playlist[];
+	selectedPlaylistId: string | null;
+	presets: Preset[];
+	quickSendIndex: number | null;
+	isQuickSending: boolean;
+	onSelectPlaylist: (playlistId: string) => void;
+	onCreatePlaylist: () => void;
+	onRenamePlaylist: (playlistId: string, name: string) => void;
+	onDeletePlaylist: (playlistId: string) => void;
+	onAddPreset: (playlistId: string, presetId: string) => void;
+	onRemoveEntry: (playlistId: string, entryId: string) => void;
+	onReorderEntries: (
+		playlistId: string,
+		fromIndex: number,
+		toIndex: number,
+	) => void;
+	onStartQuickSend: (playlistId: string) => void;
+	onStepQuickSend: (direction: "prev" | "next") => void;
+	onStopQuickSend: () => void;
+	onSendCurrentToBuffer: () => void;
+}
+
+export const SetlistsPageView: React.FC<SetlistsPageViewProps> = ({
 	playlists,
 	selectedPlaylistId,
 	presets,
@@ -24,7 +52,6 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 	onStepQuickSend,
 	onStopQuickSend,
 	onSendCurrentToBuffer,
-	onPlayInPerformanceMode,
 }) => {
 	const [addPresetSearch, setAddPresetSearch] = useState("");
 	const [showAddPresetModal, setShowAddPresetModal] = useState(false);
@@ -97,15 +124,6 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 									onClick={() => setShowAddPresetModal(true)}
 								>
 									+ Add Preset
-								</Button>
-
-								<Button
-									variant="secondary"
-									size="sm"
-									disabled={selectedPlaylist.entries.length === 0}
-									onClick={() => onPlayInPerformanceMode(selectedPlaylist.id)}
-								>
-									🎹 Performance Mode
 								</Button>
 
 								{!isQuickSending ? (
@@ -245,4 +263,35 @@ const SetlistsPage: React.FC<SetlistsPageProps> = ({
 	);
 };
 
-export default SetlistsPage;
+export default function SetlistsRoutePage() {
+	const { setMidiPorts, selectedMidiPort } = useMidiPort();
+	const { selectedMidiChannel } = useMidiChannel();
+
+	useMidiSetup(setMidiPorts);
+
+	const setlistMode = useSetlistMode({
+		selectedMidiPort,
+		selectedMidiChannel,
+	});
+
+	return (
+		<SetlistsPageView
+			playlists={setlistMode.playlists}
+			selectedPlaylistId={setlistMode.selectedPlaylistId}
+			presets={setlistMode.presets}
+			quickSendIndex={setlistMode.quickSendIndex}
+			isQuickSending={setlistMode.isQuickSending}
+			onSelectPlaylist={setlistMode.setSelectedPlaylistId}
+			onCreatePlaylist={setlistMode.handleCreatePlaylist}
+			onRenamePlaylist={setlistMode.handleRenamePlaylist}
+			onDeletePlaylist={setlistMode.handleDeletePlaylist}
+			onAddPreset={setlistMode.handleAddPreset}
+			onRemoveEntry={setlistMode.handleRemoveEntry}
+			onReorderEntries={setlistMode.handleReorderEntries}
+			onStartQuickSend={setlistMode.handleStartQuickSend}
+			onStepQuickSend={setlistMode.handleStepQuickSend}
+			onStopQuickSend={setlistMode.handleStopQuickSend}
+			onSendCurrentToBuffer={setlistMode.handleSendCurrentToBuffer}
+		/>
+	);
+}

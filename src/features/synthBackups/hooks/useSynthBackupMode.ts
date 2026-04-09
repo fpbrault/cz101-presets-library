@@ -27,7 +27,7 @@ type AppMode =
 interface UseSynthBackupModeParams {
 	selectedMidiPort: string;
 	selectedMidiChannel: number;
-	setAppMode: (mode: AppMode) => void;
+	setAppMode?: (mode: AppMode) => void;
 	openSaveDraftPresetModal: (
 		sysexData: Uint8Array,
 		matchingPresetName: Awaited<ReturnType<typeof getMatchingPresetBySysex>>,
@@ -38,7 +38,7 @@ interface UseSynthBackupModeParams {
 export function useSynthBackupMode({
 	selectedMidiPort,
 	selectedMidiChannel,
-	setAppMode,
+	setAppMode = () => {},
 	openSaveDraftPresetModal,
 }: UseSynthBackupModeParams) {
 	const { notifySuccess, notifyInfo, notifyError } = useToast();

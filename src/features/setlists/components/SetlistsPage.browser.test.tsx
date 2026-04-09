@@ -1,9 +1,9 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import SetlistsPage from "@/features/setlists/components/SetlistsPage";
 import type { Playlist } from "@/lib/collections/playlistManager";
 import type { Preset } from "@/lib/presets/presetManager";
+import { SetlistsPageView } from "@/routes/SetlistsPage";
 import { fixture } from "@/test/browserFixture";
 
 const noopProps = {
@@ -23,7 +23,6 @@ const noopProps = {
 	onStepQuickSend: vi.fn(),
 	onStopQuickSend: vi.fn(),
 	onSendCurrentToBuffer: vi.fn(),
-	onPlayInPerformanceMode: vi.fn(),
 };
 
 function makePlaylist(overrides: Partial<Playlist> = {}): Playlist {
@@ -53,14 +52,14 @@ function makePreset(overrides: Partial<Preset> = {}): Preset {
 
 describe("SetlistsPage (browser)", () => {
 	it("shows a notice when no setlist is selected", async () => {
-		await fixture(<SetlistsPage {...noopProps} />);
+		await fixture(<SetlistsPageView {...noopProps} />);
 		expect(screen.getByText(/select a setlist/i)).toBeTruthy();
 	});
 
 	it("does not show the notice when a setlist is selected", async () => {
 		const playlist = makePlaylist();
 		await fixture(
-			<SetlistsPage
+			<SetlistsPageView
 				{...noopProps}
 				playlists={[playlist]}
 				selectedPlaylistId={playlist.id}
@@ -72,7 +71,7 @@ describe("SetlistsPage (browser)", () => {
 	it("renders the selected setlist name", async () => {
 		const playlist = makePlaylist({ name: "Live Gig 2024" });
 		await fixture(
-			<SetlistsPage
+			<SetlistsPageView
 				{...noopProps}
 				playlists={[playlist]}
 				selectedPlaylistId={playlist.id}
@@ -86,7 +85,7 @@ describe("SetlistsPage (browser)", () => {
 			makePlaylist({ id: "setlist-1", name: "Setlist One" }),
 			makePlaylist({ id: "setlist-2", name: "Setlist Two" }),
 		];
-		await fixture(<SetlistsPage {...noopProps} playlists={playlists} />);
+		await fixture(<SetlistsPageView {...noopProps} playlists={playlists} />);
 		expect(screen.getByText("Setlist One")).toBeTruthy();
 		expect(screen.getByText("Setlist Two")).toBeTruthy();
 	});
@@ -97,7 +96,7 @@ describe("SetlistsPage (browser)", () => {
 		const playlist = makePlaylist({ id: "setlist-click", name: "Click Me" });
 
 		await fixture(
-			<SetlistsPage
+			<SetlistsPageView
 				{...noopProps}
 				playlists={[playlist]}
 				onSelectPlaylist={onSelectPlaylist}
@@ -128,7 +127,7 @@ describe("SetlistsPage (browser)", () => {
 		];
 
 		await fixture(
-			<SetlistsPage
+			<SetlistsPageView
 				{...noopProps}
 				playlists={[playlist]}
 				selectedPlaylistId={playlist.id}

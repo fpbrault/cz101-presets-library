@@ -13,6 +13,11 @@ export class PostgresPresetDatabase implements PresetDatabase {
 		return res.rows;
 	}
 
+	async getPresetById(id: string): Promise<Preset | null> {
+		const res = await client.query("SELECT * FROM presets WHERE id = $1", [id]);
+		return res.rows[0] ?? null;
+	}
+
 	async addPreset(preset: Preset): Promise<Preset> {
 		await client.query(
 			"INSERT INTO presets (id, name, createdDate, modifiedDate, filename, sysexData, tags, author, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",

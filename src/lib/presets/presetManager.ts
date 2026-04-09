@@ -1012,6 +1012,7 @@ export async function createPresetData(
 }
 export interface PresetDatabase {
 	getPresets(): Promise<Preset[]>;
+	getPresetById(id: string): Promise<Preset | null>;
 	addPreset(preset: Preset): Promise<Preset>;
 	updatePreset(preset: Preset): Promise<void>;
 	deletePreset(id: string): Promise<void>;
@@ -1029,6 +1030,10 @@ export async function getPresets(): Promise<Preset[]> {
 		if (aName > bName) return 1;
 		return 0;
 	});
+}
+
+export async function getPresetById(id: string): Promise<Preset | null> {
+	return presetDatabase.getPresetById(id);
 }
 
 export async function addPreset(preset: Preset): Promise<Preset> {

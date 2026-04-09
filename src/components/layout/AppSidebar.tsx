@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import type React from "react";
 import {
 	FaBolt,
@@ -20,30 +21,45 @@ import {
 } from "@/lib/presets/presetManager";
 
 export type AppMode =
+	| "performance"
 	| "presets"
 	| "synthBackups"
 	| "setlists"
 	| "tagManager"
 	| "duplicateFinder";
 
+const routeToMode: Record<string, AppMode> = {
+	"/performance": "performance",
+	"/presets": "presets",
+	"/synth-backups": "synthBackups",
+	"/setlists": "setlists",
+	"/tags": "tagManager",
+	"/duplicates": "duplicateFinder",
+};
+
+const modeToRoute: Record<AppMode, string> = {
+	performance: "/performance",
+	presets: "/presets",
+	synthBackups: "/synth-backups",
+	setlists: "/setlists",
+	tagManager: "/tags",
+	duplicateFinder: "/duplicates",
+};
+
 interface AppSidebarProps {
 	leftPanelCollapsed: boolean;
 	setLeftPanelCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
-	performanceMode: boolean;
-	setPerformanceMode: React.Dispatch<React.SetStateAction<boolean>>;
-	appMode: AppMode;
-	setAppMode: React.Dispatch<React.SetStateAction<AppMode>>;
 }
 
 export default function AppSidebar({
 	leftPanelCollapsed,
 	setLeftPanelCollapsed,
-	performanceMode,
-	setPerformanceMode,
-	appMode,
-	setAppMode,
 }: AppSidebarProps) {
+	const navigate = useNavigate();
+	const location = useLocation();
 	const sidebarContent = useSidebarContentSlot();
+
+	const currentMode: AppMode = routeToMode[location.pathname] ?? "presets";
 
 	const { data: duplicatePresets = [] } = useQuery({
 		queryKey: ["presets", "sidebar-duplicate-indicator"],
@@ -90,6 +106,11 @@ export default function AppSidebar({
 	).size;
 	const hasDuplicates = duplicateGroupCount > 0;
 
+	const switchMode = (mode: AppMode) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		navigate({ to: modeToRoute[mode] });
+	};
+
 	const iconNavButtonClass =
 		"group relative grid size-9 place-items-center text-base-content/55 transition-colors hover:text-warning";
 	const activeIconNavButtonClass =
@@ -98,11 +119,6 @@ export default function AppSidebar({
 		"group relative flex w-full items-center gap-3 rounded-md px-1 py-1.5 text-sm font-semibold text-base-content/55 transition-colors hover:text-warning";
 	const activeExpandedNavButtonClass =
 		"text-warning after:absolute after:-left-3 after:h-5 after:w-0.5 after:rounded-full after:bg-warning";
-
-	const switchMode = (mode: AppMode) => {
-		setPerformanceMode(false);
-		setAppMode(mode);
-	};
 
 	return (
 		<div
@@ -172,9 +188,9 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${iconNavButtonClass} ${
-								performanceMode ? activeIconNavButtonClass : ""
+								currentMode === "performance" ? activeIconNavButtonClass : ""
 							}`}
-							onClick={() => setPerformanceMode(true)}
+							onClick={() => switchMode("performance")}
 							title="Performance Mode"
 						>
 							<FaBolt size={16} />
@@ -183,9 +199,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${iconNavButtonClass} ${
-								appMode === "presets" && !performanceMode
-									? activeIconNavButtonClass
-									: ""
+								currentMode === "presets" ? activeIconNavButtonClass : ""
 							}`}
 							onClick={() => switchMode("presets")}
 							title="Preset Library"
@@ -196,9 +210,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${iconNavButtonClass} ${
-								appMode === "synthBackups" && !performanceMode
-									? activeIconNavButtonClass
-									: ""
+								currentMode === "synthBackups" ? activeIconNavButtonClass : ""
 							}`}
 							onClick={() => switchMode("synthBackups")}
 							title="Synth Backup Manager"
@@ -209,9 +221,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${iconNavButtonClass} ${
-								appMode === "setlists" && !performanceMode
-									? activeIconNavButtonClass
-									: ""
+								currentMode === "setlists" ? activeIconNavButtonClass : ""
 							}`}
 							onClick={() => switchMode("setlists")}
 							title="Setlist Manager"
@@ -222,9 +232,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${iconNavButtonClass} ${
-								appMode === "tagManager" && !performanceMode
-									? activeIconNavButtonClass
-									: ""
+								currentMode === "tagManager" ? activeIconNavButtonClass : ""
 							}`}
 							onClick={() => switchMode("tagManager")}
 							title="Tag Manager"
@@ -235,7 +243,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${iconNavButtonClass} ${
-								appMode === "duplicateFinder" && !performanceMode
+								currentMode === "duplicateFinder"
 									? activeIconNavButtonClass
 									: ""
 							}`}
@@ -263,9 +271,11 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${expandedNavButtonClass} ${
-								performanceMode ? activeExpandedNavButtonClass : ""
+								currentMode === "performance"
+									? activeExpandedNavButtonClass
+									: ""
 							}`}
-							onClick={() => setPerformanceMode(true)}
+							onClick={() => switchMode("performance")}
 							title="Performance Mode"
 						>
 							<FaBolt size={16} />
@@ -275,9 +285,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${expandedNavButtonClass} ${
-								appMode === "presets" && !performanceMode
-									? activeExpandedNavButtonClass
-									: ""
+								currentMode === "presets" ? activeExpandedNavButtonClass : ""
 							}`}
 							onClick={() => switchMode("presets")}
 							title="Preset Library"
@@ -289,7 +297,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${expandedNavButtonClass} ${
-								appMode === "synthBackups" && !performanceMode
+								currentMode === "synthBackups"
 									? activeExpandedNavButtonClass
 									: ""
 							}`}
@@ -303,9 +311,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${expandedNavButtonClass} ${
-								appMode === "setlists" && !performanceMode
-									? activeExpandedNavButtonClass
-									: ""
+								currentMode === "setlists" ? activeExpandedNavButtonClass : ""
 							}`}
 							onClick={() => switchMode("setlists")}
 							title="Setlist Manager"
@@ -317,9 +323,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${expandedNavButtonClass} ${
-								appMode === "tagManager" && !performanceMode
-									? activeExpandedNavButtonClass
-									: ""
+								currentMode === "tagManager" ? activeExpandedNavButtonClass : ""
 							}`}
 							onClick={() => switchMode("tagManager")}
 							title="Tag Manager"
@@ -331,7 +335,7 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${expandedNavButtonClass} ${
-								appMode === "duplicateFinder" && !performanceMode
+								currentMode === "duplicateFinder"
 									? activeExpandedNavButtonClass
 									: ""
 							}`}

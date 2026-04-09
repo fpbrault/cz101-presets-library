@@ -1,8 +1,7 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 
-import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import PresetManager from "@/components/presets/PresetManager";
 import Button from "@/components/ui/Button";
 import { MidiChannelProvider } from "@/context/MidiChannelContext";
 import { MidiPortProvider } from "@/context/MidiPortContext";
@@ -17,6 +16,7 @@ import {
 } from "@/lib/presets/presetManager";
 import { saveOnlineSyncSettings } from "@/lib/sync/onlineSyncSettings";
 import { configurePresetSyncAdapterFromSettings } from "@/lib/sync/remotePresetSyncAdapter";
+import { RouterProvider, router } from "@/routes/router";
 import { queryClient } from "@/utils/queryClient";
 
 function AppInner() {
@@ -24,7 +24,6 @@ function AppInner() {
 	const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
 	useEffect(() => {
-		// Handle OAuth popup callback — close popup and notify parent
 		if (
 			window.opener &&
 			new URLSearchParams(window.location.search).get("auth_popup") === "1"
@@ -71,7 +70,7 @@ function AppInner() {
 
 	return (
 		<>
-			<PresetManager />
+			<RouterProvider router={router} />
 
 			{showOnboardingModal && (
 				<dialog open className="modal modal-open">
