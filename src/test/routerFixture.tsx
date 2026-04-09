@@ -60,8 +60,8 @@ export async function routerFixture(initialPath = "/presets") {
 		{ container },
 	);
 
-	// Wait for async route loading (lazy imports) deterministically.  
-    await router.load();  
+	// Wait for async route loading (lazy imports) deterministically.
+	await router.load();
 
 	return { container, router };
 }

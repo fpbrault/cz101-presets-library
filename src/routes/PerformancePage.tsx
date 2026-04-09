@@ -25,18 +25,18 @@ export default function PerformanceRoutePage() {
 	});
 
 	useEffect(() => {
-	      if (!presetId) {  
-            setInitialPreset(null);  
-            return;  
-        }  
+		if (!presetId) {
+			setInitialPreset(null);
+			return;
+		}
 
-        if (fetchedPreset) {  
-            setInitialPreset(fetchedPreset);  
-            return;  
-        }  
+		if (fetchedPreset) {
+			setInitialPreset(fetchedPreset);
+			return;
+		}
 
-        setInitialPreset(null);  
-    }, [presetId, fetchedPreset]);  
+		setInitialPreset(null);
+	}, [presetId, fetchedPreset]);
 
 	useMidiSetup(setMidiPorts);
 
