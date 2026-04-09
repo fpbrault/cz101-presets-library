@@ -11,7 +11,7 @@ import {
 	retrievePresetSlotFromSynth,
 	writePresetToSynthSlot,
 } from "@/lib/presets/presetManager";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/utils/utils";
+import { getItem, STORAGE_KEYS, setItem } from "@/lib/storage";
 
 type AppMode =
 	| "presets"
@@ -43,7 +43,7 @@ export function usePresetMode({
 	const { notifySuccess, notifyInfo, notifyError } = useToast();
 	const [editMode, setEditMode] = useState(false);
 	const [autoSend, setAutoSend] = useState(
-		loadFromLocalStorage("autoSend", false),
+		getItem(STORAGE_KEYS.AUTO_SEND, false),
 	);
 
 	const [saveDraftPresetState, setSaveDraftPresetState] =
@@ -120,7 +120,7 @@ export function usePresetMode({
 	const handleToggleAutoSend = () => {
 		setAutoSend((prevAutoSend: boolean) => {
 			const newAutoSend = !prevAutoSend;
-			saveToLocalStorage("autoSend", newAutoSend);
+			setItem(STORAGE_KEYS.AUTO_SEND, newAutoSend);
 			return newAutoSend;
 		});
 	};

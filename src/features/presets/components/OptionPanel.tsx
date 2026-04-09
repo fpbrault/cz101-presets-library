@@ -5,7 +5,6 @@ import Button from "@/components/ui/Button";
 import { useMidiChannel } from "@/context/MidiChannelContext";
 import { useMidiPort } from "@/context/MidiPortContext";
 import type { Preset } from "@/lib/presets/presetManager";
-import { saveToLocalStorage } from "@/utils/utils";
 
 interface OptionPanelProps {
 	autoSend: boolean;
@@ -64,7 +63,6 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 					value={selectedMidiPort}
 					onChange={(e) => {
 						setSelectedMidiPort(e.target.value);
-						saveToLocalStorage("selectedMidiPort", e.target.value);
 					}}
 				>
 					{midiPorts.map((port) => (
@@ -78,7 +76,6 @@ const OptionPanel: React.FC<OptionPanelProps> = ({
 					onChange={(e) => {
 						const channel = parseInt(e.target.value, 10);
 						setSelectedMidiChannel(channel);
-						saveToLocalStorage("selectedMidiChannel", channel);
 					}}
 				>
 					{Array.from({ length: 16 }, (_, i) => i + 1).map((channel) => (
