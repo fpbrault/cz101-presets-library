@@ -15,6 +15,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					leftPanelCollapsed={leftPanelCollapsed}
 					setLeftPanelCollapsed={setLeftPanelCollapsed}
 				/>
+				
 				{children}
 			</div>
 		</main>

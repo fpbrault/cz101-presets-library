@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-	RouterProvider,
 	createMemoryHistory,
 	createRouter,
+	RouterProvider,
 } from "@tanstack/react-router";
 import { render } from "vitest-browser-react";
 import { MidiChannelProvider } from "@/context/MidiChannelContext";
