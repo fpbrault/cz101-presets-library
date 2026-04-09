@@ -546,6 +546,13 @@ export async function syncPresets(): Promise<void> {
 }
 
 export async function getIoportNames(): Promise<string[]> {
+	const nav = navigator as unknown as {
+		midi?: { requestAccess?: () => Promise<unknown> };
+	};
+	if (!nav.midi) {
+		return [];
+	}
+
 	if (!WebMidi.enabled) {
 		await WebMidi.enable({ sysex: true });
 	}
