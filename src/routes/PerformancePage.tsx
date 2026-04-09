@@ -1,6 +1,6 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
 import type { AppMode } from "@/components/layout/AppSidebar";
 import AppSidebar from "@/components/layout/AppSidebar";
 import PerformanceMode from "@/components/presets/PerformanceMode";
@@ -12,15 +12,14 @@ import type { Preset } from "@/lib/presets/presetManager";
 import { getPresetById } from "@/lib/presets/presetManager";
 
 export default function PerformanceRoutePage() {
+	const navigate = useNavigate();
 	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 	const [initialPreset, setInitialPreset] = useState<Preset | null>(null);
-	const [searchParams] = useSearchParams();
 
-	const navigate = useNavigate();
 	const { setMidiPorts, selectedMidiPort } = useMidiPort();
 	const { selectedMidiChannel } = useMidiChannel();
 
-	const presetId = searchParams.get("presetId");
+	const presetId = new URLSearchParams(window.location.search).get("presetId");
 
 	const { data: fetchedPreset } = useQuery({
 		queryKey: ["preset", presetId],
@@ -42,25 +41,29 @@ export default function PerformanceRoutePage() {
 		setCurrentPreset: setInitialPreset,
 		setAppMode: (mode: AppMode) => {
 			const routeMap: Record<AppMode, string> = {
-				presets: "presets",
-				synthBackups: "synth-backups",
-				setlists: "setlists",
-				tagManager: "tags",
-				duplicateFinder: "duplicates",
+				performance: "/performance",
+				presets: "/presets",
+				synthBackups: "/synth-backups",
+				setlists: "/setlists",
+				tagManager: "/tags",
+				duplicateFinder: "/duplicates",
 			};
-			navigate(`/${routeMap[mode]}`);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			navigate(routeMap[mode] as any);
 		},
 	});
 
 	const handleNavigate = (mode: AppMode) => {
 		const routeMap: Record<AppMode, string> = {
-			presets: "presets",
-			synthBackups: "synth-backups",
-			setlists: "setlists",
-			tagManager: "tags",
-			duplicateFinder: "duplicates",
+			performance: "/performance",
+			presets: "/presets",
+			synthBackups: "/synth-backups",
+			setlists: "/setlists",
+			tagManager: "/tags",
+			duplicateFinder: "/duplicates",
 		};
-		navigate(`/${routeMap[mode]}`);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		navigate(routeMap[mode] as any);
 	};
 
 	return (
@@ -70,7 +73,7 @@ export default function PerformanceRoutePage() {
 					leftPanelCollapsed={leftPanelCollapsed}
 					setLeftPanelCollapsed={setLeftPanelCollapsed}
 					performanceMode={true}
-					setPerformanceMode={() => navigate("/presets")}
+					setPerformanceMode={() => (window.location.href = "/presets")}
 					appMode="presets"
 					onNavigate={handleNavigate}
 				/>

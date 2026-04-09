@@ -1,8 +1,7 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 
-import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router";
 import Button from "@/components/ui/Button";
 import { MidiChannelProvider } from "@/context/MidiChannelContext";
 import { MidiPortProvider } from "@/context/MidiPortContext";
@@ -17,7 +16,7 @@ import {
 } from "@/lib/presets/presetManager";
 import { saveOnlineSyncSettings } from "@/lib/sync/onlineSyncSettings";
 import { configurePresetSyncAdapterFromSettings } from "@/lib/sync/remotePresetSyncAdapter";
-import { routes } from "@/routes/index";
+import { RouterProvider, router } from "@/routes/router";
 import { queryClient } from "@/utils/queryClient";
 
 function AppInner() {
@@ -71,7 +70,7 @@ function AppInner() {
 
 	return (
 		<>
-			<RouterProvider router={createBrowserRouter(routes)} />
+			<RouterProvider router={router} />
 
 			{showOnboardingModal && (
 				<dialog open className="modal modal-open">

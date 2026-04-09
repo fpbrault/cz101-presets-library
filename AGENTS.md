@@ -73,6 +73,21 @@ Tauri 2 desktop app for managing Casio CZ-101 synthesizer `.SYX` presets.
 
 This session may involve multiple agents. To determine which agent produced each response, call the `agent_attribution` tool.
 
+<!-- intent-skills:start -->
+# Skill mappings - when working in these areas, load the linked skill file into context.
+skills:
+  - task: "TanStack Router core concepts, type inference, and Register declaration"
+    load: "node_modules/@tanstack/router-core/skills/router-core/SKILL.md"
+  - task: "TanStack Router type safety, full type inference, link props, route API"
+    load: "node_modules/@tanstack/router-core/skills/router-core/type-safety/SKILL.md"
+  - task: "TanStack Router navigation, Link, useNavigate, preloading"
+    load: "node_modules/@tanstack/router-core/skills/router-core/navigation/SKILL.md"
+  - task: "TanStack Router dynamic path segments, URL parameters"
+    load: "node_modules/@tanstack/router-core/skills/router-core/path-params/SKILL.md"
+  - task: "Environment variables, .env files, process.env setup"
+    load: "node_modules/dotenv/skills/dotenv/SKILL.md"
+<!-- intent-skills:end -->
+
 ## Reference
 
 - Memory Plugin: https://github.com/joshuadavidthomas/opencode-agent-memory

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "@tanstack/react-router";
 import type { AppMode } from "@/components/layout/AppSidebar";
 import AppSidebar from "@/components/layout/AppSidebar";
 import TagManagerPage from "@/features/presets/components/TagManagerPage";
@@ -7,19 +7,20 @@ import TagManagerPage from "@/features/presets/components/TagManagerPage";
 export default function TagManagerRoutePage() {
 	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 	const [performanceMode, setPerformanceMode] = useState(false);
-
 	const navigate = useNavigate();
 
 	const handleNavigate = (mode: AppMode) => {
 		setPerformanceMode(false);
 		const routeMap: Record<AppMode, string> = {
-			presets: "presets",
-			synthBackups: "synth-backups",
-			setlists: "setlists",
-			tagManager: "tags",
-			duplicateFinder: "duplicates",
+			performance: "/performance",
+			presets: "/presets",
+			synthBackups: "/synth-backups",
+			setlists: "/setlists",
+			tagManager: "/tags",
+			duplicateFinder: "/duplicates",
 		};
-		navigate(`/${routeMap[mode]}`);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		navigate(routeMap[mode] as any);
 	};
 
 	return (

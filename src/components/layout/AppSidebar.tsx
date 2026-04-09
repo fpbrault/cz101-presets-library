@@ -20,6 +20,7 @@ import {
 } from "@/lib/presets/presetManager";
 
 export type AppMode =
+	| "performance"
 	| "presets"
 	| "synthBackups"
 	| "setlists"
@@ -174,9 +175,11 @@ export default function AppSidebar({
 							type="button"
 							unstyled
 							className={`${iconNavButtonClass} ${
-								performanceMode ? activeIconNavButtonClass : ""
+								appMode === "performance" && !performanceMode
+									? activeIconNavButtonClass
+									: ""
 							}`}
-							onClick={() => setPerformanceMode(true)}
+							onClick={() => switchMode("performance")}
 							title="Performance Mode"
 						>
 							<FaBolt size={16} />

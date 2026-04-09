@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import type { AppMode } from "@/components/layout/AppSidebar";
 import AppSidebar from "@/components/layout/AppSidebar";
 import { useMidiChannel } from "@/context/MidiChannelContext";
@@ -9,10 +9,10 @@ import { useSynthBackupMode } from "@/features/synthBackups/hooks/useSynthBackup
 import { useMidiSetup } from "@/hooks/useMidiSetup";
 
 export default function SynthBackupsRoutePage() {
+	const navigate = useNavigate();
 	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 	const [performanceMode, setPerformanceMode] = useState(false);
 
-	const navigate = useNavigate();
 	const { setMidiPorts, selectedMidiPort } = useMidiPort();
 	const { selectedMidiChannel } = useMidiChannel();
 
@@ -23,13 +23,15 @@ export default function SynthBackupsRoutePage() {
 		selectedMidiChannel,
 		setAppMode: (mode: AppMode) => {
 			const routeMap: Record<AppMode, string> = {
-				presets: "presets",
-				synthBackups: "synth-backups",
-				setlists: "setlists",
-				tagManager: "tags",
-				duplicateFinder: "duplicates",
+				performance: "/performance",
+				presets: "/presets",
+				synthBackups: "/synth-backups",
+				setlists: "/setlists",
+				tagManager: "/tags",
+				duplicateFinder: "/duplicates",
 			};
-			navigate(`/${routeMap[mode]}`);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			navigate(routeMap[mode] as any);
 		},
 		openSaveDraftPresetModal: () => {},
 	});
@@ -37,13 +39,15 @@ export default function SynthBackupsRoutePage() {
 	const handleNavigate = (mode: AppMode) => {
 		setPerformanceMode(false);
 		const routeMap: Record<AppMode, string> = {
-			presets: "presets",
-			synthBackups: "synth-backups",
-			setlists: "setlists",
-			tagManager: "tags",
-			duplicateFinder: "duplicates",
+			performance: "/performance",
+			presets: "/presets",
+			synthBackups: "/synth-backups",
+			setlists: "/setlists",
+			tagManager: "/tags",
+			duplicateFinder: "/duplicates",
 		};
-		navigate(`/${routeMap[mode]}`);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		navigate(routeMap[mode] as any);
 	};
 
 	return (

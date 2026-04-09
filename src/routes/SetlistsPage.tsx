@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import type { AppMode } from "@/components/layout/AppSidebar";
 import AppSidebar from "@/components/layout/AppSidebar";
 import { useMidiChannel } from "@/context/MidiChannelContext";
@@ -10,10 +10,10 @@ import { useSetlistMode } from "@/features/setlists/hooks/useSetlistMode";
 import { useMidiSetup } from "@/hooks/useMidiSetup";
 
 export default function SetlistsRoutePage() {
+	const navigate = useNavigate();
 	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 	const [performanceMode, setPerformanceMode] = useState(false);
 
-	const navigate = useNavigate();
 	const { setMidiPorts, selectedMidiPort } = useMidiPort();
 	const { selectedMidiChannel } = useMidiChannel();
 	const { setActivePlaylistId } = useSearchFilter();
@@ -28,13 +28,15 @@ export default function SetlistsRoutePage() {
 	const handleNavigate = (mode: AppMode) => {
 		setPerformanceMode(false);
 		const routeMap: Record<AppMode, string> = {
-			presets: "presets",
-			synthBackups: "synth-backups",
-			setlists: "setlists",
-			tagManager: "tags",
-			duplicateFinder: "duplicates",
+			performance: "/performance",
+			presets: "/presets",
+			synthBackups: "/synth-backups",
+			setlists: "/setlists",
+			tagManager: "/tags",
+			duplicateFinder: "/duplicates",
 		};
-		navigate(`/${routeMap[mode]}`);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		navigate(routeMap[mode] as any);
 	};
 
 	return (
@@ -68,7 +70,7 @@ export default function SetlistsRoutePage() {
 					onSendCurrentToBuffer={setlistMode.handleSendCurrentToBuffer}
 					onPlayInPerformanceMode={(playlistId) => {
 						setActivePlaylistId(playlistId);
-						navigate("/presets");
+						window.location.href = "/presets";
 					}}
 				/>
 			</div>
