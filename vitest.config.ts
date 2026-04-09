@@ -34,6 +34,7 @@ export default defineConfig({
 					name: "browser",
 					browser: {
 						enabled: true,
+						headless: false,
 						locators: {
 							testIdAttribute: "data-testid",
 						},
