@@ -157,12 +157,6 @@ const PerformanceMode: React.FC<PerformanceModeProps> = ({
 	const totalBanks = Math.ceil(presets.length / 8);
 
 	const sendControlChange = async (controller: number, value: number) => {
-		const nav = navigator as unknown as { midi?: unknown };
-		if (!nav.midi) {
-			setControlMessage("Web MIDI is not available in this browser.");
-			return;
-		}
-
 		if (!selectedMidiPort) {
 			setControlMessage(
 				"Select a MIDI port before sending performance controls.",
