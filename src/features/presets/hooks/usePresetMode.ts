@@ -30,14 +30,14 @@ interface UsePresetModeParams {
 	selectedMidiPort: string;
 	selectedMidiChannel: number;
 	setCurrentPreset: (preset: Preset | null) => void;
-	setAppMode: (mode: AppMode) => void;
+	setAppMode?: (mode: AppMode) => void;
 }
 
 export function usePresetMode({
 	selectedMidiPort,
 	selectedMidiChannel,
 	setCurrentPreset,
-	setAppMode,
+	setAppMode = () => {},
 }: UsePresetModeParams) {
 	const queryClient = useQueryClient();
 	const { notifySuccess, notifyInfo, notifyError } = useToast();

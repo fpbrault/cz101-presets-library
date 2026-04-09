@@ -2,10 +2,12 @@ import {
 	createRootRoute,
 	createRoute,
 	createRouter,
-	RouterProvider,
 	Outlet,
+	RouterProvider,
+	redirect,
 } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
+import AppLayout from "@/components/layout/AppLayout";
 
 const PresetsPage = lazy(() => import("./PresetsPage"));
 const PerformancePage = lazy(() => import("./PerformancePage"));
@@ -22,24 +24,25 @@ function PageLoader() {
 	);
 }
 
-function RootOutlet() {
+function RootLayout() {
 	return (
-		<Suspense fallback={<PageLoader />}>
-			<Outlet />
-		</Suspense>
+		<AppLayout>
+			<Suspense fallback={<PageLoader />}>
+				<Outlet />
+			</Suspense>
+		</AppLayout>
 	);
 }
 
 const rootRoute = createRootRoute({
-	component: RootOutlet,
+	component: RootLayout,
 });
 
 const indexRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: "/",
-	component: () => {
-		window.history.replaceState(null, "", "/presets");
-		return null;
+	beforeLoad: () => {
+		throw redirect({ to: "/presets" });
 	},
 });
 
@@ -79,7 +82,7 @@ const duplicatesRoute = createRoute({
 	component: DuplicateFinderPage,
 });
 
-const routeTree = rootRoute.addChildren([
+export const routeTree = rootRoute.addChildren([
 	indexRoute,
 	presetsRoute,
 	performanceRoute,

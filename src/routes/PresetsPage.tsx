@@ -1,7 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import type { AppMode } from "@/components/layout/AppSidebar";
-import AppSidebar from "@/components/layout/AppSidebar";
 import PresetDetails from "@/components/presets/PresetDetails";
 import PresetList from "@/components/presets/PresetList";
 import Button from "@/components/ui/Button";
@@ -15,8 +12,6 @@ import { useMidiSetup } from "@/hooks/useMidiSetup";
 import type { Preset } from "@/lib/presets/presetManager";
 
 export default function PresetsPage() {
-	const navigate = useNavigate();
-	const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(true);
 	const [currentPreset, setCurrentPreset] = useState<Preset | null>(null);
 
 	const { setMidiPorts, selectedMidiPort } = useMidiPort();
@@ -33,18 +28,6 @@ export default function PresetsPage() {
 		selectedMidiPort,
 		selectedMidiChannel,
 		setCurrentPreset,
-		setAppMode: (mode: AppMode) => {
-			const routeMap: Record<AppMode, string> = {
-				performance: "/performance",
-				presets: "/presets",
-				synthBackups: "/synth-backups",
-				setlists: "/setlists",
-				tagManager: "/tags",
-				duplicateFinder: "/duplicates",
-			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			navigate(routeMap[mode] as any);
-		},
 	});
 
 	const setlistMode = useSetlistMode({
@@ -57,67 +40,39 @@ export default function PresetsPage() {
 		setShowDeleteModal(false);
 	};
 
-	const handleNavigate = (mode: AppMode) => {
-		const routeMap: Record<AppMode, string> = {
-			performance: "/performance",
-			presets: "/presets",
-			synthBackups: "/synth-backups",
-			setlists: "/setlists",
-			tagManager: "/tags",
-			duplicateFinder: "/duplicates",
-		};
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		navigate(routeMap[mode] as any);
-	};
-
 	return (
-		<main className="flex flex-col w-full h-full">
-			<div className="flex flex-row h-full overflow-hidden">
-				<AppSidebar
-					leftPanelCollapsed={leftPanelCollapsed}
-					setLeftPanelCollapsed={setLeftPanelCollapsed}
-					performanceMode={false}
-					setPerformanceMode={() =>
-						(window.location.href = currentPreset
-							? `/performance?presetId=${currentPreset.id}`
-							: "/performance")
-					}
-					appMode="presets"
-					onNavigate={handleNavigate}
-				/>
+		<>
+			<PresetsSidebarContent
+				playlists={setlistMode.playlists}
+				dragOverPlaylistId={dragOverPlaylistId}
+				setDragOverPlaylistId={setDragOverPlaylistId}
+				onAddPresetToPlaylist={setlistMode.handleAddPreset}
+			/>
 
-				<PresetsSidebarContent
-					playlists={setlistMode.playlists}
-					dragOverPlaylistId={dragOverPlaylistId}
-					setDragOverPlaylistId={setDragOverPlaylistId}
-					onAddPresetToPlaylist={setlistMode.handleAddPreset}
-				/>
-
-				<PresetList
-					handleSelectPreset={presetMode.handleSelectPreset}
-					handleActivatePreset={presetMode.handleActivatePreset}
-					currentPreset={currentPreset}
-					autoSend={presetMode.autoSend}
-					onToggleAutoSend={presetMode.handleToggleAutoSend}
-					onSendCurrentPreset={() =>
-						presetMode.handleSendCurrentPreset(currentPreset)
-					}
-					onRetrieveCurrentPreset={presetMode.handleRetrieveCurrentPreset}
-					onRetrievePresetSlot={presetMode.handleRetrievePresetSlot}
-					playlists={setlistMode.playlists}
-					onAddPresetToPlaylist={setlistMode.handleAddPreset}
-				/>
-				<PresetDetails
-					editMode={presetMode.editMode}
-					currentPreset={currentPreset}
-					onPresetUpdated={setCurrentPreset}
-					setShowDeleteModal={setShowDeleteModal}
-					setEditMode={presetMode.setEditMode}
-					onWritePresetSlot={(bank, slot) =>
-						presetMode.handleWritePresetSlot(currentPreset, bank, slot)
-					}
-				/>
-			</div>
+			<PresetList
+				handleSelectPreset={presetMode.handleSelectPreset}
+				handleActivatePreset={presetMode.handleActivatePreset}
+				currentPreset={currentPreset}
+				autoSend={presetMode.autoSend}
+				onToggleAutoSend={presetMode.handleToggleAutoSend}
+				onSendCurrentPreset={() =>
+					presetMode.handleSendCurrentPreset(currentPreset)
+				}
+				onRetrieveCurrentPreset={presetMode.handleRetrieveCurrentPreset}
+				onRetrievePresetSlot={presetMode.handleRetrievePresetSlot}
+				playlists={setlistMode.playlists}
+				onAddPresetToPlaylist={setlistMode.handleAddPreset}
+			/>
+			<PresetDetails
+				editMode={presetMode.editMode}
+				currentPreset={currentPreset}
+				onPresetUpdated={setCurrentPreset}
+				setShowDeleteModal={setShowDeleteModal}
+				setEditMode={presetMode.setEditMode}
+				onWritePresetSlot={(bank, slot) =>
+					presetMode.handleWritePresetSlot(currentPreset, bank, slot)
+				}
+			/>
 
 			{showDeleteModal && (
 				<dialog open className="modal modal-open">
@@ -169,6 +124,6 @@ export default function PresetsPage() {
 				onCancel={presetMode.closeSaveDraftPresetModal}
 				onSave={presetMode.handleSaveDraftPreset}
 			/>
-		</main>
+		</>
 	);
 }
