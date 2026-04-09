@@ -33,16 +33,16 @@ import {
 	type RemotePresetSyncAdapter,
 } from "@/lib/sync/presetSync";
 
-let presetDatabase: PresetDatabase;
+let presetDatabase: PresetDatabase = new IndexedDbPresetDatabase();
 const presetSync = new PresetSyncCoordinator();
 const DEFAULT_USER_PRESET_AUTHOR = "User";
 
-export function setPresetDatabase(database: PresetDatabase): void {
-	presetDatabase = database;
-}
-
 export function resetPresetDatabase(): void {
 	presetDatabase = new IndexedDbPresetDatabase();
+}
+
+export function setPresetDatabase(database: PresetDatabase): void {
+	presetDatabase = database;
 }
 
 export function setPresetSyncAdapter(adapter: RemotePresetSyncAdapter): void {

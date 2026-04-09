@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, useContext } from "react";
-import type { PresetDatabase } from "@/lib/presets/presetManager";
+import type { PresetDatabase } from "@/lib/db/PresetDatabase";
 
 const PresetDatabaseContext = createContext<PresetDatabase | undefined>(
 	undefined,
