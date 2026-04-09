@@ -1,5 +1,6 @@
 import type { SortingState } from "@tanstack/react-table";
 import { isFactoryPresetIdentity } from "@/lib/presets/factoryPresets";
+import { getPresetFingerprint } from "@/lib/presets/presetFingerprint";
 import type { Preset } from "@/lib/presets/presetManager";
 
 export type FilterMode = "inclusive" | "exclusive";
@@ -15,10 +16,6 @@ export interface FilterPresetsOptions {
 	randomOrder: boolean;
 	seed: number;
 	playlistPresetIds?: string[] | null;
-}
-
-function getPresetFingerprint(preset: Preset): string {
-	return Array.from(preset.sysexData).join(",");
 }
 
 export function filterPresets(
@@ -75,7 +72,7 @@ export function filterPresets(
 	if (duplicatesOnly) {
 		const fingerprintCounts = filteredPresets.reduce(
 			(acc, preset) => {
-				const key = getPresetFingerprint(preset);
+				const key = getPresetFingerprint(preset.sysexData);
 				acc[key] = (acc[key] ?? 0) + 1;
 				return acc;
 			},
@@ -83,7 +80,7 @@ export function filterPresets(
 		);
 
 		filteredPresets = filteredPresets.filter((preset) => {
-			const key = getPresetFingerprint(preset);
+			const key = getPresetFingerprint(preset.sysexData);
 			return (fingerprintCounts[key] ?? 0) > 1;
 		});
 	}

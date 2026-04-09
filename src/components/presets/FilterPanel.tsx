@@ -88,8 +88,9 @@ const FilterPanel: React.FC = () => {
 							{} as Record<string, number>,
 						),
 				).map(([tag, count]) => (
-					<button
+					<Button
 						key={tag}
+						unstyled
 						className={`badge badge-lg text-lg p-3 font-bold capitalize badge-neutral ${
 							selectedTags.includes(tag) ? "badge-primary" : ""
 						}`}
@@ -97,7 +98,7 @@ const FilterPanel: React.FC = () => {
 						type="button"
 					>
 						{tag} ({count})
-					</button>
+					</Button>
 				))}
 			</div>
 		</div>

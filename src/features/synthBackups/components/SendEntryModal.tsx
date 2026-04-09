@@ -1,6 +1,6 @@
 import SelectInput from "@/components/forms/SelectInput";
 import Button from "@/components/ui/Button";
-import ModalShell from "@/components/ui/ModalShell";
+import Modal from "@/components/ui/Modal";
 import type { SendModalState } from "@/features/synthBackups/components/SynthBackupsPage.types";
 import type { SynthBackup } from "@/lib/collections/synthBackupManager";
 
@@ -23,7 +23,7 @@ export default function SendEntryModal({
 	onSendEntryToSlot,
 }: SendEntryModalProps) {
 	return (
-		<ModalShell
+		<Modal
 			panelClassName="w-[24rem] max-w-none"
 			onClose={() => setSendModalState(null)}
 		>
@@ -93,6 +93,6 @@ export default function SendEntryModal({
 					Send
 				</Button>
 			</div>
-		</ModalShell>
+		</Modal>
 	);
 }

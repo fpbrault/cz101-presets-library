@@ -1,24 +1,25 @@
 import type { ReactNode } from "react";
+import Button from "@/components/ui/Button";
 
-interface ModalShellProps {
+interface ModalProps {
 	children: ReactNode;
 	panelClassName?: string;
 	onClose?: () => void;
 }
 
-export default function ModalShell({
+export default function Modal({
 	children,
 	panelClassName = "w-full max-w-2xl",
 	onClose,
-}: ModalShellProps) {
+}: ModalProps) {
 	return (
 		<dialog open className="modal modal-open">
 			<div className={`modal-box ${panelClassName}`}>{children}</div>
 			{onClose && (
 				<form method="dialog" className="modal-backdrop">
-					<button type="button" onClick={onClose}>
+					<Button type="button" onClick={onClose} unstyled>
 						close
-					</button>
+					</Button>
 				</form>
 			)}
 		</dialog>

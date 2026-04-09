@@ -53,7 +53,9 @@ describe("InlineNotice", () => {
 	});
 
 	it("applies md size class", async () => {
-		const container = await fixture(<InlineNotice message="Medium" size="md" />);
+		const container = await fixture(
+			<InlineNotice message="Medium" size="md" />,
+		);
 		expect(container.querySelector(".alert")?.className).toContain("text-sm");
 	});
 

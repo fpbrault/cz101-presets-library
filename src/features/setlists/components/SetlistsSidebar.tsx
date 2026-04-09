@@ -74,8 +74,9 @@ export default function SetlistsSidebar({
 								/>
 							</div>
 						) : (
-							<button
+							<Button
 								type="button"
+								unstyled
 								className="w-full text-left"
 								onClick={() => onSelectPlaylist(playlist.id)}
 							>
@@ -86,7 +87,7 @@ export default function SetlistsSidebar({
 									{playlist.entries.length} preset
 									{playlist.entries.length !== 1 ? "s" : ""}
 								</div>
-							</button>
+							</Button>
 						)}
 						<div className="flex gap-1 mt-1 justify-end">
 							<Button

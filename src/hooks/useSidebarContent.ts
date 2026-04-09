@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useSidebarContext } from "@/context/SidebarContext";
 
 /**
@@ -27,7 +27,6 @@ export function useSidebarContent(content: ReactNode) {
 	// render of the calling component. This is safe because setSidebarContent
 	// uses a pub-sub pattern — it only triggers AppSidebar to re-render, NOT
 	// the calling component, so there is no infinite-render loop.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: intentionally runs after every render
 	useLayoutEffect(() => {
 		setSidebarContent(contentRef.current);
 	});

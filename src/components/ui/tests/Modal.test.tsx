@@ -1,24 +1,24 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import ModalShell from "@/components/ui/ModalShell";
+import Modal from "@/components/ui/Modal";
 import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
-describe("ModalShell", () => {
+describe("Modal", () => {
 	it("renders children", () => {
 		renderWithProviders(
-			<ModalShell>
+			<Modal>
 				<div data-testid="modal-content">Modal Content</div>
-			</ModalShell>,
+			</Modal>,
 		);
 		expect(screen.getByTestId("modal-content")).toBeTruthy();
 	});
 
 	it("has no accessibility violations", async () => {
 		const { container } = renderWithProviders(
-			<ModalShell>
+			<Modal>
 				<div>Modal Content</div>
-			</ModalShell>,
+			</Modal>,
 		);
 
 		await expectNoAxeViolations(container);
@@ -27,9 +27,9 @@ describe("ModalShell", () => {
 	it("applies custom panelClassName", () => {
 		const customClass = "my-custom-panel";
 		renderWithProviders(
-			<ModalShell panelClassName={customClass}>
+			<Modal panelClassName={customClass}>
 				<div>Content</div>
-			</ModalShell>,
+			</Modal>,
 		);
 		expect(screen.getByText("Content").parentElement).toHaveClass(customClass);
 	});
@@ -37,9 +37,9 @@ describe("ModalShell", () => {
 	it("calls onClose when backdrop button is clicked", () => {
 		const onClose = vi.fn();
 		renderWithProviders(
-			<ModalShell onClose={onClose}>
+			<Modal onClose={onClose}>
 				<div>Content</div>
-			</ModalShell>,
+			</Modal>,
 		);
 
 		const closeButton = screen.getByRole("button", { name: /close/i });

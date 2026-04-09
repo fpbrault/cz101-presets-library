@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import PatchParameterViewer from "@/components/charts/PatchParameterViewer";
 import FormField from "@/components/forms/FormField";
+import SelectInput from "@/components/forms/SelectInput";
 import TextAreaInput from "@/components/forms/TextAreaInput";
 import TextInput from "@/components/forms/TextInput";
 import Button from "@/components/ui/Button";
 import KeyValueBlock from "@/components/ui/KeyValueBlock";
+import Modal from "@/components/ui/Modal";
 import { type Preset, updatePreset } from "@/lib/presets/presetManager";
 import { buf2hex } from "@/utils/utils";
 
@@ -29,6 +31,7 @@ interface PresetDetailsProps {
 	onPresetUpdated: (preset: Preset) => void;
 	setEditMode: (editMode: boolean) => void;
 	setShowDeleteModal: (show: boolean) => void;
+	onWritePresetSlot: (bank: "internal" | "cartridge", slot: number) => void;
 }
 
 const PresetDetails: React.FC<PresetDetailsProps> = ({
@@ -37,8 +40,13 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 	onPresetUpdated,
 	setEditMode,
 	setShowDeleteModal,
+	onWritePresetSlot,
 }) => {
 	const queryClient = useQueryClient();
+	const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+	const [slotBank, setSlotBank] = useState<"internal" | "cartridge">(
+		"internal",
+	);
 	const [formData, setFormData] = useState<PresetFormData>({
 		name: "",
 		filename: "",
@@ -107,7 +115,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 	return (
 		<div
 			className={
-				"w-72 lg:w-96 flex flex-col p-4 bg-base-200 h-full overflow-auto min-w-52 lg:min-w-64" +
+				"w-72 lg:w-md flex flex-col p-4 bg-base-200 h-full overflow-auto min-w-52 lg:min-w-72" +
 				(currentPreset ? " block" : " hidden")
 			}
 		>
@@ -148,6 +156,23 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 						</div>
 					</div>
 					<div className="space-y-3">
+						<div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
+							<Button
+								variant="info"
+								size="sm"
+								className="w-full"
+								onClick={() => setIsWriteModalOpen(true)}
+								disabled={!currentPreset}
+								title={
+									currentPreset
+										? "Write selected preset to synth slot"
+										: "Select a preset to enable slot write"
+								}
+							>
+								Write current preset to slot
+							</Button>
+						</div>
+
 						<div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
 							<FormField
 								label="Name"
@@ -289,6 +314,52 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 					</div>
 				)}
 			</div>
+
+			{isWriteModalOpen && (
+				<Modal
+					panelClassName="w-full max-w-sm"
+					onClose={() => setIsWriteModalOpen(false)}
+				>
+					<h2 className="mb-4 text-xl">Write current preset to slot</h2>
+					<div className="mb-4">
+						<div className="label">
+							<span className="label-text">Bank</span>
+						</div>
+						<SelectInput
+							value={slotBank}
+							onChange={(e) =>
+								setSlotBank(e.target.value as "internal" | "cartridge")
+							}
+						>
+							<option value="internal">Internal</option>
+							<option value="cartridge">Cartridge</option>
+						</SelectInput>
+					</div>
+					<div className="grid grid-cols-4 gap-2">
+						{Array.from({ length: 16 }, (_, i) => i + 1).map((slot) => (
+							<Button
+								key={`details-write-slot-${slot}`}
+								onClick={() => {
+									onWritePresetSlot(slotBank, slot);
+									setIsWriteModalOpen(false);
+								}}
+								variant="primary"
+								className="text-2xl font-bold"
+							>
+								{slot}
+							</Button>
+						))}
+					</div>
+					<div className="flex justify-end mt-4">
+						<Button
+							onClick={() => setIsWriteModalOpen(false)}
+							variant="error"
+						>
+							Close
+						</Button>
+					</div>
+				</Modal>
+			)}
 		</div>
 	);
 };

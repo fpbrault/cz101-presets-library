@@ -62,7 +62,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 	const [onlineAuthSession, setOnlineAuthSession] = useState(
 		loadOnlineAuthSession(),
 	);
-/* 	const [avatarLoadFailed, setAvatarLoadFailed] = useState(false); */
+	const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
 
 	const applySyncModeFromSession = (session: { userId: string } | null) => {
 		const nextSettings = { enabled: Boolean(session?.userId) };
@@ -76,13 +76,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		const loadedSession = loadOnlineAuthSession();
 		setOnlineSyncSettings(loaded);
 		setOnlineAuthSession(loadedSession);
-		/* setAvatarLoadFailed(false); */
+		setAvatarLoadFailed(false);
 		setIsModalOpen(true);
 
 		void (async () => {
 			const nextSession = await refreshOnlineAuthSession();
 			setOnlineAuthSession(nextSession);
-			/* setAvatarLoadFailed(false); */
+			setAvatarLoadFailed(false);
 			applySyncModeFromSession(nextSession);
 		})();
 	};
@@ -261,7 +261,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 				// Popup closed — refresh session and update sync state
 				const session = await refreshOnlineAuthSession();
 				setOnlineAuthSession(session);
-				/* setAvatarLoadFailed(false); */
+				setAvatarLoadFailed(false);
 				applySyncModeFromSession(session);
 				if (session) {
 					notifySuccess(
@@ -278,14 +278,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		void (async () => {
 			await disconnectOnlineSession();
 			setOnlineAuthSession(null);
-			/* setAvatarLoadFailed(false); */
+			setAvatarLoadFailed(false);
 			applySyncModeFromSession(null);
 			notifyInfo("Disconnected account. Local-only mode enabled.");
 		})();
 	};
 
 	const renderAccountTriggerIcon = () => {
-		/* if (onlineAuthSession?.avatarUrl && !avatarLoadFailed) {
+		if (onlineAuthSession?.avatarUrl && !avatarLoadFailed) {
 			return (
 				<img
 					src={onlineAuthSession.avatarUrl}
@@ -295,7 +295,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 					referrerPolicy="no-referrer"
 				/>
 			);
-		} */
+		}
 
 		if (onlineAuthSession) {
 			const accountLabel =
@@ -320,8 +320,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		<>
 			{/* Sidebar icon-only style without button chrome */}
 			{minimalTrigger ? (
-				<button
+				<Button
 					type="button"
+					unstyled
 					onClick={handleOpenModal}
 					title={
 						triggerType === "login"
@@ -335,8 +336,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						(triggerType === "login" && onlineAuthSession ? "text-warning" : "")
 					}
 				>
-					{triggerType === "login" ? renderAccountTriggerIcon() : <FaCog size={16} />}
-				</button>
+					{triggerType === "login" ? (
+						renderAccountTriggerIcon()
+					) : (
+						<FaCog size={16} />
+					)}
+				</Button>
 			) : triggerType === "login" ? (
 				<Button
 					onClick={handleOpenModal}
@@ -370,7 +375,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						<div className="space-y-4">
 							{triggerType === "login" ? (
 								<div className="p-4 border rounded-xl border-base-content/15 bg-base-200/40">
-									<div className="mb-3 text-base font-semibold">Online Sync</div>
+									<div className="mb-3 text-base font-semibold">
+										Online Sync
+									</div>
 									<div className="mb-3 text-sm opacity-80">
 										Connect an account to sync your user-created presets to the
 										cloud.
@@ -435,9 +442,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 									<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 										<div className="w-full form-control">
 											<div className="label">
-												<span className="label-text">Factory Preset Library</span>
+												<span className="label-text">
+													Factory Preset Library
+												</span>
 											</div>
-											<Button onClick={handleAddFactoryPresets} variant="neutral">
+											<Button
+												onClick={handleAddFactoryPresets}
+												variant="neutral"
+											>
 												Add Factory Presets
 											</Button>
 										</div>
@@ -463,7 +475,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 														Export Full Workspace Backup
 													</span>
 												</div>
-												<Button onClick={handleExportWorkspace} variant="accent">
+												<Button
+													onClick={handleExportWorkspace}
+													variant="accent"
+												>
 													Export Full Backup
 												</Button>
 											</div>
@@ -504,9 +519,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button type="button" onClick={handleCloseModal}>
+						<Button type="button" onClick={handleCloseModal} unstyled>
 							close
-						</button>
+						</Button>
 					</form>
 				</dialog>
 			)}
@@ -545,9 +560,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button type="button" onClick={handleCloseResetModal}>
+						<Button type="button" onClick={handleCloseResetModal} unstyled>
 							close
-						</button>
+						</Button>
 					</form>
 				</dialog>
 			)}

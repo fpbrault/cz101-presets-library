@@ -25,6 +25,7 @@ import {
 	isFactoryPresetIdentity,
 } from "@/lib/presets/factoryPresets";
 import { filterPresets } from "@/lib/presets/filterPresets";
+import { getPresetFingerprint } from "@/lib/presets/presetFingerprint";
 import { isOnlineSyncEnabled } from "@/lib/sync/onlineSyncSettings";
 import {
 	PresetSyncCoordinator,
@@ -276,7 +277,7 @@ export function normalizeSysexForLibrary(data: Uint8Array): Uint8Array {
 	}
 
 	// Tolerate command/program variations shifting payload start.
-	for (let offset = 7; offset <= 16; offset++) {
+	for (let offset = 5; offset <= 16; offset++) {
 		if (framed.length >= offset + 256 + 1) {
 			const payload = framed.slice(offset, offset + 256);
 			if (payload.length === 256 && isNibblePayload(payload)) {
@@ -286,7 +287,7 @@ export function normalizeSysexForLibrary(data: Uint8Array): Uint8Array {
 	}
 
 	// Some dumps may carry 128 logical bytes; re-encode to canonical nibble stream.
-	for (let offset = 7; offset <= 16; offset++) {
+	for (let offset = 5; offset <= 16; offset++) {
 		if (framed.length >= offset + 128 + 1) {
 			const payload = framed.slice(offset, offset + 128);
 			if (payload.length === 128) {
@@ -325,20 +326,6 @@ function normalizePresetPacketForStorage(data: Uint8Array): Uint8Array {
 	return data;
 }
 
-function canonicalizePresetForLibrary(data: Uint8Array): Uint8Array {
-	const normalized = normalizeSysexForLibrary(data);
-	const formatted = formatPresetData(ensureSysexFraming(normalized), 1);
-	const canonical = new Uint8Array(formatted);
-
-	if (canonical.length > 7) {
-		canonical[4] = 0x70;
-		canonical[5] = 0x20;
-		canonical[6] = 0x60;
-	}
-
-	return canonical;
-}
-
 function getProgramByteForSlot(
 	bank: "internal" | "cartridge",
 	slot: number,
@@ -350,14 +337,6 @@ function getProgramByteForSlot(
 		return 0x20 + (slot - 1);
 	}
 	return slot - 1;
-}
-
-function normalizePresetForComparison(data: Uint8Array): Uint8Array {
-	return canonicalizePresetForLibrary(data);
-}
-
-function getPresetFingerprint(data: Uint8Array): string {
-	return Array.from(normalizePresetForComparison(data)).join(",");
 }
 
 async function buildPresetMatchIndex(): Promise<Map<string, Preset>> {

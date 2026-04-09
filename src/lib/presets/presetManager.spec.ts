@@ -7,6 +7,7 @@ import {
 	deleteTagGlobally,
 	fetchPresetData,
 	formatPresetData,
+	getMatchingPresetBySysex,
 	getPresets,
 	type Preset,
 	renameTagGlobally,
@@ -525,5 +526,60 @@ describe("preset database injection", () => {
 		expect(presets.length).toBeGreaterThan(0);
 
 		resetPresetDatabase();
+	});
+});
+
+describe("slot-agnostic sysex matching", () => {
+	afterEach(() => {
+		resetPresetDatabase();
+	});
+
+	it("matches identical payloads even when program slot byte differs", async () => {
+		const fakeDb = new FakePresetDatabase();
+		setPresetDatabase(fakeDb);
+
+		const basePayload = new Array(256).fill(0);
+		basePayload[10] = 0x03;
+		basePayload[11] = 0x09;
+
+		const storedPacket = new Uint8Array([
+			0xf0,
+			0x44,
+			0x00,
+			0x00,
+			0x70,
+			0x21,
+			0x20,
+			...basePayload,
+			0xf7,
+		]);
+
+		const retrievedPacketDifferentSlot = new Uint8Array([
+			0xf0,
+			0x44,
+			0x00,
+			0x00,
+			0x70,
+			0x21,
+			0x2f,
+			...basePayload,
+			0xf7,
+		]);
+
+		const saved = await addPreset({
+			id: "slot-match-1",
+			name: "Slot Match",
+			createdDate: "2021-01-01",
+			modifiedDate: "2021-01-01",
+			filename: "slot-match.syx",
+			sysexData: storedPacket,
+			tags: [],
+			author: "Test",
+			description: "slot insensitive",
+		});
+
+		const match = await getMatchingPresetBySysex(retrievedPacketDifferentSlot);
+
+		expect(match?.id).toBe(saved.id);
 	});
 });

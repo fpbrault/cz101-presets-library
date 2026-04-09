@@ -21,7 +21,9 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 	const listenersRef = useRef<Set<SidebarListener>>(new Set());
 
 	const setSidebarContent = useCallback((content: React.ReactNode) => {
-		listenersRef.current.forEach((listener) => listener(content));
+		listenersRef.current.forEach((listener) => {
+			listener(content);
+		});
 	}, []);
 
 	const subscribe = useCallback((listener: SidebarListener) => {

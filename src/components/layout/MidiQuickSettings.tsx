@@ -20,14 +20,15 @@ export default function MidiQuickSettings({
 	return (
 		<>
 			{minimalTrigger ? (
-				<button
+				<Button
 					type="button"
+					unstyled
 					onClick={() => setIsOpen(true)}
 					title="MIDI Quick Settings"
 					className="grid size-9 place-items-center text-base-content/55 transition-colors hover:text-warning"
 				>
 					<FaBroadcastTower size={16} />
-				</button>
+				</Button>
 			) : (
 				<Button
 					onClick={() => setIsOpen(true)}
@@ -82,23 +83,29 @@ export default function MidiQuickSettings({
 										saveToLocalStorage("selectedMidiChannel", channel);
 									}}
 								>
-									{Array.from({ length: 16 }, (_, i) => i + 1).map((channel) => (
-										<option key={`midi-channel-${channel}`} value={channel}>
-											Channel {channel}
-										</option>
-									))}
+									{Array.from({ length: 16 }, (_, i) => i + 1).map(
+										(channel) => (
+											<option key={`midi-channel-${channel}`} value={channel}>
+												Channel {channel}
+											</option>
+										),
+									)}
 								</SelectInput>
 							</div>
 
-							<Button className="w-full" variant="primary" onClick={() => setIsOpen(false)}>
+							<Button
+								className="w-full"
+								variant="primary"
+								onClick={() => setIsOpen(false)}
+							>
 								Done
 							</Button>
 						</div>
 					</div>
 					<form method="dialog" className="modal-backdrop">
-						<button type="button" onClick={() => setIsOpen(false)}>
+						<Button type="button" onClick={() => setIsOpen(false)} unstyled>
 							close
-						</button>
+						</Button>
 					</form>
 				</dialog>
 			)}

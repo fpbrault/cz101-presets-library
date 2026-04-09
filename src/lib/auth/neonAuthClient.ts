@@ -4,6 +4,7 @@ export type OnlineAuthSession = {
 	userId: string;
 	displayName: string;
 	provider: string;
+	avatarUrl?: string;
 };
 
 type OAuthProvider = "google" | "apple";
@@ -90,11 +91,32 @@ function parseSessionPayload(payload: unknown): OnlineAuthSession | null {
 	const provider = String(
 		accounts?.[0]?.provider ?? session?.provider ?? "neon",
 	);
+	const userMetadata = user?.user_metadata as
+		| Record<string, unknown>
+		| null
+		| undefined;
+	const profile = user?.profile as Record<string, unknown> | null | undefined;
+	const avatarUrl = String(
+		user?.image ??
+			user?.avatar_url ??
+			user?.avatarUrl ??
+			user?.picture ??
+			userMetadata?.avatar_url ??
+			userMetadata?.avatarUrl ??
+			userMetadata?.picture ??
+			userMetadata?.image ??
+			profile?.avatar_url ??
+			profile?.avatarUrl ??
+			profile?.picture ??
+			profile?.image ??
+			"",
+	).trim();
 
 	return {
 		userId,
 		displayName,
 		provider,
+		avatarUrl: avatarUrl || undefined,
 	};
 }
 

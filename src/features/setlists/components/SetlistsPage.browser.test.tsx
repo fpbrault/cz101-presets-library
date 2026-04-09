@@ -6,7 +6,6 @@ import type { Playlist } from "@/lib/collections/playlistManager";
 import type { Preset } from "@/lib/presets/presetManager";
 import { fixture } from "@/test/browserFixture";
 
-
 const noopProps = {
 	playlists: [],
 	selectedPlaylistId: null,
@@ -87,12 +86,7 @@ describe("SetlistsPage (browser)", () => {
 			makePlaylist({ id: "setlist-1", name: "Setlist One" }),
 			makePlaylist({ id: "setlist-2", name: "Setlist Two" }),
 		];
-		await fixture(
-			<SetlistsPage
-				{...noopProps}
-				playlists={playlists}
-			/>,
-		);
+		await fixture(<SetlistsPage {...noopProps} playlists={playlists} />);
 		expect(screen.getByText("Setlist One")).toBeTruthy();
 		expect(screen.getByText("Setlist Two")).toBeTruthy();
 	});

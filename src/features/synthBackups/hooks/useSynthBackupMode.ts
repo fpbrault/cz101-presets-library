@@ -17,7 +17,12 @@ import {
 	writeSysexDataToTemporaryBuffer,
 } from "@/lib/presets/presetManager";
 
-type AppMode = "presets" | "synthBackups" | "setlists";
+type AppMode =
+	| "presets"
+	| "synthBackups"
+	| "setlists"
+	| "tagManager"
+	| "duplicateFinder";
 
 interface UseSynthBackupModeParams {
 	selectedMidiPort: string;

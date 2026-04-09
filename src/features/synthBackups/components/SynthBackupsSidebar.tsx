@@ -73,8 +73,9 @@ export default function SynthBackupsSidebar({
 					/>
 				)}
 				{backups.map((backup) => (
-					<button
+					<Button
 						type="button"
+						unstyled
 						key={backup.id}
 						className={
 							"w-full text-left p-3 rounded-lg border transition-colors " +
@@ -89,7 +90,7 @@ export default function SynthBackupsSidebar({
 							{new Date(backup.createdAt).toLocaleString()} •{" "}
 							{backup.entries.length} entries
 						</div>
-					</button>
+					</Button>
 				))}
 			</div>
 		</aside>
