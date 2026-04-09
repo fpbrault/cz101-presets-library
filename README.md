@@ -70,17 +70,38 @@ This library provides a managed way to store, organize, and interact with preset
 
 - **Biome**: Unified linter and formatter.
 
-### Testing
+## Testing
 
-- **Vitest**: Test runner for unit and component testing.
-- **Playwright**: Browser testing via Vitest browser mode.
+This project uses **Vitest** for all testing needs, supporting multiple environments:
+
+### Test Types
+
+- **Unit Tests**: Fast, logic-focused tests running in a simulated DOM (Happy DOM).
+- **Component Tests**: Testing UI components with React Testing Library.
+- **Browser Tests**: High-fidelity UI tests running in a real browser via Playwright.
 
 ### Commands
 
+- `bun run test`: Run all tests.
+- `bun run test:unit`: Run unit tests.
+- `bun run test:component`: Run component tests.
+- `bun run test:browser`: Run browser-based tests.
+- `bun run test:ui`: Launch Vitest UI for interactive testing.
+- `bun run test:coverage`: Generate test coverage reports.
+
+For detailed testing strategies and patterns, see [docs/component-testing.md](docs/component-testing.md).
+
+### Commands
+
+- `bun run test`: Run all tests.
+- `bun run test:unit`: Run unit tests.
+- `bun run test:component`: Run component tests.
+- `bun run test:browser`: Run browser-based tests.
+- `bun run test:ui`: Launch Vitest UI for interactive testing.
+- `bun run test:coverage`: Generate test coverage reports.
 - `bun dev`: Run Vite dev server.
 - `bun build`: Build the application.
 - `bun lint`: Run Biome check.
 - `bun lint:fix`: Run Biome check and fix.
-- `bun test`: Run all tests.
 - `bun db:generate`: Generate Drizzle migrations.
 - `bun db:migrate`: Run Drizzle migrations.

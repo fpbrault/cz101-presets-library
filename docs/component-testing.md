@@ -1,6 +1,6 @@
 # Component Testing Strategy
 
-This project now supports reusable component tests with Vitest + Testing Library.
+This project supports reusable component tests with Vitest + Testing Library, including browser-based tests via Playwright.
 
 ## Current foundation
 
@@ -8,10 +8,21 @@ This project now supports reusable component tests with Vitest + Testing Library
 - `src/test/renderWithProviders.tsx`: one-call render helper for component tests.
 - `setupTests.ts`: includes `@testing-library/jest-dom/vitest` matchers.
 
+## Test Environments
+
+### 1. Unit / DOM Testing (Happy DOM)
+
+Used for most component tests and logic tests. It is extremely fast but does not represent a real browser environment.
+
+### 2. Browser Testing (Playwright)
+
+Used for high-fidelity UI tests that require a real browser environment. This is essential for testing complex interactions, CSS layouts, and browser-specific APIs.
+
 ## Commands
 
-- `bun run test:component` for focused component test runs
-- `bun run test:component:watch` for local TDD loops
+- `bun run test:component`: Run component tests in the DOM environment.
+- `bun run test:browser`: Run browser-based tests using Playwright.
+- `bun run test:ui`: Launch Vitest UI for interactive testing.
 
 ## How to write a component test
 
