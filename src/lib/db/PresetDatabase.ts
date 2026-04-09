@@ -1,7 +1,5 @@
 import type { Preset } from "@/lib/presets/types";
 
-export type { Preset };
-
 export interface PresetDatabase {
 	getPresets(): Promise<Preset[]>;
 	getPresetById(id: string): Promise<Preset | null>;
