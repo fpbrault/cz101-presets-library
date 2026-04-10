@@ -9,7 +9,9 @@ import {
 	FaDatabase,
 	FaFolderOpen,
 	FaListUl,
+	FaMusic,
 	FaTags,
+	FaWaveSquare,
 } from "react-icons/fa";
 import MidiQuickSettings from "@/components/layout/MidiQuickSettings";
 import SettingsPanel from "@/components/layout/SettingsPanel";
@@ -26,7 +28,9 @@ export type AppMode =
 	| "synthBackups"
 	| "setlists"
 	| "tagManager"
-	| "duplicateFinder";
+	| "duplicateFinder"
+	| "synth"
+	| "visualizer";
 
 const routeToMode: Record<string, AppMode> = {
 	"/performance": "performance",
@@ -35,6 +39,8 @@ const routeToMode: Record<string, AppMode> = {
 	"/setlists": "setlists",
 	"/tags": "tagManager",
 	"/duplicates": "duplicateFinder",
+	"/synth": "synth",
+	"/visualizer": "visualizer",
 };
 
 const modeToRoute: Record<AppMode, string> = {
@@ -44,6 +50,8 @@ const modeToRoute: Record<AppMode, string> = {
 	setlists: "/setlists",
 	tagManager: "/tags",
 	duplicateFinder: "/duplicates",
+	synth: "/synth",
+	visualizer: "/visualizer",
 };
 
 interface AppSidebarProps {
@@ -255,6 +263,28 @@ export default function AppSidebar({
 								<span className="badge badge-error badge-xs absolute -right-1 -top-1 min-h-0 h-3 w-3 p-0" />
 							)}
 						</Button>
+						<Button
+							type="button"
+							unstyled
+							className={`${iconNavButtonClass} ${
+								currentMode === "synth" ? activeIconNavButtonClass : ""
+							}`}
+							onClick={() => switchMode("synth")}
+							title="Synthesizer"
+						>
+							<FaMusic size={16} />
+						</Button>
+						<Button
+							type="button"
+							unstyled
+							className={`${iconNavButtonClass} ${
+								currentMode === "visualizer" ? activeIconNavButtonClass : ""
+							}`}
+							onClick={() => switchMode("visualizer")}
+							title="Phase Distortion Visualizer"
+						>
+							<FaWaveSquare size={16} />
+						</Button>
 					</div>
 
 					<div className="mt-auto flex flex-col items-center gap-3 pb-1">
@@ -349,6 +379,30 @@ export default function AppSidebar({
 									{duplicateGroupCount}
 								</span>
 							)}
+						</Button>
+						<Button
+							type="button"
+							unstyled
+							className={`${expandedNavButtonClass} ${
+								currentMode === "synth" ? activeExpandedNavButtonClass : ""
+							}`}
+							onClick={() => switchMode("synth")}
+							title="Synthesizer"
+						>
+							<FaMusic size={16} />
+							<span>Synthesizer</span>
+						</Button>
+						<Button
+							type="button"
+							unstyled
+							className={`${expandedNavButtonClass} ${
+								currentMode === "visualizer" ? activeExpandedNavButtonClass : ""
+							}`}
+							onClick={() => switchMode("visualizer")}
+							title="Phase Distortion Visualizer"
+						>
+							<FaWaveSquare size={16} />
+							<span>PD Visualizer</span>
 						</Button>
 					</div>
 
