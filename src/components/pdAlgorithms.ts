@@ -297,6 +297,86 @@ export const DEFAULT_ADSR: Adsr = {
 	release: 0.25,
 };
 
+export type StepEnvStep = { level: number; rate: number };
+
+export type StepEnvData = {
+	steps: StepEnvStep[];
+	sustainStep: number;
+	loop: boolean;
+	releaseRate: number;
+};
+
+export const DEFAULT_DCA_ENV: StepEnvData = {
+	steps: [
+		{ level: 1, rate: 90 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 0, rate: 60 },
+	],
+	sustainStep: 1,
+	loop: false,
+	releaseRate: 60,
+};
+
+export const DEFAULT_DCW_ENV: StepEnvData = {
+	steps: [
+		{ level: 1, rate: 80 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 1, rate: 99 },
+		{ level: 0, rate: 60 },
+	],
+	sustainStep: 1,
+	loop: false,
+	releaseRate: 60,
+};
+
+export const DEFAULT_DCO_ENV: StepEnvData = {
+	steps: [
+		{ level: 0, rate: 50 },
+		{ level: 0, rate: 50 },
+		{ level: 0, rate: 50 },
+		{ level: 0, rate: 50 },
+		{ level: 0, rate: 50 },
+		{ level: 0, rate: 50 },
+		{ level: 0, rate: 50 },
+		{ level: 0, rate: 50 },
+	],
+	sustainStep: 0,
+	loop: false,
+	releaseRate: 50,
+};
+
+export function rateToSeconds(rate: number): number {
+	return 5.0 * 0.0002 ** (rate / 99);
+}
+
+export function stepEnvLevelAtTime(env: StepEnvData, timeSec: number): number {
+	let t = 0;
+	let prevLevel = 0;
+	for (let i = 0; i < env.steps.length; i++) {
+		const step = env.steps[i];
+		const duration = rateToSeconds(step.rate);
+		if (t + duration > timeSec) {
+			const progress = duration > 0 ? (timeSec - t) / duration : 1;
+			return lerp(prevLevel, step.level, Math.min(progress, 1));
+		}
+		t += duration;
+		prevLevel = step.level;
+		if (!env.loop && i === env.sustainStep) {
+			return step.level;
+		}
+	}
+	return prevLevel;
+}
+
 export const KEYBOARD_NOTES = [60, 62, 64, 65, 67, 69, 71, 72];
 
 export const PC_KEY_TO_NOTE: Record<string, number> = {
@@ -561,6 +641,10 @@ export function computeWaveform(params: {
 	warpBAmount: number;
 	warpAAlgo: PdAlgo;
 	warpBAlgo: PdAlgo;
+	algo2A: PdAlgo | null;
+	algo2B: PdAlgo | null;
+	algoBlendA: number;
+	algoBlendB: number;
 	intPmAmount: number;
 	intPmRatio: number;
 	extPmAmount: number;
@@ -589,6 +673,12 @@ export function computeWaveform(params: {
 	const algoB =
 		PD_ALGOS.find((a) => String(a.value) === String(params.warpBAlgo)) ??
 		PD_ALGOS[0];
+	const algo2ADef = params.algo2A
+		? (PD_ALGOS.find((a) => String(a.value) === String(params.algo2A)) ?? null)
+		: null;
+	const algo2BDef = params.algo2B
+		? (PD_ALGOS.find((a) => String(a.value) === String(params.algo2B)) ?? null)
+		: null;
 
 	if (!params.pmPre) {
 		for (let i = 0; i < N; ++i) phasor[i] = (phasor[i] + pm[i]) % 1;
@@ -615,30 +705,86 @@ export function computeWaveform(params: {
 
 	for (let i = 0; i < N; ++i) {
 		const w = applyWindow(phasor[i], params.windowType);
-		if (algoA.algo === "cz101") {
+
+		if (algo2ADef) {
+			const blendA = params.algoBlendA;
+			const dcw1eff = params.warpAAmount * (1 - blendA);
+			const dcw2A = params.warpAAmount * blendA;
+			const sigA1 =
+				algoA.algo === "cz101"
+					? lerp(
+							Math.sin(TAU * phasor[i]),
+							czWaveform(algoA.waveform, phasor[i]),
+							dcw1eff,
+						)
+					: Math.sin(TAU * phaseA[i]);
+			const phaseA2 = applyPdAlgo(
+				phasor[i],
+				dcw2A,
+				params.algo2A as PdAlgo,
+				algo2ADef.waveform,
+			);
+			const sigA2 =
+				algo2ADef.algo === "cz101"
+					? lerp(
+							Math.sin(TAU * phasor[i]),
+							czWaveform(algo2ADef.waveform, phasor[i]),
+							dcw2A,
+						)
+					: Math.sin(TAU * phaseA2);
+			out1[i] = lerp(sigA1, sigA2, blendA) * w * params.line1Level;
+		} else if (algoA.algo === "cz101") {
 			out1[i] =
 				lerp(
 					Math.sin(TAU * phasor[i]),
 					czWaveform(algoA.waveform, phasor[i]),
 					params.warpAAmount,
-				) * w;
+				) *
+				w *
+				params.line1Level;
 		} else {
-			out1[i] = Math.sin(TAU * phaseA[i]) * w;
+			out1[i] = Math.sin(TAU * phaseA[i]) * w * params.line1Level;
 		}
-		if (algoB.algo === "cz101") {
+
+		if (algo2BDef) {
+			const blendB = params.algoBlendB;
+			const dcw1effB = params.warpBAmount * (1 - blendB);
+			const dcw2B = params.warpBAmount * blendB;
+			const sigB1 =
+				algoB.algo === "cz101"
+					? lerp(
+							Math.sin(TAU * phasor[i]),
+							czWaveform(algoB.waveform, phasor[i]),
+							dcw1effB,
+						)
+					: Math.sin(TAU * phaseB[i]);
+			const phaseB2 = applyPdAlgo(
+				phasor[i],
+				dcw2B,
+				params.algo2B as PdAlgo,
+				algo2BDef.waveform,
+			);
+			const sigB2 =
+				algo2BDef.algo === "cz101"
+					? lerp(
+							Math.sin(TAU * phasor[i]),
+							czWaveform(algo2BDef.waveform, phasor[i]),
+							dcw2B,
+						)
+					: Math.sin(TAU * phaseB2);
+			out2[i] = lerp(sigB1, sigB2, blendB) * w * params.line2Level;
+		} else if (algoB.algo === "cz101") {
 			out2[i] =
 				lerp(
 					Math.sin(TAU * phasor[i]),
 					czWaveform(algoB.waveform, phasor[i]),
 					params.warpBAmount,
-				) * w;
+				) *
+				w *
+				params.line2Level;
 		} else {
-			out2[i] = Math.sin(TAU * phaseB[i]) * w;
+			out2[i] = Math.sin(TAU * phaseB[i]) * w * params.line2Level;
 		}
-	}
-	for (let i = 0; i < N; ++i) {
-		out1[i] *= params.line1Level;
-		out2[i] *= params.line2Level;
 	}
 
 	return { out1, out2, phase: phaseA };
