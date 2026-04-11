@@ -866,7 +866,7 @@ async function symlinkDirs(
 		try {
 			// Check if source directory exists
 			const fileStat = await stat(sourcePath).catch(() => null);
-			if (!fileStat || !fileStat.isDirectory()) {
+			if (!fileStat?.isDirectory()) {
 				log.debug(`[worktree] Skipping missing directory: ${dir}`);
 				continue;
 			}

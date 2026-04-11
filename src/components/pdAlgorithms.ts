@@ -302,8 +302,8 @@ export type StepEnvStep = { level: number; rate: number };
 export type StepEnvData = {
 	steps: StepEnvStep[];
 	sustainStep: number;
+	stepCount: number;
 	loop: boolean;
-	releaseRate: number;
 };
 
 export const DEFAULT_DCA_ENV: StepEnvData = {
@@ -318,8 +318,8 @@ export const DEFAULT_DCA_ENV: StepEnvData = {
 		{ level: 0, rate: 60 },
 	],
 	sustainStep: 1,
+	stepCount: 8,
 	loop: false,
-	releaseRate: 60,
 };
 
 export const DEFAULT_DCW_ENV: StepEnvData = {
@@ -334,8 +334,8 @@ export const DEFAULT_DCW_ENV: StepEnvData = {
 		{ level: 0, rate: 60 },
 	],
 	sustainStep: 1,
+	stepCount: 8,
 	loop: false,
-	releaseRate: 60,
 };
 
 export const DEFAULT_DCO_ENV: StepEnvData = {
@@ -350,20 +350,31 @@ export const DEFAULT_DCO_ENV: StepEnvData = {
 		{ level: 0, rate: 50 },
 	],
 	sustainStep: 0,
+	stepCount: 8,
 	loop: false,
-	releaseRate: 50,
 };
 
 export function rateToSeconds(rate: number): number {
 	return 5.0 * 0.0002 ** (rate / 99);
 }
 
+function stepDurationSeconds(
+	fromLevel: number,
+	toLevel: number,
+	rate: number,
+): number {
+	const distance = Math.abs(toLevel - fromLevel);
+	if (distance <= 0) return 0;
+	return rateToSeconds(rate) * distance;
+}
+
 export function stepEnvLevelAtTime(env: StepEnvData, timeSec: number): number {
+	const activeSteps = env.steps.slice(0, env.stepCount);
 	let t = 0;
 	let prevLevel = 0;
-	for (let i = 0; i < env.steps.length; i++) {
-		const step = env.steps[i];
-		const duration = rateToSeconds(step.rate);
+	for (let i = 0; i < activeSteps.length; i++) {
+		const step = activeSteps[i];
+		const duration = stepDurationSeconds(prevLevel, step.level, step.rate);
 		if (t + duration > timeSec) {
 			const progress = duration > 0 ? (timeSec - t) / duration : 1;
 			return lerp(prevLevel, step.level, Math.min(progress, 1));

@@ -35,9 +35,6 @@ interface PerLineWarpBlockProps {
 	setDcaEnv: (e: StepEnvData) => void;
 }
 
-const ENV_TABS = ["DCO", "DCW", "DCA"] as const;
-type EnvTab = (typeof ENV_TABS)[number];
-
 export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	label,
 	waveform,
@@ -67,14 +64,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	dcaEnv,
 	setDcaEnv,
 }: PerLineWarpBlockProps) {
-	const [envTab, setEnvTab] = useState<EnvTab>("DCW");
-
-	const activeEnv =
-		envTab === "DCO" ? dcoEnv : envTab === "DCW" ? dcwEnv : dcaEnv;
-	const setActiveEnv =
-		envTab === "DCO" ? setDcoEnv : envTab === "DCW" ? setDcwEnv : setDcaEnv;
-	const envColor =
-		envTab === "DCO" ? "#f59e0b" : envTab === "DCW" ? color : "#10b981";
+	const [algo2Enabled, setAlgo2Enabled] = useState(false);
 
 	return (
 		<div className="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm flex flex-col items-center gap-3 w-full">
@@ -93,43 +83,43 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 				<AlgoIconGrid value={algo} onChange={setAlgo} size={64} />
 			</div>
 			<div className="w-full flex flex-col items-center gap-1">
-				<div className="flex items-center gap-2 w-full">
-					<span className="text-xs whitespace-nowrap">Algo 2</span>
-					<select
-						className="select select-bordered select-xs flex-1"
-						value={algo2 ?? ""}
-						onChange={(e) =>
-							setAlgo2(
-								e.target.value === "" ? null : (e.target.value as PdAlgo),
-							)
+				<button
+					type="button"
+					className={`btn btn-xs ${algo2Enabled ? "btn-primary" : "btn-outline"}`}
+					onClick={() => {
+						if (algo2Enabled) {
+							setAlgo2(null);
+							setAlgo2Enabled(false);
+						} else {
+							setAlgo2(PD_ALGOS[0].value as PdAlgo);
+							setAlgo2Enabled(true);
 						}
-					>
-						<option value="">None</option>
-						{PD_ALGOS.map((a) => (
-							<option key={String(a.value)} value={String(a.value)}>
-								{a.label}
-							</option>
-						))}
-					</select>
-				</div>
-				{algo2 !== null && (
-					<AlgoIconGrid value={algo2} onChange={setAlgo2} size={64} />
+					}}
+				>
+					Algo 2 {algo2Enabled ? "On" : "Off"}
+				</button>
+				{algo2Enabled && (
+					<>
+						<AlgoIconGrid
+							value={algo2 as PdAlgo}
+							onChange={setAlgo2}
+							size={64}
+						/>
+						<label className="w-full text-xs flex flex-col gap-1">
+							<span>Blend {Math.round(algoBlend * 100)}%</span>
+							<input
+								type="range"
+								min={0}
+								max={1}
+								step={0.01}
+								value={algoBlend}
+								onChange={(e) => setAlgoBlend(Number(e.target.value))}
+								className="range range-xs range-accent"
+							/>
+						</label>
+					</>
 				)}
 			</div>
-			{algo2 !== null && (
-				<label className="w-full text-xs flex flex-col gap-1">
-					<span>Blend {Math.round(algoBlend * 100)}%</span>
-					<input
-						type="range"
-						min={0}
-						max={1}
-						step={0.01}
-						value={algoBlend}
-						onChange={(e) => setAlgoBlend(Number(e.target.value))}
-						className="range range-xs range-accent"
-					/>
-				</label>
-			)}
 			<label className="w-full text-xs flex flex-col gap-1">
 				<span>Warp Amount {warpAmount.toFixed(2)}</span>
 				<input
@@ -210,24 +200,26 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 					/>
 				</label>
 			</div>
-			<div className="flex gap-1 w-full">
-				{ENV_TABS.map((tab) => (
-					<button
-						key={tab}
-						type="button"
-						className={`btn btn-xs flex-1 ${envTab === tab ? "btn-primary" : "btn-outline"}`}
-						onClick={() => setEnvTab(tab)}
-					>
-						{tab}
-					</button>
-				))}
+			<div className="flex flex-col gap-2 w-full">
+				<StepEnvelopeEditor
+					title={`${label} DCO`}
+					env={dcoEnv}
+					onChange={setDcoEnv}
+					color="#f59e0b"
+				/>
+				<StepEnvelopeEditor
+					title={`${label} DCW`}
+					env={dcwEnv}
+					onChange={setDcwEnv}
+					color={color}
+				/>
+				<StepEnvelopeEditor
+					title={`${label} DCA`}
+					env={dcaEnv}
+					onChange={setDcaEnv}
+					color="#10b981"
+				/>
 			</div>
-			<StepEnvelopeEditor
-				title={`${label} ${envTab} Envelope`}
-				env={activeEnv}
-				onChange={setActiveEnv}
-				color={envColor}
-			/>
 		</div>
 	);
 });

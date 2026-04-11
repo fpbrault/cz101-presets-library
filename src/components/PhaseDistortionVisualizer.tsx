@@ -44,7 +44,7 @@ export default function PhaseDistortionVisualizer() {
 	const [windowType, setWindowType] = useState<"off" | "saw" | "triangle">(
 		"off",
 	);
-	const [volume, setVolume] = useState(0.5);
+	const [volume, setVolume] = useState(1);
 	const [line1Level, setLine1Level] = useState(1);
 	const [line2Level, setLine2Level] = useState(1);
 	const [line1Octave, setLine1Octave] = useState(0);

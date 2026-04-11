@@ -182,6 +182,12 @@ function rateToSamples(rate, sr) {
 	return Math.max(1, Math.round(sr * 5.0 * 0.0002 ** (rate / 99)));
 }
 
+function stepDurationSamples(fromLevel, toLevel, rate, sr) {
+	const distance = Math.abs(toLevel - fromLevel);
+	if (distance <= 0) return 0;
+	return Math.max(1, Math.round(rateToSamples(rate, sr) * distance));
+}
+
 function createEnvGen() {
 	return {
 		step: 0,
@@ -207,37 +213,69 @@ function resetEnv(env) {
 }
 
 function advanceEnv(env, envData, sr) {
+	const steps = envData.steps;
+	const stepCount = Math.max(
+		1,
+		Math.min(envData.stepCount ?? steps.length ?? 8, steps.length),
+	);
+	const sustainStep = Math.max(
+		0,
+		Math.min(envData.sustainStep ?? 0, stepCount - 1),
+	);
+	const effectiveEndStep = stepCount - 1;
+	const currentStep = Math.max(0, Math.min(env.step, effectiveEndStep));
+
+	let stepData = steps[currentStep];
+	let targetLevel = stepData?.level ?? 0;
+	let duration = stepDurationSamples(
+		env.prevLevel,
+		targetLevel,
+		stepData?.rate ?? 50,
+		sr,
+	);
+
 	if (env.releasing) {
-		env.releaseProgress += 1;
-		if (env.releaseProgress >= env.releaseDuration) {
-			env.output = 0;
-		} else if (env.releaseDuration > 0) {
-			env.output =
-				env.releaseStartLevel * (1 - env.releaseProgress / env.releaseDuration);
+		if (duration <= 0) {
+			env.output = targetLevel;
 		} else {
-			env.output = 0;
+			const progress = Math.min(env.stepPos / duration, 1);
+			env.output = lerp(env.prevLevel, targetLevel, progress);
+		}
+
+		env.stepPos += 1;
+		if (env.stepPos >= duration) {
+			env.prevLevel = targetLevel;
+			env.stepPos = 0;
+			env.step += 1;
+			if (env.step >= effectiveEndStep) {
+				env.step = effectiveEndStep;
+				env.output = steps[effectiveEndStep]?.level ?? 0;
+			}
 		}
 		return;
 	}
 
-	const steps = envData.steps;
-	const numSteps = steps.length;
+	const numSteps = stepCount;
 	if (numSteps === 0) return;
-	const safeIdx = Math.min(env.step, numSteps - 1);
-	const stepData = steps[safeIdx];
-	const targetLevel = stepData.level;
-	const duration = Math.max(1, rateToSamples(stepData.rate, sr));
-	const progress = Math.min(env.stepPos / duration, 1);
+	stepData = steps[currentStep];
+	targetLevel = stepData.level;
+	duration = stepDurationSamples(env.prevLevel, targetLevel, stepData.rate, sr);
+	const progress = duration <= 0 ? 1 : Math.min(env.stepPos / duration, 1);
 
 	env.output = lerp(env.prevLevel, targetLevel, progress);
+
+	if (!envData.loop && currentStep === sustainStep && progress >= 1) {
+		env.output = targetLevel;
+		return;
+	}
 
 	env.stepPos += 1;
 	if (env.stepPos >= duration) {
 		env.prevLevel = targetLevel;
 		env.stepPos = 0;
 
-		if (!envData.loop && env.step >= envData.sustainStep) {
-			env.output = steps[envData.sustainStep].level;
+		if (!envData.loop && currentStep === sustainStep) {
+			env.output = targetLevel;
 			return;
 		}
 
@@ -247,18 +285,34 @@ function advanceEnv(env, envData, sr) {
 			if (envData.loop) {
 				env.step = 0;
 			} else {
-				env.step = numSteps - 1;
-				env.output = steps[numSteps - 1].level;
+				env.step = effectiveEndStep;
+				env.output = steps[effectiveEndStep]?.level ?? 0;
 			}
 		}
 	}
 }
 
-function startEnvRelease(env, releaseRate, sr) {
+function startEnvRelease(env, envData, _sr) {
+	const steps = envData.steps;
+	const stepCount = Math.max(
+		1,
+		Math.min(envData.stepCount ?? steps.length ?? 8, steps.length),
+	);
+	const sustainStep = Math.max(
+		0,
+		Math.min(envData.sustainStep ?? 0, stepCount - 1),
+	);
+	const effectiveEndStep = stepCount - 1;
+
 	env.releasing = true;
-	env.releaseStartLevel = env.output;
 	env.releaseProgress = 0;
-	env.releaseDuration = Math.max(1, rateToSamples(releaseRate, sr));
+
+	if (env.step <= sustainStep) {
+		env.step = Math.min(sustainStep + 1, effectiveEndStep);
+		env.stepPos = 0;
+	}
+
+	env.prevLevel = env.output;
 }
 
 class DelayLine {
@@ -556,12 +610,12 @@ class Cz101Processor extends AudioWorkletProcessor {
 		for (const key of ["dco", "dcw", "dca"]) {
 			startEnvRelease(
 				voice.line1Env[key],
-				(p.line1[`${key}Env`] ?? DEFAULT_STEP_ENV).releaseRate,
+				p.line1[`${key}Env`] ?? DEFAULT_STEP_ENV,
 				sr,
 			);
 			startEnvRelease(
 				voice.line2Env[key],
-				(p.line2[`${key}Env`] ?? DEFAULT_STEP_ENV).releaseRate,
+				p.line2[`${key}Env`] ?? DEFAULT_STEP_ENV,
 				sr,
 			);
 		}
