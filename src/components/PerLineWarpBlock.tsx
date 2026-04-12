@@ -225,7 +225,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 							min={0}
 							max={1}
 							color={color}
-							label="Warp"
+							label="DCW Amt"
 							valueFormatter={(value) => value.toFixed(2)}
 						/>
 						<ControlKnob
@@ -234,7 +234,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 							min={0}
 							max={1}
 							color="#7dd3fc"
-							label="DCW"
+							label="DCW Vol Comp"
 							valueFormatter={(value) => `${Math.round(value * 100)}%`}
 						/>
 						<ControlKnob
@@ -274,7 +274,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 							min={0}
 							max={24}
 							color="#fdba74"
-							label="Pitch"
+							label="DCO Range"
 							valueFormatter={(value) => `${Math.round(value)} st`}
 						/>
 					</div>

@@ -27,7 +27,6 @@ export default defineConfig(async () => ({
 		strictPort: true,
 		host: "0.0.0.0",
 		allowedHosts: ["macbook-pro.tailec1ed.ts.net"],
-		hmr: false,
 		watch: {
 			// 3. tell vite to ignore watching `src-tauri`
 			ignored: ["**/src-tauri/**"],

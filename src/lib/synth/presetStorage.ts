@@ -9,8 +9,8 @@ const STORAGE_PREFIX = "cz101-preset-";
 const CURRENT_STATE_KEY = "cz101-current-state";
 
 export const DEFAULT_PRESET: SynthPresetData = {
-	warpAAmount: 0,
-	warpBAmount: 0,
+	warpAAmount: 1,
+	warpBAmount: 1,
 	warpAAlgo: "bend",
 	warpBAlgo: "bend",
 	algo2A: null,
@@ -28,8 +28,8 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	line2Octave: 0,
 	line1Detune: 0,
 	line2Detune: 0,
-	line1DcoDepth: 0,
-	line2DcoDepth: 0,
+	line1DcoDepth: 12,
+	line2DcoDepth: 12,
 	line1DcwComp: 0,
 	line2DcwComp: 0,
 	line1DcoEnv: DEFAULT_DCO_ENV,

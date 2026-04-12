@@ -93,7 +93,7 @@ export function ControlKnob({
 						strokeOpacity="0.3"
 						strokeWidth="4"
 						strokeDasharray={`${normalizedValue * 106.81} 106.81`}
-						transform="rotate(-140 28 28)"
+						transform="rotate(-230 28 28)"
 					/>
 					<line
 						x1="28"
