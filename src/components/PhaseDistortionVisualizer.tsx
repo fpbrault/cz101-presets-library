@@ -527,8 +527,11 @@ export default function PhaseDistortionVisualizer() {
 
 		const finalPitch = effectivePitchHz;
 
+		const line1ModBits = (line1RingMod ? 0b100 : 0) | (line1Noise ? 0b010 : 0);
+		const line2ModBits = (line2RingMod ? 0b100 : 0) | (line2Noise ? 0b010 : 0);
+
 		const params = {
-			lineSelect: "L1+L2",
+			lineSelect,
 			octave: 0,
 			line1: {
 				waveform: algoA.waveform,
@@ -539,7 +542,7 @@ export default function PhaseDistortionVisualizer() {
 				dcaBase: line1Level,
 				dcwBase: warpAAmount,
 				dcoDepth: line1DcoDepth,
-				modulation: 0,
+				modulation: line1ModBits,
 				dcwComp: line1DcwComp,
 				warpAlgo: algoA.algo,
 				detuneCents: line1Detune,
@@ -557,7 +560,7 @@ export default function PhaseDistortionVisualizer() {
 				dcaBase: line2Level,
 				dcwBase: warpBAmount,
 				dcoDepth: line2DcoDepth,
-				modulation: 0,
+				modulation: line2ModBits,
 				dcwComp: line2DcwComp,
 				warpAlgo: algoB.algo,
 				detuneCents: line2Detune,
@@ -625,6 +628,11 @@ export default function PhaseDistortionVisualizer() {
 		algo2B,
 		algoBlendA,
 		algoBlendB,
+		lineSelect,
+		line1RingMod,
+		line1Noise,
+		line2RingMod,
+		line2Noise,
 	]);
 
 	useEffect(() => {

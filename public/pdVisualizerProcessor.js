@@ -942,20 +942,34 @@ class Cz101Processor extends AudioWorkletProcessor {
 		}
 
 		let sample = 0;
-		if (modBits === 0b011 || modBits === 0b111) {
+		const lineSelect = p.lineSelect ?? "L1+L2";
+		const l1Mod = (modBits & 0b100) !== 0;
+		const l1Noise = (modBits & 0b010) !== 0;
+		const l2Mod = (l2.modulation & 0b100) !== 0;
+		const l2Noise = (l2.modulation & 0b010) !== 0;
+
+		if (l1Mod && l2Mod) {
+			sample = s1 * s2;
+		} else if (l1Noise) {
 			const noise = Math.random() * 2 - 1;
 			sample = (s1 + s1 * noise) / 2;
-		} else if (
-			modBits === 0b100 ||
-			modBits === 0b101 ||
-			modBits === 0b010 ||
-			modBits === 0b110
-		) {
-			sample = s1 * s2;
-		} else if (p.lineSelect === "L1") {
+		} else if (l2Noise) {
+			const noise = Math.random() * 2 - 1;
+			sample = (s2 + s2 * noise) / 2;
+		} else if (lineSelect === "L1") {
 			sample = s1;
-		} else if (p.lineSelect === "L2") {
+		} else if (lineSelect === "L2") {
 			sample = s2;
+		} else if (lineSelect === "L1+L1'") {
+			const s1p =
+				czWaveform(l1.waveform2 ?? l1.waveform ?? 1, phi1) * finalDca1;
+			sample = s1 + s1p;
+		} else if (lineSelect === "L1+L2'") {
+			const s2p =
+				czWaveform(l2.waveform2 ?? l2.waveform ?? 1, phi1) * finalDca2;
+			sample = s1 + s2p;
+		} else if (lineSelect === "L1+L2") {
+			sample = s1 + s2;
 		} else {
 			sample = s1 + s2;
 		}
