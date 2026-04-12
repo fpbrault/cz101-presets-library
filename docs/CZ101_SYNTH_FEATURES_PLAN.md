@@ -17,6 +17,10 @@
 
 ## 1. Read CZ-101 SysEx Presets
 
+> **Important**: CZ-101 presets are fully compatible with the web synth. The web synth supports all CZ-101 parameters (line select, vibrato, key follow, envelopes, waveforms, ring modulation, noise). Users can import `.syx` files from the preset library directly into the synth.
+
+> **Note**: The inverse direction (web synth → CZ-101) is NOT supported because the web synth includes features the CZ-101 does not have (assignable LFO, traditional filter, advanced portamento).
+
 ### Files to Modify
 
 | File | Changes |
@@ -349,6 +353,50 @@ dcw1KeyFollow: number;
 dca2KeyFollow: number;
 dcw2KeyFollow: number;
 ```
+
+---
+
+## CZ-101 → Web Synth Conversion
+
+The web synth supports all parameters that a CZ-101 preset can store. This means any preset from the library can be loaded directly into the web synth without loss of functionality.
+
+### Field Mapping (DecodedPatch → SynthPresetData)
+
+| CZ-101 (DecodedPatch) | Web Synth (SynthPresetData) |
+|----------------------|---------------------------|
+| `lineSelect` | `lineSelect` (direct map) |
+| `octave` | `octave` |
+| `detuneDirection` + `detuneFine` + `detuneOctave` + `detuneNote` | `detune` (combined) |
+| `vibratoWave` | `vibratoWave` |
+| `vibratoRate` | `vibratoRate` |
+| `vibratoDepth` | `vibratoDepth` |
+| `vibratoDelay` | `vibratoDelay` |
+| `dco1` | `wave1`, `wave1DCO`, `wave1DCW`, `wave1DCA` (per line) |
+| `dco2` | `wave2`, `wave2DCO`, `wave2DCW`, `wave2DCA` |
+| `dco1.modulation` / `dco2.modulation` | `ringModEnabled` / `noiseEnabled` (per-line, from waveform config) |
+| `dca1` / `dcw1` / `dco1Env` | `dca1Env` / `dcw1Env` / `dco1Env` (6 envelopes) |
+| `dca2` / `dcw2` / `dco2Env` | `dca2Env` / `dcw2Env` / `dco2Env` |
+| `dca1KeyFollow` | `dca1KeyFollow` |
+| `dcw1KeyFollow` | `dcw1KeyFollow` |
+| `dca2KeyFollow` | `dca2KeyFollow` |
+| `dcw2KeyFollow` | `dcw2KeyFollow` |
+
+### Default Values for Unsupported Features
+
+The CZ-101 supports: line select, octave, detune, vibrato, waveforms, ring modulation, noise modulation, key follow, and 6 envelopes. The web synth adds features with no CZ-101 equivalent:
+
+| Feature | Default Value |
+|---------|---------------|
+| `portamentoEnabled` | `false` |
+| `lfoEnabled` | `false` |
+| `filterEnabled` | `false` |
+
+### Implementation Notes
+
+1. **Create `src/lib/synth/czPresetConverter.ts`** — Contains `convertDecodedPatchToSynthPreset()` function
+2. **All CZ-101 fields map 1:1** — No data is lost in conversion
+3. **Partial presets supported** — `applyPreset()` fills missing fields with defaults
+4. **Inverse (web → CZ-101) not supported** — Features like assignable LFO, traditional filter have no CZ-101 equivalent
 
 ---
 
