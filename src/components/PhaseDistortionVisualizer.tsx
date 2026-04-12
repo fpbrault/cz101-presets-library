@@ -406,6 +406,7 @@ export default function PhaseDistortionVisualizer() {
 	const combinedCanvasRef = useRef<HTMLCanvasElement>(null);
 	const phaseCanvasRef = useRef<HTMLCanvasElement>(null);
 	const oscilloscopeCanvasRef = useRef<HTMLCanvasElement>(null);
+	const leftScopeCanvasRef = useRef<HTMLCanvasElement>(null);
 	const pressedPcKeysRef = useRef<Set<string>>(new Set());
 	const lastHeldFreqRef = useRef(220);
 
@@ -780,6 +781,95 @@ export default function PhaseDistortionVisualizer() {
 		scopeTriggerMode,
 		scopeTriggerLevel,
 	]);
+
+	useEffect(() => {
+		const canvas = leftScopeCanvasRef.current;
+		if (!canvas) return;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+
+		let raf = 0;
+		const draw = () => {
+			raf = window.requestAnimationFrame(draw);
+			const drawWidth = Math.max(1, Math.floor(canvas.clientWidth));
+			const drawHeight = Math.max(1, Math.floor(canvas.clientHeight));
+			const dpr = window.devicePixelRatio || 1;
+			const pixelWidth = Math.floor(drawWidth * dpr);
+			const pixelHeight = Math.floor(drawHeight * dpr);
+			if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+				canvas.width = pixelWidth;
+				canvas.height = pixelHeight;
+			}
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+			const analyser = analyserNodeRef.current;
+			if (!analyser) {
+				ctx.clearRect(0, 0, drawWidth, drawHeight);
+
+				ctx.fillStyle = "#0a0a0a";
+				ctx.fillRect(0, 0, drawWidth, drawHeight);
+
+				ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
+				ctx.beginPath();
+				ctx.moveTo(0, drawHeight / 2);
+				ctx.lineTo(drawWidth, drawHeight / 2);
+				ctx.stroke();
+				return;
+			}
+
+			const data = new Uint8Array(analyser.fftSize);
+			analyser.getByteTimeDomainData(data);
+			const sampleRate = audioCtxRef.current?.sampleRate ?? 44100;
+			const hz = Math.max(1, effectivePitchHz);
+			const samplesPerCycle = Math.max(8, Math.round(sampleRate / hz));
+			const viewSamples = Math.max(
+				32,
+				Math.min(data.length - 2, Math.round(samplesPerCycle * 1)),
+			);
+
+			let start = Math.max(1, Math.floor((data.length - viewSamples) / 2));
+
+			let mean = 0;
+			for (let i = 0; i < viewSamples; i++) mean += data[start + i];
+			mean /= viewSamples;
+
+			ctx.clearRect(0, 0, drawWidth, drawHeight);
+
+			ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
+			ctx.lineWidth = 1;
+			for (let y = 0.25; y < 1; y += 0.25) {
+				ctx.beginPath();
+				ctx.moveTo(0, drawHeight * y);
+				ctx.lineTo(drawWidth, drawHeight * y);
+				ctx.stroke();
+			}
+
+			ctx.strokeStyle = "rgba(0, 120, 0, 0.6)";
+			ctx.lineWidth = 1.5;
+			ctx.beginPath();
+			ctx.moveTo(0, drawHeight / 2);
+			ctx.lineTo(drawWidth, drawHeight / 2);
+			ctx.stroke();
+
+			ctx.shadowColor = "#00ff00";
+			ctx.shadowBlur = 8;
+			ctx.strokeStyle = "#00ff00";
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			for (let i = 0; i < viewSamples; i++) {
+				const x = (i / (viewSamples - 1)) * drawWidth;
+				const idx = start + i;
+				const centered = (data[idx] - mean) / 128;
+				const y = drawHeight / 2 - centered * (drawHeight / 2 - 8) * 1;
+				if (i === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+			}
+			ctx.stroke();
+			ctx.shadowBlur = 0;
+		};
+		draw();
+		return () => window.cancelAnimationFrame(raf);
+	}, [effectivePitchHz]);
 
 	useEffect(() => {
 		if (combinedCanvasRef.current)
@@ -1317,7 +1407,7 @@ export default function PhaseDistortionVisualizer() {
 											CH1
 										</div>
 										<canvas
-											ref={oscilloscopeCanvasRef}
+											ref={leftScopeCanvasRef}
 											width={280}
 											height={100}
 											className="h-[100px] w-full"
