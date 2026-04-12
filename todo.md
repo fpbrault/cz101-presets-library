@@ -10,9 +10,9 @@
 | Phase 1: Presets and State Model | ✅ Complete |
 | Phase 2: Layout Rebalance | ✅ Complete |
 | Phase 3: Oscilloscope Improvements | ✅ Complete |
-| Phase 4: Phase-Line Tabs/Accordion | Pending |
+| Phase 4: Phase-Line Tabs/Accordion | ✅ Complete |
 | Phase 3: Oscilloscope Improvements | Pending |
-| Phase 4: Phase-Line Tabs/Accordion | Pending |
+| Phase 4: Phase-Line Tabs/Accordion | ✅ Complete |
 | Phase 5: Voice Fixes | Pending |
 | Phase 6: Parameter Range Cleanup | Pending |
 | Phase 7: Effects Tuning | Pending |

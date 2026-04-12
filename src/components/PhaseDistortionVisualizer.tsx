@@ -68,6 +68,7 @@ export default function PhaseDistortionVisualizer() {
 	const [line2DcoDepth, setLine2DcoDepth] = useState(0);
 	const [line1DcwComp, setLine1DcwComp] = useState(0);
 	const [line2DcwComp, setLine2DcwComp] = useState(0);
+	const [activeLineTab, setActiveLineTab] = useState<"a" | "b">("a");
 	const [scopeCycles, setScopeCycles] = useState(2);
 	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(2);
 	const [scopeTriggerMode, setScopeTriggerMode] = useState<
@@ -1558,81 +1559,103 @@ export default function PhaseDistortionVisualizer() {
 						)}
 					</section>
 
-					<section className="grid gap-4 2xl:grid-cols-2">
-						<PerLineWarpBlock
-							label={
-								PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
-							}
-							waveform={waveform.out1}
-							color="#3dedff"
-							copyTargetLabel={
-								PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
-							}
-							onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
-							onCopyEnvelopes={() => copyLineSettings("a", "b", "envelopes")}
-							onCopyFull={() => copyLineSettings("a", "b", "full")}
-							algo={warpAAlgo}
-							setAlgo={setWarpAAlgo}
-							algo2={algo2A}
-							setAlgo2={setAlgo2A}
-							algoBlend={algoBlendA}
-							setAlgoBlend={setAlgoBlendA}
-							warpAmount={warpAAmount}
-							setWarpAmount={setWarpAAmount}
-							dcwComp={line1DcwComp}
-							setDcwComp={setLine1DcwComp}
-							level={line1Level}
-							setLevel={setLine1Level}
-							octave={line1Octave}
-							setOctave={setLine1Octave}
-							fineDetune={line1Detune}
-							setFineDetune={setLine1Detune}
-							dcoDepth={line1DcoDepth}
-							setDcoDepth={setLine1DcoDepth}
-							dcoEnv={line1DcoEnv}
-							setDcoEnv={setLine1DcoEnv}
-							dcwEnv={line1DcwEnv}
-							setDcwEnv={setLine1DcwEnv}
-							dcaEnv={line1DcaEnv}
-							setDcaEnv={setLine1DcaEnv}
-						/>
-						<PerLineWarpBlock
-							label={
-								PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
-							}
-							waveform={waveform.out2}
-							color="#ff71ce"
-							copyTargetLabel={
-								PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
-							}
-							onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
-							onCopyEnvelopes={() => copyLineSettings("b", "a", "envelopes")}
-							onCopyFull={() => copyLineSettings("b", "a", "full")}
-							algo={warpBAlgo}
-							setAlgo={setWarpBAlgo}
-							algo2={algo2B}
-							setAlgo2={setAlgo2B}
-							algoBlend={algoBlendB}
-							setAlgoBlend={setAlgoBlendB}
-							warpAmount={warpBAmount}
-							setWarpAmount={setWarpBAmount}
-							dcwComp={line2DcwComp}
-							setDcwComp={setLine2DcwComp}
-							level={line2Level}
-							setLevel={setLine2Level}
-							octave={line2Octave}
-							setOctave={setLine2Octave}
-							fineDetune={line2Detune}
-							setFineDetune={setLine2Detune}
-							dcoDepth={line2DcoDepth}
-							setDcoDepth={setLine2DcoDepth}
-							dcoEnv={line2DcoEnv}
-							setDcoEnv={setLine2DcoEnv}
-							dcwEnv={line2DcwEnv}
-							setDcwEnv={setLine2DcwEnv}
-							dcaEnv={line2DcaEnv}
-							setDcaEnv={setLine2DcaEnv}
-						/>
+					<section className="space-y-4">
+						<div className="flex justify-center gap-2">
+							<button
+								type="button"
+								className={`btn btn-sm ${activeLineTab === "a" ? "btn-primary" : "btn-outline"}`}
+								onClick={() => setActiveLineTab("a")}
+							>
+								Line A
+							</button>
+							<button
+								type="button"
+								className={`btn btn-sm ${activeLineTab === "b" ? "btn-secondary" : "btn-outline"}`}
+								onClick={() => setActiveLineTab("b")}
+							>
+								Line B
+							</button>
+						</div>
+
+						{activeLineTab === "a" && (
+							<PerLineWarpBlock
+								label={
+									PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
+								}
+								waveform={waveform.out1}
+								color="#3dedff"
+								copyTargetLabel={
+									PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
+								}
+								onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
+								onCopyEnvelopes={() => copyLineSettings("a", "b", "envelopes")}
+								onCopyFull={() => copyLineSettings("a", "b", "full")}
+								algo={warpAAlgo}
+								setAlgo={setWarpAAlgo}
+								algo2={algo2A}
+								setAlgo2={setAlgo2A}
+								algoBlend={algoBlendA}
+								setAlgoBlend={setAlgoBlendA}
+								warpAmount={warpAAmount}
+								setWarpAmount={setWarpAAmount}
+								dcwComp={line1DcwComp}
+								setDcwComp={setLine1DcwComp}
+								level={line1Level}
+								setLevel={setLine1Level}
+								octave={line1Octave}
+								setOctave={setLine1Octave}
+								fineDetune={line1Detune}
+								setFineDetune={setLine1Detune}
+								dcoDepth={line1DcoDepth}
+								setDcoDepth={setLine1DcoDepth}
+								dcoEnv={line1DcoEnv}
+								setDcoEnv={setLine1DcoEnv}
+								dcwEnv={line1DcwEnv}
+								setDcwEnv={setLine1DcwEnv}
+								dcaEnv={line1DcaEnv}
+								setDcaEnv={setLine1DcaEnv}
+							/>
+						)}
+
+						{activeLineTab === "b" && (
+							<PerLineWarpBlock
+								label={
+									PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
+								}
+								waveform={waveform.out2}
+								color="#ff71ce"
+								copyTargetLabel={
+									PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
+								}
+								onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
+								onCopyEnvelopes={() => copyLineSettings("b", "a", "envelopes")}
+								onCopyFull={() => copyLineSettings("b", "a", "full")}
+								algo={warpBAlgo}
+								setAlgo={setWarpBAlgo}
+								algo2={algo2B}
+								setAlgo2={setAlgo2B}
+								algoBlend={algoBlendB}
+								setAlgoBlend={setAlgoBlendB}
+								warpAmount={warpBAmount}
+								setWarpAmount={setWarpBAmount}
+								dcwComp={line2DcwComp}
+								setDcwComp={setLine2DcwComp}
+								level={line2Level}
+								setLevel={setLine2Level}
+								octave={line2Octave}
+								setOctave={setLine2Octave}
+								fineDetune={line2Detune}
+								setFineDetune={setLine2Detune}
+								dcoDepth={line2DcoDepth}
+								setDcoDepth={setLine2DcoDepth}
+								dcoEnv={line2DcoEnv}
+								setDcoEnv={setLine2DcoEnv}
+								dcwEnv={line2DcwEnv}
+								setDcwEnv={setLine2DcwEnv}
+								dcaEnv={line2DcaEnv}
+								setDcaEnv={setLine2DcaEnv}
+							/>
+						)}
 					</section>
 				</main>
 			</div>
