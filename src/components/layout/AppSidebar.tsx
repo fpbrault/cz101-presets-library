@@ -9,7 +9,6 @@ import {
 	FaDatabase,
 	FaFolderOpen,
 	FaListUl,
-	FaMusic,
 	FaTags,
 	FaWaveSquare,
 } from "react-icons/fa";
@@ -29,7 +28,6 @@ export type AppMode =
 	| "setlists"
 	| "tagManager"
 	| "duplicateFinder"
-	| "synth"
 	| "visualizer";
 
 const routeToMode: Record<string, AppMode> = {
@@ -39,8 +37,7 @@ const routeToMode: Record<string, AppMode> = {
 	"/setlists": "setlists",
 	"/tags": "tagManager",
 	"/duplicates": "duplicateFinder",
-	"/synth": "synth",
-	"/visualizer": "visualizer",
+	"/lab": "visualizer",
 };
 
 const modeToRoute: Record<AppMode, string> = {
@@ -50,8 +47,7 @@ const modeToRoute: Record<AppMode, string> = {
 	setlists: "/setlists",
 	tagManager: "/tags",
 	duplicateFinder: "/duplicates",
-	synth: "/synth",
-	visualizer: "/visualizer",
+	visualizer: "/lab",
 };
 
 interface AppSidebarProps {
@@ -263,17 +259,7 @@ export default function AppSidebar({
 								<span className="badge badge-error badge-xs absolute -right-1 -top-1 min-h-0 h-3 w-3 p-0" />
 							)}
 						</Button>
-						<Button
-							type="button"
-							unstyled
-							className={`${iconNavButtonClass} ${
-								currentMode === "synth" ? activeIconNavButtonClass : ""
-							}`}
-							onClick={() => switchMode("synth")}
-							title="Synthesizer"
-						>
-							<FaMusic size={16} />
-						</Button>
+
 						<Button
 							type="button"
 							unstyled
@@ -380,18 +366,7 @@ export default function AppSidebar({
 								</span>
 							)}
 						</Button>
-						<Button
-							type="button"
-							unstyled
-							className={`${expandedNavButtonClass} ${
-								currentMode === "synth" ? activeExpandedNavButtonClass : ""
-							}`}
-							onClick={() => switchMode("synth")}
-							title="Synthesizer"
-						>
-							<FaMusic size={16} />
-							<span>Synthesizer</span>
-						</Button>
+
 						<Button
 							type="button"
 							unstyled

@@ -15,7 +15,6 @@ const SynthBackupsPage = lazy(() => import("./SynthBackupsPage"));
 const SetlistsPage = lazy(() => import("./SetlistsPage"));
 const TagManagerPage = lazy(() => import("./TagManagerPage"));
 const DuplicateFinderPage = lazy(() => import("./DuplicateFinderPage"));
-const SynthPage = lazy(() => import("./SynthPage"));
 const VisualizerPage = lazy(() => import("./VisualizerPage"));
 
 function PageLoader() {
@@ -84,15 +83,9 @@ const duplicatesRoute = createRoute({
 	component: DuplicateFinderPage,
 });
 
-const synthRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/synth",
-	component: SynthPage,
-});
-
 const visualizerRoute = createRoute({
 	getParentRoute: () => rootRoute,
-	path: "/visualizer",
+	path: "/lab",
 	component: VisualizerPage,
 });
 
@@ -104,7 +97,6 @@ export const routeTree = rootRoute.addChildren([
 	setlistsRoute,
 	tagsRoute,
 	duplicatesRoute,
-	synthRoute,
 	visualizerRoute,
 ]);
 
