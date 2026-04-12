@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pdVisualizerWorkletUrl } from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
+	DEFAULT_PRESET,
 	deletePreset,
+	exportPreset,
+	importPreset,
 	listPresets,
 	loadCurrentState,
 	loadPreset,
@@ -16,8 +19,6 @@ import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
-	KEYBOARD_NOTES,
-	noteName,
 	noteToFreq,
 	PC_KEY_TO_NOTE,
 	PD_ALGOS,
@@ -68,7 +69,7 @@ export default function PhaseDistortionVisualizer() {
 	const [line1DcwComp, setLine1DcwComp] = useState(0);
 	const [line2DcwComp, setLine2DcwComp] = useState(0);
 	const [scopeCycles, setScopeCycles] = useState(2);
-	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(1);
+	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(2);
 	const [scopeTriggerMode, setScopeTriggerMode] = useState<
 		"off" | "rise" | "fall"
 	>("rise");
@@ -218,48 +219,7 @@ export default function PhaseDistortionVisualizer() {
 	}, []);
 
 	const resetToDefaults = useCallback(() => {
-		applyPreset({
-			warpAAmount: 0,
-			warpBAmount: 0,
-			warpAAlgo: "bend",
-			warpBAlgo: "bend",
-			algo2A: null,
-			algo2B: null,
-			algoBlendA: 0,
-			algoBlendB: 0,
-			intPmAmount: 0,
-			intPmRatio: 2,
-			pmPre: true,
-			windowType: "off",
-			volume: 0.5,
-			line1Level: 1,
-			line2Level: 1,
-			line1Octave: 0,
-			line2Octave: 0,
-			line1Detune: 0,
-			line2Detune: 0,
-			line1DcoDepth: 0,
-			line2DcoDepth: 0,
-			line1DcwComp: 0,
-			line2DcwComp: 0,
-			line1DcoEnv: DEFAULT_DCO_ENV,
-			line1DcwEnv: DEFAULT_DCW_ENV,
-			line1DcaEnv: DEFAULT_DCA_ENV,
-			line2DcoEnv: DEFAULT_DCO_ENV,
-			line2DcwEnv: DEFAULT_DCW_ENV,
-			line2DcaEnv: DEFAULT_DCA_ENV,
-			polyMode: "poly8",
-			legato: false,
-			velocityTarget: "amp",
-			chorusRate: 0.8,
-			chorusDepth: 3,
-			chorusMix: 0,
-			delayTime: 0.3,
-			delayFeedback: 0.35,
-			delayMix: 0,
-			reverbSize: 0.5,
-			reverbMix: 0,
-		});
+		applyPreset(DEFAULT_PRESET);
 	}, [applyPreset]);
 
 	const copyLineSettings = useCallback(
@@ -701,7 +661,7 @@ export default function PhaseDistortionVisualizer() {
 				audioCtxRef.current = null;
 			}
 		};
-	}, [volume]);
+	}, []);
 
 	useEffect(() => {
 		const canvas = oscilloscopeCanvasRef.current;
@@ -1021,6 +981,46 @@ export default function PhaseDistortionVisualizer() {
 										Delete
 									</button>
 								</div>
+								<div className="flex gap-2">
+									<button
+										type="button"
+										className="btn btn-xs btn-outline flex-1"
+										onClick={() => {
+											const exported = exportPreset(presetList[0] ?? "");
+											if (exported) {
+												const blob = new Blob([exported], {
+													type: "application/json",
+												});
+												const url = URL.createObjectURL(blob);
+												const a = document.createElement("a");
+												a.href = url;
+												a.download = `cz101-preset-${presetList[0] || "export"}.json`;
+												a.click();
+												URL.revokeObjectURL(url);
+											}
+										}}
+										disabled={presetList.length === 0}
+									>
+										Export
+									</button>
+									<label className="btn btn-xs btn-outline flex-1">
+										Import
+										<input
+											type="file"
+											accept=".json"
+											className="hidden"
+											onChange={async (e) => {
+												const file = e.target.files?.[0];
+												if (!file) return;
+												const text = await file.text();
+												const imported = importPreset(text);
+												if (imported) {
+													applyPreset(imported);
+												}
+											}}
+										/>
+									</label>
+								</div>
 								<div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-base-300/60 bg-base-100/40 p-2">
 									{presetList.length === 0 ? (
 										<div className="px-2 py-3 text-xs text-base-content/45">
@@ -1298,29 +1298,56 @@ export default function PhaseDistortionVisualizer() {
 						</div>
 
 						<div className="mt-auto rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
-							<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
-								Keyboard
+							<div className="mb-2 flex items-center justify-between gap-2">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Scope
+								</div>
+								<button
+									type="button"
+									className={`btn btn-xs ${scopeOpen ? "btn-primary" : "btn-outline"}`}
+									onClick={() => setScopeOpen(!scopeOpen)}
+								>
+									{scopeOpen ? "Hide" : "Show"}
+								</button>
 							</div>
-							<div className="flex flex-wrap gap-2">
-								{KEYBOARD_NOTES.map((note) => {
-									const active = activeNotes.includes(note);
-									return (
-										<button
-											type="button"
-											key={note}
-											onPointerDown={() => sendNoteOn(note)}
-											onPointerUp={() => sendNoteOff(note)}
-											onPointerLeave={() => sendNoteOff(note)}
-											className={`btn btn-sm ${active ? "btn-primary" : "btn-outline"}`}
-										>
-											{noteName(note)}
-										</button>
-									);
-								})}
-							</div>
-							<div className="mt-2 text-xs text-base-content/45">
-								A-K to play. Spacebar holds sustain.
-							</div>
+							{scopeOpen && (
+								<div className="space-y-2">
+									<div className="relative overflow-hidden rounded-lg border border-success/25 bg-[#08110f]">
+										<div className="absolute left-2 top-1 text-[8px] font-mono text-success/60">
+											CH1
+										</div>
+										<canvas
+											ref={oscilloscopeCanvasRef}
+											width={280}
+											height={100}
+											className="h-[100px] w-full"
+											style={{ imageRendering: "pixelated" }}
+										/>
+									</div>
+									<div className="flex justify-center gap-2">
+										<ControlKnob
+											value={scopeCycles}
+											onChange={setScopeCycles}
+											min={0.5}
+											max={8}
+											size={36}
+											color="#4ade80"
+											label="Cyc"
+											valueFormatter={(v) => v.toFixed(1)}
+										/>
+										<ControlKnob
+											value={scopeVerticalZoom}
+											onChange={setScopeVerticalZoom}
+											min={0.5}
+											max={4}
+											size={36}
+											color="#67e8f9"
+											label="Zoom"
+											valueFormatter={(v) => v.toFixed(1)}
+										/>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				</aside>

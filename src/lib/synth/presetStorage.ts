@@ -1,7 +1,55 @@
 import type { StepEnvData } from "@/components/pdAlgorithms";
+import {
+	DEFAULT_DCA_ENV,
+	DEFAULT_DCO_ENV,
+	DEFAULT_DCW_ENV,
+} from "@/components/pdAlgorithms";
 
 const STORAGE_PREFIX = "cz101-preset-";
 const CURRENT_STATE_KEY = "cz101-current-state";
+
+export const DEFAULT_PRESET: SynthPresetData = {
+	warpAAmount: 0,
+	warpBAmount: 0,
+	warpAAlgo: "bend",
+	warpBAlgo: "bend",
+	algo2A: null,
+	algo2B: null,
+	algoBlendA: 0,
+	algoBlendB: 0,
+	intPmAmount: 0,
+	intPmRatio: 2,
+	pmPre: true,
+	windowType: "off",
+	volume: 0.5,
+	line1Level: 1,
+	line2Level: 1,
+	line1Octave: 0,
+	line2Octave: 0,
+	line1Detune: 0,
+	line2Detune: 0,
+	line1DcoDepth: 0,
+	line2DcoDepth: 0,
+	line1DcwComp: 0,
+	line2DcwComp: 0,
+	line1DcoEnv: DEFAULT_DCO_ENV,
+	line1DcwEnv: DEFAULT_DCW_ENV,
+	line1DcaEnv: DEFAULT_DCA_ENV,
+	line2DcoEnv: DEFAULT_DCO_ENV,
+	line2DcwEnv: DEFAULT_DCW_ENV,
+	line2DcaEnv: DEFAULT_DCA_ENV,
+	polyMode: "poly8",
+	legato: false,
+	velocityTarget: "amp",
+	chorusRate: 0.8,
+	chorusDepth: 3,
+	chorusMix: 0,
+	delayTime: 0.3,
+	delayFeedback: 0.35,
+	delayMix: 0,
+	reverbSize: 0.5,
+	reverbMix: 0,
+};
 
 export interface SynthPresetData {
 	warpAAmount: number;
@@ -73,6 +121,27 @@ export function listPresets(): string[] {
 
 export function deletePreset(name: string): void {
 	localStorage.removeItem(STORAGE_PREFIX + name);
+}
+
+export function exportPreset(name: string): string | null {
+	const data = loadPreset(name);
+	if (!data) return null;
+	return JSON.stringify(data, null, 2);
+}
+
+export function importPreset(json: string): SynthPresetData | null {
+	try {
+		const parsed = JSON.parse(json);
+		if (
+			typeof parsed.warpAAmount !== "number" ||
+			typeof parsed.volume !== "number"
+		) {
+			return null;
+		}
+		return parsed as SynthPresetData;
+	} catch {
+		return null;
+	}
 }
 
 export function saveCurrentState(data: SynthPresetData): void {
