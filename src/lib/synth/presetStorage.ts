@@ -49,6 +49,15 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	delayMix: 0,
 	reverbSize: 0.5,
 	reverbMix: 0,
+	lineSelect: "L1+L2",
+	line1RingMod: false,
+	line1Noise: false,
+	line2RingMod: false,
+	line2Noise: false,
+	line1DcwKeyFollow: 0,
+	line1DcaKeyFollow: 0,
+	line2DcwKeyFollow: 0,
+	line2DcaKeyFollow: 0,
 };
 
 export interface SynthPresetData {
@@ -92,6 +101,15 @@ export interface SynthPresetData {
 	delayMix: number;
 	reverbSize: number;
 	reverbMix: number;
+	lineSelect: "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
+	line1RingMod: boolean;
+	line1Noise: boolean;
+	line2RingMod: boolean;
+	line2Noise: boolean;
+	line1DcwKeyFollow: number;
+	line1DcaKeyFollow: number;
+	line2DcwKeyFollow: number;
+	line2DcaKeyFollow: number;
 }
 
 export function savePreset(name: string, data: SynthPresetData): void {

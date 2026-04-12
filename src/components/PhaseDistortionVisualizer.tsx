@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
+import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
 import { pdVisualizerWorkletUrl } from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
 	DEFAULT_PRESET,
@@ -89,6 +91,18 @@ export default function PhaseDistortionVisualizer() {
 	const [reverbSize, setReverbSize] = useState(0.5);
 	const [reverbMix, setReverbMix] = useState(0);
 
+	const [lineSelect, setLineSelect] = useState<
+		"L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'"
+	>("L1+L2");
+	const [line1RingMod, setLine1RingMod] = useState(false);
+	const [line1Noise, setLine1Noise] = useState(false);
+	const [line2RingMod, setLine2RingMod] = useState(false);
+	const [line2Noise, setLine2Noise] = useState(false);
+	const [line1DcwKeyFollow, setLine1DcwKeyFollow] = useState(0);
+	const [line1DcaKeyFollow, setLine1DcaKeyFollow] = useState(0);
+	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
+	const [line2DcaKeyFollow, setLine2DcaKeyFollow] = useState(0);
+
 	const [presetName, setPresetName] = useState("");
 	const [presetList, setPresetList] = useState<string[]>([]);
 
@@ -134,6 +148,15 @@ export default function PhaseDistortionVisualizer() {
 			delayMix,
 			reverbSize,
 			reverbMix,
+			lineSelect,
+			line1RingMod,
+			line1Noise,
+			line2RingMod,
+			line2Noise,
+			line1DcwKeyFollow,
+			line1DcaKeyFollow,
+			line2DcwKeyFollow,
+			line2DcaKeyFollow,
 		}),
 		[
 			warpAAmount,
@@ -176,6 +199,15 @@ export default function PhaseDistortionVisualizer() {
 			delayMix,
 			reverbSize,
 			reverbMix,
+			lineSelect,
+			line1RingMod,
+			line1Noise,
+			line2RingMod,
+			line2Noise,
+			line1DcwKeyFollow,
+			line1DcaKeyFollow,
+			line2DcwKeyFollow,
+			line2DcaKeyFollow,
 		],
 	);
 
@@ -220,6 +252,15 @@ export default function PhaseDistortionVisualizer() {
 		setDelayMix(data.delayMix);
 		setReverbSize(data.reverbSize);
 		setReverbMix(data.reverbMix);
+		setLineSelect(data.lineSelect);
+		setLine1RingMod(data.line1RingMod);
+		setLine1Noise(data.line1Noise);
+		setLine2RingMod(data.line2RingMod);
+		setLine2Noise(data.line2Noise);
+		setLine1DcwKeyFollow(data.line1DcwKeyFollow);
+		setLine1DcaKeyFollow(data.line1DcaKeyFollow);
+		setLine2DcwKeyFollow(data.line2DcwKeyFollow);
+		setLine2DcaKeyFollow(data.line2DcaKeyFollow);
 	}, []);
 
 	const resetToDefaults = useCallback(() => {
@@ -1136,6 +1177,27 @@ export default function PhaseDistortionVisualizer() {
 								>
 									Reset
 								</button>
+								<label className="btn btn-xs btn-outline">
+									Import SysEx
+									<input
+										type="file"
+										accept=".syx"
+										className="hidden"
+										onChange={async (e) => {
+											const file = e.target.files?.[0];
+											if (!file) return;
+											const buffer = await file.arrayBuffer();
+											const data = new Uint8Array(buffer);
+											const decoded = decodeCzPatch(data);
+											if (decoded) {
+												const preset =
+													convertDecodedPatchToSynthPreset(decoded);
+												applyPreset(preset);
+											}
+											e.target.value = "";
+										}}
+									/>
+								</label>
 							</div>
 							<div className="space-y-2">
 								<select
