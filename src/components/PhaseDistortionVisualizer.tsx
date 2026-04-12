@@ -9,6 +9,7 @@ import {
 	saveCurrentState,
 	savePreset,
 } from "@/lib/synth/presetStorage";
+import ControlKnob from "./ControlKnob";
 import { PerLineWarpBlock } from "./PerLineWarpBlock";
 import {
 	computeWaveform,
@@ -73,7 +74,6 @@ export default function PhaseDistortionVisualizer() {
 	>("rise");
 	const [scopeTriggerLevel, setScopeTriggerLevel] = useState(128);
 	const [scopeOpen, setScopeOpen] = useState(true);
-	const [debugInfo, setDebugInfo] = useState<string>("Initializing...");
 
 	const [chorusRate, setChorusRate] = useState(0.8);
 	const [chorusDepth, setChorusDepth] = useState(3);
@@ -261,6 +261,129 @@ export default function PhaseDistortionVisualizer() {
 			reverbMix: 0,
 		});
 	}, [applyPreset]);
+
+	const copyLineSettings = useCallback(
+		(
+			source: "a" | "b",
+			target: "a" | "b",
+			mode: "algos" | "envelopes" | "full",
+		) => {
+			const sourceLine =
+				source === "a"
+					? {
+							warpAmount: warpAAmount,
+							algo: warpAAlgo,
+							algo2: algo2A,
+							algoBlend: algoBlendA,
+							dcwComp: line1DcwComp,
+							level: line1Level,
+							octave: line1Octave,
+							fineDetune: line1Detune,
+							dcoDepth: line1DcoDepth,
+							dcoEnv: line1DcoEnv,
+							dcwEnv: line1DcwEnv,
+							dcaEnv: line1DcaEnv,
+						}
+					: {
+							warpAmount: warpBAmount,
+							algo: warpBAlgo,
+							algo2: algo2B,
+							algoBlend: algoBlendB,
+							dcwComp: line2DcwComp,
+							level: line2Level,
+							octave: line2Octave,
+							fineDetune: line2Detune,
+							dcoDepth: line2DcoDepth,
+							dcoEnv: line2DcoEnv,
+							dcwEnv: line2DcwEnv,
+							dcaEnv: line2DcaEnv,
+						};
+
+			const applyToTarget = {
+				algos: () => {
+					if (target === "a") {
+						setWarpAAlgo(sourceLine.algo);
+						setAlgo2A(sourceLine.algo2);
+						setAlgoBlendA(sourceLine.algoBlend);
+						setWarpAAmount(sourceLine.warpAmount);
+						return;
+					}
+					setWarpBAlgo(sourceLine.algo);
+					setAlgo2B(sourceLine.algo2);
+					setAlgoBlendB(sourceLine.algoBlend);
+					setWarpBAmount(sourceLine.warpAmount);
+				},
+				envelopes: () => {
+					if (target === "a") {
+						setLine1DcoEnv(sourceLine.dcoEnv);
+						setLine1DcwEnv(sourceLine.dcwEnv);
+						setLine1DcaEnv(sourceLine.dcaEnv);
+						return;
+					}
+					setLine2DcoEnv(sourceLine.dcoEnv);
+					setLine2DcwEnv(sourceLine.dcwEnv);
+					setLine2DcaEnv(sourceLine.dcaEnv);
+				},
+				full: () => {
+					if (target === "a") {
+						setWarpAAmount(sourceLine.warpAmount);
+						setWarpAAlgo(sourceLine.algo);
+						setAlgo2A(sourceLine.algo2);
+						setAlgoBlendA(sourceLine.algoBlend);
+						setLine1DcwComp(sourceLine.dcwComp);
+						setLine1Level(sourceLine.level);
+						setLine1Octave(sourceLine.octave);
+						setLine1Detune(sourceLine.fineDetune);
+						setLine1DcoDepth(sourceLine.dcoDepth);
+						setLine1DcoEnv(sourceLine.dcoEnv);
+						setLine1DcwEnv(sourceLine.dcwEnv);
+						setLine1DcaEnv(sourceLine.dcaEnv);
+						return;
+					}
+					setWarpBAmount(sourceLine.warpAmount);
+					setWarpBAlgo(sourceLine.algo);
+					setAlgo2B(sourceLine.algo2);
+					setAlgoBlendB(sourceLine.algoBlend);
+					setLine2DcwComp(sourceLine.dcwComp);
+					setLine2Level(sourceLine.level);
+					setLine2Octave(sourceLine.octave);
+					setLine2Detune(sourceLine.fineDetune);
+					setLine2DcoDepth(sourceLine.dcoDepth);
+					setLine2DcoEnv(sourceLine.dcoEnv);
+					setLine2DcwEnv(sourceLine.dcwEnv);
+					setLine2DcaEnv(sourceLine.dcaEnv);
+				},
+			};
+
+			applyToTarget[mode]();
+		},
+		[
+			algo2A,
+			algo2B,
+			algoBlendA,
+			algoBlendB,
+			line1DcaEnv,
+			line1DcoDepth,
+			line1DcoEnv,
+			line1DcwComp,
+			line1DcwEnv,
+			line1Detune,
+			line1Level,
+			line1Octave,
+			line2DcaEnv,
+			line2DcoDepth,
+			line2DcoEnv,
+			line2DcwComp,
+			line2DcwEnv,
+			line2Detune,
+			line2Level,
+			line2Octave,
+			warpAAlgo,
+			warpAAmount,
+			warpBAlgo,
+			warpBAmount,
+		],
+	);
 
 	const audioCtxRef = useRef<AudioContext | null>(null);
 	const gainNodeRef = useRef<GainNode | null>(null);
@@ -537,16 +660,13 @@ export default function PhaseDistortionVisualizer() {
 							type: "setParams",
 							params: paramsRef.current,
 						});
-						setDebugInfo("Worklet ready — poly 8-voice");
 					} else if (e.data?.type === "debug") {
-						const d = e.data;
-						setDebugInfo(
-							`voices=${d.activeVoices ?? 0} | freq=${d.smoothFreq?.toFixed(2)}Hz`,
-						);
+						// debug info - uncomment for development
+						// console.log(e.data);
 					}
 				};
 				const gainNode = ctx.createGain();
-				gainNode.gain.value = volume;
+				gainNode.gain.value = 1;
 				const analyserNode = new AnalyserNode(ctx, { fftSize: 2048 });
 				workletNode.connect(gainNode);
 				gainNode.connect(analyserNode);
@@ -592,17 +712,28 @@ export default function PhaseDistortionVisualizer() {
 		let raf = 0;
 		const draw = () => {
 			raf = window.requestAnimationFrame(draw);
+			const drawWidth = Math.max(1, Math.floor(canvas.clientWidth));
+			const drawHeight = Math.max(1, Math.floor(canvas.clientHeight));
+			const dpr = window.devicePixelRatio || 1;
+			const pixelWidth = Math.floor(drawWidth * dpr);
+			const pixelHeight = Math.floor(drawHeight * dpr);
+			if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+				canvas.width = pixelWidth;
+				canvas.height = pixelHeight;
+			}
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
 			const analyser = analyserNodeRef.current;
 			if (!analyser) {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.clearRect(0, 0, drawWidth, drawHeight);
 
 				ctx.fillStyle = "#0a0a0a";
-				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				ctx.fillRect(0, 0, drawWidth, drawHeight);
 
 				ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
 				ctx.beginPath();
-				ctx.moveTo(0, canvas.height / 2);
-				ctx.lineTo(canvas.width, canvas.height / 2);
+				ctx.moveTo(0, drawHeight / 2);
+				ctx.lineTo(drawWidth, drawHeight / 2);
 				ctx.stroke();
 				return;
 			}
@@ -639,28 +770,28 @@ export default function PhaseDistortionVisualizer() {
 			for (let i = 0; i < viewSamples; i++) mean += data[start + i];
 			mean /= viewSamples;
 
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.clearRect(0, 0, drawWidth, drawHeight);
 
 			ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
 			ctx.lineWidth = 1;
 			for (let y = 0.25; y < 1; y += 0.25) {
 				ctx.beginPath();
-				ctx.moveTo(0, canvas.height * y);
-				ctx.lineTo(canvas.width, canvas.height * y);
+				ctx.moveTo(0, drawHeight * y);
+				ctx.lineTo(drawWidth, drawHeight * y);
 				ctx.stroke();
 			}
 			for (let x = 0.1; x < 1; x += 0.1) {
 				ctx.beginPath();
-				ctx.moveTo(canvas.width * x, 0);
-				ctx.lineTo(canvas.width * x, canvas.height);
+				ctx.moveTo(drawWidth * x, 0);
+				ctx.lineTo(drawWidth * x, drawHeight);
 				ctx.stroke();
 			}
 
 			ctx.strokeStyle = "rgba(0, 120, 0, 0.6)";
 			ctx.lineWidth = 1.5;
 			ctx.beginPath();
-			ctx.moveTo(0, canvas.height / 2);
-			ctx.lineTo(canvas.width, canvas.height / 2);
+			ctx.moveTo(0, drawHeight / 2);
+			ctx.lineTo(drawWidth, drawHeight / 2);
 			ctx.stroke();
 
 			ctx.shadowColor = "#00ff00";
@@ -669,12 +800,11 @@ export default function PhaseDistortionVisualizer() {
 			ctx.lineWidth = 2;
 			ctx.beginPath();
 			for (let i = 0; i < viewSamples; i++) {
-				const x = (i / (viewSamples - 1)) * canvas.width;
+				const x = (i / (viewSamples - 1)) * drawWidth;
 				const idx = start + i;
 				const centered = (data[idx] - mean) / 128;
 				const y =
-					canvas.height / 2 -
-					centered * (canvas.height / 2 - 8) * scopeVerticalZoom;
+					drawHeight / 2 - centered * (drawHeight / 2 - 8) * scopeVerticalZoom;
 				if (i === 0) ctx.moveTo(x, y);
 				else ctx.lineTo(x, y);
 			}
@@ -810,524 +940,584 @@ export default function PhaseDistortionVisualizer() {
 	}, [sendNoteOff, sendNoteOn, setSustain]);
 
 	return (
-		<div className="flex flex-col items-center gap-6 p-6">
-			<div className="w-full">
-				<div className="text-xs font-mono bg-base-300 rounded p-2 mb-2">
-					<span className="text-base-content/50">[Worklet Debug] </span>
-					<span className="text-success">{debugInfo}</span>
-				</div>
-				<div className="bg-base-200 border border-base-300 rounded-lg p-3 mb-2">
-					<div className="text-sm font-semibold text-base-content/70 mb-2">
-						Presets
-					</div>
-					<div className="flex flex-wrap items-center gap-2">
-						<select
-							className="select select-bordered select-xs flex-1 min-w-[120px]"
-							value=""
-							onChange={(e) => {
-								const name = e.target.value;
-								if (!name) return;
-								const data = loadPreset(name);
-								if (data) applyPreset(data);
-								e.target.value = "";
-							}}
-						>
-							<option value="">Load preset...</option>
-							{presetList.map((name) => (
-								<option key={name} value={name}>
-									{name}
-								</option>
-							))}
-						</select>
-						<input
-							type="text"
-							className="input input-bordered input-xs w-28"
-							placeholder="Preset name"
-							value={presetName}
-							onChange={(e) => setPresetName(e.target.value)}
-						/>
-						<button
-							type="button"
-							className="btn btn-xs btn-primary"
-							disabled={!presetName.trim()}
-							onClick={() => {
-								savePreset(presetName.trim(), gatherState());
-								setPresetList(listPresets());
-								setPresetName("");
-							}}
-						>
-							Save
-						</button>
-						<button
-							type="button"
-							className="btn btn-xs btn-outline"
-							disabled={!presetName.trim()}
-							onClick={() => {
-								deletePreset(presetName.trim());
-								setPresetList(listPresets());
-								setPresetName("");
-							}}
-						>
-							Delete
-						</button>
-						<button
-							type="button"
-							className="btn btn-xs btn-warning"
-							onClick={resetToDefaults}
-						>
-							Reset
-						</button>
-					</div>
-				</div>
-			</div>
+		<div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,113,206,0.08),transparent_22%),radial-gradient(circle_at_20%_20%,rgba(61,237,255,0.08),transparent_20%),linear-gradient(180deg,#141624_0%,#10111a_100%)] p-4 md:p-6">
+			<div className="mx-auto grid max-w-[1680px] gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+				<aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto">
+					<div className="flex h-full flex-col gap-4 rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(22,23,36,0.97),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+						<div className="border-b border-base-300/50 pb-3 shrink-0">
+							<div className="text-[10px] uppercase tracking-[0.4em] text-primary/80">
+								CZ Lab
+							</div>
+							<h1 className="mt-2 text-2xl font-semibold text-base-content">
+								Phase Distortion Deck
+							</h1>
+							<p className="mt-2 text-sm text-base-content/55">
+								Retro-cyber patch bay for fast CZ sculpting.
+							</p>
+						</div>
 
-			<div className="col-span-2">
-				<button
-					type="button"
-					className="flex items-center gap-2 text-sm font-semibold text-base-content/70 mb-2 hover:text-primary transition-colors"
-					onClick={() => setScopeOpen(!scopeOpen)}
-				>
-					<svg
-						className={`w-4 h-4 transition-transform ${scopeOpen ? "rotate-90" : ""}`}
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-						aria-hidden="true"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M9 5l7 7-7 7"
-						/>
-					</svg>
-					Live Oscilloscope
-				</button>
-				{scopeOpen && (
-					<>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 bg-base-200 border border-base-300 rounded p-3 mb-3">
-							<label className="text-xs flex flex-col gap-1">
-								<span>Time (cycles) {scopeCycles.toFixed(1)}</span>
-								<input
-									type="range"
-									min={0.5}
-									max={8}
-									step={0.1}
-									value={scopeCycles}
-									onChange={(e) => setScopeCycles(Number(e.target.value))}
-									className="range range-xs range-success"
-								/>
-							</label>
-							<label className="text-xs flex flex-col gap-1">
-								<span>Vertical {scopeVerticalZoom.toFixed(2)}x</span>
-								<input
-									type="range"
-									min={0.25}
-									max={4}
-									step={0.05}
-									value={scopeVerticalZoom}
-									onChange={(e) => setScopeVerticalZoom(Number(e.target.value))}
-									className="range range-xs range-warning"
-								/>
-							</label>
-							<label className="text-xs flex flex-col gap-1">
-								<span>Trigger</span>
-								<select
-									className="select select-bordered select-xs"
-									value={scopeTriggerMode}
-									onChange={(e) =>
-										setScopeTriggerMode(
-											e.target.value as "off" | "rise" | "fall",
-										)
-									}
+						<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3 shrink-0">
+							<div className="mb-3 flex items-center justify-between">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Presets
+								</div>
+								<button
+									type="button"
+									className="btn btn-xs btn-warning"
+									onClick={resetToDefaults}
 								>
-									<option value="off">Off</option>
-									<option value="rise">Rising</option>
-									<option value="fall">Falling</option>
+									Reset
+								</button>
+							</div>
+							<div className="space-y-2">
+								<select
+									className="select select-bordered select-sm w-full"
+									value=""
+									onChange={(e) => {
+										const name = e.target.value;
+										if (!name) return;
+										const data = loadPreset(name);
+										if (data) applyPreset(data);
+										e.target.value = "";
+									}}
+								>
+									<option value="">Load preset...</option>
+									{presetList.map((name) => (
+										<option key={name} value={name}>
+											{name}
+										</option>
+									))}
 								</select>
-							</label>
-							<label className="text-xs flex flex-col gap-1">
-								<span>Trig Level {scopeTriggerLevel}</span>
 								<input
-									type="range"
-									min={0}
-									max={255}
-									step={1}
-									value={scopeTriggerLevel}
-									onChange={(e) => setScopeTriggerLevel(Number(e.target.value))}
-									className="range range-xs range-info"
+									type="text"
+									className="input input-bordered input-sm w-full"
+									placeholder="Preset name"
+									value={presetName}
+									onChange={(e) => setPresetName(e.target.value)}
 								/>
-							</label>
+								<div className="grid grid-cols-2 gap-2">
+									<button
+										type="button"
+										className="btn btn-sm btn-primary"
+										disabled={!presetName.trim()}
+										onClick={() => {
+											savePreset(presetName.trim(), gatherState());
+											setPresetList(listPresets());
+											setPresetName("");
+										}}
+									>
+										Save
+									</button>
+									<button
+										type="button"
+										className="btn btn-sm btn-outline"
+										disabled={!presetName.trim()}
+										onClick={() => {
+											deletePreset(presetName.trim());
+											setPresetList(listPresets());
+											setPresetName("");
+										}}
+									>
+										Delete
+									</button>
+								</div>
+								<div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-base-300/60 bg-base-100/40 p-2">
+									{presetList.length === 0 ? (
+										<div className="px-2 py-3 text-xs text-base-content/45">
+											No stored presets yet.
+										</div>
+									) : (
+										presetList.map((name) => (
+											<button
+												key={name}
+												type="button"
+												className="btn btn-ghost btn-sm w-full justify-start rounded-lg"
+												onClick={() => {
+													const data = loadPreset(name);
+													if (data) applyPreset(data);
+												}}
+											>
+												{name}
+											</button>
+										))
+									)}
+								</div>
+							</div>
 						</div>
-						<div className="relative rounded-lg overflow-hidden bg-black border-2 border-gray-700 shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]">
-							<div
-								className="absolute inset-0 pointer-events-none opacity-10"
-								style={{
-									backgroundImage:
-										"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.03) 2px, rgba(0,255,0,0.03) 4px), repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,255,0,0.02) 2px, rgba(0,255,0,0.02) 4px)",
-									backgroundSize: "100% 4px, 4px 100%",
-								}}
-							/>
-							<div className="absolute top-2 left-3 text-[10px] font-mono text-green-500/70">
-								CH1
-							</div>
-							<div className="absolute top-2 right-3 text-[10px] font-mono text-green-500/70">
-								{effectivePitchHz.toFixed(1)}Hz
-							</div>
-							<div className="absolute bottom-2 left-3 text-[10px] font-mono text-green-500/50">
-								{scopeTriggerMode !== "off"
-									? `TRIG: ${scopeTriggerMode.toUpperCase()}`
-									: "AUTO"}
-							</div>
-							<canvas
-								ref={oscilloscopeCanvasRef}
-								width={900}
-								height={200}
-								className="w-full"
-								style={{ imageRendering: "pixelated" }}
-							/>
-							<div className="absolute inset-0 pointer-events-none rounded-lg shadow-[inset_0_0_60px_rgba(0,0,0,0.4)]" />
-						</div>
-					</>
-				)}
-			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full my-6">
-				<PerLineWarpBlock
-					label={PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"}
-					waveform={waveform.out1}
-					color="#2563eb"
-					algo={warpAAlgo}
-					setAlgo={setWarpAAlgo}
-					algo2={algo2A}
-					setAlgo2={setAlgo2A}
-					algoBlend={algoBlendA}
-					setAlgoBlend={setAlgoBlendA}
-					warpAmount={warpAAmount}
-					setWarpAmount={setWarpAAmount}
-					dcwComp={line1DcwComp}
-					setDcwComp={setLine1DcwComp}
-					level={line1Level}
-					setLevel={setLine1Level}
-					octave={line1Octave}
-					setOctave={setLine1Octave}
-					fineDetune={line1Detune}
-					setFineDetune={setLine1Detune}
-					dcoDepth={line1DcoDepth}
-					setDcoDepth={setLine1DcoDepth}
-					dcoEnv={line1DcoEnv}
-					setDcoEnv={setLine1DcoEnv}
-					dcwEnv={line1DcwEnv}
-					setDcwEnv={setLine1DcwEnv}
-					dcaEnv={line1DcaEnv}
-					setDcaEnv={setLine1DcaEnv}
-				/>
-				<PerLineWarpBlock
-					label={PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"}
-					waveform={waveform.out2}
-					color="#ec4899"
-					algo={warpBAlgo}
-					setAlgo={setWarpBAlgo}
-					algo2={algo2B}
-					setAlgo2={setAlgo2B}
-					algoBlend={algoBlendB}
-					setAlgoBlend={setAlgoBlendB}
-					warpAmount={warpBAmount}
-					setWarpAmount={setWarpBAmount}
-					dcwComp={line2DcwComp}
-					setDcwComp={setLine2DcwComp}
-					level={line2Level}
-					setLevel={setLine2Level}
-					octave={line2Octave}
-					setOctave={setLine2Octave}
-					fineDetune={line2Detune}
-					setFineDetune={setLine2Detune}
-					dcoDepth={line2DcoDepth}
-					setDcoDepth={setLine2DcoDepth}
-					dcoEnv={line2DcoEnv}
-					setDcoEnv={setLine2DcoEnv}
-					dcwEnv={line2DcwEnv}
-					setDcwEnv={setLine2DcwEnv}
-					dcaEnv={line2DcaEnv}
-					setDcaEnv={setLine2DcaEnv}
-				/>
-			</div>
+						<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+							<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
+								<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Global Voice
+								</div>
+								<div className="mb-3 flex justify-center">
+									<ControlKnob
+										value={volume}
+										onChange={setVolume}
+										min={0}
+										max={1}
+										size={58}
+										color="#f6f06d"
+										label="Volume"
+										valueFormatter={(value) => `${Math.round(value * 100)}%`}
+									/>
+								</div>
+								<div className="space-y-2">
+									<div className="join w-full">
+										<button
+											type="button"
+											className={`btn btn-sm join-item flex-1 ${polyMode === "poly8" ? "btn-primary" : "btn-outline"}`}
+											onClick={() => setPolyMode("poly8")}
+										>
+											Poly 8
+										</button>
+										<button
+											type="button"
+											className={`btn btn-sm join-item flex-1 ${polyMode === "mono" ? "btn-primary" : "btn-outline"}`}
+											onClick={() => setPolyMode("mono")}
+										>
+											Mono
+										</button>
+									</div>
+									{polyMode === "mono" && (
+										<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2">
+											<input
+												type="checkbox"
+												checked={legato}
+												onChange={(e) => setLegato(e.target.checked)}
+												className="checkbox checkbox-xs"
+											/>
+											<span className="label-text text-xs">Legato</span>
+										</label>
+									)}
+									<div className="flex items-center gap-2">
+										<button
+											type="button"
+											className={`btn btn-sm ${sustainOn ? "btn-primary" : "btn-outline"}`}
+											onClick={() => setSustain(!sustainOn)}
+										>
+											Sustain
+										</button>
+										<span className="text-xs text-base-content/45">
+											Spacebar
+										</span>
+									</div>
+									<div>
+										<div className="mb-1 text-xs text-base-content/55">
+											Velocity
+										</div>
+										<div className="flex flex-wrap gap-1">
+											{(["amp", "dcw", "both"] as VelocityTarget[]).map(
+												(target) => (
+													<button
+														key={target}
+														type="button"
+														className={`btn btn-xs ${velocityTarget === target ? "btn-primary" : "btn-outline"}`}
+														onClick={() => setVelocityTarget(target)}
+													>
+														{target === "amp"
+															? "Amplitude"
+															: target === "dcw"
+																? "DCW"
+																: "Both"}
+													</button>
+												),
+											)}
+										</div>
+									</div>
+									<div>
+										<div className="mb-1 text-xs text-base-content/55">
+											Window
+										</div>
+										<select
+											className="select select-bordered select-sm w-full"
+											value={windowType}
+											onChange={(e) =>
+												setWindowType(
+													e.target.value as "off" | "saw" | "triangle",
+												)
+											}
+										>
+											<option value="off">Off</option>
+											<option value="saw">Saw</option>
+											<option value="triangle">Triangle</option>
+										</select>
+									</div>
+								</div>
+							</div>
 
-			<div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3">
-				<div className="bg-base-200 border border-base-300 rounded-lg p-3">
-					<div className="text-sm font-semibold text-base-content/70 mb-2">
-						Phase Modulation
-					</div>
-					<label className="text-xs flex flex-col gap-1">
-						<span>PM Amount {intPmAmount.toFixed(2)}</span>
-						<input
-							type="range"
-							min={0}
-							max={1}
-							step={0.01}
-							value={intPmAmount}
-							onChange={(e) => setIntPmAmount(Number(e.target.value))}
-							className="range range-xs range-accent"
-						/>
-					</label>
-					<label className="text-xs flex flex-col gap-1 mt-1">
-						<span>PM Ratio {intPmRatio.toFixed(1)}</span>
-						<input
-							type="range"
-							min={0.5}
-							max={16}
-							step={0.5}
-							value={intPmRatio}
-							onChange={(e) => setIntPmRatio(Number(e.target.value))}
-							className="range range-xs range-accent"
-						/>
-					</label>
-					<div className="flex items-center gap-2 mt-2">
-						<input
-							type="checkbox"
-							checked={pmPre}
-							onChange={(e) => setPmPre(e.target.checked)}
-							className="checkbox checkbox-xs"
-							id="pm-pre"
-						/>
-						<label htmlFor="pm-pre" className="text-xs">
-							Pre-warp PM
-						</label>
-					</div>
-				</div>
-
-				<div className="bg-base-200 border border-base-300 rounded-lg p-3">
-					<div className="text-sm font-semibold text-base-content/70 mb-2">
-						Polyphony
-					</div>
-					<div className="flex gap-2 mb-2">
-						<button
-							type="button"
-							className={`btn btn-xs ${polyMode === "poly8" ? "btn-primary" : "btn-outline"}`}
-							onClick={() => setPolyMode("poly8")}
-						>
-							Poly 8
-						</button>
-						<button
-							type="button"
-							className={`btn btn-xs ${polyMode === "mono" ? "btn-primary" : "btn-outline"}`}
-							onClick={() => setPolyMode("mono")}
-						>
-							Mono
-						</button>
-						{polyMode === "mono" && (
-							<div className="flex items-center gap-1 ml-2">
-								<input
-									type="checkbox"
-									checked={legato}
-									onChange={(e) => setLegato(e.target.checked)}
-									className="checkbox checkbox-xs"
-									id="legato"
-								/>
-								<label htmlFor="legato" className="text-xs">
-									Legato
+							<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
+								<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Phase Mod
+								</div>
+								<div className="flex justify-center gap-4">
+									<ControlKnob
+										value={intPmAmount}
+										onChange={setIntPmAmount}
+										min={0}
+										max={1}
+										size={52}
+										color="#fda4af"
+										label="Amount"
+										valueFormatter={(value) => value.toFixed(2)}
+									/>
+									<ControlKnob
+										value={intPmRatio}
+										onChange={setIntPmRatio}
+										min={0.5}
+										max={16}
+										size={52}
+										color="#fdba74"
+										label="Ratio"
+										valueFormatter={(value) => value.toFixed(1)}
+									/>
+								</div>
+								<label className="label mt-3 cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2">
+									<input
+										type="checkbox"
+										checked={pmPre}
+										onChange={(e) => setPmPre(e.target.checked)}
+										className="checkbox checkbox-xs"
+									/>
+									<span className="label-text text-xs">Pre-warp PM</span>
 								</label>
 							</div>
-						)}
-					</div>
-					<div className="flex items-center gap-2 mb-2">
-						<button
-							type="button"
-							className={`btn btn-xs ${sustainOn ? "btn-primary" : "btn-outline"}`}
-							onClick={() => setSustain(!sustainOn)}
-						>
-							Sustain
-						</button>
-						<span className="text-xs text-base-content/50">or Spacebar</span>
-					</div>
-					<div className="mb-2">
-						<div className="text-xs text-base-content/60 mb-1">Velocity</div>
-						<div className="flex gap-1">
-							{(["amp", "dcw", "both"] as VelocityTarget[]).map((t) => (
-								<button
-									key={t}
-									type="button"
-									className={`btn btn-xs ${velocityTarget === t ? "btn-primary" : "btn-outline"}`}
-									onClick={() => setVelocityTarget(t)}
-								>
-									{t === "amp" ? "Amplitude" : t === "dcw" ? "DCW" : "Both"}
-								</button>
-							))}
+						</div>
+
+						<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
+							<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								FX Rack
+							</div>
+							<div className="grid grid-cols-3 gap-3">
+								<div className="space-y-2">
+									<div className="text-xs font-medium text-base-content/70">
+										Chorus
+									</div>
+									<div className="flex justify-center gap-2">
+										<ControlKnob
+											value={chorusRate}
+											onChange={setChorusRate}
+											min={0.1}
+											max={5}
+											size={44}
+											color="#60a5fa"
+											label="Rate"
+											valueFormatter={(value) => value.toFixed(1)}
+										/>
+										<ControlKnob
+											value={chorusMix}
+											onChange={setChorusMix}
+											min={0}
+											max={1}
+											size={44}
+											color="#f472b6"
+											label="Mix"
+											valueFormatter={(value) => `${Math.round(value * 100)}%`}
+										/>
+									</div>
+								</div>
+								<div className="space-y-2">
+									<div className="text-xs font-medium text-base-content/70">
+										Delay
+									</div>
+									<div className="flex justify-center gap-2">
+										<ControlKnob
+											value={delayTime}
+											onChange={setDelayTime}
+											min={0.01}
+											max={1}
+											size={44}
+											color="#c084fc"
+											label="Time"
+											valueFormatter={(value) =>
+												`${Math.round(value * 1000)}ms`
+											}
+										/>
+										<ControlKnob
+											value={delayMix}
+											onChange={setDelayMix}
+											min={0}
+											max={1}
+											size={44}
+											color="#a78bfa"
+											label="Mix"
+											valueFormatter={(value) => `${Math.round(value * 100)}%`}
+										/>
+									</div>
+								</div>
+								<div className="space-y-2">
+									<div className="text-xs font-medium text-base-content/70">
+										Reverb
+									</div>
+									<div className="flex justify-center gap-2">
+										<ControlKnob
+											value={reverbSize}
+											onChange={setReverbSize}
+											min={0}
+											max={1}
+											size={44}
+											color="#fdba74"
+											label="Size"
+											valueFormatter={(value) => `${Math.round(value * 100)}%`}
+										/>
+										<ControlKnob
+											value={reverbMix}
+											onChange={setReverbMix}
+											min={0}
+											max={1}
+											size={44}
+											color="#fda4af"
+											label="Mix"
+											valueFormatter={(value) => `${Math.round(value * 100)}%`}
+										/>
+									</div>
+								</div>
+							</div>
+							<div className="mt-3 grid grid-cols-2 gap-2">
+								<ControlKnob
+									value={chorusDepth}
+									onChange={setChorusDepth}
+									min={0}
+									max={20}
+									size={42}
+									color="#38bdf8"
+									label="Chr Dpth"
+									valueFormatter={(value) => `${Math.round(value)}`}
+								/>
+								<ControlKnob
+									value={delayFeedback}
+									onChange={setDelayFeedback}
+									min={0}
+									max={0.9}
+									size={42}
+									color="#e879f9"
+									label="Dly Fdbk"
+									valueFormatter={(value) => `${Math.round(value * 100)}%`}
+								/>
+							</div>
+						</div>
+
+						<div className="mt-auto rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
+							<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								Keyboard
+							</div>
+							<div className="flex flex-wrap gap-2">
+								{KEYBOARD_NOTES.map((note) => {
+									const active = activeNotes.includes(note);
+									return (
+										<button
+											type="button"
+											key={note}
+											onPointerDown={() => sendNoteOn(note)}
+											onPointerUp={() => sendNoteOff(note)}
+											onPointerLeave={() => sendNoteOff(note)}
+											className={`btn btn-sm ${active ? "btn-primary" : "btn-outline"}`}
+										>
+											{noteName(note)}
+										</button>
+									);
+								})}
+							</div>
+							<div className="mt-2 text-xs text-base-content/45">
+								A-K to play. Spacebar holds sustain.
+							</div>
 						</div>
 					</div>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Volume {(volume * 100).toFixed(0)}%</span>
-						<input
-							type="range"
-							min={0}
-							max={1}
-							step={0.01}
-							value={volume}
-							onChange={(e) => setVolume(Number(e.target.value))}
-							className="range range-xs"
-						/>
-					</label>
-				</div>
+				</aside>
 
-				<div className="bg-base-200 border border-base-300 rounded-lg p-3">
-					<div className="text-sm font-semibold text-base-content/70 mb-2">
-						Window
-					</div>
-					<select
-						className="select select-bordered select-xs w-full"
-						value={windowType}
-						onChange={(e) =>
-							setWindowType(e.target.value as "off" | "saw" | "triangle")
-						}
-					>
-						<option value="off">Off</option>
-						<option value="saw">Saw</option>
-						<option value="triangle">Triangle</option>
-					</select>
-				</div>
-			</div>
-
-			<div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3">
-				<div className="bg-base-200 border border-base-300 rounded-lg p-3">
-					<div className="text-sm font-semibold text-base-content/70 mb-2">
-						Chorus
-					</div>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Rate {chorusRate.toFixed(1)} Hz</span>
-						<input
-							type="range"
-							min={0.1}
-							max={5}
-							step={0.1}
-							value={chorusRate}
-							onChange={(e) => setChorusRate(Number(e.target.value))}
-							className="range range-xs range-primary"
-						/>
-					</label>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Depth {chorusDepth.toFixed(0)}</span>
-						<input
-							type="range"
-							min={0}
-							max={20}
-							step={1}
-							value={chorusDepth}
-							onChange={(e) => setChorusDepth(Number(e.target.value))}
-							className="range range-xs range-primary"
-						/>
-					</label>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Mix {(chorusMix * 100).toFixed(0)}%</span>
-						<input
-							type="range"
-							min={0}
-							max={1}
-							step={0.01}
-							value={chorusMix}
-							onChange={(e) => setChorusMix(Number(e.target.value))}
-							className="range range-xs range-primary"
-						/>
-					</label>
-				</div>
-
-				<div className="bg-base-200 border border-base-300 rounded-lg p-3">
-					<div className="text-sm font-semibold text-base-content/70 mb-2">
-						Delay
-					</div>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Time {(delayTime * 1000).toFixed(0)}ms</span>
-						<input
-							type="range"
-							min={0.01}
-							max={1}
-							step={0.01}
-							value={delayTime}
-							onChange={(e) => setDelayTime(Number(e.target.value))}
-							className="range range-xs range-secondary"
-						/>
-					</label>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Feedback {(delayFeedback * 100).toFixed(0)}%</span>
-						<input
-							type="range"
-							min={0}
-							max={0.9}
-							step={0.01}
-							value={delayFeedback}
-							onChange={(e) => setDelayFeedback(Number(e.target.value))}
-							className="range range-xs range-secondary"
-						/>
-					</label>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Mix {(delayMix * 100).toFixed(0)}%</span>
-						<input
-							type="range"
-							min={0}
-							max={1}
-							step={0.01}
-							value={delayMix}
-							onChange={(e) => setDelayMix(Number(e.target.value))}
-							className="range range-xs range-secondary"
-						/>
-					</label>
-				</div>
-
-				<div className="bg-base-200 border border-base-300 rounded-lg p-3">
-					<div className="text-sm font-semibold text-base-content/70 mb-2">
-						Reverb
-					</div>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Size {(reverbSize * 100).toFixed(0)}%</span>
-						<input
-							type="range"
-							min={0}
-							max={1}
-							step={0.01}
-							value={reverbSize}
-							onChange={(e) => setReverbSize(Number(e.target.value))}
-							className="range range-xs range-accent"
-						/>
-					</label>
-					<label className="text-xs flex flex-col gap-1">
-						<span>Mix {(reverbMix * 100).toFixed(0)}%</span>
-						<input
-							type="range"
-							min={0}
-							max={1}
-							step={0.01}
-							value={reverbMix}
-							onChange={(e) => setReverbMix(Number(e.target.value))}
-							className="range range-xs range-accent"
-						/>
-					</label>
-				</div>
-			</div>
-
-			<div className="w-full p-3 rounded-lg bg-base-200 border border-base-300">
-				<div className="text-sm font-semibold text-base-content/70 mb-2">
-					On-Screen Keyboard
-				</div>
-				<div className="flex flex-wrap gap-2">
-					{KEYBOARD_NOTES.map((note) => {
-						const active = activeNotes.includes(note);
-						return (
+				<main className="space-y-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
+					<section className="rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(27,29,43,0.95),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+						<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<div className="text-[10px] uppercase tracking-[0.34em] text-base-content/45">
+									Monitor
+								</div>
+								<div className="text-lg font-semibold text-base-content">
+									Compact Oscilloscope
+								</div>
+							</div>
 							<button
 								type="button"
-								key={note}
-								onPointerDown={() => sendNoteOn(note)}
-								onPointerUp={() => sendNoteOff(note)}
-								onPointerLeave={() => sendNoteOff(note)}
-								className={`btn btn-sm ${active ? "btn-primary" : "btn-outline"}`}
+								className={`btn btn-sm ${scopeOpen ? "btn-primary" : "btn-outline"}`}
+								onClick={() => setScopeOpen(!scopeOpen)}
 							>
-								{noteName(note)}
+								{scopeOpen ? "Hide Scope" : "Show Scope"}
 							</button>
-						);
-					})}
-				</div>
-			</div>
-			<div className="text-xs text-gray-500 mt-2">
-				Press keys A-K or click buttons. Spacebar = sustain. Poly: 8 voices with
-				chorus, delay and reverb FX.
+						</div>
+
+						{scopeOpen && (
+							<div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+								<div className="relative overflow-hidden rounded-[1.4rem] border border-success/25 bg-[#08110f] shadow-[inset_0_0_50px_rgba(0,0,0,0.8),0_20px_40px_rgba(0,0,0,0.22)]">
+									<div className="absolute inset-x-0 top-0 h-px bg-success/30" />
+									<div className="absolute left-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-success/60">
+										CH1 Live
+									</div>
+									<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-success/60">
+										{effectivePitchHz.toFixed(1)} Hz
+									</div>
+									<canvas
+										ref={oscilloscopeCanvasRef}
+										width={900}
+										height={220}
+										className="h-full w-full"
+										style={{ imageRendering: "pixelated" }}
+									/>
+								</div>
+
+								<div className="rounded-[1.4rem] border border-base-300/70 bg-base-300/20 p-3">
+									<div className="mb-3 flex justify-center gap-3">
+										<ControlKnob
+											value={scopeCycles}
+											onChange={setScopeCycles}
+											min={0.5}
+											max={8}
+											size={48}
+											color="#4ade80"
+											label="Cycles"
+											valueFormatter={(value) => value.toFixed(1)}
+										/>
+										<ControlKnob
+											value={scopeVerticalZoom}
+											onChange={setScopeVerticalZoom}
+											min={0.25}
+											max={4}
+											size={48}
+											color="#facc15"
+											label="Zoom"
+											valueFormatter={(value) => `${value.toFixed(1)}x`}
+										/>
+										<ControlKnob
+											value={scopeTriggerLevel}
+											onChange={(value) =>
+												setScopeTriggerLevel(Math.round(value))
+											}
+											min={0}
+											max={255}
+											size={48}
+											color="#67e8f9"
+											label="Trig"
+											valueFormatter={(value) => `${Math.round(value)}`}
+										/>
+									</div>
+									<select
+										className="select select-bordered select-sm w-full"
+										value={scopeTriggerMode}
+										onChange={(e) =>
+											setScopeTriggerMode(
+												e.target.value as "off" | "rise" | "fall",
+											)
+										}
+									>
+										<option value="off">Trigger Off</option>
+										<option value="rise">Rising</option>
+										<option value="fall">Falling</option>
+									</select>
+									<div className="mt-3 grid grid-cols-2 gap-3">
+										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
+											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
+												Mix A/B
+											</div>
+											<canvas
+												ref={combinedCanvasRef}
+												width={220}
+												height={70}
+												className="h-[70px] w-full rounded-lg"
+											/>
+										</div>
+										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
+											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
+												Phase Map
+											</div>
+											<canvas
+												ref={phaseCanvasRef}
+												width={220}
+												height={70}
+												className="h-[70px] w-full rounded-lg"
+											/>
+										</div>
+									</div>
+								</div>
+							</div>
+						)}
+					</section>
+
+					<section className="grid gap-4 2xl:grid-cols-2">
+						<PerLineWarpBlock
+							label={
+								PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
+							}
+							waveform={waveform.out1}
+							color="#3dedff"
+							copyTargetLabel={
+								PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
+							}
+							onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
+							onCopyEnvelopes={() => copyLineSettings("a", "b", "envelopes")}
+							onCopyFull={() => copyLineSettings("a", "b", "full")}
+							algo={warpAAlgo}
+							setAlgo={setWarpAAlgo}
+							algo2={algo2A}
+							setAlgo2={setAlgo2A}
+							algoBlend={algoBlendA}
+							setAlgoBlend={setAlgoBlendA}
+							warpAmount={warpAAmount}
+							setWarpAmount={setWarpAAmount}
+							dcwComp={line1DcwComp}
+							setDcwComp={setLine1DcwComp}
+							level={line1Level}
+							setLevel={setLine1Level}
+							octave={line1Octave}
+							setOctave={setLine1Octave}
+							fineDetune={line1Detune}
+							setFineDetune={setLine1Detune}
+							dcoDepth={line1DcoDepth}
+							setDcoDepth={setLine1DcoDepth}
+							dcoEnv={line1DcoEnv}
+							setDcoEnv={setLine1DcoEnv}
+							dcwEnv={line1DcwEnv}
+							setDcwEnv={setLine1DcwEnv}
+							dcaEnv={line1DcaEnv}
+							setDcaEnv={setLine1DcaEnv}
+						/>
+						<PerLineWarpBlock
+							label={
+								PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
+							}
+							waveform={waveform.out2}
+							color="#ff71ce"
+							copyTargetLabel={
+								PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
+							}
+							onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
+							onCopyEnvelopes={() => copyLineSettings("b", "a", "envelopes")}
+							onCopyFull={() => copyLineSettings("b", "a", "full")}
+							algo={warpBAlgo}
+							setAlgo={setWarpBAlgo}
+							algo2={algo2B}
+							setAlgo2={setAlgo2B}
+							algoBlend={algoBlendB}
+							setAlgoBlend={setAlgoBlendB}
+							warpAmount={warpBAmount}
+							setWarpAmount={setWarpBAmount}
+							dcwComp={line2DcwComp}
+							setDcwComp={setLine2DcwComp}
+							level={line2Level}
+							setLevel={setLine2Level}
+							octave={line2Octave}
+							setOctave={setLine2Octave}
+							fineDetune={line2Detune}
+							setFineDetune={setLine2Detune}
+							dcoDepth={line2DcoDepth}
+							setDcoDepth={setLine2DcoDepth}
+							dcoEnv={line2DcoEnv}
+							setDcoEnv={setLine2DcoEnv}
+							dcwEnv={line2DcwEnv}
+							setDcwEnv={setLine2DcwEnv}
+							dcaEnv={line2DcaEnv}
+							setDcaEnv={setLine2DcaEnv}
+						/>
+					</section>
+				</main>
 			</div>
 		</div>
 	);

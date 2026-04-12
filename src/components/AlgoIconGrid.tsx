@@ -3,7 +3,7 @@ import { PD_ALGOS, type PdAlgo } from "./pdAlgorithms";
 export default function AlgoIconGrid({
 	value,
 	onChange,
-	size = 32,
+	size = 28,
 	disabled = false,
 }: {
 	value: PdAlgo;
@@ -14,7 +14,7 @@ export default function AlgoIconGrid({
 	const iconSize = Math.max(16, size - 12);
 	return (
 		<div
-			className="grid grid-cols-8 gap-2 justify-start items-center"
+			className="grid grid-cols-4 gap-1 justify-start items-center"
 			style={{
 				userSelect: "none",
 				pointerEvents: disabled ? "none" : undefined,
@@ -27,16 +27,16 @@ export default function AlgoIconGrid({
 					title={algo.label}
 					className={`
             border
-            rounded-lg
+            rounded-xl
             flex flex-col items-center justify-center
-            transition-colors
-            bg-base-200
-            hover:bg-base-300
-            ${value === algo.value ? "ring-2 ring-primary border-primary" : "border-base-300"}
+            transition-all
+            bg-base-200/75
+            hover:bg-base-300/90
+            ${value === algo.value ? "border-primary bg-base-300 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_0_24px_rgba(255,113,206,0.2)]" : "border-base-300/70"}
             focus:outline-none
             px-0
             py-0
-            shadow-sm
+            shadow-[0_10px_24px_rgba(0,0,0,0.2)]
           `}
 					style={{ width: size, height: size }}
 					onClick={() => !disabled && onChange(algo.value)}

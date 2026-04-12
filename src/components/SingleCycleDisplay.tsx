@@ -43,12 +43,14 @@ export const SingleCycleDisplay = memo(function SingleCycleDisplay({
 
 	return (
 		<div className="flex flex-col items-center">
-			<span className="text-xs text-base-content/60 mb-1">{label}</span>
+			<span className="mb-1 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+				{label}
+			</span>
 			<canvas
 				ref={canvasRef}
 				width={width}
 				height={height}
-				className="rounded bg-base-200 shadow"
+				className="rounded-xl border border-base-300/70 bg-base-300/30 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
 			/>
 		</div>
 	);

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import ControlKnob from "./ControlKnob";
 import type { StepEnvData } from "./pdAlgorithms";
 import { rateToSeconds } from "./pdAlgorithms";
 
@@ -85,114 +86,6 @@ function drawEnvPreview(
 	}
 }
 
-function RotaryKnob({
-	value,
-	onChange,
-	min = 0,
-	max = 1,
-	label,
-	color,
-	size = 32,
-}: {
-	value: number;
-	onChange: (v: number) => void;
-	min?: number;
-	max?: number;
-	label?: string;
-	color?: string;
-	size?: number;
-}) {
-	const knobRef = useRef<HTMLDivElement>(null);
-	const [dragging, setDragging] = useState(false);
-	const startYRef = useRef(0);
-	const startValueRef = useRef(0);
-
-	const normalizedValue = (value - min) / (max - min);
-	const angle = -135 + normalizedValue * 270;
-
-	const handleMouseDown = (e: React.MouseEvent) => {
-		e.preventDefault();
-		setDragging(true);
-		startYRef.current = e.clientY;
-		startValueRef.current = value;
-	};
-
-	useEffect(() => {
-		if (!dragging) return;
-
-		const handleMouseMove = (e: MouseEvent) => {
-			const deltaY = startYRef.current - e.clientY;
-			const range = max - min;
-			const sensitivity = 200;
-			const newValue = startValueRef.current + (deltaY / sensitivity) * range;
-			onChange(Math.max(min, Math.min(max, newValue)));
-		};
-
-		const handleMouseUp = () => {
-			setDragging(false);
-		};
-
-		window.addEventListener("mousemove", handleMouseMove);
-		window.addEventListener("mouseup", handleMouseUp);
-		return () => {
-			window.removeEventListener("mousemove", handleMouseMove);
-			window.removeEventListener("mouseup", handleMouseUp);
-		};
-	}, [dragging, min, max, onChange]);
-
-	return (
-		<div className="flex flex-col items-center gap-0.5">
-			<div
-				ref={knobRef}
-				role="slider"
-				aria-valuemin={min}
-				aria-valuemax={max}
-				aria-valuenow={value}
-				aria-label={label ?? "knob"}
-				tabIndex={0}
-				className="cursor-ns-resize"
-				onMouseDown={handleMouseDown}
-				style={{ width: size, height: size }}
-			>
-				<svg width={size} height={size} viewBox="0 0 40 40" role="presentation">
-					<circle
-						cx="20"
-						cy="20"
-						r="16"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						className="text-base-content/20"
-					/>
-					<circle
-						cx="20"
-						cy="20"
-						r="16"
-						fill="none"
-						stroke={color ?? "currentColor"}
-						strokeWidth="3"
-						strokeDasharray={`${normalizedValue * 100.53} 100.53`}
-						transform="rotate(-135 20 20)"
-						style={{ transition: dragging ? "none" : "stroke-dasharray 0.15s" }}
-					/>
-					<line
-						x1="20"
-						y1="20"
-						x2={20 + Math.cos((angle * Math.PI) / 180) * 12}
-						y2={20 + Math.sin((angle * Math.PI) / 180) * 12}
-						stroke={color ?? "currentColor"}
-						strokeWidth="2"
-						strokeLinecap="round"
-					/>
-				</svg>
-			</div>
-			{label && (
-				<span className="text-[9px] text-base-content/50">{label}</span>
-			)}
-		</div>
-	);
-}
-
 export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	title,
 	env,
@@ -275,9 +168,9 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	}, [dragStep, updateStep]);
 
 	return (
-		<div className="p-2 rounded-lg bg-base-200 border border-base-300 space-y-2">
+		<div className="rounded-2xl border border-base-300/70 bg-base-200/70 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.2)] space-y-3">
 			<div className="flex items-center justify-between">
-				<span className="text-xs font-semibold text-base-content/70">
+				<span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-base-content/70">
 					{title}
 				</span>
 				<div className="flex items-center gap-2">
@@ -315,39 +208,41 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 			<canvas
 				ref={canvasRef}
 				width={500}
-				height={100}
-				className="w-full rounded cursor-crosshair"
+				height={84}
+				className="w-full rounded-xl cursor-crosshair border border-base-300/60 bg-base-300/30"
 				style={{ imageRendering: "auto" }}
 				onMouseDown={handleCanvasMouseDown}
 			/>
 
-			<div className="grid grid-cols-8 gap-1">
+			<div className="grid grid-cols-2 gap-2 sm:grid-cols-4 2xl:grid-cols-8">
 				{env.steps.slice(0, env.stepCount).map((step, i) => (
 					<div
 						key={STEP_KEYS[i]}
-						className="flex flex-col items-center gap-0.5"
+						className="rounded-xl border border-base-300/60 bg-base-300/20 px-1 py-2"
 					>
-						<span className="text-[9px] text-base-content/50">{i + 1}</span>
-						<RotaryKnob
-							value={step.level}
-							onChange={(v) => updateStep(i, "level", v)}
-							color={color}
-							size={28}
-						/>
-						<span className="text-[9px] text-base-content/40">
-							{Math.round(step.level * 99)}
-						</span>
-						<RotaryKnob
-							value={step.rate}
-							onChange={(v) => updateStep(i, "rate", v)}
-							min={1}
-							max={99}
-							color="#a3a3a3"
-							size={24}
-						/>
-						<span className="text-[9px] text-base-content/40">
-							{step.rate.toFixed(0)}
-						</span>
+						<div className="mb-1 text-center text-[9px] uppercase tracking-[0.2em] text-base-content/45">
+							{i + 1}
+						</div>
+						<div className="flex flex-col items-center justify-center gap-2">
+							<ControlKnob
+								value={step.level}
+								onChange={(v) => updateStep(i, "level", v)}
+								label="Lvl"
+								valueFormatter={(v) => `${Math.round(v * 99)}`}
+								color={color}
+								size={30}
+							/>
+							<ControlKnob
+								value={step.rate}
+								onChange={(v) => updateStep(i, "rate", v)}
+								min={1}
+								max={99}
+								label="Rate"
+								valueFormatter={(v) => `${Math.round(v)}`}
+								color="#a3a3a3"
+								size={30}
+							/>
+						</div>
 					</div>
 				))}
 			</div>
