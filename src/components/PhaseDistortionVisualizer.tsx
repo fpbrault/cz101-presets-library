@@ -40,7 +40,7 @@ export default function PhaseDistortionVisualizer() {
 	const [algoBlendA, setAlgoBlendA] = useState(0);
 	const [algoBlendB, setAlgoBlendB] = useState(0);
 	const [intPmAmount, setIntPmAmount] = useState(0);
-	const [intPmRatio, setIntPmRatio] = useState(2);
+	const [intPmRatio, setIntPmRatio] = useState(1);
 	const [extPmAmount] = useState(0);
 	const [pmPre, setPmPre] = useState(true);
 	const [windowType, setWindowType] = useState<"off" | "saw" | "triangle">(
@@ -1270,7 +1270,7 @@ export default function PhaseDistortionVisualizer() {
 										value={intPmAmount}
 										onChange={setIntPmAmount}
 										min={0}
-										max={1}
+										max={0.3}
 										size={52}
 										color="#fda4af"
 										label="Amount"
@@ -1280,7 +1280,7 @@ export default function PhaseDistortionVisualizer() {
 										value={intPmRatio}
 										onChange={setIntPmRatio}
 										min={0.5}
-										max={16}
+										max={4}
 										size={52}
 										color="#fdba74"
 										label="Ratio"
@@ -1393,8 +1393,8 @@ export default function PhaseDistortionVisualizer() {
 									value={chorusDepth}
 									onChange={setChorusDepth}
 									min={0}
-									max={20}
-									size={42}
+									max={3}
+									size={52}
 									color="#38bdf8"
 									label="Chr Dpth"
 									valueFormatter={(value) => `${Math.round(value)}`}
