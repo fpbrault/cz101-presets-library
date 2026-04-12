@@ -11,12 +11,10 @@
 | Phase 2: Layout Rebalance | ✅ Complete |
 | Phase 3: Oscilloscope Improvements | ✅ Complete |
 | Phase 4: Phase-Line Tabs/Accordion | ✅ Complete |
-| Phase 3: Oscilloscope Improvements | Pending |
-| Phase 4: Phase-Line Tabs/Accordion | ✅ Complete |
-| Phase 5: Voice Fixes | ✅ Done |
-| Phase 6: Parameter Range Cleanup | Pending |
-| Phase 7: Effects Tuning | Pending |
-| Phase 8: Touch Keyboard | Pending |
+| Phase 5: Voice Fixes | ✅ Complete |
+| Phase 6: Parameter Range Cleanup | ✅ Complete |
+| Phase 7: Effects Tuning | ✅ Complete |
+| Phase 8: Touch Keyboard | ✅ Complete (keyboard removed, uses PC keys) |
 
 ## Overview
 
