@@ -28,7 +28,7 @@ import {
 import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
 
 type PolyMode = "poly8" | "mono";
-type VelocityTarget = "amp" | "dcw" | "both";
+type VelocityTarget = "amp" | "dcw" | "both" | "off";
 
 export default function PhaseDistortionVisualizer() {
 	const [warpAAmount, setWarpAAmount] = useState(0);
@@ -884,23 +884,45 @@ export default function PhaseDistortionVisualizer() {
 	}, [waveform]);
 
 	const activeNotesRef = useRef<Set<number>>(new Set());
-	const sendNoteOn = useCallback((note: number, velocity = 100) => {
-		if (activeNotesRef.current.has(note)) return;
-		activeNotesRef.current.add(note);
-		setActiveNotes((prev) => (prev.includes(note) ? prev : [...prev, note]));
-		const freq = noteToFreq(note);
-		workletNodeRef.current?.port.postMessage({
-			type: "noteOn",
-			note,
-			frequency: freq,
-			velocity: velocity / 127,
-		});
-	}, []);
-	const sendNoteOff = useCallback((note: number) => {
-		activeNotesRef.current.delete(note);
-		setActiveNotes((prev) => prev.filter((n) => n !== note));
-		workletNodeRef.current?.port.postMessage({ type: "noteOff", note });
-	}, []);
+	const monoNoteRef = useRef<number | null>(null);
+	const sendNoteOn = useCallback(
+		(note: number, velocity = 100) => {
+			if (activeNotesRef.current.has(note)) return;
+			const isMono = polyMode === "mono";
+			const prevMonoNote = monoNoteRef.current;
+			if (isMono && prevMonoNote != null) {
+				activeNotesRef.current.delete(prevMonoNote);
+				workletNodeRef.current?.port.postMessage({
+					type: "noteOff",
+					note: prevMonoNote,
+				});
+			}
+			activeNotesRef.current.add(note);
+			monoNoteRef.current = note;
+			setActiveNotes((prev) => (prev.includes(note) ? prev : [...prev, note]));
+			const freq = noteToFreq(note);
+			workletNodeRef.current?.port.postMessage({
+				type: "noteOn",
+				note,
+				frequency: freq,
+				velocity: velocityTarget !== "off" ? velocity / 127 : 0,
+			});
+		},
+		[polyMode, velocityTarget],
+	);
+	const sendNoteOff = useCallback(
+		(note: number) => {
+			if (polyMode === "mono" && monoNoteRef.current === note) {
+				monoNoteRef.current = null;
+			}
+			activeNotesRef.current.delete(note);
+			setActiveNotes((prev) => prev.filter((n) => n !== note));
+			if (!sustainRef.current) {
+				workletNodeRef.current?.port.postMessage({ type: "noteOff", note });
+			}
+		},
+		[polyMode],
+	);
 
 	const setSustain = useCallback((on: boolean) => {
 		sustainRef.current = on;
@@ -1198,7 +1220,7 @@ export default function PhaseDistortionVisualizer() {
 											Velocity
 										</div>
 										<div className="flex flex-wrap gap-1">
-											{(["amp", "dcw", "both"] as VelocityTarget[]).map(
+											{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
 												(target) => (
 													<button
 														key={target}
@@ -1207,10 +1229,12 @@ export default function PhaseDistortionVisualizer() {
 														onClick={() => setVelocityTarget(target)}
 													>
 														{target === "amp"
-															? "Amplitude"
+															? "Amp"
 															: target === "dcw"
 																? "DCW"
-																: "Both"}
+																: target === "both"
+																	? "Both"
+																	: "Off"}
 													</button>
 												),
 											)}

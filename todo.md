@@ -13,7 +13,7 @@
 | Phase 4: Phase-Line Tabs/Accordion | ✅ Complete |
 | Phase 3: Oscilloscope Improvements | Pending |
 | Phase 4: Phase-Line Tabs/Accordion | ✅ Complete |
-| Phase 5: Voice Fixes | Pending |
+| Phase 5: Voice Fixes | ✅ Done |
 | Phase 6: Parameter Range Cleanup | Pending |
 | Phase 7: Effects Tuning | Pending |
 | Phase 8: Touch Keyboard | Pending |
