@@ -80,7 +80,6 @@ export default function PhaseDistortionVisualizer() {
 		"off" | "rise" | "fall"
 	>("rise");
 	const [scopeTriggerLevel, setScopeTriggerLevel] = useState(128);
-	const [scopeOpen, setScopeOpen] = useState(true);
 
 	const [chorusRate, setChorusRate] = useState(0.8);
 	const [chorusDepth, setChorusDepth] = useState(3);
@@ -157,6 +156,11 @@ export default function PhaseDistortionVisualizer() {
 			line1DcaKeyFollow,
 			line2DcwKeyFollow,
 			line2DcaKeyFollow,
+			vibratoEnabled: false,
+			vibratoWave: 1,
+			vibratoRate: 30,
+			vibratoDepth: 30,
+			vibratoDelay: 0,
 		}),
 		[
 			warpAAmount,
@@ -1068,7 +1072,7 @@ export default function PhaseDistortionVisualizer() {
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,113,206,0.08),transparent_22%),radial-gradient(circle_at_20%_20%,rgba(61,237,255,0.08),transparent_20%),linear-gradient(180deg,#141624_0%,#10111a_100%)] p-4 md:p-6 w-full">
 			<div className="mx-auto grid w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto">
-					<div className="flex h-full flex-col gap-4 rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(22,23,36,0.97),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+					<div className="flex flex-col gap-4 rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(22,23,36,0.97),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
 						<div className="border-b border-base-300/50 pb-3 shrink-0">
 							<div className="text-[10px] uppercase tracking-[0.4em] text-primary/80">
 								CZ Lab
@@ -1081,20 +1085,13 @@ export default function PhaseDistortionVisualizer() {
 							</p>
 						</div>
 
-						<div className="mt-auto rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
-							<div className="mb-2 flex items-center justify-between gap-2">
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none">
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Scope
 								</div>
-								<button
-									type="button"
-									className={`btn btn-xs ${scopeOpen ? "btn-primary" : "btn-outline"}`}
-									onClick={() => setScopeOpen(!scopeOpen)}
-								>
-									{scopeOpen ? "Hide" : "Show"}
-								</button>
-							</div>
-							{scopeOpen && (
+							</summary>
+							<div className="collapse-content">
 								<div className="space-y-2">
 									<div className="relative overflow-hidden rounded-lg border border-success/25 bg-[#08110f]">
 										<div className="absolute left-2 top-1 text-[8px] font-mono text-success/60">
@@ -1170,18 +1167,21 @@ export default function PhaseDistortionVisualizer() {
 										</div>
 									</div>
 								</div>
-							)}
-						</div>
+							</div>
+						</details>
 
-						<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3 shrink-0">
-							<div className="mb-3 flex items-center justify-between">
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none flex items-center justify-between">
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Presets
 								</div>
 								<button
 									type="button"
 									className="btn btn-xs btn-warning"
-									onClick={resetToDefaults}
+									onClick={(e) => {
+										e.stopPropagation();
+										resetToDefaults();
+									}}
 								>
 									Reset
 								</button>
@@ -1206,128 +1206,132 @@ export default function PhaseDistortionVisualizer() {
 										}}
 									/>
 								</label>
-							</div>
-							<div className="space-y-2">
-								<select
-									className="select select-bordered select-sm w-full"
-									value=""
-									onChange={(e) => {
-										const name = e.target.value;
-										if (!name) return;
-										const data = loadPreset(name);
-										if (data) applyPreset(data);
-										e.target.value = "";
-									}}
-								>
-									<option value="">Load preset...</option>
-									{presetList.map((name) => (
-										<option key={name} value={name}>
-											{name}
-										</option>
-									))}
-								</select>
-								<input
-									type="text"
-									className="input input-bordered input-sm w-full"
-									placeholder="Preset name"
-									value={presetName}
-									onChange={(e) => setPresetName(e.target.value)}
-								/>
-								<div className="grid grid-cols-2 gap-2">
-									<button
-										type="button"
-										className="btn btn-sm btn-primary"
-										disabled={!presetName.trim()}
-										onClick={() => {
-											savePreset(presetName.trim(), gatherState());
-											setPresetList(listPresets());
-											setPresetName("");
+							</summary>
+							<div className="collapse-content">
+								<div className="space-y-2">
+									<select
+										className="select select-bordered select-sm w-full"
+										value=""
+										onChange={(e) => {
+											const name = e.target.value;
+											if (!name) return;
+											const data = loadPreset(name);
+											if (data) applyPreset(data);
+											e.target.value = "";
 										}}
 									>
-										Save
-									</button>
-									<button
-										type="button"
-										className="btn btn-sm btn-outline"
-										disabled={!presetName.trim()}
-										onClick={() => {
-											deletePreset(presetName.trim());
-											setPresetList(listPresets());
-											setPresetName("");
-										}}
-									>
-										Delete
-									</button>
-								</div>
-								<div className="flex gap-2">
-									<button
-										type="button"
-										className="btn btn-xs btn-outline flex-1"
-										onClick={() => {
-											const exported = exportPreset(presetList[0] ?? "");
-											if (exported) {
-												const blob = new Blob([exported], {
-													type: "application/json",
-												});
-												const url = URL.createObjectURL(blob);
-												const a = document.createElement("a");
-												a.href = url;
-												a.download = `cz101-preset-${presetList[0] || "export"}.json`;
-												a.click();
-												URL.revokeObjectURL(url);
-											}
-										}}
-										disabled={presetList.length === 0}
-									>
-										Export
-									</button>
-									<label className="btn btn-xs btn-outline flex-1">
-										Import
-										<input
-											type="file"
-											accept=".json"
-											className="hidden"
-											onChange={async (e) => {
-												const file = e.target.files?.[0];
-												if (!file) return;
-												const text = await file.text();
-												const imported = importPreset(text);
-												if (imported) {
-													applyPreset(imported);
+										<option value="">Load preset...</option>
+										{presetList.map((name) => (
+											<option key={name} value={name}>
+												{name}
+											</option>
+										))}
+									</select>
+									<input
+										type="text"
+										className="input input-bordered input-sm w-full"
+										placeholder="Preset name"
+										value={presetName}
+										onChange={(e) => setPresetName(e.target.value)}
+									/>
+									<div className="grid grid-cols-2 gap-2">
+										<button
+											type="button"
+											className="btn btn-sm btn-primary"
+											disabled={!presetName.trim()}
+											onClick={() => {
+												savePreset(presetName.trim(), gatherState());
+												setPresetList(listPresets());
+												setPresetName("");
+											}}
+										>
+											Save
+										</button>
+										<button
+											type="button"
+											className="btn btn-sm btn-outline"
+											disabled={!presetName.trim()}
+											onClick={() => {
+												deletePreset(presetName.trim());
+												setPresetList(listPresets());
+												setPresetName("");
+											}}
+										>
+											Delete
+										</button>
+									</div>
+									<div className="flex gap-2">
+										<button
+											type="button"
+											className="btn btn-xs btn-outline flex-1"
+											onClick={() => {
+												const exported = exportPreset(presetList[0] ?? "");
+												if (exported) {
+													const blob = new Blob([exported], {
+														type: "application/json",
+													});
+													const url = URL.createObjectURL(blob);
+													const a = document.createElement("a");
+													a.href = url;
+													a.download = `cz101-preset-${presetList[0] || "export"}.json`;
+													a.click();
+													URL.revokeObjectURL(url);
 												}
 											}}
-										/>
-									</label>
-								</div>
-								<div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-base-300/60 bg-base-100/40 p-2">
-									{presetList.length === 0 ? (
-										<div className="px-2 py-3 text-xs text-base-content/45">
-											No stored presets yet.
-										</div>
-									) : (
-										presetList.map((name) => (
-											<button
-												key={name}
-												type="button"
-												className="btn btn-ghost btn-sm w-full justify-start rounded-lg"
-												onClick={() => {
-													const data = loadPreset(name);
-													if (data) applyPreset(data);
+											disabled={presetList.length === 0}
+										>
+											Export
+										</button>
+										<label className="btn btn-xs btn-outline flex-1">
+											Import
+											<input
+												type="file"
+												accept=".json"
+												className="hidden"
+												onChange={async (e) => {
+													const file = e.target.files?.[0];
+													if (!file) return;
+													const text = await file.text();
+													const imported = importPreset(text);
+													if (imported) {
+														applyPreset(imported);
+													}
 												}}
-											>
-												{name}
-											</button>
-										))
-									)}
+											/>
+										</label>
+									</div>
+									<div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-base-300/60 bg-base-100/40 p-2">
+										{presetList.length === 0 ? (
+											<div className="px-2 py-3 text-xs text-base-content/45">
+												No stored presets yet.
+											</div>
+										) : (
+											presetList.map((name) => (
+												<button
+													key={name}
+													type="button"
+													className="btn btn-ghost btn-sm w-full justify-start rounded-lg"
+													onClick={() => {
+														const data = loadPreset(name);
+														if (data) applyPreset(data);
+													}}
+												>
+													{name}
+												</button>
+											))
+										)}
+									</div>
 								</div>
 							</div>
-						</div>
+						</details>
 
-						<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-							<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
-								<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Global Voice
 								</div>
+							</summary>
+							<div className="collapse-content">
 								<div className="mb-3 flex justify-center">
 									<ControlKnob
 										value={volume}
@@ -1425,11 +1429,15 @@ export default function PhaseDistortionVisualizer() {
 									</div>
 								</div>
 							</div>
+						</details>
 
-							<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
-								<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Phase Mod
 								</div>
+							</summary>
+							<div className="collapse-content">
 								<div className="flex justify-center gap-4">
 									<ControlKnob
 										value={intPmAmount}
@@ -1462,9 +1470,7 @@ export default function PhaseDistortionVisualizer() {
 									<span className="label-text text-xs">Pre-warp PM</span>
 								</label>
 							</div>
-						</div>
-
-						<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3"></div>
+						</details>
 					</div>
 				</aside>
 
