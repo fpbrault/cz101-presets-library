@@ -102,6 +102,33 @@ export default function PhaseDistortionVisualizer() {
 	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
 	const [line2DcaKeyFollow, setLine2DcaKeyFollow] = useState(0);
 
+	const [vibratoEnabled, setVibratoEnabled] = useState(false);
+	const [vibratoWave, setVibratoWave] = useState(1);
+	const [vibratoRate, setVibratoRate] = useState(30);
+	const [vibratoDepth, setVibratoDepth] = useState(30);
+	const [vibratoDelay, setVibratoDelay] = useState(0);
+
+	const [portamentoEnabled, setPortamentoEnabled] = useState(false);
+	const [portamentoMode, setPortamentoMode] = useState<"rate" | "time">("rate");
+	const [portamentoRate, setPortamentoRate] = useState(50);
+	const [portamentoTime, setPortamentoTime] = useState(0.5);
+
+	const [lfoEnabled, setLfoEnabled] = useState(false);
+	const [lfoWaveform, setLfoWaveform] = useState<
+		"sine" | "triangle" | "square" | "saw"
+	>("sine");
+	const [lfoRate, setLfoRate] = useState(5);
+	const [lfoDepth, setLfoDepth] = useState(0);
+	const [lfoTarget, setLfoTarget] = useState<
+		"pitch" | "dcw" | "dca" | "filter"
+	>("pitch");
+
+	const [filterEnabled, setFilterEnabled] = useState(false);
+	const [filterType, setFilterType] = useState<"lp" | "hp" | "bp">("lp");
+	const [filterCutoff, setFilterCutoff] = useState(5000);
+	const [filterResonance, setFilterResonance] = useState(0);
+	const [filterEnvAmount, setFilterEnvAmount] = useState(0);
+
 	const [presetName, setPresetName] = useState("");
 	const [presetList, setPresetList] = useState<string[]>([]);
 
@@ -156,11 +183,25 @@ export default function PhaseDistortionVisualizer() {
 			line1DcaKeyFollow,
 			line2DcwKeyFollow,
 			line2DcaKeyFollow,
-			vibratoEnabled: false,
-			vibratoWave: 1,
-			vibratoRate: 30,
-			vibratoDepth: 30,
-			vibratoDelay: 0,
+			vibratoEnabled,
+			vibratoWave,
+			vibratoRate,
+			vibratoDepth,
+			vibratoDelay,
+			portamentoEnabled,
+			portamentoMode,
+			portamentoRate,
+			portamentoTime,
+			lfoEnabled,
+			lfoWaveform,
+			lfoRate,
+			lfoDepth,
+			lfoTarget,
+			filterEnabled,
+			filterType,
+			filterCutoff,
+			filterResonance,
+			filterEnvAmount,
 		}),
 		[
 			warpAAmount,
@@ -212,6 +253,25 @@ export default function PhaseDistortionVisualizer() {
 			line1DcaKeyFollow,
 			line2DcwKeyFollow,
 			line2DcaKeyFollow,
+			vibratoEnabled,
+			vibratoWave,
+			vibratoRate,
+			vibratoDepth,
+			vibratoDelay,
+			portamentoEnabled,
+			portamentoMode,
+			portamentoRate,
+			portamentoTime,
+			lfoEnabled,
+			lfoWaveform,
+			lfoRate,
+			lfoDepth,
+			lfoTarget,
+			filterEnabled,
+			filterType,
+			filterCutoff,
+			filterResonance,
+			filterEnvAmount,
 		],
 	);
 
@@ -265,6 +325,25 @@ export default function PhaseDistortionVisualizer() {
 		setLine1DcaKeyFollow(data.line1DcaKeyFollow);
 		setLine2DcwKeyFollow(data.line2DcwKeyFollow);
 		setLine2DcaKeyFollow(data.line2DcaKeyFollow);
+		setVibratoEnabled(data.vibratoEnabled);
+		setVibratoWave(data.vibratoWave as 1 | 2 | 3 | 4);
+		setVibratoRate(data.vibratoRate);
+		setVibratoDepth(data.vibratoDepth);
+		setVibratoDelay(data.vibratoDelay);
+		setPortamentoEnabled(data.portamentoEnabled);
+		setPortamentoMode(data.portamentoMode as "rate" | "time");
+		setPortamentoRate(data.portamentoRate);
+		setPortamentoTime(data.portamentoTime);
+		setLfoEnabled(data.lfoEnabled);
+		setLfoWaveform(data.lfoWaveform as "sine" | "triangle" | "square" | "saw");
+		setLfoRate(data.lfoRate);
+		setLfoDepth(data.lfoDepth);
+		setLfoTarget(data.lfoTarget as "pitch" | "dcw" | "dca" | "filter");
+		setFilterEnabled(data.filterEnabled);
+		setFilterType(data.filterType as "lp" | "hp" | "bp");
+		setFilterCutoff(data.filterCutoff);
+		setFilterResonance(data.filterResonance);
+		setFilterEnvAmount(data.filterEnvAmount);
 	}, []);
 
 	const resetToDefaults = useCallback(() => {
@@ -554,6 +633,7 @@ export default function PhaseDistortionVisualizer() {
 				dcoEnv: line1DcoEnv,
 				dcwEnv: line1DcwEnv,
 				dcaEnv: line1DcaEnv,
+				keyFollow: line1DcwKeyFollow,
 			},
 			line2: {
 				waveform: algoB.waveform,
@@ -572,6 +652,7 @@ export default function PhaseDistortionVisualizer() {
 				dcoEnv: line2DcoEnv,
 				dcwEnv: line2DcwEnv,
 				dcaEnv: line2DcaEnv,
+				keyFollow: line2DcwKeyFollow,
 			},
 			intPmAmount,
 			intPmRatio,
@@ -585,6 +666,33 @@ export default function PhaseDistortionVisualizer() {
 			chorus: { rate: chorusRate, depth: chorusDepth / 1000, mix: chorusMix },
 			delay: { time: delayTime, feedback: delayFeedback, mix: delayMix },
 			reverb: { size: reverbSize, mix: reverbMix },
+			vibrato: {
+				enabled: vibratoEnabled,
+				waveform: vibratoWave,
+				rate: vibratoRate,
+				depth: vibratoDepth,
+				delay: vibratoDelay,
+			},
+			portamento: {
+				enabled: portamentoEnabled,
+				mode: portamentoMode,
+				rate: portamentoRate,
+				time: portamentoTime,
+			},
+			lfo: {
+				enabled: lfoEnabled,
+				waveform: lfoWaveform,
+				rate: lfoRate,
+				depth: lfoDepth,
+				target: lfoTarget,
+			},
+			filter: {
+				enabled: filterEnabled,
+				type: filterType,
+				cutoff: filterCutoff,
+				resonance: filterResonance,
+				envAmount: filterEnvAmount,
+			},
 		};
 		paramsRef.current = params;
 		if (!workletNodeRef.current) return;
@@ -637,6 +745,27 @@ export default function PhaseDistortionVisualizer() {
 		line1Noise,
 		line2RingMod,
 		line2Noise,
+		line1DcwKeyFollow,
+		line2DcwKeyFollow,
+		vibratoEnabled,
+		vibratoWave,
+		vibratoRate,
+		vibratoDepth,
+		vibratoDelay,
+		portamentoEnabled,
+		portamentoMode,
+		portamentoRate,
+		portamentoTime,
+		lfoEnabled,
+		lfoWaveform,
+		lfoRate,
+		lfoDepth,
+		lfoTarget,
+		filterEnabled,
+		filterType,
+		filterCutoff,
+		filterResonance,
+		filterEnvAmount,
 	]);
 
 	useEffect(() => {
@@ -1471,6 +1600,262 @@ export default function PhaseDistortionVisualizer() {
 								</label>
 							</div>
 						</details>
+
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Vibrato
+								</div>
+							</summary>
+							<div className="collapse-content">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+									<input
+										type="checkbox"
+										checked={vibratoEnabled}
+										onChange={(e) => setVibratoEnabled(e.target.checked)}
+										className="checkbox checkbox-xs"
+									/>
+									<span className="label-text text-xs">Enable Vibrato</span>
+								</label>
+								<div className="flex justify-center gap-2">
+									{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
+										<button
+											key={w}
+											type="button"
+											className={`btn btn-xs ${vibratoWave === i + 1 ? "btn-primary" : "btn-outline"}`}
+											onClick={() => setVibratoWave(i + 1)}
+										>
+											{w}
+										</button>
+									))}
+								</div>
+								<div className="flex justify-center gap-2 mt-2">
+									<ControlKnob
+										value={vibratoRate}
+										onChange={setVibratoRate}
+										min={0}
+										max={99}
+										size={44}
+										color="#fda4af"
+										label="Rate"
+										valueFormatter={(v) => `${Math.round(v)}`}
+									/>
+									<ControlKnob
+										value={vibratoDepth}
+										onChange={setVibratoDepth}
+										min={0}
+										max={99}
+										size={44}
+										color="#fda4af"
+										label="Depth"
+										valueFormatter={(v) => `${Math.round(v)}`}
+									/>
+									<ControlKnob
+										value={vibratoDelay}
+										onChange={setVibratoDelay}
+										min={0}
+										max={99}
+										size={44}
+										color="#fda4af"
+										label="Delay"
+										valueFormatter={(v) => `${Math.round(v)}`}
+									/>
+								</div>
+							</div>
+						</details>
+
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Portamento
+								</div>
+							</summary>
+							<div className="collapse-content">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+									<input
+										type="checkbox"
+										checked={portamentoEnabled}
+										onChange={(e) => setPortamentoEnabled(e.target.checked)}
+										className="checkbox checkbox-xs"
+									/>
+									<span className="label-text text-xs">Enable Portamento</span>
+								</label>
+								<div className="join w-full mb-2">
+									<button
+										type="button"
+										className={`btn btn-sm join-item flex-1 ${portamentoMode === "rate" ? "btn-primary" : "btn-outline"}`}
+										onClick={() => setPortamentoMode("rate")}
+									>
+										Rate
+									</button>
+									<button
+										type="button"
+										className={`btn btn-sm join-item flex-1 ${portamentoMode === "time" ? "btn-primary" : "btn-outline"}`}
+										onClick={() => setPortamentoMode("time")}
+									>
+										Time
+									</button>
+								</div>
+								<div className="flex justify-center gap-2">
+									{portamentoMode === "rate" ? (
+										<ControlKnob
+											value={portamentoRate}
+											onChange={setPortamentoRate}
+											min={0}
+											max={99}
+											size={52}
+											color="#67e8f9"
+											label="Rate"
+											valueFormatter={(v) => `${Math.round(v)}`}
+										/>
+									) : (
+										<ControlKnob
+											value={portamentoTime}
+											onChange={setPortamentoTime}
+											min={0}
+											max={2}
+											size={52}
+											color="#67e8f9"
+											label="Time"
+											valueFormatter={(v) => `${v.toFixed(2)}s`}
+										/>
+									)}
+								</div>
+							</div>
+						</details>
+
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									LFO
+								</div>
+							</summary>
+							<div className="collapse-content">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+									<input
+										type="checkbox"
+										checked={lfoEnabled}
+										onChange={(e) => setLfoEnabled(e.target.checked)}
+										className="checkbox checkbox-xs"
+									/>
+									<span className="label-text text-xs">Enable LFO</span>
+								</label>
+								<div className="flex flex-wrap gap-1 mb-2">
+									{(["sine", "triangle", "square", "saw"] as const).map((w) => (
+										<button
+											key={w}
+											type="button"
+											className={`btn btn-xs ${lfoWaveform === w ? "btn-primary" : "btn-outline"}`}
+											onClick={() => setLfoWaveform(w)}
+										>
+											{w}
+										</button>
+									))}
+								</div>
+								<div className="flex justify-center gap-2">
+									<ControlKnob
+										value={lfoRate}
+										onChange={setLfoRate}
+										min={0}
+										max={20}
+										size={44}
+										color="#a78bfa"
+										label="Rate"
+										valueFormatter={(v) => `${v.toFixed(1)}Hz`}
+									/>
+									<ControlKnob
+										value={lfoDepth}
+										onChange={setLfoDepth}
+										min={0}
+										max={1}
+										size={44}
+										color="#a78bfa"
+										label="Depth"
+										valueFormatter={(v) => `${Math.round(v * 100)}%`}
+									/>
+								</div>
+								<div className="mt-2">
+									<div className="text-xs text-base-content/55 mb-1">
+										Target
+									</div>
+									<div className="flex flex-wrap gap-1">
+										{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
+											<button
+												key={t}
+												type="button"
+												className={`btn btn-xs ${lfoTarget === t ? "btn-primary" : "btn-outline"}`}
+												onClick={() => setLfoTarget(t)}
+											>
+												{t}
+											</button>
+										))}
+									</div>
+								</div>
+							</div>
+						</details>
+
+						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+							<summary className="collapse-title pr-3 cursor-pointer list-none">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Filter
+								</div>
+							</summary>
+							<div className="collapse-content">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+									<input
+										type="checkbox"
+										checked={filterEnabled}
+										onChange={(e) => setFilterEnabled(e.target.checked)}
+										className="checkbox checkbox-xs"
+									/>
+									<span className="label-text text-xs">Enable Filter</span>
+								</label>
+								<div className="join w-full mb-2">
+									{(["lp", "hp", "bp"] as const).map((t) => (
+										<button
+											key={t}
+											type="button"
+											className={`btn btn-sm join-item flex-1 ${filterType === t ? "btn-primary" : "btn-outline"}`}
+											onClick={() => setFilterType(t)}
+										>
+											{t.toUpperCase()}
+										</button>
+									))}
+								</div>
+								<div className="flex justify-center gap-2">
+									<ControlKnob
+										value={filterCutoff}
+										onChange={setFilterCutoff}
+										min={20}
+										max={20000}
+										size={44}
+										color="#34d399"
+										label="Cutoff"
+										valueFormatter={(v) => `${Math.round(v)}Hz`}
+									/>
+									<ControlKnob
+										value={filterResonance}
+										onChange={setFilterResonance}
+										min={0}
+										max={1}
+										size={44}
+										color="#34d399"
+										label="Res"
+										valueFormatter={(v) => `${Math.round(v * 100)}%`}
+									/>
+									<ControlKnob
+										value={filterEnvAmount}
+										onChange={setFilterEnvAmount}
+										min={-1}
+										max={1}
+										size={44}
+										color="#34d399"
+										label="Env"
+										valueFormatter={(v) => `${Math.round(v * 100)}%`}
+									/>
+								</div>
+							</div>
+						</details>
 					</div>
 				</aside>
 
@@ -1560,6 +1945,8 @@ export default function PhaseDistortionVisualizer() {
 								setDcwEnv={setLine1DcwEnv}
 								dcaEnv={line1DcaEnv}
 								setDcaEnv={setLine1DcaEnv}
+								keyFollow={line1DcwKeyFollow}
+								setKeyFollow={setLine1DcwKeyFollow}
 							/>
 						)}
 
@@ -1600,6 +1987,8 @@ export default function PhaseDistortionVisualizer() {
 								setDcwEnv={setLine2DcwEnv}
 								dcaEnv={line2DcaEnv}
 								setDcaEnv={setLine2DcaEnv}
+								keyFollow={line2DcwKeyFollow}
+								setKeyFollow={setLine2DcwKeyFollow}
 							/>
 						)}
 					</section>

@@ -38,6 +38,8 @@ interface PerLineWarpBlockProps {
 	setDcwEnv: (e: StepEnvData) => void;
 	dcaEnv: StepEnvData;
 	setDcaEnv: (e: StepEnvData) => void;
+	keyFollow: number;
+	setKeyFollow: (v: number) => void;
 }
 
 type EnvTab = "dco" | "dcw" | "dca";
@@ -74,6 +76,8 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setDcwEnv,
 	dcaEnv,
 	setDcaEnv,
+	keyFollow,
+	setKeyFollow,
 }: PerLineWarpBlockProps) {
 	const [algo2Enabled, setAlgo2Enabled] = useState(algo2 != null);
 	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
@@ -133,21 +137,21 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 					className="btn btn-xs btn-outline"
 					onClick={onCopyAlgos}
 				>
-					Copy Algos to {copyTargetLabel}
+					Clone Algo to {copyTargetLabel}
 				</button>
 				<button
 					type="button"
 					className="btn btn-xs btn-outline"
 					onClick={onCopyEnvelopes}
 				>
-					Copy Envs
+					Clone DCA/DCW/DCO to {copyTargetLabel}
 				</button>
 				<button
 					type="button"
 					className="btn btn-xs btn-primary"
 					onClick={onCopyFull}
 				>
-					Copy Full Line
+					Clone Full Line to {copyTargetLabel}
 				</button>
 			</div>
 
@@ -303,6 +307,22 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 							onChange={activeEnv.setEnv}
 							color={activeEnv.envColor}
 						/>
+						<div className="mt-2 flex items-center gap-2">
+							<span className="text-[10px] text-base-content/55">
+								Key Follow:
+							</span>
+							<input
+								type="range"
+								min={0}
+								max={9}
+								value={keyFollow}
+								onChange={(e) => setKeyFollow(Number(e.target.value))}
+								className="range range-xs range-primary"
+							/>
+							<span className="text-xs text-base-content/60 w-4">
+								{keyFollow}
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>

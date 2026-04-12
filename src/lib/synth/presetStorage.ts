@@ -58,6 +58,25 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	line1DcaKeyFollow: 0,
 	line2DcwKeyFollow: 0,
 	line2DcaKeyFollow: 0,
+	vibratoEnabled: false,
+	vibratoWave: 1,
+	vibratoRate: 30,
+	vibratoDepth: 30,
+	vibratoDelay: 0,
+	portamentoEnabled: false,
+	portamentoMode: "rate",
+	portamentoRate: 50,
+	portamentoTime: 0.5,
+	lfoEnabled: false,
+	lfoWaveform: "sine",
+	lfoRate: 5,
+	lfoDepth: 0,
+	lfoTarget: "pitch",
+	filterEnabled: false,
+	filterType: "lp",
+	filterCutoff: 5000,
+	filterResonance: 0,
+	filterEnvAmount: 0,
 };
 
 export interface SynthPresetData {
@@ -110,6 +129,25 @@ export interface SynthPresetData {
 	line1DcaKeyFollow: number;
 	line2DcwKeyFollow: number;
 	line2DcaKeyFollow: number;
+	vibratoEnabled: boolean;
+	vibratoWave: number;
+	vibratoRate: number;
+	vibratoDepth: number;
+	vibratoDelay: number;
+	portamentoEnabled: boolean;
+	portamentoMode: "rate" | "time";
+	portamentoRate: number;
+	portamentoTime: number;
+	lfoEnabled: boolean;
+	lfoWaveform: "sine" | "triangle" | "square" | "saw" | "random";
+	lfoRate: number;
+	lfoDepth: number;
+	lfoTarget: "pitch" | "dcw" | "dca" | "filter";
+	filterEnabled: boolean;
+	filterType: "lp" | "hp" | "bp";
+	filterCutoff: number;
+	filterResonance: number;
+	filterEnvAmount: number;
 }
 
 export function savePreset(name: string, data: SynthPresetData): void {

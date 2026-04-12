@@ -212,7 +212,7 @@ function resetEnv(env) {
 	env.releaseDuration = 0;
 }
 
-function advanceEnv(env, envData, sr) {
+function advanceEnv(env, envData, sr, keyFollow = 0, note = 60) {
 	const steps = envData.steps;
 	const stepCount = Math.max(
 		1,
@@ -225,6 +225,9 @@ function advanceEnv(env, envData, sr) {
 	const effectiveEndStep = stepCount - 1;
 	const currentStep = Math.max(0, Math.min(env.step, effectiveEndStep));
 
+	const noteOffset = (note - 60) / 60;
+	const speedMult = 1 + (keyFollow ?? 0) * noteOffset * 0.1;
+
 	let stepData = steps[currentStep];
 	let targetLevel = stepData?.level ?? 0;
 	let duration = stepDurationSamples(
@@ -233,6 +236,7 @@ function advanceEnv(env, envData, sr) {
 		stepData?.rate ?? 50,
 		sr,
 	);
+	duration = Math.max(1, Math.round(duration / speedMult));
 
 	if (env.releasing) {
 		if (duration <= 0) {
@@ -448,11 +452,31 @@ class FxChain {
 	}
 }
 
+function lfoOutput(phase, waveform) {
+	switch (waveform) {
+		case 1:
+			return Math.sin(TWO_PI * phase);
+		case 2:
+			return phase < 0.5 ? 4 * phase - 1 : 3 - 4 * phase;
+		case 3:
+			return phase < 0.5 ? 1 : -1;
+		case 4:
+			return phase * 2 - 1;
+		default:
+			return Math.sin(TWO_PI * phase);
+	}
+}
+
 function createVoice() {
 	return {
 		phi1: 0,
 		phi2: 0,
 		pmPhi: 0,
+		vibratoPhase: 0,
+		vibratoDelayCounter: 0,
+		currentFreq: 0,
+		targetFreq: 0,
+		glideProgress: 0,
 		isReleasing: false,
 		isSilent: true,
 		sustained: false,
@@ -470,6 +494,8 @@ function createVoice() {
 			dcw: createEnvGen(),
 			dca: createEnvGen(),
 		},
+		filterState1: [0, 0],
+		filterState2: [0, 0],
 	};
 }
 
@@ -498,6 +524,7 @@ class Cz101Processor extends AudioWorkletProcessor {
 		this.activeNoteMap = new Map();
 
 		this.sustainOn = false;
+		this.lfoPhase = 0;
 		this.params = {
 			lineSelect: "L1+L2",
 			octave: 0,
@@ -518,6 +545,7 @@ class Cz101Processor extends AudioWorkletProcessor {
 				dcoEnv: DEFAULT_STEP_ENV,
 				dcwEnv: DEFAULT_STEP_ENV,
 				dcaEnv: DEFAULT_STEP_ENV,
+				keyFollow: 0,
 			},
 			line2: {
 				waveform: 1,
@@ -536,6 +564,7 @@ class Cz101Processor extends AudioWorkletProcessor {
 				dcoEnv: DEFAULT_STEP_ENV,
 				dcwEnv: DEFAULT_STEP_ENV,
 				dcaEnv: DEFAULT_STEP_ENV,
+				keyFollow: 0,
 			},
 			intPmAmount: 0,
 			intPmRatio: 1,
@@ -549,6 +578,22 @@ class Cz101Processor extends AudioWorkletProcessor {
 			chorus: { rate: 0.8, depth: 0.003, mix: 0 },
 			delay: { time: 0.3, feedback: 0.35, mix: 0 },
 			reverb: { size: 0.5, mix: 0 },
+			vibrato: { enabled: false, waveform: 1, rate: 30, depth: 30, delay: 0 },
+			portamento: { enabled: false, mode: "rate", rate: 50, time: 0.5 },
+			lfo: {
+				enabled: false,
+				waveform: "sine",
+				rate: 5,
+				depth: 0,
+				target: "pitch",
+			},
+			filter: {
+				enabled: false,
+				type: "lp",
+				cutoff: 5000,
+				resonance: 0,
+				envAmount: 0,
+			},
 		};
 
 		this.port.onmessage = (e) => {
@@ -627,10 +672,16 @@ class Cz101Processor extends AudioWorkletProcessor {
 
 	noteOn(note, frequency, velocity) {
 		const vel = velocity ?? 1;
-		if (this.params.polyMode === "mono") {
+		const p = this.params;
+		const sr = sampleRate;
+
+		if (p.polyMode === "mono") {
 			const voice = this.voices[0];
-			if (this.params.legato && !voice.isSilent && voice.note !== note) {
-				voice.frequency = frequency;
+			if (p.legato && !voice.isSilent && voice.note !== note) {
+				voice.targetFreq = frequency;
+				if (p.portamento?.enabled) {
+					voice.glideProgress = 0;
+				}
 				voice.note = note;
 				voice.velocity = vel;
 				this.activeNoteMap.set(note, 0);
@@ -638,6 +689,9 @@ class Cz101Processor extends AudioWorkletProcessor {
 			}
 			voice.note = note;
 			voice.frequency = frequency;
+			voice.targetFreq = frequency;
+			voice.currentFreq = frequency;
+			voice.glideProgress = 0;
 			voice.velocity = vel;
 			voice.phi1 = 0;
 			voice.phi2 = 0;
@@ -646,6 +700,12 @@ class Cz101Processor extends AudioWorkletProcessor {
 			voice.isSilent = false;
 			voice.sustained = false;
 			voice.gateWasOpen = false;
+			if (p.vibrato?.enabled) {
+				voice.vibratoPhase = 0;
+				voice.vibratoDelayCounter = Math.round(
+					((p.vibrato.delay ?? 0) * sr) / 1000,
+				);
+			}
 			this.resetVoiceEnvs(voice);
 			this.activeNoteMap.set(note, 0);
 		} else {
@@ -654,6 +714,7 @@ class Cz101Processor extends AudioWorkletProcessor {
 				const voice = this.voices[existing];
 				if (voice && voice.note === note) {
 					voice.frequency = frequency;
+					voice.targetFreq = frequency;
 					voice.velocity = vel;
 					return;
 				}
@@ -679,6 +740,9 @@ class Cz101Processor extends AudioWorkletProcessor {
 			const voice = this.voices[voiceIdx];
 			voice.note = note;
 			voice.frequency = frequency;
+			voice.targetFreq = frequency;
+			voice.currentFreq = frequency;
+			voice.glideProgress = 0;
 			voice.velocity = vel;
 			voice.phi1 = 0;
 			voice.phi2 = 0;
@@ -687,6 +751,12 @@ class Cz101Processor extends AudioWorkletProcessor {
 			voice.isSilent = false;
 			voice.sustained = false;
 			voice.gateWasOpen = false;
+			if (p.vibrato?.enabled) {
+				voice.vibratoPhase = 0;
+				voice.vibratoDelayCounter = Math.round(
+					((p.vibrato.delay ?? 0) * sr) / 1000,
+				);
+			}
 			this.resetVoiceEnvs(voice);
 			this.activeNoteMap.set(note, voiceIdx);
 		}
@@ -752,12 +822,12 @@ class Cz101Processor extends AudioWorkletProcessor {
 		const l2DcwEnv = l2.dcwEnv ?? DEFAULT_STEP_ENV;
 		const l2DcaEnv = l2.dcaEnv ?? DEFAULT_STEP_ENV;
 
-		advanceEnv(voice.line1Env.dco, l1DcoEnv, sr);
-		advanceEnv(voice.line1Env.dcw, l1DcwEnv, sr);
-		advanceEnv(voice.line1Env.dca, l1DcaEnv, sr);
-		advanceEnv(voice.line2Env.dco, l2DcoEnv, sr);
-		advanceEnv(voice.line2Env.dcw, l2DcwEnv, sr);
-		advanceEnv(voice.line2Env.dca, l2DcaEnv, sr);
+		advanceEnv(voice.line1Env.dco, l1DcoEnv, sr, l1.keyFollow, voice.note);
+		advanceEnv(voice.line1Env.dcw, l1DcwEnv, sr, l1.keyFollow, voice.note);
+		advanceEnv(voice.line1Env.dca, l1DcaEnv, sr, l1.keyFollow, voice.note);
+		advanceEnv(voice.line2Env.dco, l2DcoEnv, sr, l2.keyFollow, voice.note);
+		advanceEnv(voice.line2Env.dcw, l2DcwEnv, sr, l2.keyFollow, voice.note);
+		advanceEnv(voice.line2Env.dca, l2DcaEnv, sr, l2.keyFollow, voice.note);
 
 		// Check if voice is silent
 		const dca1 = voice.line1Env.dca.output;
@@ -824,6 +894,46 @@ class Cz101Processor extends AudioWorkletProcessor {
 			baseFreq *
 			2 ** ((l2.octave ?? 0) + (l2.detuneCents ?? 0) / 1200) *
 			2 ** ((dcoDepth2 * dco2) / 12);
+
+		let effectiveFreq1 = freq1;
+		let effectiveFreq2 = freq2;
+
+		const port = p.portamento;
+		if (port?.enabled && voice.targetFreq !== voice.currentFreq) {
+			if (port.mode === "rate") {
+				voice.currentFreq +=
+					((voice.targetFreq - voice.currentFreq) * (port.rate ?? 50)) / 1000;
+			} else {
+				voice.glideProgress += 1 / ((port.time ?? 0.5) * sr);
+				if (voice.glideProgress >= 1) {
+					voice.currentFreq = voice.targetFreq;
+				} else {
+					voice.currentFreq = lerp(
+						voice.currentFreq,
+						voice.targetFreq,
+						voice.glideProgress,
+					);
+				}
+			}
+			const ratio = voice.currentFreq / baseFreq;
+			effectiveFreq1 *= ratio;
+			effectiveFreq2 *= ratio;
+		}
+
+		const vibrato = p.vibrato;
+		if (vibrato?.enabled) {
+			if (voice.vibratoDelayCounter > 0) {
+				voice.vibratoDelayCounter -= 1;
+			} else {
+				voice.vibratoPhase += (vibrato.rate ?? 30) / sr;
+				if (voice.vibratoPhase >= 1) voice.vibratoPhase -= 1;
+				const lfoVal = lfoOutput(voice.vibratoPhase, vibrato.waveform ?? 1);
+				const pitchMod = 1 + lfoVal * ((vibrato.depth ?? 30) / 1000);
+				effectiveFreq1 *= pitchMod;
+				effectiveFreq2 *= pitchMod;
+			}
+		}
+
 		const pmFreq = baseFreq * (p.intPmRatio ?? 1);
 		const pmDelta = pmFreq / sr;
 
@@ -974,8 +1084,48 @@ class Cz101Processor extends AudioWorkletProcessor {
 			sample = s1 + s2;
 		}
 
-		voice.phi1 += freq1 / sr;
-		voice.phi2 += freq2 / sr;
+		if (p.filter?.enabled) {
+			const f = p.filter;
+			const fc = f.cutoff * (1 + (f.envAmount ?? 0) * dcw1);
+			const res = f.resonance ?? 0;
+			const w0 = (TWO_PI * fc) / sr;
+			const alpha = Math.sin(w0) / (2 * res + 0.0001);
+			let a0, a1, a2, b1, b2;
+			if (f.type === "lp") {
+				a0 = 1 + alpha;
+				a1 = -2 * Math.cos(w0);
+				a2 = 1 - alpha;
+				b1 = -2 * Math.cos(w0);
+				b2 = 1 - alpha;
+			} else if (f.type === "hp") {
+				a0 = 1 + alpha;
+				a1 = -2 * Math.cos(w0);
+				a2 = 1 - alpha;
+				b1 = 2 * Math.cos(w0);
+				b2 = -(1 - alpha);
+			} else {
+				a0 = 1 + alpha;
+				a1 = -2 * Math.cos(w0);
+				a2 = 1 - alpha;
+				b1 = 2 * Math.cos(w0);
+				b2 = -(1 - alpha);
+			}
+			const norm = 1 / a0;
+			const s1f =
+				norm *
+				(a1 * voice.filterState1[0] + a2 * voice.filterState1[1] + sample);
+			const s2f =
+				norm *
+				(b1 * voice.filterState2[0] + b2 * voice.filterState2[1] + sample);
+			voice.filterState1[1] = voice.filterState1[0];
+			voice.filterState1[0] = s1f;
+			voice.filterState2[1] = voice.filterState2[0];
+			voice.filterState2[0] = s2f;
+			sample = f.type === "bp" ? (s1f - s2f) / 2 : f.type === "hp" ? s1f : s2f;
+		}
+
+		voice.phi1 += effectiveFreq1 / sr;
+		voice.phi2 += effectiveFreq2 / sr;
 		voice.pmPhi += pmDelta;
 		if (voice.phi1 >= 1) voice.phi1 -= 1;
 		if (voice.phi2 >= 1) voice.phi2 -= 1;
@@ -993,12 +1143,38 @@ class Cz101Processor extends AudioWorkletProcessor {
 		const volume = p.volume ?? 0.4;
 		const hasSecondChannel = output.length > 1;
 
+		const lfoEnabled = p.lfo?.enabled ?? false;
+		const lfoRate = p.lfo?.rate ?? 5;
+		const lfoDepth = p.lfo?.depth ?? 0;
+		const lfoTarget = p.lfo?.target ?? "pitch";
+
+		if (lfoEnabled) {
+			this.lfoPhase += lfoRate / sampleRate;
+			if (this.lfoPhase >= 1) this.lfoPhase -= 1;
+		}
+
 		for (let i = 0; i < N; i++) {
 			let mixed = 0;
 			for (let v = 0; v < NUM_VOICES; v++) {
 				mixed += this.renderVoice(this.voices[v], p);
 			}
 			mixed *= volume / Math.sqrt(NUM_VOICES);
+
+			if (lfoEnabled && lfoDepth !== 0) {
+				const lfoVal = lfoOutput(this.lfoPhase, p.lfo?.waveform ?? "sine");
+				const mod = lfoVal * lfoDepth;
+				switch (lfoTarget) {
+					case "pitch":
+						mixed *= 1 + mod;
+						break;
+					case "dca":
+						mixed *= 1 + mod;
+						break;
+					case "filter":
+					case "dcw":
+						break;
+				}
+			}
 
 			const fxOut = this.fx.process(mixed);
 			const clamped = Math.max(-1, Math.min(1, fxOut));

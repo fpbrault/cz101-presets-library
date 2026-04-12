@@ -103,50 +103,13 @@ export function convertDecodedPatchToSynthPreset(
 			preset.line2DcaEnv = convertEnvelope(decoded.dca2, DEFAULT_DCA_ENV);
 			preset.line2DcaKeyFollow = decoded.dca2KeyFollow;
 			preset.line2DcwKeyFollow = decoded.dcw2KeyFollow;
-			break;
-		case "L1+1'":
-			preset.lineSelect = "L1+L1'";
-			preset.line1Octave = decoded.octave;
-			preset.line2Octave = decoded.octave;
-			preset.line1Detune = detune1;
-			preset.line2Detune = detune2;
-			preset.line1RingMod = decoded.dco1.modulation === "ring";
-			preset.line1Noise = decoded.dco1.modulation === "noise";
-			preset.line2RingMod = decoded.dco1.modulation === "ring";
-			preset.line2Noise = decoded.dco1.modulation === "noise";
-			preset.line1DcoEnv = convertEnvelope(decoded.dco1Env, DEFAULT_DCO_ENV);
-			preset.line1DcwEnv = convertEnvelope(decoded.dcw1, DEFAULT_DCW_ENV);
-			preset.line1DcaEnv = convertEnvelope(decoded.dca1, DEFAULT_DCA_ENV);
-			preset.line1DcaKeyFollow = decoded.dca1KeyFollow;
-			preset.line1DcwKeyFollow = decoded.dcw1KeyFollow;
-			preset.line2DcoEnv = convertEnvelope(decoded.dco1Env, DEFAULT_DCO_ENV);
-			preset.line2DcwEnv = convertEnvelope(decoded.dcw1, DEFAULT_DCW_ENV);
-			preset.line2DcaEnv = convertEnvelope(decoded.dca1, DEFAULT_DCA_ENV);
-			preset.line2DcaKeyFollow = decoded.dca1KeyFollow;
-			preset.line2DcwKeyFollow = decoded.dcw1KeyFollow;
-			break;
-		case "L1+2'":
-			preset.lineSelect = "L1+L2'";
-			preset.line1Octave = decoded.octave;
-			preset.line2Octave = decoded.octave;
-			preset.line1Detune = detune1;
-			preset.line2Detune = detune2;
-			preset.line1RingMod = decoded.dco1.modulation === "ring";
-			preset.line1Noise = decoded.dco1.modulation === "noise";
-			preset.line2RingMod = decoded.dco2.modulation === "ring";
-			preset.line2Noise = decoded.dco2.modulation === "noise";
-			preset.line1DcoEnv = convertEnvelope(decoded.dco1Env, DEFAULT_DCO_ENV);
-			preset.line1DcwEnv = convertEnvelope(decoded.dcw1, DEFAULT_DCW_ENV);
-			preset.line1DcaEnv = convertEnvelope(decoded.dca1, DEFAULT_DCA_ENV);
-			preset.line1DcaKeyFollow = decoded.dca1KeyFollow;
-			preset.line1DcwKeyFollow = decoded.dcw1KeyFollow;
-			preset.line2DcoEnv = convertEnvelope(decoded.dco2Env, DEFAULT_DCO_ENV);
-			preset.line2DcwEnv = convertEnvelope(decoded.dcw2, DEFAULT_DCW_ENV);
-			preset.line2DcaEnv = convertEnvelope(decoded.dca2, DEFAULT_DCA_ENV);
-			preset.line2DcaKeyFollow = decoded.dca2KeyFollow;
-			preset.line2DcwKeyFollow = decoded.dcw2KeyFollow;
-			break;
 	}
+
+	preset.vibratoEnabled = true;
+	preset.vibratoWave = decoded.vibratoWave;
+	preset.vibratoRate = decoded.vibratoRate;
+	preset.vibratoDepth = decoded.vibratoDepth;
+	preset.vibratoDelay = decoded.vibratoDelay;
 
 	preset.polyMode = "poly8";
 	preset.legato = false;
