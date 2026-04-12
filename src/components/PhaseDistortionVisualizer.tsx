@@ -1389,6 +1389,7 @@ export default function PhaseDistortionVisualizer() {
 								</div>
 							</div>
 							<div className="mt-3 grid grid-cols-2 gap-2">
+								
 								<ControlKnob
 									value={chorusDepth}
 									onChange={setChorusDepth}

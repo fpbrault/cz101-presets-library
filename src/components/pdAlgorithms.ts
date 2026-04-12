@@ -334,7 +334,7 @@ export const DEFAULT_DCW_ENV: StepEnvData = {
 		{ level: 0, rate: 60 },
 	],
 	sustainStep: 1,
-	stepCount: 8,
+	stepCount: 2,
 	loop: false,
 };
 
@@ -350,7 +350,7 @@ export const DEFAULT_DCO_ENV: StepEnvData = {
 		{ level: 0, rate: 50 },
 	],
 	sustainStep: 0,
-	stepCount: 8,
+	stepCount: 2,
 	loop: false,
 };
 

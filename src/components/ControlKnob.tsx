@@ -26,7 +26,7 @@ export function ControlKnob({
 	const startValueRef = useRef(0);
 
 	const normalizedValue = (value - min) / (max - min);
-	const angle = -140 + normalizedValue * 280;
+	const angle = -230 + normalizedValue * 280;
 
 	const handlePointerDown = (event: React.PointerEvent) => {
 		event.preventDefault();
