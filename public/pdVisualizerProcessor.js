@@ -423,17 +423,21 @@ class FxChain {
 
 	processReverb(sample) {
 		if (this.reverbMix <= 0) return sample;
-		const feedback = this.reverbSize * 0.84;
-		const damping = 0.5;
+		const size = this.reverbSize;
+		const feedback = 0.28 + size * 0.56;
+		const damping = 0.15 + (1 - size) * 0.5;
 		let sum = 0;
 		for (let i = 0; i < this.reverbCombs.length; i++) {
 			sum += this.reverbCombs[i].process(sample, feedback, damping);
 		}
 		sum /= this.reverbCombs.length;
+		const allpassFeedback = 0.55 + size * 0.1;
 		for (let i = 0; i < this.reverbAllpass.length; i++) {
+			this.reverbAllpass[i].feedback = allpassFeedback;
 			sum = this.reverbAllpass[i].process(sum);
 		}
-		return sample * (1 - this.reverbMix) + sum * this.reverbMix;
+		const reverbGain = 0.3 + size * 0.25;
+		return sample * (1 - this.reverbMix) + sum * this.reverbMix * reverbGain;
 	}
 
 	process(sample) {
