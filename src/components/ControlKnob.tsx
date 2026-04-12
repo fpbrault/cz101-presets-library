@@ -27,6 +27,18 @@ export function ControlKnob({
 
 	const normalizedValue = (value - min) / (max - min);
 	const angle = -230 + normalizedValue * 280;
+	const startAngleRad = (-230 * Math.PI) / 180;
+	const endAngleRad = (angle * Math.PI) / 180;
+	const startX = 28 + Math.cos(startAngleRad) * 17;
+	const startY = 28 + Math.sin(startAngleRad) * 17;
+	const endX = 28 + Math.cos(endAngleRad) * 17;
+	const endY = 28 + Math.sin(endAngleRad) * 17;
+	const sweepAngle = normalizedValue * 280;
+	const largeArcFlag = sweepAngle >= 180 ? 1 : 0;
+	const arcPath =
+		normalizedValue > 0
+			? `M ${startX} ${startY} A 17 17 0 ${largeArcFlag} 1 ${endX} ${endY}`
+			: "";
 
 	const handlePointerDown = (event: React.PointerEvent) => {
 		event.preventDefault();
@@ -69,6 +81,16 @@ export function ControlKnob({
 				style={{ width: size, height: size }}
 			>
 				<svg width={size} height={size} viewBox="0 0 56 56" role="presentation">
+					<defs>
+						<linearGradient id="knobGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+							<stop offset="0%" stopColor={color} stopOpacity="0.2" />
+							<stop offset="100%" stopColor={color} stopOpacity="0" />
+						</linearGradient>
+						<radialGradient id="knobInner" cx="50%" cy="50%" r="50%">
+							<stop offset="60%" stopColor="rgba(0,0,0,0)" />
+							<stop offset="100%" stopColor="rgba(0,0,0,0.5)" />
+						</radialGradient>
+					</defs>
 					<circle
 						cx="28"
 						cy="28"
@@ -76,6 +98,7 @@ export function ControlKnob({
 						fill="rgba(24,24,35,0.95)"
 						stroke="rgba(255,255,255,0.08)"
 					/>
+					<circle cx="28" cy="28" r="21" fill="url(#knobGrad)" />
 					<circle
 						cx="28"
 						cy="28"
@@ -84,16 +107,13 @@ export function ControlKnob({
 						stroke="rgba(255,255,255,0.08)"
 						strokeWidth="1.5"
 					/>
-					<circle
-						cx="28"
-						cy="28"
-						r="17"
+					<path
+						d={arcPath}
 						fill="none"
 						stroke={color}
 						strokeOpacity="0.3"
 						strokeWidth="4"
-						strokeDasharray={`${normalizedValue * 106.81} 106.81`}
-						transform="rotate(-230 28 28)"
+						strokeLinecap="round"
 					/>
 					<line
 						x1="28"
@@ -104,6 +124,7 @@ export function ControlKnob({
 						strokeWidth="3.5"
 						strokeLinecap="round"
 					/>
+					<circle cx="28" cy="28" r="21" fill="url(#inner)" />
 					<circle cx="28" cy="28" r="3" fill={color} fillOpacity="0.85" />
 				</svg>
 			</button>

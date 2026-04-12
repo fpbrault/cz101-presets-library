@@ -21,6 +21,10 @@ function drawEnvPreview(
 	if (!ctx) return;
 	const w = canvas.width;
 	const h = canvas.height;
+	const paddingY = 8;
+	const paddingX = 12;
+	const drawWidth = w - paddingX * 2;
+	const drawHeight = h - paddingY * 2;
 	ctx.clearRect(0, 0, w, h);
 
 	ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -30,8 +34,8 @@ function drawEnvPreview(
 	ctx.lineWidth = 1;
 	for (let y = 0.25; y < 1; y += 0.25) {
 		ctx.beginPath();
-		ctx.moveTo(0, h * (1 - y));
-		ctx.lineTo(w, h * (1 - y));
+		ctx.moveTo(paddingX, h * (1 - y));
+		ctx.lineTo(w - paddingX, h * (1 - y));
 		ctx.stroke();
 	}
 
@@ -42,13 +46,13 @@ function drawEnvPreview(
 	}
 	if (totalTime <= 0) totalTime = 1;
 
-	let x = 0;
+	let x = paddingX;
 	const points: Array<{ x: number; y: number }> = [];
-	points.push({ x: 0, y: 1 - 0 });
+	points.push({ x: paddingX, y: 1 - 0 });
 
 	for (const step of activeSteps) {
 		const duration = rateToSeconds(step.rate);
-		const dx = (duration / totalTime) * w;
+		const dx = (duration / totalTime) * drawWidth;
 		points.push({ x: x + dx, y: 1 - step.level });
 		x += dx;
 	}
@@ -56,9 +60,9 @@ function drawEnvPreview(
 	ctx.strokeStyle = color;
 	ctx.lineWidth = 2;
 	ctx.beginPath();
-	ctx.moveTo(points[0].x, points[0].y * h);
+	ctx.moveTo(points[0].x, points[0].y * drawHeight + paddingY);
 	for (let i = 1; i < points.length; i++) {
-		ctx.lineTo(points[i].x, points[i].y * h);
+		ctx.lineTo(points[i].x, points[i].y * drawHeight + paddingY);
 	}
 	ctx.stroke();
 
@@ -70,8 +74,8 @@ function drawEnvPreview(
 			ctx.strokeStyle = "rgba(255,200,0,0.6)";
 			ctx.setLineDash([3, 3]);
 			ctx.beginPath();
-			ctx.moveTo(sp.x, 0);
-			ctx.lineTo(sp.x, h);
+			ctx.moveTo(sp.x, paddingY);
+			ctx.lineTo(sp.x, h - paddingY);
 			ctx.stroke();
 			ctx.setLineDash([]);
 		}
@@ -81,7 +85,7 @@ function drawEnvPreview(
 		const p = points[i];
 		ctx.fillStyle = i - 1 === susStep ? "#fbbf24" : color;
 		ctx.beginPath();
-		ctx.arc(p.x, p.y * h, 3, 0, Math.PI * 2);
+		ctx.arc(p.x, p.y * drawHeight + paddingY, 8, 0, Math.PI * 2);
 		ctx.fill();
 	}
 }
@@ -168,7 +172,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	}, [dragStep, updateStep]);
 
 	return (
-		<div className="rounded-2xl border border-base-300/70 bg-base-200/70 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.2)] space-y-3">
+		<div className="max-w-120 rounded-2xl border border-base-300/70 bg-base-200/70 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.2)] space-y-3">
 			<div className="flex items-center justify-between">
 				<span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-base-content/70">
 					{title}
@@ -207,9 +211,9 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 
 			<canvas
 				ref={canvasRef}
-				width={500}
-				height={84}
-				className="w-full rounded-xl cursor-crosshair border border-base-300/60 bg-base-300/30"
+				width={1000}
+				height={200}
+				className="max-w-full rounded-xl cursor-crosshair border border-base-300/60 bg-base-300/30"
 				style={{ imageRendering: "auto" }}
 				onMouseDown={handleCanvasMouseDown}
 			/>

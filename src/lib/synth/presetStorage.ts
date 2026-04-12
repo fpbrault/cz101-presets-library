@@ -1,4 +1,4 @@
-import type { StepEnvData } from "@/components/pdAlgorithms";
+import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
 import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
@@ -11,8 +11,8 @@ const CURRENT_STATE_KEY = "cz101-current-state";
 export const DEFAULT_PRESET: SynthPresetData = {
 	warpAAmount: 1,
 	warpBAmount: 1,
-	warpAAlgo: "bend",
-	warpBAlgo: "bend",
+	warpAAlgo: 1,
+	warpBAlgo: 1,
 	algo2A: null,
 	algo2B: null,
 	algoBlendA: 0,
@@ -21,7 +21,7 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	intPmRatio: 2,
 	pmPre: true,
 	windowType: "off",
-	volume: 0.5,
+	volume: 1,
 	line1Level: 1,
 	line2Level: 1,
 	line1Octave: 0,
@@ -42,7 +42,7 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	legato: false,
 	velocityTarget: "amp",
 	chorusRate: 0.8,
-	chorusDepth: 3,
+	chorusDepth: 1,
 	chorusMix: 0,
 	delayTime: 0.3,
 	delayFeedback: 0.35,
@@ -54,10 +54,10 @@ export const DEFAULT_PRESET: SynthPresetData = {
 export interface SynthPresetData {
 	warpAAmount: number;
 	warpBAmount: number;
-	warpAAlgo: string;
-	warpBAlgo: string;
-	algo2A: string | null;
-	algo2B: string | null;
+	warpAAlgo: PdAlgo;
+	warpBAlgo: PdAlgo;
+	algo2A: PdAlgo | null;
+	algo2B: PdAlgo | null;
 	algoBlendA: number;
 	algoBlendB: number;
 	intPmAmount: number;

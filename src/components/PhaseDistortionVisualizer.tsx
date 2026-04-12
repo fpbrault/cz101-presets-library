@@ -12,7 +12,9 @@ import {
 	saveCurrentState,
 	savePreset,
 } from "@/lib/synth/presetStorage";
+import { ChorusSection } from "./ChorusSection";
 import ControlKnob from "./ControlKnob";
+import { DelaySection } from "./DelaySection";
 import { PerLineWarpBlock } from "./PerLineWarpBlock";
 import {
 	computeWaveform,
@@ -26,6 +28,7 @@ import {
 	type StepEnvData,
 } from "./pdAlgorithms";
 import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
+import { ReverbSection } from "./ReverbSection";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
@@ -70,8 +73,8 @@ export default function PhaseDistortionVisualizer() {
 	const [line2DcwComp, setLine2DcwComp] = useState(0);
 	const [activeLineTab, setActiveLineTab] = useState<"a" | "b">("a");
 	const [scopeCycles, setScopeCycles] = useState(2);
-	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(2);
-	const [scopeTriggerMode, setScopeTriggerMode] = useState<
+	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(1.0);
+	const [scopeTriggerMode, _setScopeTriggerMode] = useState<
 		"off" | "rise" | "fall"
 	>("rise");
 	const [scopeTriggerLevel, setScopeTriggerLevel] = useState(128);
@@ -93,10 +96,10 @@ export default function PhaseDistortionVisualizer() {
 		(): SynthPresetData => ({
 			warpAAmount,
 			warpBAmount,
-			warpAAlgo: String(warpAAlgo),
-			warpBAlgo: String(warpBAlgo),
-			algo2A: algo2A ? String(algo2A) : null,
-			algo2B: algo2B ? String(algo2B) : null,
+			warpAAlgo: warpAAlgo,
+			warpBAlgo: warpBAlgo,
+			algo2A: algo2A ?? null,
+			algo2B: algo2B ?? null,
 			algoBlendA,
 			algoBlendB,
 			intPmAmount,
@@ -828,7 +831,7 @@ export default function PhaseDistortionVisualizer() {
 				Math.min(data.length - 2, Math.round(samplesPerCycle * 1)),
 			);
 
-			let start = Math.max(1, Math.floor((data.length - viewSamples) / 2));
+			const start = Math.max(1, Math.floor((data.length - viewSamples) / 2));
 
 			let mean = 0;
 			for (let i = 0; i < viewSamples; i++) mean += data[start + i];
@@ -1013,8 +1016,8 @@ export default function PhaseDistortionVisualizer() {
 	}, [sendNoteOff, sendNoteOn, setSustain]);
 
 	return (
-		<div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,113,206,0.08),transparent_22%),radial-gradient(circle_at_20%_20%,rgba(61,237,255,0.08),transparent_20%),linear-gradient(180deg,#141624_0%,#10111a_100%)] p-4 md:p-6">
-			<div className="mx-auto grid max-w-[1680px] gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+		<div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,113,206,0.08),transparent_22%),radial-gradient(circle_at_20%_20%,rgba(61,237,255,0.08),transparent_20%),linear-gradient(180deg,#141624_0%,#10111a_100%)] p-4 md:p-6 w-full">
+			<div className="mx-auto grid w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto">
 					<div className="flex h-full flex-col gap-4 rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(22,23,36,0.97),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
 						<div className="border-b border-base-300/50 pb-3 shrink-0">
@@ -1027,6 +1030,98 @@ export default function PhaseDistortionVisualizer() {
 							<p className="mt-2 text-sm text-base-content/55">
 								Retro-cyber patch bay for fast CZ sculpting.
 							</p>
+						</div>
+
+						<div className="mt-auto rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
+							<div className="mb-2 flex items-center justify-between gap-2">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									Scope
+								</div>
+								<button
+									type="button"
+									className={`btn btn-xs ${scopeOpen ? "btn-primary" : "btn-outline"}`}
+									onClick={() => setScopeOpen(!scopeOpen)}
+								>
+									{scopeOpen ? "Hide" : "Show"}
+								</button>
+							</div>
+							{scopeOpen && (
+								<div className="space-y-2">
+									<div className="relative overflow-hidden rounded-lg border border-success/25 bg-[#08110f]">
+										<div className="absolute left-2 top-1 text-[8px] font-mono text-success/60">
+											CH1
+										</div>
+										<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-success/60">
+											{effectivePitchHz.toFixed(1)} Hz
+										</div>
+										<canvas
+											ref={oscilloscopeCanvasRef}
+											width={900}
+											height={220}
+											className="h-36 w-full"
+											style={{ imageRendering: "pixelated" }}
+										/>
+									</div>
+									<div className="flex justify-center gap-2">
+										<ControlKnob
+											value={scopeCycles}
+											onChange={setScopeCycles}
+											min={0.5}
+											max={8}
+											size={48}
+											color="#4ade80"
+											label="Cycles"
+											valueFormatter={(value) => value.toFixed(1)}
+										/>
+										<ControlKnob
+											value={scopeVerticalZoom}
+											onChange={setScopeVerticalZoom}
+											min={0.25}
+											max={4}
+											size={48}
+											color="#facc15"
+											label="Zoom"
+											valueFormatter={(value) => `${value.toFixed(1)}x`}
+										/>
+										<ControlKnob
+											value={scopeTriggerLevel}
+											onChange={(value) =>
+												setScopeTriggerLevel(Math.round(value))
+											}
+											min={0}
+											max={255}
+											size={48}
+											color="#67e8f9"
+											label="Trig"
+											valueFormatter={(value) => `${Math.round(value)}`}
+										/>
+									</div>
+									<div className="mt-3 grid grid-cols-2 gap-3">
+										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
+											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
+												Mix A/B
+											</div>
+											<canvas
+												ref={combinedCanvasRef}
+												width={220}
+												height={70}
+												className="h-17.5 w-full rounded-lg"
+											/>
+										</div>
+										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
+											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
+												Phase Map
+											</div>
+											<canvas
+												ref={phaseCanvasRef}
+												width={220}
+												height={70}
+												className="h-17.5 w-full rounded-lg"
+											/>
+										</div>
+									</div>
+								</div>
+							)}
 						</div>
 
 						<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3 shrink-0">
@@ -1299,289 +1394,39 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 						</div>
 
-						<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
-							<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
-								FX Rack
-							</div>
-							<div className="grid grid-cols-3 gap-3">
-								<div className="space-y-2">
-									<div className="text-xs font-medium text-base-content/70">
-										Chorus
-									</div>
-									<div className="flex justify-center gap-2">
-										<ControlKnob
-											value={chorusRate}
-											onChange={setChorusRate}
-											min={0.1}
-											max={5}
-											size={44}
-											color="#60a5fa"
-											label="Rate"
-											valueFormatter={(value) => value.toFixed(1)}
-										/>
-										<ControlKnob
-											value={chorusMix}
-											onChange={setChorusMix}
-											min={0}
-											max={1}
-											size={44}
-											color="#f472b6"
-											label="Mix"
-											valueFormatter={(value) => `${Math.round(value * 100)}%`}
-										/>
-									</div>
-								</div>
-								<div className="space-y-2">
-									<div className="text-xs font-medium text-base-content/70">
-										Delay
-									</div>
-									<div className="flex justify-center gap-2">
-										<ControlKnob
-											value={delayTime}
-											onChange={setDelayTime}
-											min={0.01}
-											max={1}
-											size={44}
-											color="#c084fc"
-											label="Time"
-											valueFormatter={(value) =>
-												`${Math.round(value * 1000)}ms`
-											}
-										/>
-										<ControlKnob
-											value={delayMix}
-											onChange={setDelayMix}
-											min={0}
-											max={1}
-											size={44}
-											color="#a78bfa"
-											label="Mix"
-											valueFormatter={(value) => `${Math.round(value * 100)}%`}
-										/>
-									</div>
-								</div>
-								<div className="space-y-2">
-									<div className="text-xs font-medium text-base-content/70">
-										Reverb
-									</div>
-									<div className="flex justify-center gap-2">
-										<ControlKnob
-											value={reverbSize}
-											onChange={setReverbSize}
-											min={0}
-											max={1}
-											size={44}
-											color="#fdba74"
-											label="Size"
-											valueFormatter={(value) => `${Math.round(value * 100)}%`}
-										/>
-										<ControlKnob
-											value={reverbMix}
-											onChange={setReverbMix}
-											min={0}
-											max={1}
-											size={44}
-											color="#fda4af"
-											label="Mix"
-											valueFormatter={(value) => `${Math.round(value * 100)}%`}
-										/>
-									</div>
-								</div>
-							</div>
-							<div className="mt-3 grid grid-cols-2 gap-2">
-								
-								<ControlKnob
-									value={chorusDepth}
-									onChange={setChorusDepth}
-									min={0}
-									max={3}
-									size={52}
-									color="#38bdf8"
-									label="Chr Dpth"
-									valueFormatter={(value) => `${Math.round(value)}`}
-								/>
-								<ControlKnob
-									value={delayFeedback}
-									onChange={setDelayFeedback}
-									min={0}
-									max={0.9}
-									size={42}
-									color="#e879f9"
-									label="Dly Fdbk"
-									valueFormatter={(value) => `${Math.round(value * 100)}%`}
-								/>
-							</div>
-						</div>
-
-						<div className="mt-auto rounded-2xl border border-base-300/70 bg-base-300/20 p-3">
-							<div className="mb-2 flex items-center justify-between gap-2">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
-									Scope
-								</div>
-								<button
-									type="button"
-									className={`btn btn-xs ${scopeOpen ? "btn-primary" : "btn-outline"}`}
-									onClick={() => setScopeOpen(!scopeOpen)}
-								>
-									{scopeOpen ? "Hide" : "Show"}
-								</button>
-							</div>
-							{scopeOpen && (
-								<div className="space-y-2">
-									<div className="relative overflow-hidden rounded-lg border border-success/25 bg-[#08110f]">
-										<div className="absolute left-2 top-1 text-[8px] font-mono text-success/60">
-											CH1
-										</div>
-										<canvas
-											ref={leftScopeCanvasRef}
-											width={280}
-											height={100}
-											className="h-[100px] w-full"
-											style={{ imageRendering: "pixelated" }}
-										/>
-									</div>
-									<div className="flex justify-center gap-2">
-										<ControlKnob
-											value={scopeCycles}
-											onChange={setScopeCycles}
-											min={0.5}
-											max={8}
-											size={36}
-											color="#4ade80"
-											label="Cyc"
-											valueFormatter={(v) => v.toFixed(1)}
-										/>
-										<ControlKnob
-											value={scopeVerticalZoom}
-											onChange={setScopeVerticalZoom}
-											min={0.5}
-											max={4}
-											size={36}
-											color="#67e8f9"
-											label="Zoom"
-											valueFormatter={(v) => v.toFixed(1)}
-										/>
-									</div>
-								</div>
-							)}
-						</div>
+						<div className="rounded-2xl border border-base-300/70 bg-base-300/20 p-3"></div>
 					</div>
 				</aside>
 
 				<main className="space-y-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
 					<section className="rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(27,29,43,0.95),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-						<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-							<div>
-								<div className="text-[10px] uppercase tracking-[0.34em] text-base-content/45">
-									Monitor
-								</div>
-								<div className="text-lg font-semibold text-base-content">
-									Compact Oscilloscope
-								</div>
-							</div>
-							<button
-								type="button"
-								className={`btn btn-sm ${scopeOpen ? "btn-primary" : "btn-outline"}`}
-								onClick={() => setScopeOpen(!scopeOpen)}
-							>
-								{scopeOpen ? "Hide Scope" : "Show Scope"}
-							</button>
+						<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+							FX Rack
 						</div>
-
-						{scopeOpen && (
-							<div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-								<div className="relative overflow-hidden rounded-[1.4rem] border border-success/25 bg-[#08110f] shadow-[inset_0_0_50px_rgba(0,0,0,0.8),0_20px_40px_rgba(0,0,0,0.22)]">
-									<div className="absolute inset-x-0 top-0 h-px bg-success/30" />
-									<div className="absolute left-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-success/60">
-										CH1 Live
-									</div>
-									<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-success/60">
-										{effectivePitchHz.toFixed(1)} Hz
-									</div>
-									<canvas
-										ref={oscilloscopeCanvasRef}
-										width={900}
-										height={220}
-										className="h-full w-full"
-										style={{ imageRendering: "pixelated" }}
-									/>
-								</div>
-
-								<div className="rounded-[1.4rem] border border-base-300/70 bg-base-300/20 p-3">
-									<div className="mb-3 flex justify-center gap-3">
-										<ControlKnob
-											value={scopeCycles}
-											onChange={setScopeCycles}
-											min={0.5}
-											max={8}
-											size={48}
-											color="#4ade80"
-											label="Cycles"
-											valueFormatter={(value) => value.toFixed(1)}
-										/>
-										<ControlKnob
-											value={scopeVerticalZoom}
-											onChange={setScopeVerticalZoom}
-											min={0.25}
-											max={4}
-											size={48}
-											color="#facc15"
-											label="Zoom"
-											valueFormatter={(value) => `${value.toFixed(1)}x`}
-										/>
-										<ControlKnob
-											value={scopeTriggerLevel}
-											onChange={(value) =>
-												setScopeTriggerLevel(Math.round(value))
-											}
-											min={0}
-											max={255}
-											size={48}
-											color="#67e8f9"
-											label="Trig"
-											valueFormatter={(value) => `${Math.round(value)}`}
-										/>
-									</div>
-									<select
-										className="select select-bordered select-sm w-full"
-										value={scopeTriggerMode}
-										onChange={(e) =>
-											setScopeTriggerMode(
-												e.target.value as "off" | "rise" | "fall",
-											)
-										}
-									>
-										<option value="off">Trigger Off</option>
-										<option value="rise">Rising</option>
-										<option value="fall">Falling</option>
-									</select>
-									<div className="mt-3 grid grid-cols-2 gap-3">
-										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
-												Mix A/B
-											</div>
-											<canvas
-												ref={combinedCanvasRef}
-												width={220}
-												height={70}
-												className="h-[70px] w-full rounded-lg"
-											/>
-										</div>
-										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
-												Phase Map
-											</div>
-											<canvas
-												ref={phaseCanvasRef}
-												width={220}
-												height={70}
-												className="h-[70px] w-full rounded-lg"
-											/>
-										</div>
-									</div>
-								</div>
-							</div>
-						)}
+						<div className="grid grid-cols-3 gap-x-3">
+							<ChorusSection
+								rate={chorusRate}
+								setRate={setChorusRate}
+								depth={chorusDepth}
+								setDepth={setChorusDepth}
+								mix={chorusMix}
+								setMix={setChorusMix}
+							/>
+							<DelaySection
+								time={delayTime}
+								setTime={setDelayTime}
+								feedback={delayFeedback}
+								setFeedback={setDelayFeedback}
+								mix={delayMix}
+								setMix={setDelayMix}
+							/>
+							<ReverbSection
+								size={reverbSize}
+								setSize={setReverbSize}
+								mix={reverbMix}
+								setMix={setReverbMix}
+							/>
+						</div>
 					</section>
 
 					<section className="space-y-4">
