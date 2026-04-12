@@ -28,10 +28,17 @@ export function ControlKnob({
 	const normalizedValue = (value - min) / (max - min);
 	const angle = -140 + normalizedValue * 280;
 
+	const handlePointerDown = (event: React.PointerEvent) => {
+		event.preventDefault();
+		setDragging(true);
+		startYRef.current = event.clientY;
+		startValueRef.current = value;
+	};
+
 	useEffect(() => {
 		if (!dragging) return;
 
-		const handleMouseMove = (event: MouseEvent) => {
+		const handlePointerMove = (event: PointerEvent) => {
 			const deltaY = startYRef.current - event.clientY;
 			const range = max - min;
 			const sensitivity = Math.max(160, size * 4);
@@ -39,16 +46,16 @@ export function ControlKnob({
 			onChange(Math.max(min, Math.min(max, nextValue)));
 		};
 
-		const handleMouseUp = () => {
+		const handlePointerUp = () => {
 			setDragging(false);
 		};
 
-		window.addEventListener("mousemove", handleMouseMove);
-		window.addEventListener("mouseup", handleMouseUp);
+		window.addEventListener("pointermove", handlePointerMove);
+		window.addEventListener("pointerup", handlePointerUp);
 
 		return () => {
-			window.removeEventListener("mousemove", handleMouseMove);
-			window.removeEventListener("mouseup", handleMouseUp);
+			window.removeEventListener("pointermove", handlePointerMove);
+			window.removeEventListener("pointerup", handlePointerUp);
 		};
 	}, [dragging, max, min, onChange, size]);
 
@@ -56,14 +63,9 @@ export function ControlKnob({
 		<div className="flex flex-col items-center gap-1 text-center">
 			<button
 				type="button"
-				className="rounded-full border border-base-300/80 bg-base-300/40 p-0 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm"
+				className="rounded-full border border-base-300/80 bg-base-300/40 p-0 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm touch-none"
 				aria-label={label ?? "knob"}
-				onMouseDown={(event) => {
-					event.preventDefault();
-					setDragging(true);
-					startYRef.current = event.clientY;
-					startValueRef.current = value;
-				}}
+				onPointerDown={handlePointerDown}
 				style={{ width: size, height: size }}
 			>
 				<svg width={size} height={size} viewBox="0 0 56 56" role="presentation">
