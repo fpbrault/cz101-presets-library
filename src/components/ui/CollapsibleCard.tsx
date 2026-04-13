@@ -107,7 +107,9 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 				>
 					{title}
 				</div>
-				<div className={joinClasses("collapse-content", resolvedContentClassName)}>
+				<div
+					className={joinClasses("collapse-content", resolvedContentClassName)}
+				>
 					{children}
 				</div>
 			</div>

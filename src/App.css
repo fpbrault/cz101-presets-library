@@ -55,7 +55,7 @@
 @layer components {
 	/* Section header bar — mimics the blue labeled bars on the CZ hardware */
 	.cz-light-blue {
-		@apply flex items-center gap-2 py-[0.15rem] px-2 font-mono text-[0.8rem] text-center justify-center font-bold tracking-[0.28em] uppercase text-cz-green ;
+		@apply flex items-center gap-2 py-[0.15rem] px-2 font-mono text-[0.8rem] text-center justify-center font-bold tracking-[0.28em] uppercase text-cz-green;
 	}
 
 	/* Collapsible card header — solid blue bar like CZ hardware section dividers */
@@ -67,7 +67,7 @@
 		@apply rounded-none text-center;
 	}
 	.cz-section-slanted-title {
-		@apply  [clip-path:polygon(15px_0%,calc(100%_-_5px)_0%,calc(100%_-_15px)_100%,5px_100%)] text-xl text-cz-panel font-bold;
+		@apply [clip-path:polygon(15px_0%,calc(100%_-_5px)_0%,calc(100%_-_15px)_100%,5px_100%)] text-xl text-cz-panel font-bold;
 	}
 
 	/* LED indicator dot — small square LED above/beside a button */

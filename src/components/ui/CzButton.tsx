@@ -38,15 +38,15 @@ export default function CzButton({
 		>
 			{/* LED above the button */}
 			{led ? (
-			<span
-				className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
-					active
-						? "bg-cz-led-on shadow-[0_0_4px_1px_rgba(255,30,30,0.55),inset_0_1px_0_rgba(255,180,180,0.3)]"
-						: "bg-cz-led-off shadow-[inset_0_1px_1px_rgba(0,0,0,0.6)]"
-				}`}
-				aria-hidden="true"
-			/>
-			 ) : (
+				<span
+					className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
+						active
+							? "bg-cz-led-on shadow-[0_0_4px_1px_rgba(255,30,30,0.55),inset_0_1px_0_rgba(255,180,180,0.3)]"
+							: "bg-cz-led-off shadow-[inset_0_1px_1px_rgba(0,0,0,0.6)]"
+					}`}
+					aria-hidden="true"
+				/>
+			) : (
 				// Placeholder to keep buttons aligned when LED is disabled
 				<span className="inline-block h-1 w-3 mb-1" aria-hidden="true" />
 			)}
@@ -60,10 +60,10 @@ export default function CzButton({
 						? "bg-cz-btn border-cz-btn-border text-cz-cream"
 						: "bg-cz-btn border-cz-btn-border text-cz-cream-dim"
 				}`}
-			>
-				
-			</button>
-			<div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] ">{children}</div>
+			></button>
+			<div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] ">
+				{children}
+			</div>
 		</div>
 	);
 }

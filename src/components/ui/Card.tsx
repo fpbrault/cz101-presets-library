@@ -1,6 +1,11 @@
 import type React from "react";
 
-export type CardVariant = "panel" | "panel-slanted" | "hero" | "subtle" | "inset";
+export type CardVariant =
+	| "panel"
+	| "panel-slanted"
+	| "hero"
+	| "subtle"
+	| "inset";
 export type CardPadding = "none" | "sm" | "md" | "lg";
 
 type CardProps<T extends React.ElementType = "div"> = {

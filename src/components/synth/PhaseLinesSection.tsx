@@ -79,8 +79,6 @@ export default function PhaseLinesSection({
 			? onCopyLine1ToLine2("full")
 			: onCopyLine2ToLine1("full");
 
-	const copyTargetLabel = activeTab === "line1" ? "Line 2" : "Line 1";
-
 	return (
 		<CollapsibleCard title="Phase Lines" variant="panel-slanted" open>
 			{/* Line Select + Modulation */}

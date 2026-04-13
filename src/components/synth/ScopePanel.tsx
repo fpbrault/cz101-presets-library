@@ -1,6 +1,6 @@
+import type { RefObject } from "react";
 import ControlKnob from "@/components/ControlKnob";
 import CollapsibleCard from "@/components/ui/CollapsibleCard";
-import type { RefObject } from "react";
 
 type ScopePanelProps = {
 	oscilloscopeCanvasRef: RefObject<HTMLCanvasElement | null>;
