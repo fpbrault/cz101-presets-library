@@ -2301,16 +2301,15 @@ export default function PhaseDistortionVisualizer() {
 						<CollapsibleCard title="Phase Lines" variant="panel" open>
 							{/* Line Select + Modulation — above tabs */}
 							<div className="mb-3 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-border pb-3">
-								<div className="flex-1 min-w-0">
+								<div className="shrink-0">
 									<div className="mb-1 cz-section-bar">Line Select</div>
-									<div className="flex w-full gap-1">
+									<div className="flex gap-1">
 										{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
 											(ls) => (
 												<CzButton
 													key={ls}
 													active={lineSelect === ls}
 													onClick={() => setLineSelect(ls)}
-													className="flex-1"
 												>
 													{ls}
 												</CzButton>
