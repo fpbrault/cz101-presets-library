@@ -70,6 +70,23 @@
 		color: var(--color-cz-orange);
 	}
 
+	/* Collapsible card header — solid blue bar like CZ hardware section dividers */
+	.cz-collapse-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.2rem 0.75rem;
+		font-family: var(--font-mono, monospace);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		background-color: var(--color-cz-section-bar);
+		color: #ffffff;
+		width: 100%;
+		border-radius: 2px;
+	}
+
 	/* LED indicator dot — small square LED above/beside a button */
 	.cz-led {
 		display: inline-block;

@@ -72,7 +72,12 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 					defaultChecked={defaultOpen}
 					className={inputClassName}
 				/>
-				<div className={joinClasses("collapse-title", titleClassName)}>
+				<div
+					className={joinClasses(
+						"collapse-title cz-collapse-header",
+						titleClassName,
+					)}
+				>
 					{title}
 				</div>
 				<div className={joinClasses("collapse-content", contentClassName)}>
@@ -99,7 +104,7 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 		<details className={collapseClassName} {...detailsProps}>
 			<summary
 				className={joinClasses(
-					"collapse-title cursor-pointer list-none",
+					"collapse-title cursor-pointer list-none cz-collapse-header",
 					titleClassName,
 				)}
 			>

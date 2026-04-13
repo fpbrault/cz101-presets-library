@@ -1523,7 +1523,7 @@ export default function PhaseDistortionVisualizer() {
 											min={0.5}
 											max={8}
 											size={48}
-											color="#4ade80"
+											color="#3dff3d"
 											label="Cycles"
 											valueFormatter={(value) => value.toFixed(1)}
 										/>
@@ -1533,7 +1533,7 @@ export default function PhaseDistortionVisualizer() {
 											min={0.25}
 											max={4}
 											size={48}
-											color="#facc15"
+											color="#9cb937"
 											label="Zoom"
 											valueFormatter={(value) => `${value.toFixed(1)}x`}
 										/>
@@ -1545,7 +1545,7 @@ export default function PhaseDistortionVisualizer() {
 											min={0}
 											max={255}
 											size={48}
-											color="#67e8f9"
+											color="#7f9de4"
 											label="Trig"
 											valueFormatter={(value) => `${Math.round(value)}`}
 										/>
@@ -1796,7 +1796,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={1}
 										size={58}
-										color="#f6f06d"
+										color="#9cb937"
 										label="Volume"
 										valueFormatter={(value) => `${Math.round(value * 100)}%`}
 									/>
@@ -1819,15 +1819,13 @@ export default function PhaseDistortionVisualizer() {
 										</CzButton>
 									</div>
 									{polyMode === "mono" && (
-										<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
-											<input
-												type="checkbox"
-												checked={legato}
-												onChange={(e) => setLegato(e.target.checked)}
-												className="checkbox checkbox-xs"
-											/>
-											<span className="label-text text-xs">Legato</span>
-										</label>
+										<CzButton
+											active={legato}
+											onClick={() => setLegato(!legato)}
+											className="[&_button]:bg-cz-inset [&_button]:border-cz-border"
+										>
+											Legato
+										</CzButton>
 									)}
 									<div className="flex items-center gap-2">
 										<CzButton
@@ -1892,7 +1890,7 @@ export default function PhaseDistortionVisualizer() {
 							}
 							className="collapse collapse-arrow overflow-hidden"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
+							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
 								<div className="cz-section-bar">Phase Mod</div>
 							</summary>
 							<div className="collapse-content">
@@ -1903,7 +1901,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={0.3}
 										size={52}
-										color="#fda4af"
+										color="#7f9de4"
 										label="Amount"
 										valueFormatter={(value) => value.toFixed(2)}
 									/>
@@ -1913,20 +1911,18 @@ export default function PhaseDistortionVisualizer() {
 										min={0.5}
 										max={4}
 										size={52}
-										color="#fdba74"
+										color="#9cb937"
 										label="Ratio"
 										valueFormatter={(value) => value.toFixed(1)}
 									/>
 								</div>
-								<label className="label mt-3 cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
-									<input
-										type="checkbox"
-										checked={pmPre}
-										onChange={(e) => setPmPre(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Pre-warp PM</span>
-								</label>
+								<CzButton
+									active={pmPre}
+									onClick={() => setPmPre(!pmPre)}
+									className="mt-3 [&_button]:bg-cz-inset [&_button]:border-cz-border"
+								>
+									Pre-warp PM
+								</CzButton>
 							</div>
 						</Card>
 
@@ -1938,19 +1934,17 @@ export default function PhaseDistortionVisualizer() {
 							onToggle={(e) => toggleAccordion("vibrato", e.currentTarget.open)}
 							className="collapse collapse-arrow overflow-hidden"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
+							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
 								<div className="cz-section-bar">Vibrato</div>
 							</summary>
 							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
-									<input
-										type="checkbox"
-										checked={vibratoEnabled}
-										onChange={(e) => setVibratoEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Enable Vibrato</span>
-								</label>
+								<CzButton
+									active={vibratoEnabled}
+									onClick={() => setVibratoEnabled(!vibratoEnabled)}
+									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
+								>
+									Enable Vibrato
+								</CzButton>
 								<div className="flex justify-center gap-2">
 									{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
 										<CzButton
@@ -1969,7 +1963,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={99}
 										size={44}
-										color="#fda4af"
+										color="#7f9de4"
 										label="Rate"
 										valueFormatter={(v) => `${Math.round(v)}`}
 									/>
@@ -1979,7 +1973,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={99}
 										size={44}
-										color="#fda4af"
+										color="#7f9de4"
 										label="Depth"
 										valueFormatter={(v) => `${Math.round(v)}`}
 									/>
@@ -1989,7 +1983,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={99}
 										size={44}
-										color="#fda4af"
+										color="#7f9de4"
 										label="Delay"
 										valueFormatter={(v) => `${Math.round(v)}`}
 									/>
@@ -2007,19 +2001,17 @@ export default function PhaseDistortionVisualizer() {
 							}
 							className="collapse collapse-arrow overflow-hidden"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
+							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
 								<div className="cz-section-bar">Portamento</div>
 							</summary>
 							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
-									<input
-										type="checkbox"
-										checked={portamentoEnabled}
-										onChange={(e) => setPortamentoEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Enable Portamento</span>
-								</label>
+								<CzButton
+									active={portamentoEnabled}
+									onClick={() => setPortamentoEnabled(!portamentoEnabled)}
+									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
+								>
+									Enable Portamento
+								</CzButton>
 								<div className="flex w-full gap-1 mb-2">
 									<CzButton
 										active={portamentoMode === "rate"}
@@ -2044,7 +2036,7 @@ export default function PhaseDistortionVisualizer() {
 											min={0}
 											max={99}
 											size={52}
-											color="#67e8f9"
+											color="#7f9de4"
 											label="Rate"
 											valueFormatter={(v) => `${Math.round(v)}`}
 										/>
@@ -2055,7 +2047,7 @@ export default function PhaseDistortionVisualizer() {
 											min={0}
 											max={2}
 											size={52}
-											color="#67e8f9"
+											color="#7f9de4"
 											label="Time"
 											valueFormatter={(v) => `${v.toFixed(2)}s`}
 										/>
@@ -2072,7 +2064,7 @@ export default function PhaseDistortionVisualizer() {
 							onToggle={(e) => toggleAccordion("lfo", e.currentTarget.open)}
 							className="collapse collapse-arrow overflow-hidden"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
+							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
 								<div className="cz-section-bar">LFO</div>
 							</summary>
 							<div className="collapse-content">
@@ -2113,15 +2105,13 @@ export default function PhaseDistortionVisualizer() {
 										/>
 									</svg>
 								</div>
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
-									<input
-										type="checkbox"
-										checked={lfoEnabled}
-										onChange={(e) => setLfoEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Enable LFO</span>
-								</label>
+								<CzButton
+									active={lfoEnabled}
+									onClick={() => setLfoEnabled(!lfoEnabled)}
+									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
+								>
+									Enable LFO
+								</CzButton>
 								<div className="flex flex-wrap gap-1 mb-2">
 									{(["sine", "triangle", "square", "saw"] as const).map((w) => (
 										<CzButton
@@ -2140,7 +2130,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={20}
 										size={44}
-										color="#a78bfa"
+										color="#7f9de4"
 										label="Rate"
 										valueFormatter={(v) => `${v.toFixed(1)}Hz`}
 									/>
@@ -2150,7 +2140,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={1}
 										size={44}
-										color="#a78bfa"
+										color="#7f9de4"
 										label="Depth"
 										valueFormatter={(v) => `${Math.round(v * 100)}%`}
 									/>
@@ -2180,7 +2170,7 @@ export default function PhaseDistortionVisualizer() {
 							onToggle={(e) => toggleAccordion("filter", e.currentTarget.open)}
 							className="collapse collapse-arrow overflow-hidden"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
+							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
 								<div className="cz-section-bar">Filter</div>
 							</summary>
 							<div className="collapse-content">
@@ -2222,15 +2212,13 @@ export default function PhaseDistortionVisualizer() {
 										/>
 									</svg>
 								</div>
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
-									<input
-										type="checkbox"
-										checked={filterEnabled}
-										onChange={(e) => setFilterEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Enable Filter</span>
-								</label>
+								<CzButton
+									active={filterEnabled}
+									onClick={() => setFilterEnabled(!filterEnabled)}
+									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
+								>
+									Enable Filter
+								</CzButton>
 								<div className="flex w-full gap-1 mb-2">
 									{(["lp", "hp", "bp"] as const).map((t) => (
 										<CzButton
@@ -2250,7 +2238,7 @@ export default function PhaseDistortionVisualizer() {
 										min={20}
 										max={20000}
 										size={44}
-										color="#34d399"
+										color="#3dff3d"
 										label="Cutoff"
 										valueFormatter={(v) => `${Math.round(v)}Hz`}
 									/>
@@ -2260,7 +2248,7 @@ export default function PhaseDistortionVisualizer() {
 										min={0}
 										max={1}
 										size={44}
-										color="#34d399"
+										color="#3dff3d"
 										label="Res"
 										valueFormatter={(v) => `${Math.round(v * 100)}%`}
 									/>
@@ -2270,7 +2258,7 @@ export default function PhaseDistortionVisualizer() {
 										min={-1}
 										max={1}
 										size={44}
-										color="#34d399"
+										color="#3dff3d"
 										label="Env"
 										valueFormatter={(v) => `${Math.round(v * 100)}%`}
 									/>
@@ -2283,9 +2271,12 @@ export default function PhaseDistortionVisualizer() {
 				<main className="space-y-4 p-1 pb-4 overflow-y-auto min-h-0">
 					<section className="space-y-4">
 						{/* Line Select + Modulation — merged panel */}
-						<Card variant="panel" className="space-y-3">
-							<div>
-								<div className="mb-2 cz-section-bar">Line Select</div>
+						<Card
+							variant="panel"
+							className="flex flex-wrap items-end gap-x-6 gap-y-2"
+						>
+							<div className="flex-1 min-w-0">
+								<div className="mb-1 cz-section-bar">Line Select</div>
 								<div className="flex w-full gap-1">
 									{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
 										(ls) => (
@@ -2302,9 +2293,9 @@ export default function PhaseDistortionVisualizer() {
 								</div>
 							</div>
 
-							<div>
-								<div className="mb-2 cz-section-bar">Modulation</div>
-								<div className="flex w-full gap-1">
+							<div className="shrink-0">
+								<div className="mb-1 cz-section-bar">Modulation</div>
+								<div className="flex gap-1">
 									{(
 										[
 											["normal", "Normal"],
@@ -2325,7 +2316,6 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 						</Card>
 						<CollapsibleCard title="FX Rack" variant="panel">
-							<div className="mb-3 cz-section-bar">FX Rack</div>
 							<div className="grid grid-cols-3 gap-x-3">
 								<ChorusSection
 									rate={chorusRate}
@@ -2366,7 +2356,7 @@ export default function PhaseDistortionVisualizer() {
 									<PerLineWarpBlock
 										label={"Line 1"}
 										waveform={waveform.out1}
-										color="#3dedff"
+										color="#3dff3d"
 										copyTargetLabel={"Line 2"}
 										onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
 										onCopyEnvelopes={() =>
@@ -2413,7 +2403,7 @@ export default function PhaseDistortionVisualizer() {
 									<PerLineWarpBlock
 										label={"Line 2"}
 										waveform={waveform.out2}
-										color="#ff71ce"
+										color="#9cb937"
 										copyTargetLabel={"Line 1"}
 										onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
 										onCopyEnvelopes={() =>
