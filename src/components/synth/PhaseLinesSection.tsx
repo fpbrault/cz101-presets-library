@@ -1,7 +1,6 @@
 import { type RefObject, useState } from "react";
 import { PerLineWarpBlock } from "@/components/PerLineWarpBlock";
 import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
-import Card from "@/components/ui/Card";
 import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
 
@@ -60,8 +59,6 @@ export default function PhaseLinesSection({
 	line2,
 	onCopyLine1ToLine2,
 	onCopyLine2ToLine1,
-	combinedCanvasRef,
-	phaseCanvasRef,
 }: PhaseLinesSectionProps) {
 	const showLineA = lineSelect !== "L2";
 	const [activeTab, setActiveTab] = useState<"line1" | "line2">("line1");
