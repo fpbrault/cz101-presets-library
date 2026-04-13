@@ -53,10 +53,10 @@ export default function CzButton({
 						? "bg-cz-btn border-cz-btn-border text-cz-cream"
 						: "bg-cz-btn border-cz-btn-border text-cz-cream-dim"
 				}`}
-			></button>
-			<div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] ">
-				{children}
-			</div>
+			>
+				
+			</button>
+			<div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] ">{children}</div>
 		</div>
 	);
 }
