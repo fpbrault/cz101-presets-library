@@ -929,10 +929,10 @@ export default function PhaseDistortionVisualizer() {
 			if (!analyser) {
 				ctx.clearRect(0, 0, drawWidth, drawHeight);
 
-				ctx.fillStyle = "#0a0a0a";
+				ctx.fillStyle = "#051005";
 				ctx.fillRect(0, 0, drawWidth, drawHeight);
 
-				ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
+				ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
 				ctx.beginPath();
 				ctx.moveTo(0, drawHeight / 2);
 				ctx.lineTo(drawWidth, drawHeight / 2);
@@ -974,7 +974,7 @@ export default function PhaseDistortionVisualizer() {
 
 			ctx.clearRect(0, 0, drawWidth, drawHeight);
 
-			ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
+			ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
 			ctx.lineWidth = 1;
 			for (let y = 0.25; y < 1; y += 0.25) {
 				ctx.beginPath();
@@ -996,9 +996,9 @@ export default function PhaseDistortionVisualizer() {
 			ctx.lineTo(drawWidth, drawHeight / 2);
 			ctx.stroke();
 
-			ctx.shadowColor = "#00ff00";
+			ctx.shadowColor = "#3dff3d";
 			ctx.shadowBlur = 8;
-			ctx.strokeStyle = "#00ff00";
+			ctx.strokeStyle = "#3dff3d";
 			ctx.lineWidth = 2;
 			ctx.beginPath();
 			for (let i = 0; i < viewSamples; i++) {
@@ -1047,10 +1047,10 @@ export default function PhaseDistortionVisualizer() {
 			if (!analyser) {
 				ctx.clearRect(0, 0, drawWidth, drawHeight);
 
-				ctx.fillStyle = "#0a0a0a";
+				ctx.fillStyle = "#051005";
 				ctx.fillRect(0, 0, drawWidth, drawHeight);
 
-				ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
+				ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
 				ctx.beginPath();
 				ctx.moveTo(0, drawHeight / 2);
 				ctx.lineTo(drawWidth, drawHeight / 2);
@@ -1076,7 +1076,7 @@ export default function PhaseDistortionVisualizer() {
 
 			ctx.clearRect(0, 0, drawWidth, drawHeight);
 
-			ctx.strokeStyle = "rgba(0, 80, 0, 0.4)";
+			ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
 			ctx.lineWidth = 1;
 			for (let y = 0.25; y < 1; y += 0.25) {
 				ctx.beginPath();
@@ -1092,9 +1092,9 @@ export default function PhaseDistortionVisualizer() {
 			ctx.lineTo(drawWidth, drawHeight / 2);
 			ctx.stroke();
 
-			ctx.shadowColor = "#00ff00";
+			ctx.shadowColor = "#3dff3d";
 			ctx.shadowBlur = 8;
-			ctx.strokeStyle = "#00ff00";
+			ctx.strokeStyle = "#3dff3d";
 			ctx.lineWidth = 2;
 			ctx.beginPath();
 			for (let i = 0; i < viewSamples; i++) {
@@ -1280,18 +1280,18 @@ export default function PhaseDistortionVisualizer() {
 							onToggle={(e) => toggleAccordion("scope", e.currentTarget.open)}
 							titleClassName="pr-3"
 							title={
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
 									Scope
 								</div>
 							}
 						>
 							<div>
 								<div className="space-y-2">
-									<div className="relative overflow-hidden rounded-lg border border-success/25 bg-[#08110f]">
-										<div className="absolute left-2 top-1 text-[8px] font-mono text-success/60">
+									<div className="relative overflow-hidden rounded-lg border border-cz-border bg-cz-lcd-bg">
+										<div className="absolute left-2 top-1 text-[8px] font-mono text-cz-lcd-fg/60">
 											CH1
 										</div>
-										<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-success/60">
+										<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-cz-lcd-fg/60">
 											{effectivePitchHz.toFixed(1)} Hz
 										</div>
 										<canvas
@@ -1337,8 +1337,8 @@ export default function PhaseDistortionVisualizer() {
 										/>
 									</div>
 									<div className="mt-3 grid grid-cols-2 gap-3">
-										<Card variant="inset" className="border-base-300/60 p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
+										<Card variant="inset" className="border-cz-border p-2">
+											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
 												Mix A/B
 											</div>
 											<canvas
@@ -1348,8 +1348,8 @@ export default function PhaseDistortionVisualizer() {
 												className="h-17.5 w-full rounded-lg"
 											/>
 										</Card>
-										<Card variant="inset" className="border-base-300/60 p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
+										<Card variant="inset" className="border-cz-border p-2">
+											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
 												Phase Map
 											</div>
 											<canvas
