@@ -34,3 +34,9 @@ package-lock.json
 src/**/__screenshots__/
 
 venv/
+
+# Generated WASM build output
+public/cz-synth-wasm/
+
+# Plans (local only)
+plans/
