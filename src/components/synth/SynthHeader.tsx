@@ -1,22 +1,36 @@
 import type { Preset } from "@/lib/presets/presetManager";
-import PresetNavigator from "./PresetNavigator";
+import PresetNavigator, { type PresetEntry } from "./PresetNavigator";
 
 type SynthHeaderProps = {
-	presetList: string[];
-	libraryPresets: Preset[];
+	allEntries: PresetEntry[];
 	activePresetName: string;
 	onLoadLocal: (name: string) => void;
 	onLoadLibrary: (preset: Preset) => void;
+	onLoadBuiltin: (name: string) => void;
 	onStepPreset: (direction: -1 | 1) => void;
+	onSavePreset: (name: string) => void;
+	onDeletePreset: (name: string) => void;
+	onRenamePreset: (oldName: string, newName: string) => void;
+	onExportPreset: (name: string) => void;
+	onExportCurrentState: (name: string) => void;
+	onImportPreset: (json: string, filename: string) => void;
+	onInitPreset: () => void;
 };
 
 export default function SynthHeader({
-	presetList,
-	libraryPresets,
+	allEntries,
 	activePresetName,
 	onLoadLocal,
 	onLoadLibrary,
+	onLoadBuiltin,
 	onStepPreset,
+	onSavePreset,
+	onDeletePreset,
+	onRenamePreset,
+	onExportPreset,
+	onExportCurrentState,
+	onImportPreset,
+	onInitPreset,
 }: SynthHeaderProps) {
 	return (
 		<header className="shrink-0 flex flex-col gap-3 border-b-4 border-cz-border bg-cz-body px-8 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
@@ -39,12 +53,19 @@ export default function SynthHeader({
 			</div>
 
 			<PresetNavigator
-				presetList={presetList}
-				libraryPresets={libraryPresets}
+				allEntries={allEntries}
 				activePresetName={activePresetName}
 				onLoadLocal={onLoadLocal}
 				onLoadLibrary={onLoadLibrary}
+				onLoadBuiltin={onLoadBuiltin}
 				onStepPreset={onStepPreset}
+				onSavePreset={onSavePreset}
+				onDeletePreset={onDeletePreset}
+				onRenamePreset={onRenamePreset}
+				onExportPreset={onExportPreset}
+				onExportCurrentState={onExportCurrentState}
+				onImportPreset={onImportPreset}
+				onInitPreset={onInitPreset}
 			/>
 
 			<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">

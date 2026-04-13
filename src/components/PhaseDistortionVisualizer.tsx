@@ -3,13 +3,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
+import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
 import { pdVisualizerWorkletUrl } from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
+	deletePreset,
+	DEFAULT_PRESET,
+	exportPreset,
+	importPreset,
 	listPresets,
 	loadCurrentState,
 	loadPreset,
 	type SynthPresetData,
+	renamePreset,
 	saveCurrentState,
+	savePreset,
 } from "@/lib/synth/presetStorage";
 import {
 	computeWaveform,
@@ -381,6 +388,11 @@ export default function PhaseDistortionVisualizer() {
 
 	const allPresetEntries = useMemo(
 		() => [
+			...Object.keys(DEFAULT_SYNTH_PRESETS).map((name) => ({
+				id: `builtin:${name}`,
+				label: name,
+				type: "builtin" as const,
+			})),
 			...presetList.map((name) => ({
 				id: `local:${name}`,
 				label: name,
@@ -411,6 +423,16 @@ export default function PhaseDistortionVisualizer() {
 		[applyPreset],
 	);
 
+	const handleLoadBuiltin = useCallback(
+		(name: string) => {
+			const data = DEFAULT_SYNTH_PRESETS[name];
+			if (!data) return;
+			applyPreset(data);
+			setActivePresetName(name);
+		},
+		[applyPreset],
+	);
+
 	const handleStepPreset = useCallback(
 		(direction: -1 | 1) => {
 			if (allPresetEntries.length === 0) return;
@@ -421,7 +443,13 @@ export default function PhaseDistortionVisualizer() {
 			if (!entry) return;
 			if (entry.type === "local") {
 				handleLoadLocal(entry.label);
-			} else if (entry.preset) {
+			} else if (entry.type === "builtin") {
+				handleLoadBuiltin(entry.label);
+			} else if (
+				entry.type === "library" &&
+				"preset" in entry &&
+				entry.preset
+			) {
 				handleLoadLibraryPreset(entry.preset);
 			}
 		},
@@ -429,8 +457,85 @@ export default function PhaseDistortionVisualizer() {
 			activePresetIndex,
 			allPresetEntries,
 			handleLoadLocal,
+			handleLoadBuiltin,
 			handleLoadLibraryPreset,
 		],
+	);
+
+	const handleSavePreset = useCallback(
+		(name: string) => {
+			savePreset(name, gatherState());
+			setPresetList(listPresets());
+			setActivePresetName(name);
+		},
+		[gatherState],
+	);
+
+	const handleDeletePreset = useCallback((name: string) => {
+		deletePreset(name);
+		setPresetList(listPresets());
+		setActivePresetName((prev) => (prev === name ? "Current State" : prev));
+	}, []);
+
+	const handleRenamePreset = useCallback((oldName: string, newName: string) => {
+		const trimmed = newName.trim();
+		if (!trimmed || trimmed === oldName) return;
+		renamePreset(oldName, trimmed);
+		setPresetList(listPresets());
+		setActivePresetName((prev) => (prev === oldName ? trimmed : prev));
+	}, []);
+
+	const handleInitPreset = useCallback(() => {
+		applyPreset(DEFAULT_PRESET);
+		setActivePresetName("Current State");
+	}, [applyPreset]);
+
+	const handleExportPreset = useCallback((name: string) => {
+		const json = exportPreset(name);
+		if (!json) return;
+		const blob = new Blob([json], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `${name}.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}, []);
+
+	const handleImportPreset = useCallback(
+		(json: string, filename: string) => {
+			const data = importPreset(json);
+			if (!data) return;
+			// Use the filename as the preset name (already stripped of .json by PresetNavigator)
+			const name = filename.trim() || "imported";
+			// avoid collisions
+			const existing = listPresets();
+			let candidate = name;
+			let n = 2;
+			while (existing.includes(candidate)) {
+				candidate = `${name} ${n++}`;
+			}
+			savePreset(candidate, data);
+			setPresetList(listPresets());
+			applyPreset(data);
+			setActivePresetName(candidate);
+		},
+		[applyPreset],
+	);
+
+	const handleExportCurrentState = useCallback(
+		(name: string) => {
+			const state = gatherState();
+			const json = JSON.stringify({ _name: name, ...state }, null, 2);
+			const blob = new Blob([json], { type: "application/json" });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `${name}.json`;
+			a.click();
+			URL.revokeObjectURL(url);
+		},
+		[gatherState],
 	);
 
 	const copyLineSettings = useCallback(
@@ -1070,7 +1175,13 @@ export default function PhaseDistortionVisualizer() {
 
 	// ── Keyboard input ────────────────────────────────────────────────────────
 	useEffect(() => {
+		const isTypingTarget = (e: KeyboardEvent) => {
+			const tag = (e.target as HTMLElement | null)?.tagName;
+			return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+		};
+
 		const keyDown = (event: KeyboardEvent) => {
+			if (isTypingTarget(event)) return;
 			if (event.key === " ") {
 				event.preventDefault();
 				if (!sustainRef.current) setSustain(true);
@@ -1085,6 +1196,7 @@ export default function PhaseDistortionVisualizer() {
 			sendNoteOn(note);
 		};
 		const keyUp = (event: KeyboardEvent) => {
+			if (isTypingTarget(event)) return;
 			if (event.key === " ") {
 				setSustain(false);
 				return;
@@ -1156,12 +1268,19 @@ export default function PhaseDistortionVisualizer() {
 	return (
 		<div className="h-full bg-cz-body flex flex-col overflow-hidden gap-4 w-full">
 			<SynthHeader
-				presetList={presetList}
-				libraryPresets={libraryPresets}
+				allEntries={allPresetEntries}
 				activePresetName={activePresetName}
 				onLoadLocal={handleLoadLocal}
 				onLoadLibrary={handleLoadLibraryPreset}
+				onLoadBuiltin={handleLoadBuiltin}
 				onStepPreset={handleStepPreset}
+				onSavePreset={handleSavePreset}
+				onDeletePreset={handleDeletePreset}
+				onRenamePreset={handleRenamePreset}
+				onInitPreset={handleInitPreset}
+				onExportPreset={handleExportPreset}
+				onExportCurrentState={handleExportCurrentState}
+				onImportPreset={handleImportPreset}
 			/>
 
 			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">

@@ -134,7 +134,7 @@ export default function PhaseLinesSection({
 				</div>
 
 				{/* Mix A/B + Phase Map */}
-				<div className="ml-auto grid grid-cols-2 gap-3">
+			{/* 	<div className="ml-auto grid grid-cols-2 gap-3">
 					<Card variant="inset" className="border-cz-border p-2">
 						<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
 							Mix A/B
@@ -157,7 +157,7 @@ export default function PhaseLinesSection({
 							className="h-17.5 w-full rounded-lg"
 						/>
 					</Card>
-				</div>
+				</div> */}
 			</div>
 
 			{/* Phase Line Tabs */}

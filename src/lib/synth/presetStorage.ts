@@ -173,6 +173,15 @@ export function deletePreset(name: string): void {
 	localStorage.removeItem(STORAGE_PREFIX + name);
 }
 
+export function renamePreset(oldName: string, newName: string): boolean {
+	const data = loadPreset(oldName);
+	if (!data) return false;
+	if (oldName === newName) return true;
+	savePreset(newName, data);
+	deletePreset(oldName);
+	return true;
+}
+
 export function exportPreset(name: string): string | null {
 	const data = loadPreset(name);
 	if (!data) return null;
