@@ -1,0 +1,32 @@
+[package]
+name = "cz-synth"
+version = "0.1.0"
+edition = "2021"
+description = "CZ-101 Phase Distortion synthesizer DSP core"
+
+[features]
+default = ["std"]
+std = ["serde/std", "serde_json"]
+wasm = ["wasm-bindgen", "web-sys", "getrandom/js"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], default-features = false }
+serde_json = { version = "1", optional = true }
+libm = "0.2"
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+
+[dependencies.web-sys]
+version = "0.3"
+optional = true
+features = []
+
+[dependencies.getrandom]
+version = "0.2"
+optional = true
+
+[dev-dependencies]
+serde_json = "1"
+approx = "0.5"
