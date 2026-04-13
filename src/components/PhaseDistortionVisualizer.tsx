@@ -2270,13 +2270,37 @@ export default function PhaseDistortionVisualizer() {
 
 				<main className="space-y-4 p-1 pb-4 overflow-y-auto min-h-0">
 					<section className="space-y-4">
-						{/* Line Select + Modulation and FX Rack — side by side */}
-						<div className="flex flex-wrap gap-4 items-start">
-							{/* Line Select + Modulation */}
-							<Card
-								variant="panel"
-								className="flex flex-wrap items-end gap-x-6 gap-y-2 shrink-0"
-							>
+						{/* FX Rack */}
+						<CollapsibleCard title="FX Rack" variant="panel">
+							<div className="grid grid-cols-3 gap-x-3">
+								<ChorusSection
+									rate={chorusRate}
+									setRate={setChorusRate}
+									depth={chorusDepth}
+									setDepth={setChorusDepth}
+									mix={chorusMix}
+									setMix={setChorusMix}
+								/>
+								<DelaySection
+									time={delayTime}
+									setTime={setDelayTime}
+									feedback={delayFeedback}
+									setFeedback={setDelayFeedback}
+									mix={delayMix}
+									setMix={setDelayMix}
+								/>
+								<ReverbSection
+									size={reverbSize}
+									setSize={setReverbSize}
+									mix={reverbMix}
+									setMix={setReverbMix}
+								/>
+							</div>
+						</CollapsibleCard>
+
+						<CollapsibleCard title="Phase Lines" variant="panel" open>
+							{/* Line Select + Modulation — above tabs */}
+							<div className="mb-3 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-border pb-3">
 								<div className="flex-1 min-w-0">
 									<div className="mb-1 cz-section-bar">Line Select</div>
 									<div className="flex w-full gap-1">
@@ -2294,7 +2318,6 @@ export default function PhaseDistortionVisualizer() {
 										)}
 									</div>
 								</div>
-
 								<div className="shrink-0">
 									<div className="mb-1 cz-section-bar">Modulation</div>
 									<div className="flex gap-1">
@@ -2316,42 +2339,7 @@ export default function PhaseDistortionVisualizer() {
 										))}
 									</div>
 								</div>
-							</Card>
-							{/* FX Rack */}
-							<CollapsibleCard
-								title="FX Rack"
-								variant="panel"
-								className="flex-1 min-w-0"
-							>
-								<div className="grid grid-cols-3 gap-x-3">
-									<ChorusSection
-										rate={chorusRate}
-										setRate={setChorusRate}
-										depth={chorusDepth}
-										setDepth={setChorusDepth}
-										mix={chorusMix}
-										setMix={setChorusMix}
-									/>
-									<DelaySection
-										time={delayTime}
-										setTime={setDelayTime}
-										feedback={delayFeedback}
-										setFeedback={setDelayFeedback}
-										mix={delayMix}
-										setMix={setDelayMix}
-									/>
-									<ReverbSection
-										size={reverbSize}
-										setSize={setReverbSize}
-										mix={reverbMix}
-										setMix={setReverbMix}
-									/>
-								</div>
-							</CollapsibleCard>
-						</div>
-						{/* end flex row: Line Select/Mod + FX Rack */}
-
-						<CollapsibleCard title="Phase Lines" variant="panel" open>
+							</div>
 							{/* Phase Line Tabs */}
 							<div className="tabs tabs-lift">
 								<input
