@@ -1382,17 +1382,35 @@ export default function PhaseDistortionVisualizer() {
 	return (
 		<div className="h-full bg-cz-body flex flex-col overflow-hidden p-4 md:p-6 gap-4 w-full">
 			<header className="shrink-0 flex flex-col gap-3 rounded-2xl border border-cz-border bg-cz-panel px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
-				<div className="flex items-center gap-3">
-					<div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cz-orange/50 bg-cz-inset text-sm font-black uppercase tracking-[0.16em] text-cz-orange">
-						CZ
+				{/* Hardware nameplate logo */}
+				<div className="flex items-center gap-4 shrink-0">
+					<div className="flex flex-col items-start leading-none select-none">
+						{/* COSMO wordmark */}
+						<span className="text-[9px] font-black uppercase tracking-[0.55em] text-cz-cream-dim font-mono pl-[2px]">
+							COSMO
+						</span>
+						{/* PD-101 model number */}
+						<span
+							className="text-[2.1rem] font-black uppercase leading-none"
+							style={{
+								fontFamily: "'Arial Narrow', 'Arial', sans-serif",
+								letterSpacing: "-0.02em",
+							}}
+						>
+							<span className="text-cz-cream">PD</span>
+							<span className="text-cz-orange">-101</span>
+						</span>
+						{/* Orange accent underline bar */}
+						<span className="mt-[3px] block h-[3px] w-full bg-cz-orange rounded-full" />
 					</div>
-					<div>
-						<div className="text-[10px] font-mono uppercase tracking-[0.38em] text-cz-orange">
-							CASIO CZ-101
-						</div>
-						<div className="text-2xl font-mono font-bold uppercase tracking-[0.18em] text-cz-cream">
-							CZ LAB
-						</div>
+					{/* Subtitle */}
+					<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">
+						<span className="text-[9px] font-mono uppercase tracking-[0.3em] text-cz-orange">
+							Phase Distortion
+						</span>
+						<span className="text-xs font-mono font-semibold uppercase tracking-[0.18em] text-cz-cream">
+							Synthesizer Lab
+						</span>
 					</div>
 				</div>
 
@@ -1469,18 +1487,6 @@ export default function PhaseDistortionVisualizer() {
 						variant="panel"
 						className="flex flex-col gap-4 bg-cz-panel border-cz-border rounded-sm overflow-visible"
 					>
-						<div className="border-b border-cz-border pb-3 shrink-0">
-							<div className="text-[10px] font-mono uppercase tracking-[0.4em] text-cz-orange">
-								CASIO CZ-101
-							</div>
-							<h1 className="mt-1 text-lg font-mono font-bold uppercase tracking-[0.15em] text-cz-cream">
-								Phase Distortion Lab
-							</h1>
-							<p className="mt-1 text-xs font-mono text-cz-cream-dim">
-								Phase distortion synthesis engine
-							</p>
-						</div>
-
 						<CollapsibleCard
 							variant="subtle"
 							open={accordionState.scope ?? true}
