@@ -1386,7 +1386,10 @@ export default function PhaseDistortionVisualizer() {
 				<div className="flex items-center gap-4 shrink-0">
 					<div className="flex flex-col items-start leading-none select-none">
 						{/* COSMO wordmark */}
-						<span className="text-[9px] font-black uppercase tracking-[0.55em] text-cz-cream-dim font-mono pl-[2px]">
+						<span
+							className="text-[9px] uppercase tracking-[0.55em] text-cz-cream-dim pl-[2px]"
+							style={{ fontFamily: "'Michroma', sans-serif" }}
+						>
 							COSMO
 						</span>
 						{/* PD-101 model number */}
