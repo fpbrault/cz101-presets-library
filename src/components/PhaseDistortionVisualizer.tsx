@@ -159,6 +159,8 @@ export default function PhaseDistortionVisualizer() {
 
 	const [presetName, setPresetName] = useState("");
 	const [presetList, setPresetList] = useState<string[]>([]);
+	const [activePresetName, setActivePresetName] = useState("Current State");
+	const [presetPanelOpen, setPresetPanelOpen] = useState(false);
 
 	const gatherState = useCallback(
 		(): SynthPresetData => ({
@@ -400,6 +402,8 @@ export default function PhaseDistortionVisualizer() {
 				if (decoded) {
 					const synthPreset = convertDecodedPatchToSynthPreset(decoded);
 					applyPreset(synthPreset);
+					setActivePresetName(preset.name);
+					setPresetPanelOpen(false);
 				}
 			}
 		},
@@ -408,7 +412,127 @@ export default function PhaseDistortionVisualizer() {
 
 	const resetToDefaults = useCallback(() => {
 		applyPreset(DEFAULT_PRESET);
+		setActivePresetName("Factory Default");
+		setPresetPanelOpen(false);
 	}, [applyPreset]);
+
+	type PresetEntry = {
+		id: string;
+		label: string;
+		type: "local" | "library";
+		preset?: Preset;
+	};
+
+	const allPresetEntries = useMemo<PresetEntry[]>(
+		() => [
+			...presetList.map((name) => ({
+				id: `local:${name}`,
+				label: name,
+				type: "local" as const,
+			})),
+			...libraryPresets.map((preset) => ({
+				id: `library:${preset.id}`,
+				label: preset.name,
+				type: "library" as const,
+				preset,
+			})),
+		],
+		[presetList, libraryPresets],
+	);
+
+	const activePresetIndex = useMemo(
+		() =>
+			allPresetEntries.findIndex((entry) => entry.label === activePresetName),
+		[activePresetName, allPresetEntries],
+	);
+
+	const loadPresetEntry = useCallback(
+		(index: number) => {
+			const entry = allPresetEntries[index];
+			if (!entry) return;
+
+			if (entry.type === "local") {
+				const data = loadPreset(entry.label);
+				if (!data) return;
+				applyPreset(data);
+				setActivePresetName(entry.label);
+				setPresetPanelOpen(false);
+				return;
+			}
+
+			if (entry.preset) handleLoadLibraryPreset(entry.preset);
+		},
+		[allPresetEntries, applyPreset, handleLoadLibraryPreset],
+	);
+
+	const handleStepPreset = useCallback(
+		(direction: -1 | 1) => {
+			if (allPresetEntries.length === 0) return;
+			const baseIndex = activePresetIndex >= 0 ? activePresetIndex : 0;
+			const nextIndex =
+				(baseIndex + direction + allPresetEntries.length) %
+				allPresetEntries.length;
+			loadPresetEntry(nextIndex);
+		},
+		[activePresetIndex, allPresetEntries.length, loadPresetEntry],
+	);
+
+	const lfoDisplayPath = useMemo(() => {
+		const width = 220;
+		const height = 92;
+		const amplitude = 14 + lfoDepth * 24;
+		const cycles = 1 + lfoRate / 10;
+		const points: string[] = [];
+
+		for (let i = 0; i <= 48; i++) {
+			const t = i / 48;
+			const phase = (t * cycles) % 1;
+			let value = 0;
+
+			if (lfoWaveform === "sine") value = Math.sin(t * cycles * Math.PI * 2);
+			else if (lfoWaveform === "triangle")
+				value = 1 - 4 * Math.abs(phase - 0.5);
+			else if (lfoWaveform === "square") value = phase < 0.5 ? 1 : -1;
+			else value = 1 - phase * 2;
+
+			const x = t * width;
+			const y = height / 2 - value * amplitude;
+			points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+		}
+
+		return points.join(" ");
+	}, [lfoDepth, lfoRate, lfoWaveform]);
+
+	const filterDisplay = useMemo(() => {
+		const width = 220;
+		const height = 92;
+		const cutoffNorm =
+			(Math.log10(filterCutoff) - Math.log10(20)) /
+			(Math.log10(20000) - Math.log10(20));
+		const cutoffX = 18 + cutoffNorm * (width - 36);
+		const peakY = 22 - filterResonance * 18 - filterEnvAmount * 10;
+		const topY = 24;
+		const bottomY = height - 14;
+
+		if (filterType === "hp") {
+			return {
+				path: `M 0 ${bottomY} L ${Math.max(0, cutoffX - 22)} ${bottomY} L ${cutoffX} ${peakY} L ${width} ${topY}`,
+				fill: `M 0 ${height} L 0 ${bottomY} L ${Math.max(0, cutoffX - 22)} ${bottomY} L ${cutoffX} ${peakY} L ${width} ${topY} L ${width} ${height} Z`,
+			};
+		}
+
+		if (filterType === "bp") {
+			return {
+				path: `M 0 ${bottomY} L ${Math.max(0, cutoffX - 34)} ${bottomY} L ${Math.max(0, cutoffX - 8)} ${peakY} L ${Math.min(width, cutoffX + 8)} ${peakY} L ${Math.min(width, cutoffX + 34)} ${bottomY} L ${width} ${bottomY}`,
+				fill: `M 0 ${height} L 0 ${bottomY} L ${Math.max(0, cutoffX - 34)} ${bottomY} L ${Math.max(0, cutoffX - 8)} ${peakY} L ${Math.min(width, cutoffX + 8)} ${peakY} L ${Math.min(width, cutoffX + 34)} ${bottomY} L ${width} ${bottomY} L ${width} ${height} Z`,
+			};
+		}
+
+		return {
+			path: `M 0 ${topY} L ${Math.max(0, cutoffX - 22)} ${topY} L ${cutoffX} ${peakY} L ${width} ${bottomY}`,
+			fill: `M 0 ${height} L 0 ${topY} L ${Math.max(0, cutoffX - 22)} ${topY} L ${cutoffX} ${peakY} L ${width} ${bottomY} L ${width} ${height} Z`,
+		};
+	}, [filterCutoff, filterEnvAmount, filterResonance, filterType]);
 
 	const copyLineSettings = useCallback(
 		(
@@ -1256,372 +1380,476 @@ export default function PhaseDistortionVisualizer() {
 
 	return (
 		<div className="min-h-screen bg-cz-body p-4 md:p-6 w-full">
-			<div className="mx-auto grid w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-				<aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto">
-					<Card
-						variant="panel"
-						className="flex flex-col gap-4 bg-cz-panel border-cz-border rounded-sm"
-					>
-						<div className="border-b border-cz-border pb-3 shrink-0">
-							<div className="text-[10px] font-mono uppercase tracking-[0.4em] text-cz-orange">
+			<div className="mx-auto flex w-full flex-col gap-4">
+				<header className="flex flex-col gap-3 rounded-2xl border border-cz-border bg-cz-panel px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
+					<div className="flex items-center gap-3">
+						<div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cz-orange/50 bg-cz-inset text-sm font-black uppercase tracking-[0.16em] text-cz-orange">
+							CZ
+						</div>
+						<div>
+							<div className="text-[10px] font-mono uppercase tracking-[0.38em] text-cz-orange">
 								CASIO CZ-101
 							</div>
-							<h1 className="mt-1 text-lg font-mono font-bold uppercase tracking-[0.15em] text-cz-cream">
-								Phase Distortion Lab
-							</h1>
-							<p className="mt-1 text-xs font-mono text-cz-cream-dim">
-								Phase distortion synthesis engine
-							</p>
+							<div className="text-2xl font-mono font-bold uppercase tracking-[0.18em] text-cz-cream">
+								CZ LAB
+							</div>
+						</div>
+					</div>
+
+					<div className="relative w-full max-w-3xl">
+						<div className="flex items-stretch overflow-hidden rounded-xl border border-cz-border bg-cz-inset">
+							<button
+								type="button"
+								className="flex w-12 items-center justify-center border-r border-cz-border text-cz-cream transition hover:bg-cz-surface disabled:text-cz-cream-dim/50"
+								onClick={() => handleStepPreset(-1)}
+								disabled={allPresetEntries.length === 0}
+								aria-label="Previous preset"
+							>
+								&#8249;
+							</button>
+							<button
+								type="button"
+								className="flex min-w-0 flex-1 flex-col items-center justify-center px-4 py-2 text-center transition hover:bg-cz-surface"
+								onClick={() => setPresetPanelOpen((open) => !open)}
+							>
+								<span className="text-[10px] font-mono uppercase tracking-[0.32em] text-cz-orange">
+									Preset
+								</span>
+								<span className="truncate text-lg font-mono font-bold text-cz-cream">
+									{activePresetName}
+								</span>
+							</button>
+							<button
+								type="button"
+								className="flex w-12 items-center justify-center border-l border-cz-border text-cz-cream transition hover:bg-cz-surface disabled:text-cz-cream-dim/50"
+								onClick={() => handleStepPreset(1)}
+								disabled={allPresetEntries.length === 0}
+								aria-label="Next preset"
+							>
+								&#8250;
+							</button>
 						</div>
 
-						<CollapsibleCard
-							variant="subtle"
-							open={accordionState.scope ?? true}
-							onToggle={(e) => toggleAccordion("scope", e.currentTarget.open)}
-							titleClassName="pr-3"
-							title={
-								<div className="text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
-									Scope
+						{presetPanelOpen && (
+							<div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-full overflow-hidden rounded-xl border border-cz-border bg-cz-panel shadow-2xl lg:w-[28rem]">
+								<div className="border-b border-cz-border bg-cz-surface px-4 py-2 text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream-dim">
+									Preset List
 								</div>
-							}
-						>
-							<div>
-								<div className="space-y-2">
-									<div className="relative overflow-hidden rounded-lg border border-cz-border bg-cz-lcd-bg">
-										<div className="absolute left-2 top-1 text-[8px] font-mono text-cz-lcd-fg/60">
-											CH1
+								<div className="max-h-72 overflow-y-auto p-2">
+									{allPresetEntries.length === 0 ? (
+										<div className="px-3 py-4 text-sm text-cz-cream-dim">
+											No presets available.
 										</div>
-										<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-cz-lcd-fg/60">
-											{effectivePitchHz.toFixed(1)} Hz
-										</div>
-										<canvas
-											ref={oscilloscopeCanvasRef}
-											width={900}
-											height={220}
-											className="h-36 w-full"
-											style={{ imageRendering: "pixelated" }}
-										/>
-									</div>
-									<div className="flex justify-center gap-2">
-										<ControlKnob
-											value={scopeCycles}
-											onChange={setScopeCycles}
-											min={0.5}
-											max={8}
-											size={48}
-											color="#4ade80"
-											label="Cycles"
-											valueFormatter={(value) => value.toFixed(1)}
-										/>
-										<ControlKnob
-											value={scopeVerticalZoom}
-											onChange={setScopeVerticalZoom}
-											min={0.25}
-											max={4}
-											size={48}
-											color="#facc15"
-											label="Zoom"
-											valueFormatter={(value) => `${value.toFixed(1)}x`}
-										/>
-										<ControlKnob
-											value={scopeTriggerLevel}
-											onChange={(value) =>
-												setScopeTriggerLevel(Math.round(value))
-											}
-											min={0}
-											max={255}
-											size={48}
-											color="#67e8f9"
-											label="Trig"
-											valueFormatter={(value) => `${Math.round(value)}`}
-										/>
-									</div>
-									<div className="mt-3 grid grid-cols-2 gap-3">
-										<Card variant="inset" className="border-cz-border p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
-												Mix A/B
-											</div>
-											<canvas
-												ref={combinedCanvasRef}
-												width={220}
-												height={70}
-												className="h-17.5 w-full rounded-lg"
-											/>
-										</Card>
-										<Card variant="inset" className="border-cz-border p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
-												Phase Map
-											</div>
-											<canvas
-												ref={phaseCanvasRef}
-												width={220}
-												height={70}
-												className="h-17.5 w-full rounded-lg"
-											/>
-										</Card>
-									</div>
+									) : (
+										allPresetEntries.map((entry, index) => (
+											<button
+												key={entry.id}
+												type="button"
+												className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${entry.label === activePresetName ? "bg-cz-orange text-white" : "text-cz-cream hover:bg-cz-surface"}`}
+												onClick={() => loadPresetEntry(index)}
+											>
+												<span className="truncate">{entry.label}</span>
+												<span
+													className={`ml-3 shrink-0 text-[10px] font-mono uppercase tracking-[0.22em] ${entry.label === activePresetName ? "text-white/75" : "text-cz-cream-dim"}`}
+												>
+													{entry.type}
+												</span>
+											</button>
+										))
+									)}
 								</div>
 							</div>
-						</CollapsibleCard>
+						)}
+					</div>
+				</header>
 
-						<CollapsibleCard
-							variant="subtle"
-							open={accordionState.presets ?? false}
-							onToggle={(e) => toggleAccordion("presets", e.currentTarget.open)}
-							titleClassName="pr-3 flex items-center justify-between"
-							title={
-								<>
-									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-										Presets
-									</div>
-									<button
-										type="button"
-										className="btn btn-xs bg-cz-orange border-cz-orange text-white"
-										onClick={(e) => {
-											e.stopPropagation();
-											resetToDefaults();
-										}}
-									>
-										Reset
-									</button>
-									<label className="btn btn-xs border-cz-border text-cz-cream">
-										Import SysEx
-										<input
-											type="file"
-											accept=".syx"
-											className="hidden"
-											onChange={async (e) => {
-												const file = e.target.files?.[0];
-												if (!file) return;
-												const buffer = await file.arrayBuffer();
-												const data = new Uint8Array(buffer);
-												const decoded = decodeCzPatch(data);
-												if (decoded) {
-													const preset =
-														convertDecodedPatchToSynthPreset(decoded);
-													applyPreset(preset);
-												}
-												e.target.value = "";
-											}}
-										/>
-									</label>
-								</>
-							}
+				<div className="grid w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+					<aside className="xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
+						<Card
+							variant="panel"
+							className="flex flex-col gap-4 bg-cz-panel border-cz-border rounded-sm"
 						>
-							<div>
-								<div className="space-y-2">
-									<select
-										className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-										value=""
-										onChange={(e) => {
-											const name = e.target.value;
-											if (!name) return;
-											const data = loadPreset(name);
-											if (data) applyPreset(data);
-											e.target.value = "";
-										}}
-									>
-										<option value="">Load preset...</option>
-										{presetList.map((name) => (
-											<option key={name} value={name}>
-												{name}
-											</option>
-										))}
-									</select>
-									<select
-										className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-										value=""
-										onChange={(e) => {
-											const presetId = e.target.value;
-											if (!presetId) return;
-											const preset = libraryPresets.find(
-												(p) => p.id === presetId,
-											);
-											if (preset) handleLoadLibraryPreset(preset);
-											e.target.value = "";
-										}}
-									>
-										<option value="">Load from library...</option>
-										{libraryPresets.map((preset) => (
-											<option key={preset.id} value={preset.id}>
-												{preset.name}
-											</option>
-										))}
-									</select>
-									<input
-										type="text"
-										className="input input-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-										placeholder="Preset name"
-										value={presetName}
-										onChange={(e) => setPresetName(e.target.value)}
-									/>
-									<div className="grid grid-cols-2 gap-2">
-										<button
-											type="button"
-											className="btn btn-sm bg-cz-orange border-cz-orange text-white"
-											disabled={!presetName.trim()}
-											onClick={() => {
-												savePreset(presetName.trim(), gatherState());
-												setPresetList(listPresets());
-												setPresetName("");
-											}}
-										>
-											Save
-										</button>
-										<button
-											type="button"
-											className="btn btn-sm border-cz-border text-cz-cream"
-											disabled={!presetName.trim()}
-											onClick={() => {
-												deletePreset(presetName.trim());
-												setPresetList(listPresets());
-												setPresetName("");
-											}}
-										>
-											Delete
-										</button>
+							<div className="border-b border-cz-border pb-3 shrink-0">
+								<div className="text-[10px] font-mono uppercase tracking-[0.4em] text-cz-orange">
+									CASIO CZ-101
+								</div>
+								<h1 className="mt-1 text-lg font-mono font-bold uppercase tracking-[0.15em] text-cz-cream">
+									Phase Distortion Lab
+								</h1>
+								<p className="mt-1 text-xs font-mono text-cz-cream-dim">
+									Phase distortion synthesis engine
+								</p>
+							</div>
+
+							<CollapsibleCard
+								variant="subtle"
+								open={accordionState.scope ?? true}
+								onToggle={(e) => toggleAccordion("scope", e.currentTarget.open)}
+								titleClassName="pr-3"
+								title={
+									<div className="text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
+										Scope
 									</div>
-									<div className="flex gap-2">
+								}
+							>
+								<div>
+									<div className="space-y-2">
+										<div className="relative overflow-hidden rounded-lg border border-cz-border bg-cz-lcd-bg">
+											<div className="absolute left-2 top-1 text-[8px] font-mono text-cz-lcd-fg/60">
+												CH1
+											</div>
+											<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-cz-lcd-fg/60">
+												{effectivePitchHz.toFixed(1)} Hz
+											</div>
+											<canvas
+												ref={oscilloscopeCanvasRef}
+												width={900}
+												height={220}
+												className="h-36 w-full"
+												style={{ imageRendering: "pixelated" }}
+											/>
+										</div>
+										<div className="flex justify-center gap-2">
+											<ControlKnob
+												value={scopeCycles}
+												onChange={setScopeCycles}
+												min={0.5}
+												max={8}
+												size={48}
+												color="#4ade80"
+												label="Cycles"
+												valueFormatter={(value) => value.toFixed(1)}
+											/>
+											<ControlKnob
+												value={scopeVerticalZoom}
+												onChange={setScopeVerticalZoom}
+												min={0.25}
+												max={4}
+												size={48}
+												color="#facc15"
+												label="Zoom"
+												valueFormatter={(value) => `${value.toFixed(1)}x`}
+											/>
+											<ControlKnob
+												value={scopeTriggerLevel}
+												onChange={(value) =>
+													setScopeTriggerLevel(Math.round(value))
+												}
+												min={0}
+												max={255}
+												size={48}
+												color="#67e8f9"
+												label="Trig"
+												valueFormatter={(value) => `${Math.round(value)}`}
+											/>
+										</div>
+										<div className="mt-3 grid grid-cols-2 gap-3">
+											<Card variant="inset" className="border-cz-border p-2">
+												<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
+													Mix A/B
+												</div>
+												<canvas
+													ref={combinedCanvasRef}
+													width={220}
+													height={70}
+													className="h-17.5 w-full rounded-lg"
+												/>
+											</Card>
+											<Card variant="inset" className="border-cz-border p-2">
+												<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
+													Phase Map
+												</div>
+												<canvas
+													ref={phaseCanvasRef}
+													width={220}
+													height={70}
+													className="h-17.5 w-full rounded-lg"
+												/>
+											</Card>
+										</div>
+									</div>
+								</div>
+							</CollapsibleCard>
+
+							<CollapsibleCard
+								variant="subtle"
+								open={accordionState.presets ?? false}
+								onToggle={(e) =>
+									toggleAccordion("presets", e.currentTarget.open)
+								}
+								titleClassName="pr-3 flex items-center justify-between"
+								title={
+									<>
+										<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+											Presets
+										</div>
 										<button
 											type="button"
-											className="btn btn-xs border-cz-border text-cz-cream flex-1"
-											onClick={() => {
-												const exported = exportPreset(presetList[0] ?? "");
-												if (exported) {
-													const blob = new Blob([exported], {
-														type: "application/json",
-													});
-													const url = URL.createObjectURL(blob);
-													const a = document.createElement("a");
-													a.href = url;
-													a.download = `cz101-preset-${presetList[0] || "export"}.json`;
-													a.click();
-													URL.revokeObjectURL(url);
-												}
+											className="btn btn-xs bg-cz-orange border-cz-orange text-white"
+											onClick={(e) => {
+												e.stopPropagation();
+												resetToDefaults();
 											}}
-											disabled={presetList.length === 0}
 										>
-											Export
+											Reset
 										</button>
-										<label className="btn btn-xs border-cz-border text-cz-cream flex-1">
-											Import
+										<label className="btn btn-xs border-cz-border text-cz-cream">
+											Import SysEx
 											<input
 												type="file"
-												accept=".json"
+												accept=".syx"
 												className="hidden"
 												onChange={async (e) => {
 													const file = e.target.files?.[0];
 													if (!file) return;
-													const text = await file.text();
-													const imported = importPreset(text);
-													if (imported) {
-														applyPreset(imported);
+													const buffer = await file.arrayBuffer();
+													const data = new Uint8Array(buffer);
+													const decoded = decodeCzPatch(data);
+													if (decoded) {
+														const preset =
+															convertDecodedPatchToSynthPreset(decoded);
+														applyPreset(preset);
+														setActivePresetName(
+															file.name.replace(/\.[^.]+$/, ""),
+														);
+														setPresetPanelOpen(false);
 													}
+													e.target.value = "";
 												}}
 											/>
 										</label>
-									</div>
-									<Card
-										variant="inset"
-										className="max-h-40 space-y-1 overflow-y-auto border-cz-border p-2"
-									>
-										{presetList.length === 0 ? (
-											<div className="px-2 py-3 text-xs text-cz-cream-dim/45">
-												No stored presets yet.
-											</div>
-										) : (
-											presetList.map((name) => (
-												<button
-													key={name}
-													type="button"
-													className="btn btn-ghost btn-sm w-full justify-start rounded-lg"
-													onClick={() => {
-														const data = loadPreset(name);
-														if (data) applyPreset(data);
-													}}
-												>
+									</>
+								}
+							>
+								<div>
+									<div className="space-y-2">
+										<select
+											className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
+											value=""
+											onChange={(e) => {
+												const name = e.target.value;
+												if (!name) return;
+												const data = loadPreset(name);
+												if (data) {
+													applyPreset(data);
+													setActivePresetName(name);
+													setPresetPanelOpen(false);
+												}
+												e.target.value = "";
+											}}
+										>
+											<option value="">Load preset...</option>
+											{presetList.map((name) => (
+												<option key={name} value={name}>
 													{name}
-												</button>
-											))
-										)}
-									</Card>
-								</div>
-							</div>
-						</CollapsibleCard>
-
-						<CollapsibleCard
-							variant="subtle"
-							open={accordionState.globalVoice ?? false}
-							onToggle={(e) =>
-								toggleAccordion("globalVoice", e.currentTarget.open)
-							}
-							titleClassName="pr-3"
-							title={
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Global Voice
-								</div>
-							}
-						>
-							<div>
-								<div className="mb-3 flex justify-center">
-									<ControlKnob
-										value={volume}
-										onChange={setVolume}
-										min={0}
-										max={1}
-										size={58}
-										color="#f6f06d"
-										label="Volume"
-										valueFormatter={(value) => `${Math.round(value * 100)}%`}
-									/>
-								</div>
-								<div className="space-y-2">
-									<div className="join w-full">
-										<button
-											type="button"
-											className={`btn btn-sm join-item flex-1 ${polyMode === "poly8" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-											onClick={() => setPolyMode("poly8")}
+												</option>
+											))}
+										</select>
+										<select
+											className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
+											value=""
+											onChange={(e) => {
+												const presetId = e.target.value;
+												if (!presetId) return;
+												const preset = libraryPresets.find(
+													(p) => p.id === presetId,
+												);
+												if (preset) handleLoadLibraryPreset(preset);
+												e.target.value = "";
+											}}
 										>
-											Poly 8
-										</button>
-										<button
-											type="button"
-											className={`btn btn-sm join-item flex-1 ${polyMode === "mono" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-											onClick={() => setPolyMode("mono")}
-										>
-											Mono
-										</button>
-									</div>
-									{polyMode === "mono" && (
-										<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
-											<input
-												type="checkbox"
-												checked={legato}
-												onChange={(e) => setLegato(e.target.checked)}
-												className="checkbox checkbox-xs"
-											/>
-											<span className="label-text text-xs">Legato</span>
-										</label>
-									)}
-									<div className="flex items-center gap-2">
-										<button
-											type="button"
-											className={`btn btn-sm ${sustainOn ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-											onClick={() => setSustain(!sustainOn)}
-										>
-											Sustain
-										</button>
-										<span className="text-xs text-cz-cream-dim/45">
-											Spacebar
-										</span>
-									</div>
-									<div>
-										<div className="mb-1 text-xs text-cz-cream-dim">
-											Velocity
+											<option value="">Load from library...</option>
+											{libraryPresets.map((preset) => (
+												<option key={preset.id} value={preset.id}>
+													{preset.name}
+												</option>
+											))}
+										</select>
+										<input
+											type="text"
+											className="input input-sm w-full bg-cz-surface border-cz-border text-cz-cream"
+											placeholder="Preset name"
+											value={presetName}
+											onChange={(e) => setPresetName(e.target.value)}
+										/>
+										<div className="grid grid-cols-2 gap-2">
+											<button
+												type="button"
+												className="btn btn-sm bg-cz-orange border-cz-orange text-white"
+												disabled={!presetName.trim()}
+												onClick={() => {
+													savePreset(presetName.trim(), gatherState());
+													setPresetList(listPresets());
+													setActivePresetName(presetName.trim());
+													setPresetPanelOpen(false);
+													setPresetName("");
+												}}
+											>
+												Save
+											</button>
+											<button
+												type="button"
+												className="btn btn-sm border-cz-border text-cz-cream"
+												disabled={!presetName.trim()}
+												onClick={() => {
+													deletePreset(presetName.trim());
+													setPresetList(listPresets());
+													setPresetName("");
+												}}
+											>
+												Delete
+											</button>
 										</div>
-										<div className="flex flex-wrap gap-1">
-											{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
-												(target) => (
+										<div className="flex gap-2">
+											<button
+												type="button"
+												className="btn btn-xs border-cz-border text-cz-cream flex-1"
+												onClick={() => {
+													const exported = exportPreset(presetList[0] ?? "");
+													if (exported) {
+														const blob = new Blob([exported], {
+															type: "application/json",
+														});
+														const url = URL.createObjectURL(blob);
+														const a = document.createElement("a");
+														a.href = url;
+														a.download = `cz101-preset-${presetList[0] || "export"}.json`;
+														a.click();
+														URL.revokeObjectURL(url);
+													}
+												}}
+												disabled={presetList.length === 0}
+											>
+												Export
+											</button>
+											<label className="btn btn-xs border-cz-border text-cz-cream flex-1">
+												Import
+												<input
+													type="file"
+													accept=".json"
+													className="hidden"
+													onChange={async (e) => {
+														const file = e.target.files?.[0];
+														if (!file) return;
+														const text = await file.text();
+														const imported = importPreset(text);
+														if (imported) {
+															applyPreset(imported);
+															setActivePresetName(
+																file.name.replace(/\.[^.]+$/, ""),
+															);
+															setPresetPanelOpen(false);
+														}
+													}}
+												/>
+											</label>
+										</div>
+										<Card
+											variant="inset"
+											className="max-h-40 space-y-1 overflow-y-auto border-cz-border p-2"
+										>
+											{presetList.length === 0 ? (
+												<div className="px-2 py-3 text-xs text-cz-cream-dim/45">
+													No stored presets yet.
+												</div>
+											) : (
+												presetList.map((name) => (
+													<button
+														key={name}
+														type="button"
+														className="btn btn-ghost btn-sm w-full justify-start rounded-lg"
+														onClick={() => {
+															const data = loadPreset(name);
+															if (data) {
+																applyPreset(data);
+																setActivePresetName(name);
+																setPresetPanelOpen(false);
+															}
+														}}
+													>
+														{name}
+													</button>
+												))
+											)}
+										</Card>
+									</div>
+								</div>
+							</CollapsibleCard>
+
+							<CollapsibleCard
+								variant="subtle"
+								open={accordionState.globalVoice ?? false}
+								onToggle={(e) =>
+									toggleAccordion("globalVoice", e.currentTarget.open)
+								}
+								titleClassName="pr-3"
+								title={
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+										Global Voice
+									</div>
+								}
+							>
+								<div>
+									<div className="mb-3 flex justify-center">
+										<ControlKnob
+											value={volume}
+											onChange={setVolume}
+											min={0}
+											max={1}
+											size={58}
+											color="#f6f06d"
+											label="Volume"
+											valueFormatter={(value) => `${Math.round(value * 100)}%`}
+										/>
+									</div>
+									<div className="space-y-2">
+										<div className="join w-full">
+											<button
+												type="button"
+												className={`btn btn-sm join-item flex-1 ${polyMode === "poly8" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+												onClick={() => setPolyMode("poly8")}
+											>
+												Poly 8
+											</button>
+											<button
+												type="button"
+												className={`btn btn-sm join-item flex-1 ${polyMode === "mono" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+												onClick={() => setPolyMode("mono")}
+											>
+												Mono
+											</button>
+										</div>
+										{polyMode === "mono" && (
+											<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
+												<input
+													type="checkbox"
+													checked={legato}
+													onChange={(e) => setLegato(e.target.checked)}
+													className="checkbox checkbox-xs"
+												/>
+												<span className="label-text text-xs">Legato</span>
+											</label>
+										)}
+										<div className="flex items-center gap-2">
+											<button
+												type="button"
+												className={`btn btn-sm ${sustainOn ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+												onClick={() => setSustain(!sustainOn)}
+											>
+												Sustain
+											</button>
+											<span className="text-xs text-cz-cream-dim/45">
+												Spacebar
+											</span>
+										</div>
+										<div>
+											<div className="mb-1 text-xs text-cz-cream-dim">
+												Velocity
+											</div>
+											<div className="flex flex-wrap gap-1">
+												{(
+													["amp", "dcw", "both", "off"] as VelocityTarget[]
+												).map((target) => (
 													<button
 														key={target}
 														type="button"
@@ -1636,548 +1864,636 @@ export default function PhaseDistortionVisualizer() {
 																	? "Both"
 																	: "Off"}
 													</button>
-												),
-											)}
+												))}
+											</div>
+										</div>
+										<div>
+											<div className="mb-1 text-xs text-cz-cream-dim">
+												Window
+											</div>
+											<select
+												className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
+												value={windowType}
+												onChange={(e) =>
+													setWindowType(
+														e.target.value as "off" | "saw" | "triangle",
+													)
+												}
+											>
+												<option value="off">Off</option>
+												<option value="saw">Saw</option>
+												<option value="triangle">Triangle</option>
+											</select>
 										</div>
 									</div>
-									<div>
-										<div className="mb-1 text-xs text-cz-cream-dim">Window</div>
-										<select
-											className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-											value={windowType}
-											onChange={(e) =>
-												setWindowType(
-													e.target.value as "off" | "saw" | "triangle",
-												)
-											}
-										>
-											<option value="off">Off</option>
-											<option value="saw">Saw</option>
-											<option value="triangle">Triangle</option>
-										</select>
+								</div>
+							</CollapsibleCard>
+
+							<Card
+								as="details"
+								variant="subtle"
+								padding="none"
+								open={accordionState.phaseMod ?? false}
+								onToggle={(e) =>
+									toggleAccordion("phaseMod", e.currentTarget.open)
+								}
+								className="collapse collapse-arrow overflow-hidden"
+							>
+								<summary className="collapse-title pr-3 cursor-pointer list-none">
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+										Phase Mod
 									</div>
-								</div>
-							</div>
-						</CollapsibleCard>
-
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
-							open={accordionState.phaseMod ?? false}
-							onToggle={(e) =>
-								toggleAccordion("phaseMod", e.currentTarget.open)
-							}
-							className="collapse collapse-arrow overflow-hidden"
-						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Phase Mod
-								</div>
-							</summary>
-							<div className="collapse-content">
-								<div className="flex justify-center gap-4">
-									<ControlKnob
-										value={intPmAmount}
-										onChange={setIntPmAmount}
-										min={0}
-										max={0.3}
-										size={52}
-										color="#fda4af"
-										label="Amount"
-										valueFormatter={(value) => value.toFixed(2)}
-									/>
-									<ControlKnob
-										value={intPmRatio}
-										onChange={setIntPmRatio}
-										min={0.5}
-										max={4}
-										size={52}
-										color="#fdba74"
-										label="Ratio"
-										valueFormatter={(value) => value.toFixed(1)}
-									/>
-								</div>
-								<label className="label mt-3 cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
-									<input
-										type="checkbox"
-										checked={pmPre}
-										onChange={(e) => setPmPre(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Pre-warp PM</span>
-								</label>
-							</div>
-						</Card>
-
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
-							open={accordionState.vibrato ?? false}
-							onToggle={(e) => toggleAccordion("vibrato", e.currentTarget.open)}
-							className="collapse collapse-arrow overflow-hidden"
-						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Vibrato
-								</div>
-							</summary>
-							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
-									<input
-										type="checkbox"
-										checked={vibratoEnabled}
-										onChange={(e) => setVibratoEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Enable Vibrato</span>
-								</label>
-								<div className="flex justify-center gap-2">
-									{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
-										<button
-											key={w}
-											type="button"
-											className={`btn btn-xs ${vibratoWave === i + 1 ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-											onClick={() => setVibratoWave(i + 1)}
-										>
-											{w}
-										</button>
-									))}
-								</div>
-								<div className="flex justify-center gap-2 mt-2">
-									<ControlKnob
-										value={vibratoRate}
-										onChange={setVibratoRate}
-										min={0}
-										max={99}
-										size={44}
-										color="#fda4af"
-										label="Rate"
-										valueFormatter={(v) => `${Math.round(v)}`}
-									/>
-									<ControlKnob
-										value={vibratoDepth}
-										onChange={setVibratoDepth}
-										min={0}
-										max={99}
-										size={44}
-										color="#fda4af"
-										label="Depth"
-										valueFormatter={(v) => `${Math.round(v)}`}
-									/>
-									<ControlKnob
-										value={vibratoDelay}
-										onChange={setVibratoDelay}
-										min={0}
-										max={99}
-										size={44}
-										color="#fda4af"
-										label="Delay"
-										valueFormatter={(v) => `${Math.round(v)}`}
-									/>
-								</div>
-							</div>
-						</Card>
-
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
-							open={accordionState.portamento ?? false}
-							onToggle={(e) =>
-								toggleAccordion("portamento", e.currentTarget.open)
-							}
-							className="collapse collapse-arrow overflow-hidden"
-						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Portamento
-								</div>
-							</summary>
-							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
-									<input
-										type="checkbox"
-										checked={portamentoEnabled}
-										onChange={(e) => setPortamentoEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Enable Portamento</span>
-								</label>
-								<div className="join w-full mb-2">
-									<button
-										type="button"
-										className={`btn btn-sm join-item flex-1 ${portamentoMode === "rate" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-										onClick={() => setPortamentoMode("rate")}
-									>
-										Rate
-									</button>
-									<button
-										type="button"
-										className={`btn btn-sm join-item flex-1 ${portamentoMode === "time" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-										onClick={() => setPortamentoMode("time")}
-									>
-										Time
-									</button>
-								</div>
-								<div className="flex justify-center gap-2">
-									{portamentoMode === "rate" ? (
+								</summary>
+								<div className="collapse-content">
+									<div className="flex justify-center gap-4">
 										<ControlKnob
-											value={portamentoRate}
-											onChange={setPortamentoRate}
+											value={intPmAmount}
+											onChange={setIntPmAmount}
+											min={0}
+											max={0.3}
+											size={52}
+											color="#fda4af"
+											label="Amount"
+											valueFormatter={(value) => value.toFixed(2)}
+										/>
+										<ControlKnob
+											value={intPmRatio}
+											onChange={setIntPmRatio}
+											min={0.5}
+											max={4}
+											size={52}
+											color="#fdba74"
+											label="Ratio"
+											valueFormatter={(value) => value.toFixed(1)}
+										/>
+									</div>
+									<label className="label mt-3 cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
+										<input
+											type="checkbox"
+											checked={pmPre}
+											onChange={(e) => setPmPre(e.target.checked)}
+											className="checkbox checkbox-xs"
+										/>
+										<span className="label-text text-xs">Pre-warp PM</span>
+									</label>
+								</div>
+							</Card>
+
+							<Card
+								as="details"
+								variant="subtle"
+								padding="none"
+								open={accordionState.vibrato ?? false}
+								onToggle={(e) =>
+									toggleAccordion("vibrato", e.currentTarget.open)
+								}
+								className="collapse collapse-arrow overflow-hidden"
+							>
+								<summary className="collapse-title pr-3 cursor-pointer list-none">
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+										Vibrato
+									</div>
+								</summary>
+								<div className="collapse-content">
+									<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
+										<input
+											type="checkbox"
+											checked={vibratoEnabled}
+											onChange={(e) => setVibratoEnabled(e.target.checked)}
+											className="checkbox checkbox-xs"
+										/>
+										<span className="label-text text-xs">Enable Vibrato</span>
+									</label>
+									<div className="flex justify-center gap-2">
+										{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
+											<button
+												key={w}
+												type="button"
+												className={`btn btn-xs ${vibratoWave === i + 1 ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+												onClick={() => setVibratoWave(i + 1)}
+											>
+												{w}
+											</button>
+										))}
+									</div>
+									<div className="flex justify-center gap-2 mt-2">
+										<ControlKnob
+											value={vibratoRate}
+											onChange={setVibratoRate}
 											min={0}
 											max={99}
-											size={52}
-											color="#67e8f9"
+											size={44}
+											color="#fda4af"
 											label="Rate"
 											valueFormatter={(v) => `${Math.round(v)}`}
 										/>
-									) : (
 										<ControlKnob
-											value={portamentoTime}
-											onChange={setPortamentoTime}
+											value={vibratoDepth}
+											onChange={setVibratoDepth}
 											min={0}
-											max={2}
-											size={52}
-											color="#67e8f9"
-											label="Time"
-											valueFormatter={(v) => `${v.toFixed(2)}s`}
+											max={99}
+											size={44}
+											color="#fda4af"
+											label="Depth"
+											valueFormatter={(v) => `${Math.round(v)}`}
 										/>
-									)}
+										<ControlKnob
+											value={vibratoDelay}
+											onChange={setVibratoDelay}
+											min={0}
+											max={99}
+											size={44}
+											color="#fda4af"
+											label="Delay"
+											valueFormatter={(v) => `${Math.round(v)}`}
+										/>
+									</div>
 								</div>
-							</div>
-						</Card>
+							</Card>
 
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
-							open={accordionState.lfo ?? false}
-							onToggle={(e) => toggleAccordion("lfo", e.currentTarget.open)}
-							className="collapse collapse-arrow overflow-hidden"
-						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									LFO
-								</div>
-							</summary>
-							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
-									<input
-										type="checkbox"
-										checked={lfoEnabled}
-										onChange={(e) => setLfoEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
-									/>
-									<span className="label-text text-xs">Enable LFO</span>
-								</label>
-								<div className="flex flex-wrap gap-1 mb-2">
-									{(["sine", "triangle", "square", "saw"] as const).map((w) => (
+							<Card
+								as="details"
+								variant="subtle"
+								padding="none"
+								open={accordionState.portamento ?? false}
+								onToggle={(e) =>
+									toggleAccordion("portamento", e.currentTarget.open)
+								}
+								className="collapse collapse-arrow overflow-hidden"
+							>
+								<summary className="collapse-title pr-3 cursor-pointer list-none">
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+										Portamento
+									</div>
+								</summary>
+								<div className="collapse-content">
+									<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
+										<input
+											type="checkbox"
+											checked={portamentoEnabled}
+											onChange={(e) => setPortamentoEnabled(e.target.checked)}
+											className="checkbox checkbox-xs"
+										/>
+										<span className="label-text text-xs">
+											Enable Portamento
+										</span>
+									</label>
+									<div className="join w-full mb-2">
 										<button
-											key={w}
 											type="button"
-											className={`btn btn-xs ${lfoWaveform === w ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-											onClick={() => setLfoWaveform(w)}
+											className={`btn btn-sm join-item flex-1 ${portamentoMode === "rate" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											onClick={() => setPortamentoMode("rate")}
 										>
-											{w}
+											Rate
 										</button>
-									))}
+										<button
+											type="button"
+											className={`btn btn-sm join-item flex-1 ${portamentoMode === "time" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											onClick={() => setPortamentoMode("time")}
+										>
+											Time
+										</button>
+									</div>
+									<div className="flex justify-center gap-2">
+										{portamentoMode === "rate" ? (
+											<ControlKnob
+												value={portamentoRate}
+												onChange={setPortamentoRate}
+												min={0}
+												max={99}
+												size={52}
+												color="#67e8f9"
+												label="Rate"
+												valueFormatter={(v) => `${Math.round(v)}`}
+											/>
+										) : (
+											<ControlKnob
+												value={portamentoTime}
+												onChange={setPortamentoTime}
+												min={0}
+												max={2}
+												size={52}
+												color="#67e8f9"
+												label="Time"
+												valueFormatter={(v) => `${v.toFixed(2)}s`}
+											/>
+										)}
+									</div>
 								</div>
-								<div className="flex justify-center gap-2">
-									<ControlKnob
-										value={lfoRate}
-										onChange={setLfoRate}
-										min={0}
-										max={20}
-										size={44}
-										color="#a78bfa"
-										label="Rate"
-										valueFormatter={(v) => `${v.toFixed(1)}Hz`}
-									/>
-									<ControlKnob
-										value={lfoDepth}
-										onChange={setLfoDepth}
-										min={0}
-										max={1}
-										size={44}
-										color="#a78bfa"
-										label="Depth"
-										valueFormatter={(v) => `${Math.round(v * 100)}%`}
-									/>
+							</Card>
+
+							<Card
+								as="details"
+								variant="subtle"
+								padding="none"
+								open={accordionState.lfo ?? false}
+								onToggle={(e) => toggleAccordion("lfo", e.currentTarget.open)}
+								className="collapse collapse-arrow overflow-hidden"
+							>
+								<summary className="collapse-title pr-3 cursor-pointer list-none">
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+										LFO
+									</div>
+								</summary>
+								<div className="collapse-content">
+									<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
+										<div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+											<span>LFO Visual</span>
+											<span>{lfoTarget}</span>
+										</div>
+										<svg
+											viewBox="0 0 220 92"
+											className="h-24 w-full rounded-lg border border-cz-border bg-cz-panel"
+										>
+											<title>LFO waveform display</title>
+											{[0.2, 0.4, 0.6, 0.8].map((stop) => (
+												<line
+													key={stop}
+													x1={220 * stop}
+													y1="0"
+													x2={220 * stop}
+													y2="92"
+													stroke="rgba(232,119,34,0.08)"
+												/>
+											))}
+											<line
+												x1="0"
+												y1="46"
+												x2="220"
+												y2="46"
+												stroke="rgba(122,112,96,0.28)"
+											/>
+											<polyline
+												fill="none"
+												stroke="#e87722"
+												strokeWidth="3"
+												strokeLinejoin="round"
+												strokeLinecap="round"
+												points={lfoDisplayPath}
+											/>
+										</svg>
+									</div>
+									<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
+										<input
+											type="checkbox"
+											checked={lfoEnabled}
+											onChange={(e) => setLfoEnabled(e.target.checked)}
+											className="checkbox checkbox-xs"
+										/>
+										<span className="label-text text-xs">Enable LFO</span>
+									</label>
+									<div className="flex flex-wrap gap-1 mb-2">
+										{(["sine", "triangle", "square", "saw"] as const).map(
+											(w) => (
+												<button
+													key={w}
+													type="button"
+													className={`btn btn-xs ${lfoWaveform === w ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+													onClick={() => setLfoWaveform(w)}
+												>
+													{w}
+												</button>
+											),
+										)}
+									</div>
+									<div className="flex justify-center gap-2">
+										<ControlKnob
+											value={lfoRate}
+											onChange={setLfoRate}
+											min={0}
+											max={20}
+											size={44}
+											color="#a78bfa"
+											label="Rate"
+											valueFormatter={(v) => `${v.toFixed(1)}Hz`}
+										/>
+										<ControlKnob
+											value={lfoDepth}
+											onChange={setLfoDepth}
+											min={0}
+											max={1}
+											size={44}
+											color="#a78bfa"
+											label="Depth"
+											valueFormatter={(v) => `${Math.round(v * 100)}%`}
+										/>
+									</div>
+									<div className="mt-2">
+										<div className="text-xs text-cz-cream-dim mb-1">Target</div>
+										<div className="flex flex-wrap gap-1">
+											{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
+												<button
+													key={t}
+													type="button"
+													className={`btn btn-xs ${lfoTarget === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+													onClick={() => setLfoTarget(t)}
+												>
+													{t}
+												</button>
+											))}
+										</div>
+									</div>
 								</div>
-								<div className="mt-2">
-									<div className="text-xs text-cz-cream-dim mb-1">Target</div>
-									<div className="flex flex-wrap gap-1">
-										{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
+							</Card>
+
+							<Card
+								as="details"
+								variant="subtle"
+								padding="none"
+								open={accordionState.filter ?? false}
+								onToggle={(e) =>
+									toggleAccordion("filter", e.currentTarget.open)
+								}
+								className="collapse collapse-arrow overflow-hidden"
+							>
+								<summary className="collapse-title pr-3 cursor-pointer list-none">
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+										Filter
+									</div>
+								</summary>
+								<div className="collapse-content">
+									<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
+										<div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+											<span>Response</span>
+											<span>{filterType.toUpperCase()}</span>
+										</div>
+										<svg
+											viewBox="0 0 220 92"
+											className="h-24 w-full rounded-lg border border-cz-border bg-cz-panel"
+										>
+											<title>Filter response display</title>
+											{[0.2, 0.4, 0.6, 0.8].map((stop) => (
+												<line
+													key={stop}
+													x1={220 * stop}
+													y1="0"
+													x2={220 * stop}
+													y2="92"
+													stroke="rgba(61,255,61,0.12)"
+												/>
+											))}
+											<line
+												x1="0"
+												y1="78"
+												x2="220"
+												y2="78"
+												stroke="rgba(122,112,96,0.28)"
+											/>
+											<path
+												d={filterDisplay.fill}
+												fill="rgba(61,255,61,0.16)"
+											/>
+											<path
+												d={filterDisplay.path}
+												fill="none"
+												stroke="#3dff3d"
+												strokeWidth="3"
+												strokeLinejoin="round"
+												strokeLinecap="round"
+											/>
+										</svg>
+									</div>
+									<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
+										<input
+											type="checkbox"
+											checked={filterEnabled}
+											onChange={(e) => setFilterEnabled(e.target.checked)}
+											className="checkbox checkbox-xs"
+										/>
+										<span className="label-text text-xs">Enable Filter</span>
+									</label>
+									<div className="join w-full mb-2">
+										{(["lp", "hp", "bp"] as const).map((t) => (
 											<button
 												key={t}
 												type="button"
-												className={`btn btn-xs ${lfoTarget === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-												onClick={() => setLfoTarget(t)}
+												className={`btn btn-sm join-item flex-1 ${filterType === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+												onClick={() => setFilterType(t)}
 											>
-												{t}
+												{t.toUpperCase()}
+											</button>
+										))}
+									</div>
+									<div className="flex justify-center gap-2">
+										<ControlKnob
+											value={filterCutoff}
+											onChange={setFilterCutoff}
+											min={20}
+											max={20000}
+											size={44}
+											color="#34d399"
+											label="Cutoff"
+											valueFormatter={(v) => `${Math.round(v)}Hz`}
+										/>
+										<ControlKnob
+											value={filterResonance}
+											onChange={setFilterResonance}
+											min={0}
+											max={1}
+											size={44}
+											color="#34d399"
+											label="Res"
+											valueFormatter={(v) => `${Math.round(v * 100)}%`}
+										/>
+										<ControlKnob
+											value={filterEnvAmount}
+											onChange={setFilterEnvAmount}
+											min={-1}
+											max={1}
+											size={44}
+											color="#34d399"
+											label="Env"
+											valueFormatter={(v) => `${Math.round(v * 100)}%`}
+										/>
+									</div>
+								</div>
+							</Card>
+						</Card>
+					</aside>
+
+					<main className="space-y-4 p-1">
+						<section className="space-y-4">
+							{/* Line Select + Modulation — merged panel */}
+							<Card variant="panel" className="space-y-3">
+								<div>
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
+										Line Select
+									</div>
+									<div className="join w-full">
+										{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
+											(ls) => (
+												<button
+													key={ls}
+													type="button"
+													className={`btn btn-xs join-item flex-1 ${lineSelect === ls ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+													onClick={() => setLineSelect(ls)}
+												>
+													{ls}
+												</button>
+											),
+										)}
+									</div>
+								</div>
+
+								<div>
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
+										Modulation
+									</div>
+									<div className="join w-full">
+										{(
+											[
+												["normal", "Normal"],
+												["ring", "Ring"],
+												["noise", "Noise"],
+											] as const
+										).map(([mode, label]) => (
+											<button
+												key={mode}
+												type="button"
+												className={`btn btn-xs join-item flex-1 ${
+													modMode === mode
+														? "bg-cz-orange border-cz-orange text-white"
+														: "border-cz-border text-cz-cream"
+												}`}
+												onClick={() => setModMode(mode)}
+											>
+												{label}
 											</button>
 										))}
 									</div>
 								</div>
-							</div>
-						</Card>
-
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
-							open={accordionState.filter ?? false}
-							onToggle={(e) => toggleAccordion("filter", e.currentTarget.open)}
-							className="collapse collapse-arrow overflow-hidden"
-						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Filter
+							</Card>
+							<CollapsibleCard title="FX Rack" variant="panel">
+								<div className="mb-3 text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+									FX Rack
 								</div>
-							</summary>
-							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
+								<div className="grid grid-cols-3 gap-x-3">
+									<ChorusSection
+										rate={chorusRate}
+										setRate={setChorusRate}
+										depth={chorusDepth}
+										setDepth={setChorusDepth}
+										mix={chorusMix}
+										setMix={setChorusMix}
+									/>
+									<DelaySection
+										time={delayTime}
+										setTime={setDelayTime}
+										feedback={delayFeedback}
+										setFeedback={setDelayFeedback}
+										mix={delayMix}
+										setMix={setDelayMix}
+									/>
+									<ReverbSection
+										size={reverbSize}
+										setSize={setReverbSize}
+										mix={reverbMix}
+										setMix={setReverbMix}
+									/>
+								</div>
+							</CollapsibleCard>
+
+							<CollapsibleCard title="Phase Lines" variant="panel" open>
+								{/* Phase Line Tabs */}
+								<div className="tabs tabs-lift">
 									<input
-										type="checkbox"
-										checked={filterEnabled}
-										onChange={(e) => setFilterEnabled(e.target.checked)}
-										className="checkbox checkbox-xs"
+										type="radio"
+										name="phase_line_tabs"
+										className="tab"
+										aria-label="Line 1"
+										defaultChecked={true}
 									/>
-									<span className="label-text text-xs">Enable Filter</span>
-								</label>
-								<div className="join w-full mb-2">
-									{(["lp", "hp", "bp"] as const).map((t) => (
-										<button
-											key={t}
-											type="button"
-											className={`btn btn-sm join-item flex-1 ${filterType === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-											onClick={() => setFilterType(t)}
-										>
-											{t.toUpperCase()}
-										</button>
-									))}
-								</div>
-								<div className="flex justify-center gap-2">
-									<ControlKnob
-										value={filterCutoff}
-										onChange={setFilterCutoff}
-										min={20}
-										max={20000}
-										size={44}
-										color="#34d399"
-										label="Cutoff"
-										valueFormatter={(v) => `${Math.round(v)}Hz`}
-									/>
-									<ControlKnob
-										value={filterResonance}
-										onChange={setFilterResonance}
-										min={0}
-										max={1}
-										size={44}
-										color="#34d399"
-										label="Res"
-										valueFormatter={(v) => `${Math.round(v * 100)}%`}
-									/>
-									<ControlKnob
-										value={filterEnvAmount}
-										onChange={setFilterEnvAmount}
-										min={-1}
-										max={1}
-										size={44}
-										color="#34d399"
-										label="Env"
-										valueFormatter={(v) => `${Math.round(v * 100)}%`}
-									/>
-								</div>
-							</div>
-						</Card>
-					</Card>
-				</aside>
+									<div className="tab-content bg-cz-panel border-cz-border p-4">
+										<PerLineWarpBlock
+											label={"Line 1"}
+											waveform={waveform.out1}
+											color="#3dedff"
+											copyTargetLabel={"Line 2"}
+											onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
+											onCopyEnvelopes={() =>
+												copyLineSettings("a", "b", "envelopes")
+											}
+											onCopyFull={() => copyLineSettings("a", "b", "full")}
+											algo={warpAAlgo}
+											setAlgo={setWarpAAlgo}
+											algo2={algo2A}
+											setAlgo2={setAlgo2A}
+											algoBlend={algoBlendA}
+											setAlgoBlend={setAlgoBlendA}
+											warpAmount={warpAAmount}
+											setWarpAmount={setWarpAAmount}
+											dcwComp={line1DcwComp}
+											setDcwComp={setLine1DcwComp}
+											level={line1Level}
+											setLevel={setLine1Level}
+											octave={line1Octave}
+											setOctave={setLine1Octave}
+											fineDetune={line1Detune}
+											setFineDetune={setLine1Detune}
+											dcoDepth={line1DcoDepth}
+											setDcoDepth={setLine1DcoDepth}
+											dcoEnv={line1DcoEnv}
+											setDcoEnv={setLine1DcoEnv}
+											dcwEnv={line1DcwEnv}
+											setDcwEnv={setLine1DcwEnv}
+											dcaEnv={line1DcaEnv}
+											setDcaEnv={setLine1DcaEnv}
+											keyFollow={line1DcwKeyFollow}
+											setKeyFollow={setLine1DcwKeyFollow}
+										/>
+									</div>
 
-				<main className="space-y-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto p-1">
-					<section className="space-y-4">
-						{/* Line Select + Modulation — merged panel */}
-						<Card variant="panel" className="space-y-3">
-							<div>
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
-									Line Select
-								</div>
-								<div className="join w-full">
-									{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
-										(ls) => (
-											<button
-												key={ls}
-												type="button"
-												className={`btn btn-xs join-item flex-1 ${lineSelect === ls ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
-												onClick={() => setLineSelect(ls)}
-											>
-												{ls}
-											</button>
-										),
-									)}
-								</div>
-							</div>
-
-							<div>
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
-									Modulation
-								</div>
-								<div className="join w-full">
-									{(
-										[
-											["normal", "Normal"],
-											["ring", "Ring"],
-											["noise", "Noise"],
-										] as const
-									).map(([mode, label]) => (
-										<button
-											key={mode}
-											type="button"
-											className={`btn btn-xs join-item flex-1 ${
-												modMode === mode
-													? "bg-cz-orange border-cz-orange text-white"
-													: "border-cz-border text-cz-cream"
-											}`}
-											onClick={() => setModMode(mode)}
-										>
-											{label}
-										</button>
-									))}
-								</div>
-							</div>
-						</Card>
-						<CollapsibleCard title="FX Rack" variant="panel">
-							<div className="mb-3 text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-								FX Rack
-							</div>
-							<div className="grid grid-cols-3 gap-x-3">
-								<ChorusSection
-									rate={chorusRate}
-									setRate={setChorusRate}
-									depth={chorusDepth}
-									setDepth={setChorusDepth}
-									mix={chorusMix}
-									setMix={setChorusMix}
-								/>
-								<DelaySection
-									time={delayTime}
-									setTime={setDelayTime}
-									feedback={delayFeedback}
-									setFeedback={setDelayFeedback}
-									mix={delayMix}
-									setMix={setDelayMix}
-								/>
-								<ReverbSection
-									size={reverbSize}
-									setSize={setReverbSize}
-									mix={reverbMix}
-									setMix={setReverbMix}
-								/>
-							</div>
-						</CollapsibleCard>
-
-						<CollapsibleCard title="Phase Lines" variant="panel" open>
-							{/* Phase Line Tabs */}
-							<div className="tabs tabs-lift">
-								<input
-									type="radio"
-									name="phase_line_tabs"
-									className="tab"
-									aria-label="Line 1"
-									defaultChecked={true}
-								/>
-								<div className="tab-content bg-cz-panel border-cz-border p-4">
-									<PerLineWarpBlock
-										label={"Line 1"}
-										waveform={waveform.out1}
-										color="#3dedff"
-										copyTargetLabel={"Line 2"}
-										onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
-										onCopyEnvelopes={() =>
-											copyLineSettings("a", "b", "envelopes")
-										}
-										onCopyFull={() => copyLineSettings("a", "b", "full")}
-										algo={warpAAlgo}
-										setAlgo={setWarpAAlgo}
-										algo2={algo2A}
-										setAlgo2={setAlgo2A}
-										algoBlend={algoBlendA}
-										setAlgoBlend={setAlgoBlendA}
-										warpAmount={warpAAmount}
-										setWarpAmount={setWarpAAmount}
-										dcwComp={line1DcwComp}
-										setDcwComp={setLine1DcwComp}
-										level={line1Level}
-										setLevel={setLine1Level}
-										octave={line1Octave}
-										setOctave={setLine1Octave}
-										fineDetune={line1Detune}
-										setFineDetune={setLine1Detune}
-										dcoDepth={line1DcoDepth}
-										setDcoDepth={setLine1DcoDepth}
-										dcoEnv={line1DcoEnv}
-										setDcoEnv={setLine1DcoEnv}
-										dcwEnv={line1DcwEnv}
-										setDcwEnv={setLine1DcwEnv}
-										dcaEnv={line1DcaEnv}
-										setDcaEnv={setLine1DcaEnv}
-										keyFollow={line1DcwKeyFollow}
-										setKeyFollow={setLine1DcwKeyFollow}
+									<input
+										type="radio"
+										name="phase_line_tabs"
+										className="tab"
+										aria-label="Line 2"
+										defaultChecked={!showLineA}
 									/>
+									<div className="tab-content bg-cz-panel border-cz-border p-4">
+										<PerLineWarpBlock
+											label={"Line 2"}
+											waveform={waveform.out2}
+											color="#ff71ce"
+											copyTargetLabel={"Line 1"}
+											onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
+											onCopyEnvelopes={() =>
+												copyLineSettings("b", "a", "envelopes")
+											}
+											onCopyFull={() => copyLineSettings("b", "a", "full")}
+											algo={warpBAlgo}
+											setAlgo={setWarpBAlgo}
+											algo2={algo2B}
+											setAlgo2={setAlgo2B}
+											algoBlend={algoBlendB}
+											setAlgoBlend={setAlgoBlendB}
+											warpAmount={warpBAmount}
+											setWarpAmount={setWarpBAmount}
+											dcwComp={line2DcwComp}
+											setDcwComp={setLine2DcwComp}
+											level={line2Level}
+											setLevel={setLine2Level}
+											octave={line2Octave}
+											setOctave={setLine2Octave}
+											fineDetune={line2Detune}
+											setFineDetune={setLine2Detune}
+											dcoDepth={line2DcoDepth}
+											setDcoDepth={setLine2DcoDepth}
+											dcoEnv={line2DcoEnv}
+											setDcoEnv={setLine2DcoEnv}
+											dcwEnv={line2DcwEnv}
+											setDcwEnv={setLine2DcwEnv}
+											dcaEnv={line2DcaEnv}
+											setDcaEnv={setLine2DcaEnv}
+											keyFollow={line2DcwKeyFollow}
+											setKeyFollow={setLine2DcwKeyFollow}
+										/>
+									</div>
 								</div>
-
-								<input
-									type="radio"
-									name="phase_line_tabs"
-									className="tab"
-									aria-label="Line 2"
-									defaultChecked={!showLineA}
-								/>
-								<div className="tab-content bg-cz-panel border-cz-border p-4">
-									<PerLineWarpBlock
-										label={"Line 2"}
-										waveform={waveform.out2}
-										color="#ff71ce"
-										copyTargetLabel={"Line 1"}
-										onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
-										onCopyEnvelopes={() =>
-											copyLineSettings("b", "a", "envelopes")
-										}
-										onCopyFull={() => copyLineSettings("b", "a", "full")}
-										algo={warpBAlgo}
-										setAlgo={setWarpBAlgo}
-										algo2={algo2B}
-										setAlgo2={setAlgo2B}
-										algoBlend={algoBlendB}
-										setAlgoBlend={setAlgoBlendB}
-										warpAmount={warpBAmount}
-										setWarpAmount={setWarpBAmount}
-										dcwComp={line2DcwComp}
-										setDcwComp={setLine2DcwComp}
-										level={line2Level}
-										setLevel={setLine2Level}
-										octave={line2Octave}
-										setOctave={setLine2Octave}
-										fineDetune={line2Detune}
-										setFineDetune={setLine2Detune}
-										dcoDepth={line2DcoDepth}
-										setDcoDepth={setLine2DcoDepth}
-										dcoEnv={line2DcoEnv}
-										setDcoEnv={setLine2DcoEnv}
-										dcwEnv={line2DcwEnv}
-										setDcwEnv={setLine2DcwEnv}
-										dcaEnv={line2DcaEnv}
-										setDcaEnv={setLine2DcaEnv}
-										keyFollow={line2DcwKeyFollow}
-										setKeyFollow={setLine2DcwKeyFollow}
-									/>
-								</div>
-							</div>
-						</CollapsibleCard>
-					</section>
-				</main>
+							</CollapsibleCard>
+						</section>
+					</main>
+				</div>
 			</div>
 		</div>
 	);
