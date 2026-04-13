@@ -35,6 +35,7 @@ import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
 import { ReverbSection } from "./ReverbSection";
 import Card from "./ui/Card";
 import CollapsibleCard from "./ui/CollapsibleCard";
+import CzButton from "./ui/CzButton";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
@@ -1791,22 +1792,20 @@ export default function PhaseDistortionVisualizer() {
 								</div>
 								<div className="space-y-2">
 									<div className="flex w-full gap-1">
-										<button
-											type="button"
-											className={`cz-btn flex-1 ${polyMode === "poly8" ? "active" : ""}`}
+										<CzButton
+											active={polyMode === "poly8"}
 											onClick={() => setPolyMode("poly8")}
+											className="flex-1"
 										>
-											<span className="cz-led" />
 											Poly 8
-										</button>
-										<button
-											type="button"
-											className={`cz-btn flex-1 ${polyMode === "mono" ? "active" : ""}`}
+										</CzButton>
+										<CzButton
+											active={polyMode === "mono"}
 											onClick={() => setPolyMode("mono")}
+											className="flex-1"
 										>
-											<span className="cz-led" />
 											Mono
-										</button>
+										</CzButton>
 									</div>
 									{polyMode === "mono" && (
 										<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
@@ -1820,14 +1819,12 @@ export default function PhaseDistortionVisualizer() {
 										</label>
 									)}
 									<div className="flex items-center gap-2">
-										<button
-											type="button"
-											className={`cz-btn ${sustainOn ? "active" : ""}`}
+										<CzButton
+											active={sustainOn}
 											onClick={() => setSustain(!sustainOn)}
 										>
-											<span className="cz-led" />
 											Sustain
-										</button>
+										</CzButton>
 										<span className="text-xs text-cz-cream-dim/45">
 											Spacebar
 										</span>
@@ -1837,13 +1834,11 @@ export default function PhaseDistortionVisualizer() {
 										<div className="flex flex-wrap gap-1">
 											{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
 												(target) => (
-													<button
+													<CzButton
 														key={target}
-														type="button"
-														className={`cz-btn ${velocityTarget === target ? "active" : ""}`}
+														active={velocityTarget === target}
 														onClick={() => setVelocityTarget(target)}
 													>
-														<span className="cz-led" />
 														{target === "amp"
 															? "Amp"
 															: target === "dcw"
@@ -1851,7 +1846,7 @@ export default function PhaseDistortionVisualizer() {
 																: target === "both"
 																	? "Both"
 																	: "Off"}
-													</button>
+													</CzButton>
 												),
 											)}
 										</div>
@@ -1947,15 +1942,13 @@ export default function PhaseDistortionVisualizer() {
 								</label>
 								<div className="flex justify-center gap-2">
 									{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
-										<button
+										<CzButton
 											key={w}
-											type="button"
-											className={`cz-btn ${vibratoWave === i + 1 ? "active" : ""}`}
+											active={vibratoWave === i + 1}
 											onClick={() => setVibratoWave(i + 1)}
 										>
-											<span className="cz-led" />
 											{w}
-										</button>
+										</CzButton>
 									))}
 								</div>
 								<div className="flex justify-center gap-2 mt-2">
@@ -2017,22 +2010,20 @@ export default function PhaseDistortionVisualizer() {
 									<span className="label-text text-xs">Enable Portamento</span>
 								</label>
 								<div className="flex w-full gap-1 mb-2">
-									<button
-										type="button"
-										className={`cz-btn flex-1 ${portamentoMode === "rate" ? "active" : ""}`}
+									<CzButton
+										active={portamentoMode === "rate"}
 										onClick={() => setPortamentoMode("rate")}
+										className="flex-1"
 									>
-										<span className="cz-led" />
 										Rate
-									</button>
-									<button
-										type="button"
-										className={`cz-btn flex-1 ${portamentoMode === "time" ? "active" : ""}`}
+									</CzButton>
+									<CzButton
+										active={portamentoMode === "time"}
 										onClick={() => setPortamentoMode("time")}
+										className="flex-1"
 									>
-										<span className="cz-led" />
 										Time
-									</button>
+									</CzButton>
 								</div>
 								<div className="flex justify-center gap-2">
 									{portamentoMode === "rate" ? (
@@ -2122,15 +2113,13 @@ export default function PhaseDistortionVisualizer() {
 								</label>
 								<div className="flex flex-wrap gap-1 mb-2">
 									{(["sine", "triangle", "square", "saw"] as const).map((w) => (
-										<button
+										<CzButton
 											key={w}
-											type="button"
-											className={`cz-btn ${lfoWaveform === w ? "active" : ""}`}
+											active={lfoWaveform === w}
 											onClick={() => setLfoWaveform(w)}
 										>
-											<span className="cz-led" />
 											{w}
-										</button>
+										</CzButton>
 									))}
 								</div>
 								<div className="flex justify-center gap-2">
@@ -2159,15 +2148,13 @@ export default function PhaseDistortionVisualizer() {
 									<div className="mb-2 cz-section-bar">Target</div>
 									<div className="flex flex-wrap gap-1">
 										{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
-											<button
+											<CzButton
 												key={t}
-												type="button"
-												className={`cz-btn ${lfoTarget === t ? "active" : ""}`}
+												active={lfoTarget === t}
 												onClick={() => setLfoTarget(t)}
 											>
-												<span className="cz-led" />
 												{t}
-											</button>
+											</CzButton>
 										))}
 									</div>
 								</div>
@@ -2235,15 +2222,14 @@ export default function PhaseDistortionVisualizer() {
 								</label>
 								<div className="flex w-full gap-1 mb-2">
 									{(["lp", "hp", "bp"] as const).map((t) => (
-										<button
+										<CzButton
 											key={t}
-											type="button"
-											className={`cz-btn flex-1 ${filterType === t ? "active" : ""}`}
+											active={filterType === t}
 											onClick={() => setFilterType(t)}
+											className="flex-1"
 										>
-											<span className="cz-led" />
 											{t.toUpperCase()}
-										</button>
+										</CzButton>
 									))}
 								</div>
 								<div className="flex justify-center gap-2">
@@ -2292,15 +2278,14 @@ export default function PhaseDistortionVisualizer() {
 								<div className="flex w-full gap-1">
 									{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
 										(ls) => (
-											<button
+											<CzButton
 												key={ls}
-												type="button"
-												className={`cz-btn flex-1 ${lineSelect === ls ? "active" : ""}`}
+												active={lineSelect === ls}
 												onClick={() => setLineSelect(ls)}
+												className="flex-1"
 											>
-												<span className="cz-led" />
 												{ls}
-											</button>
+											</CzButton>
 										),
 									)}
 								</div>
@@ -2316,17 +2301,14 @@ export default function PhaseDistortionVisualizer() {
 											["noise", "Noise"],
 										] as const
 									).map(([mode, label]) => (
-										<button
+										<CzButton
 											key={mode}
-											type="button"
-											className={`cz-btn flex-1 ${
-												modMode === mode ? "active" : ""
-											}`}
+											active={modMode === mode}
 											onClick={() => setModMode(mode)}
+											className="flex-1"
 										>
-											<span className="cz-led" />
 											{label}
-										</button>
+										</CzButton>
 									))}
 								</div>
 							</div>
