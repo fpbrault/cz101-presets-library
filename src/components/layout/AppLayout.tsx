@@ -15,7 +15,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					leftPanelCollapsed={leftPanelCollapsed}
 					setLeftPanelCollapsed={setLeftPanelCollapsed}
 				/>
-				<div className="flex-1 overflow-y-auto">{children}</div>
+				<div className="flex-1 overflow-hidden">{children}</div>
 			</div>
 		</main>
 	);
