@@ -1385,24 +1385,26 @@ export default function PhaseDistortionVisualizer() {
 				{/* Hardware nameplate logo */}
 				<div className="flex items-center gap-4 shrink-0">
 					<div className="flex flex-col items-start leading-none select-none">
-						{/* COSMO wordmark */}
-						<span
-							className="text-[9px] uppercase tracking-[0.55em] text-cz-cream-dim pl-[2px]"
-							style={{ fontFamily: "'Michroma', sans-serif" }}
-						>
-							COSMO
-						</span>
-						{/* PD-101 model number */}
-						<span
-							className="text-[2.1rem] font-black uppercase leading-none"
-							style={{
-								fontFamily: "'Arial Narrow', 'Arial', sans-serif",
-								letterSpacing: "-0.02em",
-							}}
-						>
-							<span className="text-cz-cream">PD</span>
-							<span className="text-cz-orange">-101</span>
-						</span>
+						{/* COSMO + PD-101 on the same line */}
+						<div className="flex items-baseline gap-2">
+							<span
+								className="text-[2.1rem] font-black uppercase leading-none text-cz-cream"
+								style={{ fontFamily: "'Michroma', sans-serif" }}
+							>
+								COSMO
+							</span>
+							<span
+								className="text-[2.1rem] font-black uppercase leading-none"
+								style={{
+									fontFamily: "'Arial Narrow', 'Arial', sans-serif",
+									letterSpacing: "-0.02em",
+									WebkitTextStroke: "1.5px #e87722",
+									color: "transparent",
+								}}
+							>
+								PD-101
+							</span>
+						</div>
 						{/* Orange accent underline bar */}
 						<span className="mt-[3px] block h-[3px] w-full bg-cz-orange rounded-full" />
 					</div>
