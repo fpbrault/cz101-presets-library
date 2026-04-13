@@ -34,7 +34,17 @@ type CheckboxModeProps = CommonProps & {
 	inputClassName?: string;
 };
 
-type CollapsibleCardProps = DetailsModeProps | CheckboxModeProps;
+type RadioModeProps = CommonProps & {
+	mode: "radio";
+	name: string;
+	defaultOpen?: boolean;
+	inputClassName?: string;
+};
+
+type CollapsibleCardProps =
+	| DetailsModeProps
+	| CheckboxModeProps
+	| RadioModeProps;
 
 const COLLAPSE_BASE_CLASSES =
 	"border border-base-300/70 text-base-content outline-none";
@@ -127,7 +137,9 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 			>
 				{title}
 			</summary>
-			<div className={joinClasses("collapse-content", resolvedContentClassName)}>
+			<div
+				className={joinClasses("collapse-content", resolvedContentClassName)}
+			>
 				{children}
 			</div>
 		</details>

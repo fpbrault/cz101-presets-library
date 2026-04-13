@@ -5,21 +5,12 @@ import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
 import { pdVisualizerWorkletUrl } from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
-	DEFAULT_PRESET,
-	deletePreset,
-	exportPreset,
-	importPreset,
 	listPresets,
 	loadCurrentState,
 	loadPreset,
 	type SynthPresetData,
 	saveCurrentState,
-	savePreset,
 } from "@/lib/synth/presetStorage";
-import { ChorusSection } from "./ChorusSection";
-import ControlKnob from "./ControlKnob";
-import { DelaySection } from "./DelaySection";
-import { PerLineWarpBlock } from "./PerLineWarpBlock";
 import {
 	computeWaveform,
 	DEFAULT_DCA_ENV,
@@ -32,43 +23,25 @@ import {
 	type StepEnvData,
 } from "./pdAlgorithms";
 import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
-import { ReverbSection } from "./ReverbSection";
-import Card from "./ui/Card";
-import CollapsibleCard from "./ui/CollapsibleCard";
-import CzButton from "./ui/CzButton";
+import ChorusPanel from "./synth/ChorusPanel";
+import DelayPanel from "./synth/DelayPanel";
+import GlobalVoicePanel from "./synth/GlobalVoicePanel";
+import LfoPanel from "./synth/LfoPanel";
+import PhaseLinesSection from "./synth/PhaseLinesSection";
+import PhaseModPanel from "./synth/PhaseModPanel";
+import PortamentoPanel from "./synth/PortamentoPanel";
+import ReverbPanel from "./synth/ReverbPanel";
+import ScopePanel from "./synth/ScopePanel";
+import SynthFilterPanel from "./synth/SynthFilterPanel";
+import SynthHeader from "./synth/SynthHeader";
+import VibratoPanel from "./synth/VibratoPanel";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
 
-const STORAGE_KEY = "cz-lab-accordion-state";
-
-function loadAccordionState(): Record<string, boolean> {
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		return stored ? JSON.parse(stored) : {};
-	} catch {
-		return {};
-	}
-}
-
-function saveAccordionState(state: Record<string, boolean>) {
-	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-	} catch {}
-}
+const ACCORDION_NAME = "synth-aside-accordion";
 
 export default function PhaseDistortionVisualizer() {
-	const [accordionState, setAccordionState] = useState<Record<string, boolean>>(
-		() => loadAccordionState(),
-	);
-
-	const toggleAccordion = useCallback((key: string, open: boolean) => {
-		setAccordionState((prev) => {
-			const next = { ...prev, [key]: open };
-			saveAccordionState(next);
-			return next;
-		});
-	}, []);
 	const [warpAAmount, setWarpAAmount] = useState(0);
 	const [warpBAmount, setWarpBAmount] = useState(0);
 	const [warpAAlgo, setWarpAAlgo] = useState<PdAlgo>("bend");
@@ -108,9 +81,7 @@ export default function PhaseDistortionVisualizer() {
 	const [line2DcwComp, setLine2DcwComp] = useState(0);
 	const [scopeCycles, setScopeCycles] = useState(2);
 	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(1.0);
-	const [scopeTriggerMode, _setScopeTriggerMode] = useState<
-		"off" | "rise" | "fall"
-	>("rise");
+	const [scopeTriggerMode] = useState<"off" | "rise" | "fall">("rise");
 	const [scopeTriggerLevel, setScopeTriggerLevel] = useState(128);
 
 	const [chorusRate, setChorusRate] = useState(0.8);
@@ -158,17 +129,15 @@ export default function PhaseDistortionVisualizer() {
 	const [filterResonance, setFilterResonance] = useState(0);
 	const [filterEnvAmount, setFilterEnvAmount] = useState(0);
 
-	const [presetName, setPresetName] = useState("");
 	const [presetList, setPresetList] = useState<string[]>([]);
 	const [activePresetName, setActivePresetName] = useState("Current State");
-	const [presetPanelOpen, setPresetPanelOpen] = useState(false);
 
 	const gatherState = useCallback(
 		(): SynthPresetData => ({
 			warpAAmount,
 			warpBAmount,
-			warpAAlgo: warpAAlgo,
-			warpBAlgo: warpBAlgo,
+			warpAAlgo,
+			warpBAlgo,
 			algo2A: algo2A ?? null,
 			algo2B: algo2B ?? null,
 			algoBlendA,
@@ -404,27 +373,13 @@ export default function PhaseDistortionVisualizer() {
 					const synthPreset = convertDecodedPatchToSynthPreset(decoded);
 					applyPreset(synthPreset);
 					setActivePresetName(preset.name);
-					setPresetPanelOpen(false);
 				}
 			}
 		},
 		[applyPreset],
 	);
 
-	const resetToDefaults = useCallback(() => {
-		applyPreset(DEFAULT_PRESET);
-		setActivePresetName("Factory Default");
-		setPresetPanelOpen(false);
-	}, [applyPreset]);
-
-	type PresetEntry = {
-		id: string;
-		label: string;
-		type: "local" | "library";
-		preset?: Preset;
-	};
-
-	const allPresetEntries = useMemo<PresetEntry[]>(
+	const allPresetEntries = useMemo(
 		() => [
 			...presetList.map((name) => ({
 				id: `local:${name}`,
@@ -442,98 +397,41 @@ export default function PhaseDistortionVisualizer() {
 	);
 
 	const activePresetIndex = useMemo(
-		() =>
-			allPresetEntries.findIndex((entry) => entry.label === activePresetName),
+		() => allPresetEntries.findIndex((e) => e.label === activePresetName),
 		[activePresetName, allPresetEntries],
 	);
 
-	const loadPresetEntry = useCallback(
-		(index: number) => {
-			const entry = allPresetEntries[index];
-			if (!entry) return;
-
-			if (entry.type === "local") {
-				const data = loadPreset(entry.label);
-				if (!data) return;
-				applyPreset(data);
-				setActivePresetName(entry.label);
-				setPresetPanelOpen(false);
-				return;
-			}
-
-			if (entry.preset) handleLoadLibraryPreset(entry.preset);
+	const handleLoadLocal = useCallback(
+		(name: string) => {
+			const data = loadPreset(name);
+			if (!data) return;
+			applyPreset(data);
+			setActivePresetName(name);
 		},
-		[allPresetEntries, applyPreset, handleLoadLibraryPreset],
+		[applyPreset],
 	);
 
 	const handleStepPreset = useCallback(
 		(direction: -1 | 1) => {
 			if (allPresetEntries.length === 0) return;
-			const baseIndex = activePresetIndex >= 0 ? activePresetIndex : 0;
-			const nextIndex =
-				(baseIndex + direction + allPresetEntries.length) %
-				allPresetEntries.length;
-			loadPresetEntry(nextIndex);
+			const base = activePresetIndex >= 0 ? activePresetIndex : 0;
+			const next =
+				(base + direction + allPresetEntries.length) % allPresetEntries.length;
+			const entry = allPresetEntries[next];
+			if (!entry) return;
+			if (entry.type === "local") {
+				handleLoadLocal(entry.label);
+			} else if (entry.preset) {
+				handleLoadLibraryPreset(entry.preset);
+			}
 		},
-		[activePresetIndex, allPresetEntries.length, loadPresetEntry],
+		[
+			activePresetIndex,
+			allPresetEntries,
+			handleLoadLocal,
+			handleLoadLibraryPreset,
+		],
 	);
-
-	const lfoDisplayPath = useMemo(() => {
-		const width = 220;
-		const height = 92;
-		const amplitude = 14 + lfoDepth * 24;
-		const cycles = 1 + lfoRate / 10;
-		const points: string[] = [];
-
-		for (let i = 0; i <= 48; i++) {
-			const t = i / 48;
-			const phase = (t * cycles) % 1;
-			let value = 0;
-
-			if (lfoWaveform === "sine") value = Math.sin(t * cycles * Math.PI * 2);
-			else if (lfoWaveform === "triangle")
-				value = 1 - 4 * Math.abs(phase - 0.5);
-			else if (lfoWaveform === "square") value = phase < 0.5 ? 1 : -1;
-			else value = 1 - phase * 2;
-
-			const x = t * width;
-			const y = height / 2 - value * amplitude;
-			points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-		}
-
-		return points.join(" ");
-	}, [lfoDepth, lfoRate, lfoWaveform]);
-
-	const filterDisplay = useMemo(() => {
-		const width = 220;
-		const height = 92;
-		const cutoffNorm =
-			(Math.log10(filterCutoff) - Math.log10(20)) /
-			(Math.log10(20000) - Math.log10(20));
-		const cutoffX = 18 + cutoffNorm * (width - 36);
-		const peakY = 22 - filterResonance * 18 - filterEnvAmount * 10;
-		const topY = 24;
-		const bottomY = height - 14;
-
-		if (filterType === "hp") {
-			return {
-				path: `M 0 ${bottomY} L ${Math.max(0, cutoffX - 22)} ${bottomY} L ${cutoffX} ${peakY} L ${width} ${topY}`,
-				fill: `M 0 ${height} L 0 ${bottomY} L ${Math.max(0, cutoffX - 22)} ${bottomY} L ${cutoffX} ${peakY} L ${width} ${topY} L ${width} ${height} Z`,
-			};
-		}
-
-		if (filterType === "bp") {
-			return {
-				path: `M 0 ${bottomY} L ${Math.max(0, cutoffX - 34)} ${bottomY} L ${Math.max(0, cutoffX - 8)} ${peakY} L ${Math.min(width, cutoffX + 8)} ${peakY} L ${Math.min(width, cutoffX + 34)} ${bottomY} L ${width} ${bottomY}`,
-				fill: `M 0 ${height} L 0 ${bottomY} L ${Math.max(0, cutoffX - 34)} ${bottomY} L ${Math.max(0, cutoffX - 8)} ${peakY} L ${Math.min(width, cutoffX + 8)} ${peakY} L ${Math.min(width, cutoffX + 34)} ${bottomY} L ${width} ${bottomY} L ${width} ${height} Z`,
-			};
-		}
-
-		return {
-			path: `M 0 ${topY} L ${Math.max(0, cutoffX - 22)} ${topY} L ${cutoffX} ${peakY} L ${width} ${bottomY}`,
-			fill: `M 0 ${height} L 0 ${topY} L ${Math.max(0, cutoffX - 22)} ${topY} L ${cutoffX} ${peakY} L ${width} ${bottomY} L ${width} ${height} Z`,
-		};
-	}, [filterCutoff, filterEnvAmount, filterResonance, filterType]);
 
 	const copyLineSettings = useCallback(
 		(
@@ -541,7 +439,7 @@ export default function PhaseDistortionVisualizer() {
 			target: "a" | "b",
 			mode: "algos" | "envelopes" | "full",
 		) => {
-			const sourceLine =
+			const src =
 				source === "a"
 					? {
 							warpAmount: warpAAmount,
@@ -572,63 +470,45 @@ export default function PhaseDistortionVisualizer() {
 							dcaEnv: line2DcaEnv,
 						};
 
-			const applyToTarget = {
-				algos: () => {
-					if (target === "a") {
-						setWarpAAlgo(sourceLine.algo);
-						setAlgo2A(sourceLine.algo2);
-						setAlgoBlendA(sourceLine.algoBlend);
-						setWarpAAmount(sourceLine.warpAmount);
-						return;
-					}
-					setWarpBAlgo(sourceLine.algo);
-					setAlgo2B(sourceLine.algo2);
-					setAlgoBlendB(sourceLine.algoBlend);
-					setWarpBAmount(sourceLine.warpAmount);
-				},
-				envelopes: () => {
-					if (target === "a") {
-						setLine1DcoEnv(sourceLine.dcoEnv);
-						setLine1DcwEnv(sourceLine.dcwEnv);
-						setLine1DcaEnv(sourceLine.dcaEnv);
-						return;
-					}
-					setLine2DcoEnv(sourceLine.dcoEnv);
-					setLine2DcwEnv(sourceLine.dcwEnv);
-					setLine2DcaEnv(sourceLine.dcaEnv);
-				},
-				full: () => {
-					if (target === "a") {
-						setWarpAAmount(sourceLine.warpAmount);
-						setWarpAAlgo(sourceLine.algo);
-						setAlgo2A(sourceLine.algo2);
-						setAlgoBlendA(sourceLine.algoBlend);
-						setLine1DcwComp(sourceLine.dcwComp);
-						setLine1Level(sourceLine.level);
-						setLine1Octave(sourceLine.octave);
-						setLine1Detune(sourceLine.fineDetune);
-						setLine1DcoDepth(sourceLine.dcoDepth);
-						setLine1DcoEnv(sourceLine.dcoEnv);
-						setLine1DcwEnv(sourceLine.dcwEnv);
-						setLine1DcaEnv(sourceLine.dcaEnv);
-						return;
-					}
-					setWarpBAmount(sourceLine.warpAmount);
-					setWarpBAlgo(sourceLine.algo);
-					setAlgo2B(sourceLine.algo2);
-					setAlgoBlendB(sourceLine.algoBlend);
-					setLine2DcwComp(sourceLine.dcwComp);
-					setLine2Level(sourceLine.level);
-					setLine2Octave(sourceLine.octave);
-					setLine2Detune(sourceLine.fineDetune);
-					setLine2DcoDepth(sourceLine.dcoDepth);
-					setLine2DcoEnv(sourceLine.dcoEnv);
-					setLine2DcwEnv(sourceLine.dcwEnv);
-					setLine2DcaEnv(sourceLine.dcaEnv);
-				},
-			};
-
-			applyToTarget[mode]();
+			if (target === "a") {
+				if (mode === "algos" || mode === "full") {
+					setWarpAAlgo(src.algo);
+					setAlgo2A(src.algo2);
+					setAlgoBlendA(src.algoBlend);
+					setWarpAAmount(src.warpAmount);
+				}
+				if (mode === "envelopes" || mode === "full") {
+					setLine1DcoEnv(src.dcoEnv);
+					setLine1DcwEnv(src.dcwEnv);
+					setLine1DcaEnv(src.dcaEnv);
+				}
+				if (mode === "full") {
+					setLine1DcwComp(src.dcwComp);
+					setLine1Level(src.level);
+					setLine1Octave(src.octave);
+					setLine1Detune(src.fineDetune);
+					setLine1DcoDepth(src.dcoDepth);
+				}
+			} else {
+				if (mode === "algos" || mode === "full") {
+					setWarpBAlgo(src.algo);
+					setAlgo2B(src.algo2);
+					setAlgoBlendB(src.algoBlend);
+					setWarpBAmount(src.warpAmount);
+				}
+				if (mode === "envelopes" || mode === "full") {
+					setLine2DcoEnv(src.dcoEnv);
+					setLine2DcwEnv(src.dcwEnv);
+					setLine2DcaEnv(src.dcaEnv);
+				}
+				if (mode === "full") {
+					setLine2DcwComp(src.dcwComp);
+					setLine2Level(src.level);
+					setLine2Octave(src.octave);
+					setLine2Detune(src.fineDetune);
+					setLine2DcoDepth(src.dcoDepth);
+				}
+			}
 		},
 		[
 			algo2A,
@@ -658,6 +538,7 @@ export default function PhaseDistortionVisualizer() {
 		],
 	);
 
+	// ── Audio engine ──────────────────────────────────────────────────────────
 	const audioCtxRef = useRef<AudioContext | null>(null);
 	const gainNodeRef = useRef<GainNode | null>(null);
 	const analyserNodeRef = useRef<AnalyserNode | null>(null);
@@ -714,12 +595,13 @@ export default function PhaseDistortionVisualizer() {
 		reverb: { size: 0.5, mix: 0 },
 	});
 	const sustainRef = useRef(false);
+
+	// ── Canvas refs ───────────────────────────────────────────────────────────
 	const line1CanvasRef = useRef<HTMLCanvasElement>(null);
 	const line2CanvasRef = useRef<HTMLCanvasElement>(null);
 	const combinedCanvasRef = useRef<HTMLCanvasElement>(null);
 	const phaseCanvasRef = useRef<HTMLCanvasElement>(null);
 	const oscilloscopeCanvasRef = useRef<HTMLCanvasElement>(null);
-	const leftScopeCanvasRef = useRef<HTMLCanvasElement>(null);
 	const pressedPcKeysRef = useRef<Set<string>>(new Set());
 	const lastHeldFreqRef = useRef(220);
 
@@ -779,6 +661,7 @@ export default function PhaseDistortionVisualizer() {
 		],
 	);
 
+	// ── Sync params to worklet ────────────────────────────────────────────────
 	useEffect(() => {
 		const algoA =
 			PD_ALGOS.find((a) => String(a.value) === String(warpAAlgo)) ??
@@ -792,8 +675,6 @@ export default function PhaseDistortionVisualizer() {
 		const algo2BDef = algo2B
 			? (PD_ALGOS.find((a) => String(a.value) === String(algo2B)) ?? null)
 			: null;
-
-		const finalPitch = effectivePitchHz;
 
 		const params = {
 			lineSelect,
@@ -841,7 +722,7 @@ export default function PhaseDistortionVisualizer() {
 			intPmRatio,
 			extPmAmount,
 			pmPre,
-			frequency: finalPitch,
+			frequency: effectivePitchHz,
 			volume,
 			polyMode,
 			legato,
@@ -948,6 +829,7 @@ export default function PhaseDistortionVisualizer() {
 		filterEnvAmount,
 	]);
 
+	// ── Auto-save ─────────────────────────────────────────────────────────────
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			saveCurrentState(gatherState());
@@ -955,16 +837,17 @@ export default function PhaseDistortionVisualizer() {
 		return () => clearTimeout(timer);
 	}, [gatherState]);
 
+	// ── Load saved state on mount ─────────────────────────────────────────────
 	useEffect(() => {
 		setPresetList(listPresets());
 		const saved = loadCurrentState();
 		if (saved) applyPreset(saved);
 	}, [applyPreset]);
 
+	// ── Audio context init ────────────────────────────────────────────────────
 	useEffect(() => {
 		if (audioInitRef.current) return;
 		audioInitRef.current = true;
-
 		let disposed = false;
 		const init = async () => {
 			try {
@@ -987,9 +870,6 @@ export default function PhaseDistortionVisualizer() {
 							type: "setParams",
 							params: paramsRef.current,
 						});
-					} else if (e.data?.type === "debug") {
-						// debug info - uncomment for development
-						// console.log(e.data);
 					}
 				};
 				const gainNode = ctx.createGain();
@@ -1011,31 +891,23 @@ export default function PhaseDistortionVisualizer() {
 		return () => {
 			disposed = true;
 			audioInitRef.current = false;
-			if (workletNodeRef.current) {
-				workletNodeRef.current.disconnect();
-				workletNodeRef.current = null;
-			}
-			if (gainNodeRef.current) {
-				gainNodeRef.current.disconnect();
-				gainNodeRef.current = null;
-			}
-			if (analyserNodeRef.current) {
-				analyserNodeRef.current.disconnect();
-				analyserNodeRef.current = null;
-			}
-			if (audioCtxRef.current) {
-				audioCtxRef.current.close();
-				audioCtxRef.current = null;
-			}
+			workletNodeRef.current?.disconnect();
+			workletNodeRef.current = null;
+			gainNodeRef.current?.disconnect();
+			gainNodeRef.current = null;
+			analyserNodeRef.current?.disconnect();
+			analyserNodeRef.current = null;
+			audioCtxRef.current?.close();
+			audioCtxRef.current = null;
 		};
 	}, []);
 
+	// ── Oscilloscope animation ────────────────────────────────────────────────
 	useEffect(() => {
 		const canvas = oscilloscopeCanvasRef.current;
 		if (!canvas) return;
 		const ctx = canvas.getContext("2d");
 		if (!ctx) return;
-
 		let raf = 0;
 		const draw = () => {
 			raf = window.requestAnimationFrame(draw);
@@ -1049,14 +921,10 @@ export default function PhaseDistortionVisualizer() {
 				canvas.height = pixelHeight;
 			}
 			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
 			const analyser = analyserNodeRef.current;
 			if (!analyser) {
-				ctx.clearRect(0, 0, drawWidth, drawHeight);
-
 				ctx.fillStyle = "#051005";
 				ctx.fillRect(0, 0, drawWidth, drawHeight);
-
 				ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
 				ctx.beginPath();
 				ctx.moveTo(0, drawHeight / 2);
@@ -1064,7 +932,6 @@ export default function PhaseDistortionVisualizer() {
 				ctx.stroke();
 				return;
 			}
-
 			const data = new Uint8Array(analyser.fftSize);
 			analyser.getByteTimeDomainData(data);
 			const sampleRate = audioCtxRef.current?.sampleRate ?? 44100;
@@ -1074,7 +941,6 @@ export default function PhaseDistortionVisualizer() {
 				32,
 				Math.min(data.length - 2, Math.round(samplesPerCycle * scopeCycles)),
 			);
-
 			let start = Math.max(1, Math.floor((data.length - viewSamples) / 2));
 			if (scopeTriggerMode !== "off") {
 				const endLimit = data.length - viewSamples - 1;
@@ -1092,13 +958,10 @@ export default function PhaseDistortionVisualizer() {
 					}
 				}
 			}
-
 			let mean = 0;
 			for (let i = 0; i < viewSamples; i++) mean += data[start + i];
 			mean /= viewSamples;
-
 			ctx.clearRect(0, 0, drawWidth, drawHeight);
-
 			ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
 			ctx.lineWidth = 1;
 			for (let y = 0.25; y < 1; y += 0.25) {
@@ -1113,14 +976,12 @@ export default function PhaseDistortionVisualizer() {
 				ctx.lineTo(drawWidth * x, drawHeight);
 				ctx.stroke();
 			}
-
 			ctx.strokeStyle = "rgba(0, 120, 0, 0.6)";
 			ctx.lineWidth = 1.5;
 			ctx.beginPath();
 			ctx.moveTo(0, drawHeight / 2);
 			ctx.lineTo(drawWidth, drawHeight / 2);
 			ctx.stroke();
-
 			ctx.shadowColor = "#3dff3d";
 			ctx.shadowBlur = 8;
 			ctx.strokeStyle = "#3dff3d";
@@ -1128,8 +989,7 @@ export default function PhaseDistortionVisualizer() {
 			ctx.beginPath();
 			for (let i = 0; i < viewSamples; i++) {
 				const x = (i / (viewSamples - 1)) * drawWidth;
-				const idx = start + i;
-				const centered = (data[idx] - mean) / 128;
+				const centered = (data[start + i] - mean) / 128;
 				const y =
 					drawHeight / 2 - centered * (drawHeight / 2 - 8) * scopeVerticalZoom;
 				if (i === 0) ctx.moveTo(x, y);
@@ -1148,95 +1008,7 @@ export default function PhaseDistortionVisualizer() {
 		scopeTriggerLevel,
 	]);
 
-	useEffect(() => {
-		const canvas = leftScopeCanvasRef.current;
-		if (!canvas) return;
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
-
-		let raf = 0;
-		const draw = () => {
-			raf = window.requestAnimationFrame(draw);
-			const drawWidth = Math.max(1, Math.floor(canvas.clientWidth));
-			const drawHeight = Math.max(1, Math.floor(canvas.clientHeight));
-			const dpr = window.devicePixelRatio || 1;
-			const pixelWidth = Math.floor(drawWidth * dpr);
-			const pixelHeight = Math.floor(drawHeight * dpr);
-			if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-				canvas.width = pixelWidth;
-				canvas.height = pixelHeight;
-			}
-			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-			const analyser = analyserNodeRef.current;
-			if (!analyser) {
-				ctx.clearRect(0, 0, drawWidth, drawHeight);
-
-				ctx.fillStyle = "#051005";
-				ctx.fillRect(0, 0, drawWidth, drawHeight);
-
-				ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
-				ctx.beginPath();
-				ctx.moveTo(0, drawHeight / 2);
-				ctx.lineTo(drawWidth, drawHeight / 2);
-				ctx.stroke();
-				return;
-			}
-
-			const data = new Uint8Array(analyser.fftSize);
-			analyser.getByteTimeDomainData(data);
-			const sampleRate = audioCtxRef.current?.sampleRate ?? 44100;
-			const hz = Math.max(1, effectivePitchHz);
-			const samplesPerCycle = Math.max(8, Math.round(sampleRate / hz));
-			const viewSamples = Math.max(
-				32,
-				Math.min(data.length - 2, Math.round(samplesPerCycle * 1)),
-			);
-
-			const start = Math.max(1, Math.floor((data.length - viewSamples) / 2));
-
-			let mean = 0;
-			for (let i = 0; i < viewSamples; i++) mean += data[start + i];
-			mean /= viewSamples;
-
-			ctx.clearRect(0, 0, drawWidth, drawHeight);
-
-			ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
-			ctx.lineWidth = 1;
-			for (let y = 0.25; y < 1; y += 0.25) {
-				ctx.beginPath();
-				ctx.moveTo(0, drawHeight * y);
-				ctx.lineTo(drawWidth, drawHeight * y);
-				ctx.stroke();
-			}
-
-			ctx.strokeStyle = "rgba(0, 120, 0, 0.6)";
-			ctx.lineWidth = 1.5;
-			ctx.beginPath();
-			ctx.moveTo(0, drawHeight / 2);
-			ctx.lineTo(drawWidth, drawHeight / 2);
-			ctx.stroke();
-
-			ctx.shadowColor = "#3dff3d";
-			ctx.shadowBlur = 8;
-			ctx.strokeStyle = "#3dff3d";
-			ctx.lineWidth = 2;
-			ctx.beginPath();
-			for (let i = 0; i < viewSamples; i++) {
-				const x = (i / (viewSamples - 1)) * drawWidth;
-				const idx = start + i;
-				const centered = (data[idx] - mean) / 128;
-				const y = drawHeight / 2 - centered * (drawHeight / 2 - 8) * 1;
-				if (i === 0) ctx.moveTo(x, y);
-				else ctx.lineTo(x, y);
-			}
-			ctx.stroke();
-			ctx.shadowBlur = 0;
-		};
-		draw();
-		return () => window.cancelAnimationFrame(raf);
-	}, [effectivePitchHz]);
-
+	// ── Waveform canvas draws ─────────────────────────────────────────────────
 	useEffect(() => {
 		if (combinedCanvasRef.current)
 			drawScope(combinedCanvasRef.current, waveform.out1, waveform.out2);
@@ -1248,8 +1020,10 @@ export default function PhaseDistortionVisualizer() {
 			drawPhaseMap(phaseCanvasRef.current, waveform.phase);
 	}, [waveform]);
 
+	// ── Note handling ─────────────────────────────────────────────────────────
 	const activeNotesRef = useRef<Set<number>>(new Set());
 	const monoNoteRef = useRef<number | null>(null);
+
 	const sendNoteOn = useCallback(
 		(note: number, velocity = 100) => {
 			if (activeNotesRef.current.has(note)) return;
@@ -1265,21 +1039,20 @@ export default function PhaseDistortionVisualizer() {
 			activeNotesRef.current.add(note);
 			monoNoteRef.current = note;
 			setActiveNotes((prev) => (prev.includes(note) ? prev : [...prev, note]));
-			const freq = noteToFreq(note);
 			workletNodeRef.current?.port.postMessage({
 				type: "noteOn",
 				note,
-				frequency: freq,
+				frequency: noteToFreq(note),
 				velocity: velocityTarget !== "off" ? velocity / 127 : 0,
 			});
 		},
 		[polyMode, velocityTarget],
 	);
+
 	const sendNoteOff = useCallback(
 		(note: number) => {
-			if (polyMode === "mono" && monoNoteRef.current === note) {
+			if (polyMode === "mono" && monoNoteRef.current === note)
 				monoNoteRef.current = null;
-			}
 			activeNotesRef.current.delete(note);
 			setActiveNotes((prev) => prev.filter((n) => n !== note));
 			if (!sustainRef.current) {
@@ -1295,6 +1068,7 @@ export default function PhaseDistortionVisualizer() {
 		workletNodeRef.current?.port.postMessage({ type: "sustain", on });
 	}, []);
 
+	// ── Keyboard input ────────────────────────────────────────────────────────
 	useEffect(() => {
 		const keyDown = (event: KeyboardEvent) => {
 			if (event.key === " ") {
@@ -1329,6 +1103,7 @@ export default function PhaseDistortionVisualizer() {
 		};
 	}, [sendNoteOff, sendNoteOn, setSustain]);
 
+	// ── MIDI input ────────────────────────────────────────────────────────────
 	useEffect(() => {
 		if (!("requestMIDIAccess" in navigator) || !navigator.requestMIDIAccess)
 			return;
@@ -1377,1027 +1152,206 @@ export default function PhaseDistortionVisualizer() {
 		};
 	}, [sendNoteOff, sendNoteOn, setSustain]);
 
-	const showLineA = lineSelect !== "L2";
-
+	// ── Render ────────────────────────────────────────────────────────────────
 	return (
 		<div className="h-full bg-cz-body flex flex-col overflow-hidden gap-4 w-full">
-			<header className="shrink-0 flex flex-col gap-3 border-b-4 border-cz-border bg-cz-body px-8 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
-				{/* Hardware nameplate logo */}
-				<div className="flex items-center gap-4 shrink-0">
-					<div className="flex flex-col items-start leading-none select-none">
-						{/* COSMO + PD-101 on the same line */}
-						<div className="flex items-baseline gap-2">
-							<span
-								className="text-[2.1rem] font-black uppercase leading-none text-cz-cream"
-								style={{ fontFamily: "'Michroma', sans-serif" }}
-							>
-								COSMO
-							</span>
-							<span
-								className="text-[2.1rem] font-black uppercase leading-none font-['Arial_Narrow','Arial',sans-serif] tracking-[-0.02em] [-webkit-text-stroke:1.5px_#9cb937] text-transparent"
-							>
-								PD-101
-							</span>
-						</div>
-						{/* Orange accent underline bar */}
-						<span className="mt-0.75 block h-0.75 w-full bg-cz-orange rounded-full" />
-					</div>
-				
-				</div>
-
-				<div className="relative w-full max-w-3xl">
-					<div className="flex items-stretch overflow-hidden rounded-xl border border-cz-border bg-cz-inset">
-						<button
-							type="button"
-							className="flex w-12 items-center justify-center border-r border-cz-border text-cz-cream transition hover:bg-cz-surface disabled:text-cz-cream-dim/50"
-							onClick={() => handleStepPreset(-1)}
-							disabled={allPresetEntries.length === 0}
-							aria-label="Previous preset"
-						>
-							&#8249;
-						</button>
-						<button
-							type="button"
-							className="flex min-w-0 flex-1 flex-col items-center justify-center px-4 py-2 text-center transition hover:bg-cz-surface"
-							onClick={() => setPresetPanelOpen((open) => !open)}
-						>
-							<span className="text-[10px] font-mono uppercase tracking-[0.32em] text-cz-orange">
-								Preset
-							</span>
-							<span className="truncate text-lg font-mono font-bold text-cz-cream">
-								{activePresetName}
-							</span>
-						</button>
-						<button
-							type="button"
-							className="flex w-12 items-center justify-center border-l border-cz-border text-cz-cream transition hover:bg-cz-surface disabled:text-cz-cream-dim/50"
-							onClick={() => handleStepPreset(1)}
-							disabled={allPresetEntries.length === 0}
-							aria-label="Next preset"
-						>
-							&#8250;
-						</button>
-					</div>
-
-					{presetPanelOpen && (
-						<div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-full overflow-hidden rounded-xl border border-cz-border bg-cz-panel shadow-2xl lg:w-[28rem]">
-							<div className="border-b border-cz-border bg-cz-surface px-4 py-2 text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream-dim">
-								Preset List
-							</div>
-							<div className="max-h-72 overflow-y-auto p-2">
-								{allPresetEntries.length === 0 ? (
-									<div className="px-3 py-4 text-sm text-cz-cream-dim">
-										No presets available.
-									</div>
-								) : (
-									allPresetEntries.map((entry, index) => (
-										<button
-											key={entry.id}
-											type="button"
-											className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${entry.label === activePresetName ? "bg-cz-orange text-white" : "text-cz-cream hover:bg-cz-surface"}`}
-											onClick={() => loadPresetEntry(index)}
-										>
-											<span className="truncate">{entry.label}</span>
-											<span
-												className={`ml-3 shrink-0 text-[10px] font-mono uppercase tracking-[0.22em] ${entry.label === activePresetName ? "text-white/75" : "text-cz-cream-dim"}`}
-											>
-												{entry.type}
-											</span>
-										</button>
-									))
-								)}
-							</div>
-						</div>
-					)}
-				</div>
-				{/* Subtitle */}
-					<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">
-						<span className="text-[9px] font-mono uppercase tracking-[0.3em] text-cz-section-bar">
-							Phase Distortion
-						</span>
-						<span className="text-xs font-mono font-semibold uppercase tracking-[0.18em] text-cz-cream">
-							Synthesizer Lab
-						</span>
-					</div>
-			</header>
+			<SynthHeader
+				presetList={presetList}
+				libraryPresets={libraryPresets}
+				activePresetName={activePresetName}
+				onLoadLocal={handleLoadLocal}
+				onLoadLibrary={handleLoadLibraryPreset}
+				onStepPreset={handleStepPreset}
+			/>
 
 			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-				<aside className="overflow-y-auto min-h-0 pb-4">
-				
-						<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.scope ?? true}
-							onToggle={(e) => toggleAccordion("scope", e.currentTarget.open)}
-							titleClassName="pr-3"
-							title="Scope"
-						>
-							<div>
-								<div className="space-y-2">
-									<div className="relative overflow-hidden rounded-lg border border-cz-border bg-cz-lcd-bg">
-										<div className="absolute left-2 top-1 text-[8px] font-mono text-cz-lcd-fg/60">
-											CH1
-										</div>
-										<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-cz-lcd-fg/60">
-											{effectivePitchHz.toFixed(1)} Hz
-										</div>
-										<canvas
-											ref={oscilloscopeCanvasRef}
-											width={900}
-											height={220}
-											className="h-36 w-full"
-											style={{ imageRendering: "pixelated" }}
-										/>
-									</div>
-									<div className="flex justify-center gap-2">
-										<ControlKnob
-											value={scopeCycles}
-											onChange={setScopeCycles}
-											min={0.5}
-											max={8}
-											size={48}
-											color="#3dff3d"
-											label="Cycles"
-											valueFormatter={(value) => value.toFixed(1)}
-										/>
-										<ControlKnob
-											value={scopeVerticalZoom}
-											onChange={setScopeVerticalZoom}
-											min={0.25}
-											max={4}
-											size={48}
-											color="#9cb937"
-											label="Zoom"
-											valueFormatter={(value) => `${value.toFixed(1)}x`}
-										/>
-										<ControlKnob
-											value={scopeTriggerLevel}
-											onChange={(value) =>
-												setScopeTriggerLevel(Math.round(value))
-											}
-											min={0}
-											max={255}
-											size={48}
-											color="#7f9de4"
-											label="Trig"
-											valueFormatter={(value) => `${Math.round(value)}`}
-										/>
-									</div>
-									<div className="mt-3 grid grid-cols-2 gap-3">
-										<Card variant="inset" className="border-cz-border p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
-												Mix A/B
-											</div>
-											<canvas
-												ref={combinedCanvasRef}
-												width={220}
-												height={70}
-												className="h-17.5 w-full rounded-lg"
-											/>
-										</Card>
-										<Card variant="inset" className="border-cz-border p-2">
-											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
-												Phase Map
-											</div>
-											<canvas
-												ref={phaseCanvasRef}
-												width={220}
-												height={70}
-												className="h-17.5 w-full rounded-lg"
-											/>
-										</Card>
-									</div>
-								</div>
-							</div>
-						</CollapsibleCard>
+				<aside className="overflow-y-auto min-h-0 pb-4 space-y-0 [scrollbar-gutter:stable]">
+					{/* Scope — independently collapsible */}
+					<ScopePanel
+						oscilloscopeCanvasRef={oscilloscopeCanvasRef}
+						effectivePitchHz={effectivePitchHz}
+						scopeCycles={scopeCycles}
+						setScopeCycles={setScopeCycles}
+						scopeVerticalZoom={scopeVerticalZoom}
+						setScopeVerticalZoom={setScopeVerticalZoom}
+						scopeTriggerLevel={scopeTriggerLevel}
+						setScopeTriggerLevel={setScopeTriggerLevel}
+						open={true}
+					/>
 
-					{/* 	<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.presets ?? false}
-							onToggle={(e) => toggleAccordion("presets", e.currentTarget.open)}
-							titleClassName="pr-3 flex items-center justify-between"
-							title={
-								<>
-									<div className="cz-section-bar">Presets</div>
-									<button
-										type="button"
-										className="btn btn-xs bg-cz-orange border-cz-orange text-white"
-										onClick={(e) => {
-											e.stopPropagation();
-											resetToDefaults();
-										}}
-									>
-										Reset
-									</button>
-									<label className="btn btn-xs border-cz-border text-cz-cream">
-										Import SysEx
-										<input
-											type="file"
-											accept=".syx"
-											className="hidden"
-											onChange={async (e) => {
-												const file = e.target.files?.[0];
-												if (!file) return;
-												const buffer = await file.arrayBuffer();
-												const data = new Uint8Array(buffer);
-												const decoded = decodeCzPatch(data);
-												if (decoded) {
-													const preset =
-														convertDecodedPatchToSynthPreset(decoded);
-													applyPreset(preset);
-													setActivePresetName(
-														file.name.replace(/\.[^.]+$/, ""),
-													);
-													setPresetPanelOpen(false);
-												}
-												e.target.value = "";
-											}}
-										/>
-									</label>
-								</>
-							}
-						>
-							<div>
-								<div className="space-y-2">
-									<select
-										className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-										value=""
-										onChange={(e) => {
-											const name = e.target.value;
-											if (!name) return;
-											const data = loadPreset(name);
-											if (data) {
-												applyPreset(data);
-												setActivePresetName(name);
-												setPresetPanelOpen(false);
-											}
-											e.target.value = "";
-										}}
-									>
-										<option value="">Load preset...</option>
-										{presetList.map((name) => (
-											<option key={name} value={name}>
-												{name}
-											</option>
-										))}
-									</select>
-									<select
-										className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-										value=""
-										onChange={(e) => {
-											const presetId = e.target.value;
-											if (!presetId) return;
-											const preset = libraryPresets.find(
-												(p) => p.id === presetId,
-											);
-											if (preset) handleLoadLibraryPreset(preset);
-											e.target.value = "";
-										}}
-									>
-										<option value="">Load from library...</option>
-										{libraryPresets.map((preset) => (
-											<option key={preset.id} value={preset.id}>
-												{preset.name}
-											</option>
-										))}
-									</select>
-									<input
-										type="text"
-										className="input input-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-										placeholder="Preset name"
-										value={presetName}
-										onChange={(e) => setPresetName(e.target.value)}
-									/>
-									<div className="grid grid-cols-2 gap-2">
-										<button
-											type="button"
-											className="btn btn-sm bg-cz-orange border-cz-orange text-white"
-											disabled={!presetName.trim()}
-											onClick={() => {
-												savePreset(presetName.trim(), gatherState());
-												setPresetList(listPresets());
-												setActivePresetName(presetName.trim());
-												setPresetPanelOpen(false);
-												setPresetName("");
-											}}
-										>
-											Save
-										</button>
-										<button
-											type="button"
-											className="btn btn-sm border-cz-border text-cz-cream"
-											disabled={!presetName.trim()}
-											onClick={() => {
-												deletePreset(presetName.trim());
-												setPresetList(listPresets());
-												setPresetName("");
-											}}
-										>
-											Delete
-										</button>
-									</div>
-									<div className="flex gap-2">
-										<button
-											type="button"
-											className="btn btn-xs border-cz-border text-cz-cream flex-1"
-											onClick={() => {
-												const exported = exportPreset(presetList[0] ?? "");
-												if (exported) {
-													const blob = new Blob([exported], {
-														type: "application/json",
-													});
-													const url = URL.createObjectURL(blob);
-													const a = document.createElement("a");
-													a.href = url;
-													a.download = `cz101-preset-${presetList[0] || "export"}.json`;
-													a.click();
-													URL.revokeObjectURL(url);
-												}
-											}}
-											disabled={presetList.length === 0}
-										>
-											Export
-										</button>
-										<label className="btn btn-xs border-cz-border text-cz-cream flex-1">
-											Import
-											<input
-												type="file"
-												accept=".json"
-												className="hidden"
-												onChange={async (e) => {
-													const file = e.target.files?.[0];
-													if (!file) return;
-													const text = await file.text();
-													const imported = importPreset(text);
-													if (imported) {
-														applyPreset(imported);
-														setActivePresetName(
-															file.name.replace(/\.[^.]+$/, ""),
-														);
-														setPresetPanelOpen(false);
-													}
-												}}
-											/>
-										</label>
-									</div>
-									<Card
-										variant="inset"
-										className="max-h-40 space-y-1 overflow-y-auto border-cz-border p-2"
-									>
-										{presetList.length === 0 ? (
-											<div className="px-2 py-3 text-xs text-cz-cream-dim/45">
-												No stored presets yet.
-											</div>
-										) : (
-											presetList.map((name) => (
-												<button
-													key={name}
-													type="button"
-													className="btn btn-ghost btn-sm w-full justify-start rounded-lg"
-													onClick={() => {
-														const data = loadPreset(name);
-														if (data) {
-															applyPreset(data);
-															setActivePresetName(name);
-															setPresetPanelOpen(false);
-														}
-													}}
-												>
-													{name}
-												</button>
-											))
-										)}
-									</Card>
-								</div>
-							</div>
-						</CollapsibleCard> */}
-
-						<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.globalVoice ?? false}
-							onToggle={(e) =>
-								toggleAccordion("globalVoice", e.currentTarget.open)
-							}
-							titleClassName="pr-3"
-							title="Global Voice"
-						>
-							<div>
-								<div className="mb-3 flex justify-center">
-									<ControlKnob
-										value={volume}
-										onChange={setVolume}
-										min={0}
-										max={1}
-										size={58}
-										color="#9cb937"
-										label="Volume"
-										valueFormatter={(value) => `${Math.round(value * 100)}%`}
-									/>
-								</div>
-								<div className="space-y-2">
-									<div className="flex w-full gap-1">
-										<CzButton
-											active={polyMode === "poly8"}
-											onClick={() => setPolyMode("poly8")}
-											className="flex-1"
-										>
-											Poly 8
-										</CzButton>
-										<CzButton
-											active={polyMode === "mono"}
-											onClick={() => setPolyMode("mono")}
-											className="flex-1"
-										>
-											Mono
-										</CzButton>
-									</div>
-									{polyMode === "mono" && (
-										<CzButton
-											active={legato}
-											onClick={() => setLegato(!legato)}
-											className="[&_button]:bg-cz-inset [&_button]:border-cz-border"
-										>
-											Legato
-										</CzButton>
-									)}
-									<div className="flex items-center gap-2">
-										<CzButton
-											active={sustainOn}
-											onClick={() => setSustain(!sustainOn)}
-										>
-											Sustain
-										</CzButton>
-										<span className="text-xs text-cz-cream-dim/45">
-											Spacebar
-										</span>
-									</div>
-									<div>
-										<div className="mb-2 cz-section-bar">Velocity</div>
-										<div className="flex flex-wrap gap-1">
-											{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
-												(target) => (
-													<CzButton
-														key={target}
-														active={velocityTarget === target}
-														onClick={() => setVelocityTarget(target)}
-													>
-														{target === "amp"
-															? "Amp"
-															: target === "dcw"
-																? "DCW"
-																: target === "both"
-																	? "Both"
-																	: "Off"}
-													</CzButton>
-												),
-											)}
-										</div>
-									</div>
-									<div>
-										<div className="mb-2 cz-section-bar">Window</div>
-										<select
-											className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-											value={windowType}
-											onChange={(e) =>
-												setWindowType(
-													e.target.value as "off" | "saw" | "triangle",
-												)
-											}
-										>
-											<option value="off">Off</option>
-											<option value="saw">Saw</option>
-											<option value="triangle">Triangle</option>
-										</select>
-									</div>
-								</div>
-							</div>
-						</CollapsibleCard>
-
-						<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.phaseMod ?? false}
-							onToggle={(e) =>
-								toggleAccordion("phaseMod", e.currentTarget.open)
-							}
-							titleClassName="pr-3"
-							title="Phase Mod"
-						>
-							<div className="flex justify-center gap-4">
-								<ControlKnob
-									value={intPmAmount}
-									onChange={setIntPmAmount}
-									min={0}
-									max={0.3}
-									size={52}
-									color="#7f9de4"
-									label="Amount"
-									valueFormatter={(value) => value.toFixed(2)}
-								/>
-								<ControlKnob
-									value={intPmRatio}
-									onChange={setIntPmRatio}
-									min={0.5}
-									max={4}
-									size={52}
-									color="#9cb937"
-									label="Ratio"
-									valueFormatter={(value) => value.toFixed(1)}
-								/>
-							</div>
-							<CzButton
-								active={pmPre}
-								onClick={() => setPmPre(!pmPre)}
-								className="mt-3 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-							>
-								Pre-warp PM
-							</CzButton>
-						</CollapsibleCard>
-
-						<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.vibrato ?? false}
-							onToggle={(e) => toggleAccordion("vibrato", e.currentTarget.open)}
-							titleClassName="pr-3"
-							title="Vibrato"
-						>
-								<CzButton
-									active={vibratoEnabled}
-									onClick={() => setVibratoEnabled(!vibratoEnabled)}
-									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-								>
-									Enable Vibrato
-								</CzButton>
-								<div className="flex justify-center gap-2">
-									{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
-										<CzButton
-											key={w}
-											active={vibratoWave === i + 1}
-											onClick={() => setVibratoWave(i + 1)}
-										>
-											{w}
-										</CzButton>
-									))}
-								</div>
-								<div className="flex justify-center gap-2 mt-2">
-									<ControlKnob
-										value={vibratoRate}
-										onChange={setVibratoRate}
-										min={0}
-										max={99}
-										size={44}
-										color="#7f9de4"
-										label="Rate"
-										valueFormatter={(v) => `${Math.round(v)}`}
-									/>
-									<ControlKnob
-										value={vibratoDepth}
-										onChange={setVibratoDepth}
-										min={0}
-										max={99}
-										size={44}
-										color="#7f9de4"
-										label="Depth"
-										valueFormatter={(v) => `${Math.round(v)}`}
-									/>
-									<ControlKnob
-										value={vibratoDelay}
-										onChange={setVibratoDelay}
-										min={0}
-										max={99}
-										size={44}
-										color="#7f9de4"
-										label="Delay"
-										valueFormatter={(v) => `${Math.round(v)}`}
-									/>
-								</div>
-						</CollapsibleCard>
-
-						<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.portamento ?? false}
-							onToggle={(e) =>
-								toggleAccordion("portamento", e.currentTarget.open)
-							}
-							titleClassName="pr-3"
-							title="Portamento"
-						>
-								<CzButton
-									active={portamentoEnabled}
-									onClick={() => setPortamentoEnabled(!portamentoEnabled)}
-									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-								>
-									Enable Portamento
-								</CzButton>
-								<div className="flex w-full gap-1 mb-2">
-									<CzButton
-										active={portamentoMode === "rate"}
-										onClick={() => setPortamentoMode("rate")}
-										className="flex-1"
-									>
-										Rate
-									</CzButton>
-									<CzButton
-										active={portamentoMode === "time"}
-										onClick={() => setPortamentoMode("time")}
-										className="flex-1"
-									>
-										Time
-									</CzButton>
-								</div>
-								<div className="flex justify-center gap-2">
-									{portamentoMode === "rate" ? (
-										<ControlKnob
-											value={portamentoRate}
-											onChange={setPortamentoRate}
-											min={0}
-											max={99}
-											size={52}
-											color="#7f9de4"
-											label="Rate"
-											valueFormatter={(v) => `${Math.round(v)}`}
-										/>
-									) : (
-										<ControlKnob
-											value={portamentoTime}
-											onChange={setPortamentoTime}
-											min={0}
-											max={2}
-											size={52}
-											color="#7f9de4"
-											label="Time"
-											valueFormatter={(v) => `${v.toFixed(2)}s`}
-										/>
-									)}
-								</div>
-						</CollapsibleCard>
-
-						<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.lfo ?? false}
-							onToggle={(e) => toggleAccordion("lfo", e.currentTarget.open)}
-							titleClassName="pr-3"
-							title="LFO"
-						>
-								<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-									<div className="mb-2 cz-section-bar justify-between">
-										<span>LFO Visual</span>
-										<span>{lfoTarget}</span>
-									</div>
-									<svg
-										viewBox="0 0 220 92"
-										className="h-24 w-full rounded-lg border border-cz-border bg-cz-panel"
-									>
-										<title>LFO waveform display</title>
-										{[0.2, 0.4, 0.6, 0.8].map((stop) => (
-											<line
-												key={stop}
-												x1={220 * stop}
-												y1="0"
-												x2={220 * stop}
-												y2="92"
-												stroke="rgba(232,119,34,0.08)"
-											/>
-										))}
-										<line
-											x1="0"
-											y1="46"
-											x2="220"
-											y2="46"
-											stroke="rgba(122,112,96,0.28)"
-										/>
-										<polyline
-											fill="none"
-											stroke="#e87722"
-											strokeWidth="3"
-											strokeLinejoin="round"
-											strokeLinecap="round"
-											points={lfoDisplayPath}
-										/>
-									</svg>
-								</div>
-								<CzButton
-									active={lfoEnabled}
-									onClick={() => setLfoEnabled(!lfoEnabled)}
-									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-								>
-									Enable LFO
-								</CzButton>
-								<div className="flex flex-wrap gap-1 mb-2">
-									{(["sine", "triangle", "square", "saw"] as const).map((w) => (
-										<CzButton
-											key={w}
-											active={lfoWaveform === w}
-											onClick={() => setLfoWaveform(w)}
-										>
-											{w}
-										</CzButton>
-									))}
-								</div>
-								<div className="flex justify-center gap-2">
-									<ControlKnob
-										value={lfoRate}
-										onChange={setLfoRate}
-										min={0}
-										max={20}
-										size={44}
-										color="#7f9de4"
-										label="Rate"
-										valueFormatter={(v) => `${v.toFixed(1)}Hz`}
-									/>
-									<ControlKnob
-										value={lfoDepth}
-										onChange={setLfoDepth}
-										min={0}
-										max={1}
-										size={44}
-										color="#7f9de4"
-										label="Depth"
-										valueFormatter={(v) => `${Math.round(v * 100)}%`}
-									/>
-								</div>
-								<div className="mt-2">
-									<div className="mb-2 cz-section-bar">Target</div>
-									<div className="flex flex-wrap gap-1">
-										{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
-											<CzButton
-												key={t}
-												active={lfoTarget === t}
-												onClick={() => setLfoTarget(t)}
-											>
-												{t}
-											</CzButton>
-										))}
-									</div>
-								</div>
-						</CollapsibleCard>
-
-						<CollapsibleCard
-							variant="panel-slanted"
-							open={accordionState.filter ?? false}
-							onToggle={(e) => toggleAccordion("filter", e.currentTarget.open)}
-							titleClassName="pr-3"
-							title="Filter"
-						>
-								<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-									<div className="mb-2 cz-section-bar justify-between">
-										<span>Response</span>
-										<span>{filterType.toUpperCase()}</span>
-									</div>
-									<svg
-										viewBox="0 0 220 92"
-										className="h-24 w-full rounded-lg border border-cz-border bg-cz-panel"
-									>
-										<title>Filter response display</title>
-										{[0.2, 0.4, 0.6, 0.8].map((stop) => (
-											<line
-												key={stop}
-												x1={220 * stop}
-												y1="0"
-												x2={220 * stop}
-												y2="92"
-												stroke="rgba(61,255,61,0.12)"
-											/>
-										))}
-										<line
-											x1="0"
-											y1="78"
-											x2="220"
-											y2="78"
-											stroke="rgba(122,112,96,0.28)"
-										/>
-										<path d={filterDisplay.fill} fill="rgba(61,255,61,0.16)" />
-										<path
-											d={filterDisplay.path}
-											fill="none"
-											stroke="#3dff3d"
-											strokeWidth="3"
-											strokeLinejoin="round"
-											strokeLinecap="round"
-										/>
-									</svg>
-								</div>
-								<CzButton
-									active={filterEnabled}
-									onClick={() => setFilterEnabled(!filterEnabled)}
-									className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-								>
-									Enable Filter
-								</CzButton>
-								<div className="flex w-full gap-1 mb-2">
-									{(["lp", "hp", "bp"] as const).map((t) => (
-										<CzButton
-											key={t}
-											active={filterType === t}
-											onClick={() => setFilterType(t)}
-											className="flex-1"
-										>
-											{t.toUpperCase()}
-										</CzButton>
-									))}
-								</div>
-								<div className="flex justify-center gap-2">
-									<ControlKnob
-										value={filterCutoff}
-										onChange={setFilterCutoff}
-										min={20}
-										max={20000}
-										size={44}
-										color="#3dff3d"
-										label="Cutoff"
-										valueFormatter={(v) => `${Math.round(v)}Hz`}
-									/>
-									<ControlKnob
-										value={filterResonance}
-										onChange={setFilterResonance}
-										min={0}
-										max={1}
-										size={44}
-										color="#3dff3d"
-										label="Res"
-										valueFormatter={(v) => `${Math.round(v * 100)}%`}
-									/>
-									<ControlKnob
-										value={filterEnvAmount}
-										onChange={setFilterEnvAmount}
-										min={-1}
-										max={1}
-										size={44}
-										color="#3dff3d"
-										label="Env"
-										valueFormatter={(v) => `${Math.round(v * 100)}%`}
-									/>
-								</div>
-						</CollapsibleCard>
+					<div className="divider"></div>
+					{/* Accordion — only one panel open at a time */}
+					<GlobalVoicePanel
+						accordionName={ACCORDION_NAME}
+						defaultOpen={true}
+						volume={volume}
+						setVolume={setVolume}
+						polyMode={polyMode}
+						setPolyMode={setPolyMode}
+						legato={legato}
+						setLegato={setLegato}
+						sustainOn={sustainOn}
+						onSustainToggle={() => setSustain(!sustainOn)}
+						velocityTarget={velocityTarget}
+						setVelocityTarget={setVelocityTarget}
+						windowType={windowType}
+						setWindowType={setWindowType}
+					/>
+					<PhaseModPanel
+						accordionName={ACCORDION_NAME}
+						intPmAmount={intPmAmount}
+						setIntPmAmount={setIntPmAmount}
+						intPmRatio={intPmRatio}
+						setIntPmRatio={setIntPmRatio}
+						pmPre={pmPre}
+						setPmPre={setPmPre}
+					/>
+					<VibratoPanel
+						accordionName={ACCORDION_NAME}
+						vibratoEnabled={vibratoEnabled}
+						setVibratoEnabled={setVibratoEnabled}
+						vibratoWave={vibratoWave}
+						setVibratoWave={setVibratoWave}
+						vibratoRate={vibratoRate}
+						setVibratoRate={setVibratoRate}
+						vibratoDepth={vibratoDepth}
+						setVibratoDepth={setVibratoDepth}
+						vibratoDelay={vibratoDelay}
+						setVibratoDelay={setVibratoDelay}
+					/>
+					<PortamentoPanel
+						accordionName={ACCORDION_NAME}
+						portamentoEnabled={portamentoEnabled}
+						setPortamentoEnabled={setPortamentoEnabled}
+						portamentoMode={portamentoMode}
+						setPortamentoMode={setPortamentoMode}
+						portamentoRate={portamentoRate}
+						setPortamentoRate={setPortamentoRate}
+						portamentoTime={portamentoTime}
+						setPortamentoTime={setPortamentoTime}
+					/>
+					<LfoPanel
+						accordionName={ACCORDION_NAME}
+						lfoEnabled={lfoEnabled}
+						setLfoEnabled={setLfoEnabled}
+						lfoWaveform={lfoWaveform}
+						setLfoWaveform={setLfoWaveform}
+						lfoRate={lfoRate}
+						setLfoRate={setLfoRate}
+						lfoDepth={lfoDepth}
+						setLfoDepth={setLfoDepth}
+						lfoTarget={lfoTarget}
+						setLfoTarget={setLfoTarget}
+					/>
+					<SynthFilterPanel
+						accordionName={ACCORDION_NAME}
+						filterEnabled={filterEnabled}
+						setFilterEnabled={setFilterEnabled}
+						filterType={filterType}
+						setFilterType={setFilterType}
+						filterCutoff={filterCutoff}
+						setFilterCutoff={setFilterCutoff}
+						filterResonance={filterResonance}
+						setFilterResonance={setFilterResonance}
+						filterEnvAmount={filterEnvAmount}
+						setFilterEnvAmount={setFilterEnvAmount}
+					/>
+					<ChorusPanel
+						accordionName={ACCORDION_NAME}
+						rate={chorusRate}
+						setRate={setChorusRate}
+						depth={chorusDepth}
+						setDepth={setChorusDepth}
+						mix={chorusMix}
+						setMix={setChorusMix}
+					/>
+					<DelayPanel
+						accordionName={ACCORDION_NAME}
+						time={delayTime}
+						setTime={setDelayTime}
+						feedback={delayFeedback}
+						setFeedback={setDelayFeedback}
+						mix={delayMix}
+						setMix={setDelayMix}
+					/>
+					<ReverbPanel
+						accordionName={ACCORDION_NAME}
+						size={reverbSize}
+						setSize={setReverbSize}
+						mix={reverbMix}
+						setMix={setReverbMix}
+					/>
 				</aside>
 
 				<main className="space-y-4 p-1 pb-4 overflow-y-auto min-h-0">
-					<section className="space-y-4">
-						{/* FX Rack */}
-						<CollapsibleCard title="FX Rack" variant="panel-slanted">
-							<div className="grid grid-cols-3 gap-x-3">
-								<ChorusSection
-									rate={chorusRate}
-									setRate={setChorusRate}
-									depth={chorusDepth}
-									setDepth={setChorusDepth}
-									mix={chorusMix}
-									setMix={setChorusMix}
-								/>
-								<DelaySection
-									time={delayTime}
-									setTime={setDelayTime}
-									feedback={delayFeedback}
-									setFeedback={setDelayFeedback}
-									mix={delayMix}
-									setMix={setDelayMix}
-								/>
-								<ReverbSection
-									size={reverbSize}
-									setSize={setReverbSize}
-									mix={reverbMix}
-									setMix={setReverbMix}
-								/>
-							</div>
-						</CollapsibleCard>
-
-						<CollapsibleCard title="Phase Lines" variant="panel-slanted" open>
-							{/* Line Select + Modulation — above tabs */}
-							<div className="mb-3 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-border pb-3">
-								<div className="shrink-0">
-									<div className="mb-1 cz-section-bar">Line Select</div>
-									<div className="flex gap-1">
-										{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
-											(ls) => (
-												<CzButton
-													key={ls}
-													active={lineSelect === ls}
-													onClick={() => setLineSelect(ls)}
-												>
-													{ls}
-												</CzButton>
-											),
-										)}
-									</div>
-								</div>
-								<div className="shrink-0">
-									<div className="mb-1 cz-section-bar">Modulation</div>
-									<div className="flex gap-1">
-										{(
-											[
-												["normal", "Normal"],
-												["ring", "Ring"],
-												["noise", "Noise"],
-											] as const
-										).map(([mode, label]) => (
-											<CzButton
-												key={mode}
-												active={modMode === mode}
-												onClick={() => setModMode(mode)}
-												className="flex-1"
-											>
-												{label}
-											</CzButton>
-										))}
-									</div>
-								</div>
-							</div>
-							{/* Phase Line Tabs */}
-							<div className="tabs tabs-lift ">
-								<input
-									type="radio"
-									name="phase_line_tabs"
-									className="tab bg-cz-surface"
-									aria-label="Line 1"
-									defaultChecked={true}
-								/>
-								<div className="tab-content bg-cz-surface p-4 ">
-									<PerLineWarpBlock
-										label={"Line 1"}
-										waveform={waveform.out1}
-										color="#3dff3d"
-										copyTargetLabel={"Line 2"}
-										onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
-										onCopyEnvelopes={() =>
-											copyLineSettings("a", "b", "envelopes")
-										}
-										onCopyFull={() => copyLineSettings("a", "b", "full")}
-										algo={warpAAlgo}
-										setAlgo={setWarpAAlgo}
-										algo2={algo2A}
-										setAlgo2={setAlgo2A}
-										algoBlend={algoBlendA}
-										setAlgoBlend={setAlgoBlendA}
-										warpAmount={warpAAmount}
-										setWarpAmount={setWarpAAmount}
-										dcwComp={line1DcwComp}
-										setDcwComp={setLine1DcwComp}
-										level={line1Level}
-										setLevel={setLine1Level}
-										octave={line1Octave}
-										setOctave={setLine1Octave}
-										fineDetune={line1Detune}
-										setFineDetune={setLine1Detune}
-										dcoDepth={line1DcoDepth}
-										setDcoDepth={setLine1DcoDepth}
-										dcoEnv={line1DcoEnv}
-										setDcoEnv={setLine1DcoEnv}
-										dcwEnv={line1DcwEnv}
-										setDcwEnv={setLine1DcwEnv}
-										dcaEnv={line1DcaEnv}
-										setDcaEnv={setLine1DcaEnv}
-										keyFollow={line1DcwKeyFollow}
-										setKeyFollow={setLine1DcwKeyFollow}
-									/>
-								</div>
-
-								<input
-									type="radio"
-									name="phase_line_tabs"
-									className="tab"
-									aria-label="Line 2"
-									defaultChecked={!showLineA}
-								/>
-								<div className="tab-content bg-cz-panel border-cz-border p-4">
-									<PerLineWarpBlock
-										label={"Line 2"}
-										waveform={waveform.out2}
-										color="#9cb937"
-										copyTargetLabel={"Line 1"}
-										onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
-										onCopyEnvelopes={() =>
-											copyLineSettings("b", "a", "envelopes")
-										}
-										onCopyFull={() => copyLineSettings("b", "a", "full")}
-										algo={warpBAlgo}
-										setAlgo={setWarpBAlgo}
-										algo2={algo2B}
-										setAlgo2={setAlgo2B}
-										algoBlend={algoBlendB}
-										setAlgoBlend={setAlgoBlendB}
-										warpAmount={warpBAmount}
-										setWarpAmount={setWarpBAmount}
-										dcwComp={line2DcwComp}
-										setDcwComp={setLine2DcwComp}
-										level={line2Level}
-										setLevel={setLine2Level}
-										octave={line2Octave}
-										setOctave={setLine2Octave}
-										fineDetune={line2Detune}
-										setFineDetune={setLine2Detune}
-										dcoDepth={line2DcoDepth}
-										setDcoDepth={setLine2DcoDepth}
-										dcoEnv={line2DcoEnv}
-										setDcoEnv={setLine2DcoEnv}
-										dcwEnv={line2DcwEnv}
-										setDcwEnv={setLine2DcwEnv}
-										dcaEnv={line2DcaEnv}
-										setDcaEnv={setLine2DcaEnv}
-										keyFollow={line2DcwKeyFollow}
-										setKeyFollow={setLine2DcwKeyFollow}
-									/>
-								</div>
-							</div>
-						</CollapsibleCard>
-					</section>
+					<PhaseLinesSection
+						lineSelect={lineSelect}
+						setLineSelect={setLineSelect}
+						modMode={modMode}
+						setModMode={setModMode}
+						combinedCanvasRef={combinedCanvasRef}
+						phaseCanvasRef={phaseCanvasRef}
+						onCopyLine1ToLine2={(mode) => copyLineSettings("a", "b", mode)}
+						onCopyLine2ToLine1={(mode) => copyLineSettings("b", "a", mode)}
+						line1={{
+							warpAmount: warpAAmount,
+							setWarpAmount: setWarpAAmount,
+							algo: warpAAlgo,
+							setAlgo: setWarpAAlgo,
+							algo2: algo2A,
+							setAlgo2: setAlgo2A,
+							algoBlend: algoBlendA,
+							setAlgoBlend: setAlgoBlendA,
+							dcwComp: line1DcwComp,
+							setDcwComp: setLine1DcwComp,
+							level: line1Level,
+							setLevel: setLine1Level,
+							octave: line1Octave,
+							setOctave: setLine1Octave,
+							fineDetune: line1Detune,
+							setFineDetune: setLine1Detune,
+							dcoDepth: line1DcoDepth,
+							setDcoDepth: setLine1DcoDepth,
+							dcoEnv: line1DcoEnv,
+							setDcoEnv: setLine1DcoEnv,
+							dcwEnv: line1DcwEnv,
+							setDcwEnv: setLine1DcwEnv,
+							dcaEnv: line1DcaEnv,
+							setDcaEnv: setLine1DcaEnv,
+							keyFollow: line1DcwKeyFollow,
+							setKeyFollow: setLine1DcwKeyFollow,
+							waveform: waveform.out1,
+						}}
+						line2={{
+							warpAmount: warpBAmount,
+							setWarpAmount: setWarpBAmount,
+							algo: warpBAlgo,
+							setAlgo: setWarpBAlgo,
+							algo2: algo2B,
+							setAlgo2: setAlgo2B,
+							algoBlend: algoBlendB,
+							setAlgoBlend: setAlgoBlendB,
+							dcwComp: line2DcwComp,
+							setDcwComp: setLine2DcwComp,
+							level: line2Level,
+							setLevel: setLine2Level,
+							octave: line2Octave,
+							setOctave: setLine2Octave,
+							fineDetune: line2Detune,
+							setFineDetune: setLine2Detune,
+							dcoDepth: line2DcoDepth,
+							setDcoDepth: setLine2DcoDepth,
+							dcoEnv: line2DcoEnv,
+							setDcoEnv: setLine2DcoEnv,
+							dcwEnv: line2DcwEnv,
+							setDcwEnv: setLine2DcwEnv,
+							dcaEnv: line2DcaEnv,
+							setDcaEnv: setLine2DcaEnv,
+							keyFollow: line2DcwKeyFollow,
+							setKeyFollow: setLine2DcwKeyFollow,
+							waveform: waveform.out2,
+						}}
+					/>
 				</main>
 			</div>
 		</div>
