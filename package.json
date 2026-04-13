@@ -51,7 +51,7 @@
 		"webmidi": "^3.1.16"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.10",
+		"@biomejs/biome": "2.4.11",
 		"@tauri-apps/cli": "^2.10.1",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.2",
