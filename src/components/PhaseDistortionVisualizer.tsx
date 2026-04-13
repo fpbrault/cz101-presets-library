@@ -1371,7 +1371,7 @@ export default function PhaseDistortionVisualizer() {
 							titleClassName="pr-3 flex items-center justify-between"
 							title={
 								<>
-									<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 										Presets
 									</div>
 									<button
@@ -1523,10 +1523,10 @@ export default function PhaseDistortionVisualizer() {
 									</div>
 									<Card
 										variant="inset"
-										className="max-h-40 space-y-1 overflow-y-auto border-base-300/60 p-2"
+										className="max-h-40 space-y-1 overflow-y-auto border-cz-border p-2"
 									>
 										{presetList.length === 0 ? (
-											<div className="px-2 py-3 text-xs text-base-content/45">
+											<div className="px-2 py-3 text-xs text-cz-cream-dim/45">
 												No stored presets yet.
 											</div>
 										) : (
@@ -1557,7 +1557,7 @@ export default function PhaseDistortionVisualizer() {
 							}
 							titleClassName="pr-3"
 							title={
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 									Global Voice
 								</div>
 							}
@@ -1593,7 +1593,7 @@ export default function PhaseDistortionVisualizer() {
 										</button>
 									</div>
 									{polyMode === "mono" && (
-										<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2">
+										<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
 											<input
 												type="checkbox"
 												checked={legato}
@@ -1611,12 +1611,12 @@ export default function PhaseDistortionVisualizer() {
 										>
 											Sustain
 										</button>
-										<span className="text-xs text-base-content/45">
+										<span className="text-xs text-cz-cream-dim/45">
 											Spacebar
 										</span>
 									</div>
 									<div>
-										<div className="mb-1 text-xs text-base-content/55">
+										<div className="mb-1 text-xs text-cz-cream-dim">
 											Velocity
 										</div>
 										<div className="flex flex-wrap gap-1">
@@ -1641,9 +1641,7 @@ export default function PhaseDistortionVisualizer() {
 										</div>
 									</div>
 									<div>
-										<div className="mb-1 text-xs text-base-content/55">
-											Window
-										</div>
+										<div className="mb-1 text-xs text-cz-cream-dim">Window</div>
 										<select
 											className="select select-bordered select-sm w-full"
 											value={windowType}
@@ -1673,7 +1671,7 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 									Phase Mod
 								</div>
 							</summary>
@@ -1700,7 +1698,7 @@ export default function PhaseDistortionVisualizer() {
 										valueFormatter={(value) => value.toFixed(1)}
 									/>
 								</div>
-								<label className="label mt-3 cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2">
+								<label className="label mt-3 cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2">
 									<input
 										type="checkbox"
 										checked={pmPre}
@@ -1721,12 +1719,12 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 									Vibrato
 								</div>
 							</summary>
 							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
 									<input
 										type="checkbox"
 										checked={vibratoEnabled}
@@ -1793,12 +1791,12 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 									Portamento
 								</div>
 							</summary>
 							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
 									<input
 										type="checkbox"
 										checked={portamentoEnabled}
@@ -1860,12 +1858,12 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 									LFO
 								</div>
 							</summary>
 							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
 									<input
 										type="checkbox"
 										checked={lfoEnabled}
@@ -1909,9 +1907,7 @@ export default function PhaseDistortionVisualizer() {
 									/>
 								</div>
 								<div className="mt-2">
-									<div className="text-xs text-base-content/55 mb-1">
-										Target
-									</div>
+									<div className="text-xs text-cz-cream-dim mb-1">Target</div>
 									<div className="flex flex-wrap gap-1">
 										{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
 											<button
@@ -1937,12 +1933,12 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 									Filter
 								</div>
 							</summary>
 							<div className="collapse-content">
-								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-base-300/60 bg-base-100/40 px-3 py-2 mb-2">
+								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
 									<input
 										type="checkbox"
 										checked={filterEnabled}
@@ -2005,7 +2001,7 @@ export default function PhaseDistortionVisualizer() {
 						{/* Line Select + Modulation — merged panel */}
 						<Card variant="panel" className="space-y-3">
 							<div>
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55 mb-2">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
 									Line Select
 								</div>
 								<div className="join w-full">
@@ -2025,7 +2021,7 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 
 							<div>
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55 mb-2">
+								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
 									Modulation
 								</div>
 								<div className="join w-full">
@@ -2057,7 +2053,7 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 						</Card>
 						<CollapsibleCard title="FX Rack" variant="panel">
-							<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+							<div className="mb-3 text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
 								FX Rack
 							</div>
 							<div className="grid grid-cols-3 gap-x-3">
