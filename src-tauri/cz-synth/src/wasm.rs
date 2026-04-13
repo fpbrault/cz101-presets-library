@@ -1,1 +1,95 @@
-// TODO: wasm-bindgen glue
+//! wasm-bindgen glue for the CZ-101 DSP engine.
+//!
+//! Exposes `CzSynthProcessor` to JavaScript — used by `czSynthWorklet.js`
+//! which runs inside an AudioWorklet scope.
+//!
+//! Compile with:
+//!   wasm-pack build --target no-modules --out-dir ../../public/cz-synth-wasm \
+//!     -- --features wasm
+
+use wasm_bindgen::prelude::*;
+
+use crate::params::SynthParams;
+use crate::processor::Cz101Processor;
+
+/// WebAssembly wrapper around [`Cz101Processor`].
+///
+/// All public methods map 1-to-1 to the messages the AudioWorklet receives
+/// from the main thread so the JS worklet shim stays minimal.
+#[wasm_bindgen]
+pub struct CzSynthProcessor {
+    inner: Cz101Processor,
+}
+
+#[wasm_bindgen]
+impl CzSynthProcessor {
+    /// Create a new processor at the given sample rate.
+    #[wasm_bindgen(constructor)]
+    pub fn new(sample_rate: f32) -> CzSynthProcessor {
+        CzSynthProcessor {
+            inner: Cz101Processor::new(sample_rate),
+        }
+    }
+
+    /// Replace all synthesis parameters from a JSON string.
+    ///
+    /// Accepts the same JSON structure that the JS worklet received via
+    /// `{ type: "setParams", params: { ... } }`.  A full `SynthParams`
+    /// object is expected (partial-update merging is handled in JS before
+    /// calling this method).
+    #[wasm_bindgen(js_name = setParams)]
+    pub fn set_params(&mut self, json: &str) {
+        match serde_json::from_str::<SynthParams>(json) {
+            Ok(p) => self.inner.set_params(p),
+            Err(e) => {
+                // Log but do not panic — audio must keep running.
+                web_sys::console::warn_1(&format!("[cz-synth] setParams parse error: {e}").into());
+            }
+        }
+    }
+
+    /// Trigger a note-on event.
+    ///
+    /// * `note`      — MIDI note number (0-127)
+    /// * `frequency` — Hz; pass `0.0` to auto-compute from the MIDI note number
+    /// * `velocity`  — normalised 0.0-1.0
+    #[wasm_bindgen(js_name = noteOn)]
+    pub fn note_on(&mut self, note: u8, frequency: f32, velocity: f32) {
+        let freq = if frequency > 0.0 {
+            frequency
+        } else {
+            midi_note_to_freq(note)
+        };
+        self.inner.note_on(note, freq, velocity);
+    }
+
+    /// Trigger a note-off event.
+    #[wasm_bindgen(js_name = noteOff)]
+    pub fn note_off(&mut self, note: u8) {
+        self.inner.note_off(note);
+    }
+
+    /// Set the sustain (damper) pedal state.
+    #[wasm_bindgen(js_name = setSustain)]
+    pub fn set_sustain(&mut self, on: bool) {
+        self.inner.set_sustain(on);
+    }
+
+    /// Fill `output` with mono samples rendered by the DSP engine.
+    ///
+    /// The caller passes a `Float32Array` slice backed by WASM linear memory.
+    /// The entire slice is filled; returns nothing — same as the JS worklet
+    /// `process()` contract.
+    #[wasm_bindgen]
+    pub fn process(&mut self, output: &mut [f32]) {
+        self.inner.process(output);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+fn midi_note_to_freq(note: u8) -> f32 {
+    440.0 * libm::powf(2.0_f32, (note as f32 - 69.0) / 12.0)
+}

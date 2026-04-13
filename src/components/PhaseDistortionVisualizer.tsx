@@ -6,15 +6,15 @@ import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter"
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
 import { pdVisualizerWorkletUrl } from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
-	deletePreset,
 	DEFAULT_PRESET,
+	deletePreset,
 	exportPreset,
 	importPreset,
 	listPresets,
 	loadCurrentState,
 	loadPreset,
-	type SynthPresetData,
 	renamePreset,
+	type SynthPresetData,
 	saveCurrentState,
 	savePreset,
 } from "@/lib/synth/presetStorage";
@@ -961,6 +961,16 @@ export default function PhaseDistortionVisualizer() {
 					ctx.close();
 					return;
 				}
+				// Fetch WASM binary and JS bindings in parallel before loading worklet.
+				// The worklet renders silence until it receives the "init" message.
+				const [wasmResponse, bindingsResponse] = await Promise.all([
+					fetch("/cz-synth-wasm/cz_synth_bg.wasm"),
+					fetch("/cz-synth-wasm/cz_synth.js"),
+				]);
+				const [wasmBytes, bindingsJs] = await Promise.all([
+					wasmResponse.arrayBuffer(),
+					bindingsResponse.text(),
+				]);
 				await ctx.audioWorklet.addModule(pdVisualizerWorkletUrl);
 				const workletNode = new AudioWorkletNode(ctx, "cz101-processor");
 				if (disposed) {
@@ -975,8 +985,14 @@ export default function PhaseDistortionVisualizer() {
 							type: "setParams",
 							params: paramsRef.current,
 						});
+					} else if (e.data?.type === "error") {
+						console.error("[CZ Synth WASM] Worklet error:", e.data.message);
 					}
 				};
+				// Transfer ownership of wasmBytes (zero-copy) to the worklet
+				workletNode.port.postMessage({ type: "init", wasmBytes, bindingsJs }, [
+					wasmBytes,
+				]);
 				const gainNode = ctx.createGain();
 				gainNode.gain.value = 1;
 				const analyserNode = new AnalyserNode(ctx, { fftSize: 2048 });

@@ -1,1 +1,1 @@
-export const pdVisualizerWorkletUrl = "/pdVisualizerProcessor.js";
+export const pdVisualizerWorkletUrl = "/czSynthWorklet.js";
