@@ -139,6 +139,15 @@ function warpMirror(phase, amt) {
 	return phase + (1 - phase - phase) * amt;
 }
 
+function warpFof(phase, amt) {
+	if (amt === 0) return phase;
+	// Gaussian-windowed carrier: compress phase into 5x harmonic carrier,
+	// windowed by a Gaussian centered at mid-cycle
+	const carrier = wrap01(phase * 5.0);
+	const window = Math.exp(-20 * (phase - 0.5) ** 2);
+	return wrap01(carrier * (1 - amt) + carrier * window * amt);
+}
+
 function applyWarpAlgo(algo, phase, amt, waveId) {
 	if (amt === 0) return phase;
 	switch (algo) {
@@ -164,6 +173,11 @@ function applyWarpAlgo(algo, phase, amt, waveId) {
 			return warpRipple(phase, amt);
 		case "mirror":
 			return warpMirror(phase, amt);
+		case "fof":
+			return warpFof(phase, amt);
+		case "karpunk":
+			// Stateful — handled directly in renderVoice; fallthrough to identity
+			return phase;
 		case "sine":
 			return phase;
 		default:
@@ -455,12 +469,16 @@ class FxChain {
 function lfoOutput(phase, waveform) {
 	switch (waveform) {
 		case 1:
+		case "sine":
 			return Math.sin(TWO_PI * phase);
 		case 2:
+		case "triangle":
 			return phase < 0.5 ? 4 * phase - 1 : 3 - 4 * phase;
 		case 3:
+		case "square":
 			return phase < 0.5 ? 1 : -1;
 		case 4:
+		case "saw":
 			return phase * 2 - 1;
 		default:
 			return Math.sin(TWO_PI * phase);
@@ -494,8 +512,14 @@ function createVoice() {
 			dcw: createEnvGen(),
 			dca: createEnvGen(),
 		},
-		filterState1: [0, 0],
-		filterState2: [0, 0],
+		filterState1: [0, 0, 0, 0],
+		filterState2: [0, 0, 0, 0],
+		ksBuffer1: new Float32Array(2048),
+		ksWritePos1: 0,
+		ksLastSample1: 0,
+		ksBuffer2: new Float32Array(2048),
+		ksWritePos2: 0,
+		ksLastSample2: 0,
 	};
 }
 
@@ -527,6 +551,7 @@ class Cz101Processor extends AudioWorkletProcessor {
 		this.lfoPhase = 0;
 		this.params = {
 			lineSelect: "L1+L2",
+			modMode: "normal",
 			octave: 0,
 			line1: {
 				waveform: 1,
@@ -707,6 +732,15 @@ class Cz101Processor extends AudioWorkletProcessor {
 				);
 			}
 			this.resetVoiceEnvs(voice);
+			// Initialize KS delay buffers with noise for karpunk algo
+			for (let i = 0; i < voice.ksBuffer1.length; i++)
+				voice.ksBuffer1[i] = Math.random() * 2 - 1;
+			voice.ksWritePos1 = 0;
+			voice.ksLastSample1 = 0;
+			for (let i = 0; i < voice.ksBuffer2.length; i++)
+				voice.ksBuffer2[i] = Math.random() * 2 - 1;
+			voice.ksWritePos2 = 0;
+			voice.ksLastSample2 = 0;
 			this.activeNoteMap.set(note, 0);
 		} else {
 			const existing = this.activeNoteMap.get(note);
@@ -758,6 +792,15 @@ class Cz101Processor extends AudioWorkletProcessor {
 				);
 			}
 			this.resetVoiceEnvs(voice);
+			// Initialize KS delay buffers with noise for karpunk algo
+			for (let i = 0; i < voice.ksBuffer1.length; i++)
+				voice.ksBuffer1[i] = Math.random() * 2 - 1;
+			voice.ksWritePos1 = 0;
+			voice.ksLastSample1 = 0;
+			for (let i = 0; i < voice.ksBuffer2.length; i++)
+				voice.ksBuffer2[i] = Math.random() * 2 - 1;
+			voice.ksWritePos2 = 0;
+			voice.ksLastSample2 = 0;
 			this.activeNoteMap.set(note, voiceIdx);
 		}
 	}
@@ -807,10 +850,9 @@ class Cz101Processor extends AudioWorkletProcessor {
 		this.startEnvRelease(voice);
 	}
 
-	renderVoice(voice, p) {
+	renderVoice(voice, p, lfoModVal = 0) {
 		const l1 = p.line1 || {};
 		const l2 = p.line2 || {};
-		const modBits = l1.modulation ?? 0;
 		const baseFreq = voice.frequency || 220;
 		const sr = sampleRate;
 
@@ -880,11 +922,10 @@ class Cz101Processor extends AudioWorkletProcessor {
 		const velDcw =
 			velocityTarget === "dcw" || velocityTarget === "both" ? vel : 1;
 
-		const finalDcw1 = dcw1 * velDcw;
-		const finalDcw2 = dcw2 * velDcw;
-		const finalDca1 = compensatedDca1 * velAmp;
-		const finalDca2 = compensatedDca2 * velAmp;
-
+		let finalDcw1 = dcw1 * velDcw;
+		let finalDcw2 = dcw2 * velDcw;
+		let finalDca1 = compensatedDca1 * velAmp;
+		let finalDca2 = compensatedDca2 * velAmp;
 		// Frequency with DCO envelope modulation
 		const freq1 =
 			baseFreq *
@@ -934,6 +975,31 @@ class Cz101Processor extends AudioWorkletProcessor {
 			}
 		}
 
+		// Apply global LFO modulation
+		if (lfoModVal !== 0) {
+			const lfo = p.lfo;
+			const lfoTarget = lfo?.target ?? "pitch";
+			const lfoDepth = lfo?.depth ?? 0;
+			const mod = lfoModVal * lfoDepth;
+			switch (lfoTarget) {
+				case "pitch":
+					effectiveFreq1 *= 1 + mod;
+					effectiveFreq2 *= 1 + mod;
+					break;
+				case "dcw":
+					finalDcw1 = Math.max(0, Math.min(1, finalDcw1 + mod));
+					finalDcw2 = Math.max(0, Math.min(1, finalDcw2 + mod));
+					break;
+				case "dca":
+					finalDca1 = Math.max(0, finalDca1 * (1 + mod));
+					finalDca2 = Math.max(0, finalDca2 * (1 + mod));
+					break;
+				case "filter":
+					// Filter cutoff modulation handled at filter stage below
+					break;
+			}
+		}
+
 		const pmFreq = baseFreq * (p.intPmRatio ?? 1);
 		const pmDelta = pmFreq / sr;
 
@@ -970,7 +1036,23 @@ class Cz101Processor extends AudioWorkletProcessor {
 		const w2 = applyWindow(phi2, l2.window ?? "off");
 
 		let s1;
-		if (algo2A) {
+		if (l1.warpAlgo === "karpunk") {
+			// Karplus-Strong: read from delay buffer, low-pass filter, write back
+			const ksSize1 = Math.max(
+				2,
+				Math.min(2047, Math.round(sr / (effectiveFreq1 || 220))),
+			);
+			const ksRead1 = (voice.ksWritePos1 - ksSize1 + 2048) % 2048;
+			const ksOut1 = voice.ksBuffer1[ksRead1];
+			// Low-pass average — damping controlled by dcw (0=more damp, 1=brighter)
+			const ksDamp1 = 0.4 + finalDcw1 * 0.58;
+			const ksFiltered1 =
+				ksDamp1 * ksOut1 + (1 - ksDamp1) * voice.ksLastSample1;
+			voice.ksLastSample1 = ksFiltered1;
+			voice.ksBuffer1[voice.ksWritePos1] = ksFiltered1;
+			voice.ksWritePos1 = (voice.ksWritePos1 + 1) % 2048;
+			s1 = ksFiltered1 * w1 * finalDca1;
+		} else if (algo2A) {
 			const dcw2A = finalDcw1 * blendA;
 			const dcw1Effective = finalDcw1 * (1 - blendA);
 			const warpedA2 = applyWarpAlgo(
@@ -1011,7 +1093,22 @@ class Cz101Processor extends AudioWorkletProcessor {
 		}
 
 		let s2;
-		if (algo2B) {
+		if (l2.warpAlgo === "karpunk") {
+			// Karplus-Strong for line 2
+			const ksSize2 = Math.max(
+				2,
+				Math.min(2047, Math.round(sr / (effectiveFreq2 || 220))),
+			);
+			const ksRead2 = (voice.ksWritePos2 - ksSize2 + 2048) % 2048;
+			const ksOut2 = voice.ksBuffer2[ksRead2];
+			const ksDamp2 = 0.4 + finalDcw2 * 0.58;
+			const ksFiltered2 =
+				ksDamp2 * ksOut2 + (1 - ksDamp2) * voice.ksLastSample2;
+			voice.ksLastSample2 = ksFiltered2;
+			voice.ksBuffer2[voice.ksWritePos2] = ksFiltered2;
+			voice.ksWritePos2 = (voice.ksWritePos2 + 1) % 2048;
+			s2 = ksFiltered2 * w2 * finalDca2;
+		} else if (algo2B) {
 			const dcw2B = finalDcw2 * blendB;
 			const dcw1EffectiveB = finalDcw2 * (1 - blendB);
 			const warpedB2 = applyWarpAlgo(
@@ -1053,75 +1150,100 @@ class Cz101Processor extends AudioWorkletProcessor {
 
 		let sample = 0;
 		const lineSelect = p.lineSelect ?? "L1+L2";
-		const l1Mod = (modBits & 0b100) !== 0;
-		const l1Noise = (modBits & 0b010) !== 0;
-		const l2Mod = (l2.modulation & 0b100) !== 0;
-		const l2Noise = (l2.modulation & 0b010) !== 0;
+		const modMode = p.modMode ?? "normal"; // "normal" | "ring" | "noise"
 
-		if (l1Mod && l2Mod) {
-			sample = s1 * s2;
-		} else if (l1Noise) {
-			const noise = Math.random() * 2 - 1;
-			sample = (s1 + s1 * noise) / 2;
-		} else if (l2Noise) {
-			const noise = Math.random() * 2 - 1;
-			sample = (s2 + s2 * noise) / 2;
-		} else if (lineSelect === "L1") {
-			sample = s1;
-		} else if (lineSelect === "L2") {
-			sample = s2;
-		} else if (lineSelect === "L1+L1'") {
+		// First compute the line-selected signals
+		let mixA = s1; // primary signal (always line 1)
+		let mixB = s2; // secondary signal (always line 2)
+
+		if (lineSelect === "L1+L1'") {
 			const s1p =
 				czWaveform(l1.waveform2 ?? l1.waveform ?? 1, phi1) * finalDca1;
-			sample = s1 + s1p;
+			mixA = s1;
+			mixB = s1p;
 		} else if (lineSelect === "L1+L2'") {
 			const s2p =
 				czWaveform(l2.waveform2 ?? l2.waveform ?? 1, phi1) * finalDca2;
-			sample = s1 + s2p;
-		} else if (lineSelect === "L1+L2") {
-			sample = s1 + s2;
+			mixA = s1;
+			mixB = s2p;
+		}
+		// for L1, L2, L1+L2 — mixA/mixB remain s1/s2
+
+		// Apply modulation mode
+		if (modMode === "ring") {
+			// Ring modulation: multiply the two selected lines
+			// For single-line modes, ring against the other oscillator (CZ behavior)
+			sample = mixA * mixB * 4; // ×4 to compensate for amplitude loss from multiplication
+		} else if (modMode === "noise") {
+			// Noise: add white noise to the line-selected mix
+			const noise = Math.random() * 2 - 1;
+			const mixed =
+				lineSelect === "L1"
+					? mixA
+					: lineSelect === "L2"
+						? mixB
+						: (mixA + mixB) * 0.5;
+			sample = mixed + mixed * noise * 0.5;
+		} else if (lineSelect === "L1") {
+			sample = mixA;
+		} else if (lineSelect === "L2") {
+			sample = mixB;
 		} else {
-			sample = s1 + s2;
+			sample = (mixA + mixB) * 0.5;
 		}
 
 		if (p.filter?.enabled) {
 			const f = p.filter;
-			const fc = f.cutoff * (1 + (f.envAmount ?? 0) * dcw1);
-			const res = f.resonance ?? 0;
+			// Apply LFO to filter cutoff if target is "filter"
+			const lfoFilterMod =
+				p.lfo?.enabled && (p.lfo?.target ?? "pitch") === "filter"
+					? lfoModVal * (p.lfo?.depth ?? 0)
+					: 0;
+			const fc = Math.max(
+				20,
+				Math.min(
+					sr * 0.49,
+					f.cutoff * (1 + (f.envAmount ?? 0) * dcw1) * (1 + lfoFilterMod),
+				),
+			);
+			const res = Math.max(0.001, f.resonance ?? 0);
 			const w0 = (TWO_PI * fc) / sr;
-			const alpha = Math.sin(w0) / (2 * res + 0.0001);
-			let a0, a1, a2, b1, b2;
+			const cosW0 = Math.cos(w0);
+			const sinW0 = Math.sin(w0);
+			const alpha = sinW0 / (2 * res);
+			let b0, b1, b2, a1, a2;
 			if (f.type === "lp") {
-				a0 = 1 + alpha;
-				a1 = -2 * Math.cos(w0);
-				a2 = 1 - alpha;
-				b1 = -2 * Math.cos(w0);
-				b2 = 1 - alpha;
+				b0 = (1 - cosW0) / 2;
+				b1 = 1 - cosW0;
+				b2 = (1 - cosW0) / 2;
 			} else if (f.type === "hp") {
-				a0 = 1 + alpha;
-				a1 = -2 * Math.cos(w0);
-				a2 = 1 - alpha;
-				b1 = 2 * Math.cos(w0);
-				b2 = -(1 - alpha);
+				b0 = (1 + cosW0) / 2;
+				b1 = -(1 + cosW0);
+				b2 = (1 + cosW0) / 2;
 			} else {
-				a0 = 1 + alpha;
-				a1 = -2 * Math.cos(w0);
-				a2 = 1 - alpha;
-				b1 = 2 * Math.cos(w0);
-				b2 = -(1 - alpha);
+				// bp
+				b0 = alpha;
+				b1 = 0;
+				b2 = -alpha;
 			}
+			const a0 = 1 + alpha;
+			a1 = -2 * cosW0;
+			a2 = 1 - alpha;
 			const norm = 1 / a0;
-			const s1f =
+			// Direct Form I: y[n] = (b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]) / a0
+			// filterState: [x[n-1], x[n-2], y[n-1], y[n-2]]
+			const yn =
 				norm *
-				(a1 * voice.filterState1[0] + a2 * voice.filterState1[1] + sample);
-			const s2f =
-				norm *
-				(b1 * voice.filterState2[0] + b2 * voice.filterState2[1] + sample);
+				(b0 * sample +
+					b1 * voice.filterState1[0] +
+					b2 * voice.filterState1[1] -
+					a1 * voice.filterState1[2] -
+					a2 * voice.filterState1[3]);
 			voice.filterState1[1] = voice.filterState1[0];
-			voice.filterState1[0] = s1f;
-			voice.filterState2[1] = voice.filterState2[0];
-			voice.filterState2[0] = s2f;
-			sample = f.type === "bp" ? (s1f - s2f) / 2 : f.type === "hp" ? s1f : s2f;
+			voice.filterState1[0] = sample;
+			voice.filterState1[3] = voice.filterState1[2];
+			voice.filterState1[2] = yn;
+			sample = Number.isFinite(yn) ? yn : 0;
 		}
 
 		voice.phi1 += effectiveFreq1 / sr;
@@ -1145,36 +1267,21 @@ class Cz101Processor extends AudioWorkletProcessor {
 
 		const lfoEnabled = p.lfo?.enabled ?? false;
 		const lfoRate = p.lfo?.rate ?? 5;
-		const lfoDepth = p.lfo?.depth ?? 0;
-		const lfoTarget = p.lfo?.target ?? "pitch";
-
-		if (lfoEnabled) {
-			this.lfoPhase += lfoRate / sampleRate;
-			if (this.lfoPhase >= 1) this.lfoPhase -= 1;
-		}
 
 		for (let i = 0; i < N; i++) {
+			// Advance LFO phase per sample for accurate frequency
+			let lfoModVal = 0;
+			if (lfoEnabled) {
+				this.lfoPhase += lfoRate / sampleRate;
+				if (this.lfoPhase >= 1) this.lfoPhase -= 1;
+				lfoModVal = lfoOutput(this.lfoPhase, p.lfo?.waveform ?? "sine");
+			}
+
 			let mixed = 0;
 			for (let v = 0; v < NUM_VOICES; v++) {
-				mixed += this.renderVoice(this.voices[v], p);
+				mixed += this.renderVoice(this.voices[v], p, lfoModVal);
 			}
 			mixed *= volume / Math.sqrt(NUM_VOICES);
-
-			if (lfoEnabled && lfoDepth !== 0) {
-				const lfoVal = lfoOutput(this.lfoPhase, p.lfo?.waveform ?? "sine");
-				const mod = lfoVal * lfoDepth;
-				switch (lfoTarget) {
-					case "pitch":
-						mixed *= 1 + mod;
-						break;
-					case "dca":
-						mixed *= 1 + mod;
-						break;
-					case "filter":
-					case "dcw":
-						break;
-				}
-			}
 
 			const fxOut = this.fx.process(mixed);
 			const clamped = Math.max(-1, Math.min(1, fxOut));

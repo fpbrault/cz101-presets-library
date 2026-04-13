@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
+import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
 import { pdVisualizerWorkletUrl } from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
@@ -31,11 +33,41 @@ import {
 } from "./pdAlgorithms";
 import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
 import { ReverbSection } from "./ReverbSection";
+import Card from "./ui/Card";
+import CollapsibleCard from "./ui/CollapsibleCard";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
 
+const STORAGE_KEY = "cz-lab-accordion-state";
+
+function loadAccordionState(): Record<string, boolean> {
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		return stored ? JSON.parse(stored) : {};
+	} catch {
+		return {};
+	}
+}
+
+function saveAccordionState(state: Record<string, boolean>) {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	} catch {}
+}
+
 export default function PhaseDistortionVisualizer() {
+	const [accordionState, setAccordionState] = useState<Record<string, boolean>>(
+		() => loadAccordionState(),
+	);
+
+	const toggleAccordion = useCallback((key: string, open: boolean) => {
+		setAccordionState((prev) => {
+			const next = { ...prev, [key]: open };
+			saveAccordionState(next);
+			return next;
+		});
+	}, []);
 	const [warpAAmount, setWarpAAmount] = useState(0);
 	const [warpBAmount, setWarpBAmount] = useState(0);
 	const [warpAAlgo, setWarpAAlgo] = useState<PdAlgo>("bend");
@@ -73,7 +105,6 @@ export default function PhaseDistortionVisualizer() {
 	const [line2DcoDepth, setLine2DcoDepth] = useState(0);
 	const [line1DcwComp, setLine1DcwComp] = useState(0);
 	const [line2DcwComp, setLine2DcwComp] = useState(0);
-	const [activeLineTab, setActiveLineTab] = useState<"a" | "b">("a");
 	const [scopeCycles, setScopeCycles] = useState(2);
 	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(1.0);
 	const [scopeTriggerMode, _setScopeTriggerMode] = useState<
@@ -93,10 +124,7 @@ export default function PhaseDistortionVisualizer() {
 	const [lineSelect, setLineSelect] = useState<
 		"L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'"
 	>("L1+L2");
-	const [line1RingMod, setLine1RingMod] = useState(false);
-	const [line1Noise, setLine1Noise] = useState(false);
-	const [line2RingMod, setLine2RingMod] = useState(false);
-	const [line2Noise, setLine2Noise] = useState(false);
+	const [modMode, setModMode] = useState<"normal" | "ring" | "noise">("normal");
 	const [line1DcwKeyFollow, setLine1DcwKeyFollow] = useState(0);
 	const [line1DcaKeyFollow, setLine1DcaKeyFollow] = useState(0);
 	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
@@ -175,10 +203,7 @@ export default function PhaseDistortionVisualizer() {
 			reverbSize,
 			reverbMix,
 			lineSelect,
-			line1RingMod,
-			line1Noise,
-			line2RingMod,
-			line2Noise,
+			modMode,
 			line1DcwKeyFollow,
 			line1DcaKeyFollow,
 			line2DcwKeyFollow,
@@ -245,10 +270,7 @@ export default function PhaseDistortionVisualizer() {
 			reverbSize,
 			reverbMix,
 			lineSelect,
-			line1RingMod,
-			line1Noise,
-			line2RingMod,
-			line2Noise,
+			modMode,
 			line1DcwKeyFollow,
 			line1DcaKeyFollow,
 			line2DcwKeyFollow,
@@ -276,75 +298,113 @@ export default function PhaseDistortionVisualizer() {
 	);
 
 	const applyPreset = useCallback((data: SynthPresetData) => {
-		setWarpAAmount(data.warpAAmount);
-		setWarpBAmount(data.warpBAmount);
+		const safe = (v: unknown, fallback: number) =>
+			typeof v === "number" && !Number.isNaN(v) ? v : fallback;
+
+		setWarpAAmount(safe(data.warpAAmount, 0));
+		setWarpBAmount(safe(data.warpBAmount, 0));
 		setWarpAAlgo(data.warpAAlgo as PdAlgo);
 		setWarpBAlgo(data.warpBAlgo as PdAlgo);
 		setAlgo2A(data.algo2A as PdAlgo | null);
 		setAlgo2B(data.algo2B as PdAlgo | null);
-		setAlgoBlendA(data.algoBlendA);
-		setAlgoBlendB(data.algoBlendB);
-		setIntPmAmount(data.intPmAmount);
-		setIntPmRatio(data.intPmRatio);
-		setPmPre(data.pmPre);
-		setWindowType(data.windowType as "off" | "saw" | "triangle");
-		setVolume(data.volume);
-		setLine1Level(data.line1Level);
-		setLine2Level(data.line2Level);
-		setLine1Octave(data.line1Octave);
-		setLine2Octave(data.line2Octave);
-		setLine1Detune(data.line1Detune);
-		setLine2Detune(data.line2Detune);
-		setLine1DcoDepth(data.line1DcoDepth);
-		setLine2DcoDepth(data.line2DcoDepth);
-		setLine1DcwComp(data.line1DcwComp);
-		setLine2DcwComp(data.line2DcwComp);
+		setAlgoBlendA(safe(data.algoBlendA, 0));
+		setAlgoBlendB(safe(data.algoBlendB, 0));
+		setIntPmAmount(safe(data.intPmAmount, 0));
+		setIntPmRatio(safe(data.intPmRatio, 1));
+		setPmPre(data.pmPre ?? true);
+		setWindowType((data.windowType as "off" | "saw" | "triangle") ?? "off");
+		setVolume(safe(data.volume, 1));
+		setLine1Level(safe(data.line1Level, 1));
+		setLine2Level(safe(data.line2Level, 1));
+		setLine1Octave(safe(data.line1Octave, 0));
+		setLine2Octave(safe(data.line2Octave, 0));
+		setLine1Detune(safe(data.line1Detune, 0));
+		setLine2Detune(safe(data.line2Detune, 0));
+		setLine1DcoDepth(safe(data.line1DcoDepth, 0));
+		setLine2DcoDepth(safe(data.line2DcoDepth, 0));
+		setLine1DcwComp(safe(data.line1DcwComp, 0));
+		setLine2DcwComp(safe(data.line2DcwComp, 0));
 		setLine1DcoEnv(data.line1DcoEnv);
 		setLine1DcwEnv(data.line1DcwEnv);
 		setLine1DcaEnv(data.line1DcaEnv);
 		setLine2DcoEnv(data.line2DcoEnv);
 		setLine2DcwEnv(data.line2DcwEnv);
 		setLine2DcaEnv(data.line2DcaEnv);
-		setPolyMode(data.polyMode as PolyMode);
-		setLegato(data.legato);
-		setVelocityTarget(data.velocityTarget as VelocityTarget);
-		setChorusRate(data.chorusRate);
-		setChorusDepth(data.chorusDepth);
-		setChorusMix(data.chorusMix);
-		setDelayTime(data.delayTime);
-		setDelayFeedback(data.delayFeedback);
-		setDelayMix(data.delayMix);
-		setReverbSize(data.reverbSize);
-		setReverbMix(data.reverbMix);
-		setLineSelect(data.lineSelect);
-		setLine1RingMod(data.line1RingMod);
-		setLine1Noise(data.line1Noise);
-		setLine2RingMod(data.line2RingMod);
-		setLine2Noise(data.line2Noise);
-		setLine1DcwKeyFollow(data.line1DcwKeyFollow);
-		setLine1DcaKeyFollow(data.line1DcaKeyFollow);
-		setLine2DcwKeyFollow(data.line2DcwKeyFollow);
-		setLine2DcaKeyFollow(data.line2DcaKeyFollow);
-		setVibratoEnabled(data.vibratoEnabled);
-		setVibratoWave(data.vibratoWave as 1 | 2 | 3 | 4);
-		setVibratoRate(data.vibratoRate);
-		setVibratoDepth(data.vibratoDepth);
-		setVibratoDelay(data.vibratoDelay);
-		setPortamentoEnabled(data.portamentoEnabled);
-		setPortamentoMode(data.portamentoMode as "rate" | "time");
-		setPortamentoRate(data.portamentoRate);
-		setPortamentoTime(data.portamentoTime);
-		setLfoEnabled(data.lfoEnabled);
-		setLfoWaveform(data.lfoWaveform as "sine" | "triangle" | "square" | "saw");
-		setLfoRate(data.lfoRate);
-		setLfoDepth(data.lfoDepth);
-		setLfoTarget(data.lfoTarget as "pitch" | "dcw" | "dca" | "filter");
-		setFilterEnabled(data.filterEnabled);
-		setFilterType(data.filterType as "lp" | "hp" | "bp");
-		setFilterCutoff(data.filterCutoff);
-		setFilterResonance(data.filterResonance);
-		setFilterEnvAmount(data.filterEnvAmount);
+		setPolyMode((data.polyMode as PolyMode) ?? "poly8");
+		setLegato(data.legato ?? false);
+		setVelocityTarget((data.velocityTarget as VelocityTarget) ?? "amp");
+		setChorusRate(safe(data.chorusRate, 0.8));
+		setChorusDepth(safe(data.chorusDepth, 3));
+		setChorusMix(safe(data.chorusMix, 0));
+		setDelayTime(safe(data.delayTime, 0.3));
+		setDelayFeedback(safe(data.delayFeedback, 0.35));
+		setDelayMix(safe(data.delayMix, 0));
+		setReverbSize(safe(data.reverbSize, 0.5));
+		setReverbMix(safe(data.reverbMix, 0));
+		setLineSelect(data.lineSelect ?? "L1+L2");
+		setModMode((data.modMode as "normal" | "ring" | "noise") ?? "normal");
+		setLine1DcwKeyFollow(safe(data.line1DcwKeyFollow, 0));
+		setLine1DcaKeyFollow(safe(data.line1DcaKeyFollow, 0));
+		setLine2DcwKeyFollow(safe(data.line2DcwKeyFollow, 0));
+		setLine2DcaKeyFollow(safe(data.line2DcaKeyFollow, 0));
+		setVibratoEnabled(data.vibratoEnabled ?? false);
+		setVibratoWave(safe(data.vibratoWave, 1) as 1 | 2 | 3 | 4);
+		setVibratoRate(safe(data.vibratoRate, 30));
+		setVibratoDepth(safe(data.vibratoDepth, 30));
+		setVibratoDelay(safe(data.vibratoDelay, 0));
+		setPortamentoEnabled(data.portamentoEnabled ?? false);
+		setPortamentoMode((data.portamentoMode as "rate" | "time") ?? "rate");
+		setPortamentoRate(safe(data.portamentoRate, 50));
+		setPortamentoTime(safe(data.portamentoTime, 0.5));
+		setLfoEnabled(data.lfoEnabled ?? false);
+		setLfoWaveform(
+			(data.lfoWaveform as "sine" | "triangle" | "square" | "saw") ?? "sine",
+		);
+		setLfoRate(safe(data.lfoRate, 5));
+		setLfoDepth(safe(data.lfoDepth, 0));
+		setLfoTarget(
+			(data.lfoTarget as "pitch" | "dcw" | "dca" | "filter") ?? "pitch",
+		);
+		setFilterEnabled(data.filterEnabled ?? false);
+		setFilterType((data.filterType as "lp" | "hp" | "bp") ?? "lp");
+		setFilterCutoff(safe(data.filterCutoff, 5000));
+		setFilterResonance(safe(data.filterResonance, 0));
+		setFilterEnvAmount(safe(data.filterEnvAmount, 0));
 	}, []);
+
+	const { data: libraryPresets = [] } = useQuery({
+		queryKey: ["presets", "lab-library"],
+		queryFn: async () => {
+			const result = await fetchPresetData(
+				0,
+				500,
+				[],
+				"",
+				[],
+				"inclusive",
+				false,
+				false,
+				0,
+				false,
+				false,
+			);
+			return result.presets;
+		},
+		staleTime: 30000,
+	});
+
+	const handleLoadLibraryPreset = useCallback(
+		(preset: Preset) => {
+			if (preset.sysexData) {
+				const decoded = decodeCzPatch(preset.sysexData);
+				if (decoded) {
+					const synthPreset = convertDecodedPatchToSynthPreset(decoded);
+					applyPreset(synthPreset);
+				}
+			}
+		},
+		[applyPreset],
+	);
 
 	const resetToDefaults = useCallback(() => {
 		applyPreset(DEFAULT_PRESET);
@@ -610,11 +670,9 @@ export default function PhaseDistortionVisualizer() {
 
 		const finalPitch = effectivePitchHz;
 
-		const line1ModBits = (line1RingMod ? 0b100 : 0) | (line1Noise ? 0b010 : 0);
-		const line2ModBits = (line2RingMod ? 0b100 : 0) | (line2Noise ? 0b010 : 0);
-
 		const params = {
 			lineSelect,
+			modMode,
 			octave: 0,
 			line1: {
 				waveform: algoA.waveform,
@@ -625,7 +683,7 @@ export default function PhaseDistortionVisualizer() {
 				dcaBase: line1Level,
 				dcwBase: warpAAmount,
 				dcoDepth: line1DcoDepth,
-				modulation: line1ModBits,
+				modulation: 0,
 				dcwComp: line1DcwComp,
 				warpAlgo: algoA.algo,
 				detuneCents: line1Detune,
@@ -644,7 +702,7 @@ export default function PhaseDistortionVisualizer() {
 				dcaBase: line2Level,
 				dcwBase: warpBAmount,
 				dcoDepth: line2DcoDepth,
-				modulation: line2ModBits,
+				modulation: 0,
 				dcwComp: line2DcwComp,
 				warpAlgo: algoB.algo,
 				detuneCents: line2Detune,
@@ -741,10 +799,7 @@ export default function PhaseDistortionVisualizer() {
 		algoBlendA,
 		algoBlendB,
 		lineSelect,
-		line1RingMod,
-		line1Noise,
-		line2RingMod,
-		line2Noise,
+		modMode,
 		line1DcwKeyFollow,
 		line2DcwKeyFollow,
 		vibratoEnabled,
@@ -1197,11 +1252,18 @@ export default function PhaseDistortionVisualizer() {
 		};
 	}, [sendNoteOff, sendNoteOn, setSustain]);
 
+	const showLineA = lineSelect !== "L2";
+	const showLineB =
+		lineSelect === "L2" || lineSelect === "L1+L2" || lineSelect === "L1+L2'";
+
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,113,206,0.08),transparent_22%),radial-gradient(circle_at_20%_20%,rgba(61,237,255,0.08),transparent_20%),linear-gradient(180deg,#141624_0%,#10111a_100%)] p-4 md:p-6 w-full">
 			<div className="mx-auto grid w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto">
-					<div className="flex flex-col gap-4 rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(22,23,36,0.97),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+					<Card
+						variant="panel"
+						className="flex flex-col gap-4 bg-[linear-gradient(180deg,rgba(22,23,36,0.97),rgba(17,18,28,0.98))]"
+					>
 						<div className="border-b border-base-300/50 pb-3 shrink-0">
 							<div className="text-[10px] uppercase tracking-[0.4em] text-primary/80">
 								CZ Lab
@@ -1214,13 +1276,18 @@ export default function PhaseDistortionVisualizer() {
 							</p>
 						</div>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
+						<CollapsibleCard
+							variant="subtle"
+							open={accordionState.scope ?? true}
+							onToggle={(e) => toggleAccordion("scope", e.currentTarget.open)}
+							titleClassName="pr-3"
+							title={
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Scope
 								</div>
-							</summary>
-							<div className="collapse-content">
+							}
+						>
+							<div>
 								<div className="space-y-2">
 									<div className="relative overflow-hidden rounded-lg border border-success/25 bg-[#08110f]">
 										<div className="absolute left-2 top-1 text-[8px] font-mono text-success/60">
@@ -1272,7 +1339,7 @@ export default function PhaseDistortionVisualizer() {
 										/>
 									</div>
 									<div className="mt-3 grid grid-cols-2 gap-3">
-										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
+										<Card variant="inset" className="border-base-300/60 p-2">
 											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
 												Mix A/B
 											</div>
@@ -1282,8 +1349,8 @@ export default function PhaseDistortionVisualizer() {
 												height={70}
 												className="h-17.5 w-full rounded-lg"
 											/>
-										</div>
-										<div className="rounded-xl border border-base-300/60 bg-base-100/30 p-2">
+										</Card>
+										<Card variant="inset" className="border-base-300/60 p-2">
 											<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-base-content/45">
 												Phase Map
 											</div>
@@ -1293,50 +1360,57 @@ export default function PhaseDistortionVisualizer() {
 												height={70}
 												className="h-17.5 w-full rounded-lg"
 											/>
-										</div>
+										</Card>
 									</div>
 								</div>
 							</div>
-						</details>
+						</CollapsibleCard>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
-							<summary className="collapse-title pr-3 cursor-pointer list-none flex items-center justify-between">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
-									Presets
-								</div>
-								<button
-									type="button"
-									className="btn btn-xs btn-warning"
-									onClick={(e) => {
-										e.stopPropagation();
-										resetToDefaults();
-									}}
-								>
-									Reset
-								</button>
-								<label className="btn btn-xs btn-outline">
-									Import SysEx
-									<input
-										type="file"
-										accept=".syx"
-										className="hidden"
-										onChange={async (e) => {
-											const file = e.target.files?.[0];
-											if (!file) return;
-											const buffer = await file.arrayBuffer();
-											const data = new Uint8Array(buffer);
-											const decoded = decodeCzPatch(data);
-											if (decoded) {
-												const preset =
-													convertDecodedPatchToSynthPreset(decoded);
-												applyPreset(preset);
-											}
-											e.target.value = "";
+						<CollapsibleCard
+							variant="subtle"
+							open={accordionState.presets ?? false}
+							onToggle={(e) => toggleAccordion("presets", e.currentTarget.open)}
+							titleClassName="pr-3 flex items-center justify-between"
+							title={
+								<>
+									<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+										Presets
+									</div>
+									<button
+										type="button"
+										className="btn btn-xs btn-warning"
+										onClick={(e) => {
+											e.stopPropagation();
+											resetToDefaults();
 										}}
-									/>
-								</label>
-							</summary>
-							<div className="collapse-content">
+									>
+										Reset
+									</button>
+									<label className="btn btn-xs btn-outline">
+										Import SysEx
+										<input
+											type="file"
+											accept=".syx"
+											className="hidden"
+											onChange={async (e) => {
+												const file = e.target.files?.[0];
+												if (!file) return;
+												const buffer = await file.arrayBuffer();
+												const data = new Uint8Array(buffer);
+												const decoded = decodeCzPatch(data);
+												if (decoded) {
+													const preset =
+														convertDecodedPatchToSynthPreset(decoded);
+													applyPreset(preset);
+												}
+												e.target.value = "";
+											}}
+										/>
+									</label>
+								</>
+							}
+						>
+							<div>
 								<div className="space-y-2">
 									<select
 										className="select select-bordered select-sm w-full"
@@ -1353,6 +1427,26 @@ export default function PhaseDistortionVisualizer() {
 										{presetList.map((name) => (
 											<option key={name} value={name}>
 												{name}
+											</option>
+										))}
+									</select>
+									<select
+										className="select select-bordered select-sm w-full"
+										value=""
+										onChange={(e) => {
+											const presetId = e.target.value;
+											if (!presetId) return;
+											const preset = libraryPresets.find(
+												(p) => p.id === presetId,
+											);
+											if (preset) handleLoadLibraryPreset(preset);
+											e.target.value = "";
+										}}
+									>
+										<option value="">Load from library...</option>
+										{libraryPresets.map((preset) => (
+											<option key={preset.id} value={preset.id}>
+												{preset.name}
 											</option>
 										))}
 									</select>
@@ -1429,7 +1523,10 @@ export default function PhaseDistortionVisualizer() {
 											/>
 										</label>
 									</div>
-									<div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-base-300/60 bg-base-100/40 p-2">
+									<Card
+										variant="inset"
+										className="max-h-40 space-y-1 overflow-y-auto border-base-300/60 p-2"
+									>
 										{presetList.length === 0 ? (
 											<div className="px-2 py-3 text-xs text-base-content/45">
 												No stored presets yet.
@@ -1449,18 +1546,25 @@ export default function PhaseDistortionVisualizer() {
 												</button>
 											))
 										)}
-									</div>
+									</Card>
 								</div>
 							</div>
-						</details>
+						</CollapsibleCard>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
-							<summary className="collapse-title pr-3 cursor-pointer list-none">
+						<CollapsibleCard
+							variant="subtle"
+							open={accordionState.globalVoice ?? false}
+							onToggle={(e) =>
+								toggleAccordion("globalVoice", e.currentTarget.open)
+							}
+							titleClassName="pr-3"
+							title={
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Global Voice
 								</div>
-							</summary>
-							<div className="collapse-content">
+							}
+						>
+							<div>
 								<div className="mb-3 flex justify-center">
 									<ControlKnob
 										value={volume}
@@ -1558,9 +1662,18 @@ export default function PhaseDistortionVisualizer() {
 									</div>
 								</div>
 							</div>
-						</details>
+						</CollapsibleCard>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+						<Card
+							as="details"
+							variant="subtle"
+							padding="none"
+							open={accordionState.phaseMod ?? false}
+							onToggle={(e) =>
+								toggleAccordion("phaseMod", e.currentTarget.open)
+							}
+							className="collapse collapse-arrow overflow-hidden"
+						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Phase Mod
@@ -1599,9 +1712,16 @@ export default function PhaseDistortionVisualizer() {
 									<span className="label-text text-xs">Pre-warp PM</span>
 								</label>
 							</div>
-						</details>
+						</Card>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+						<Card
+							as="details"
+							variant="subtle"
+							padding="none"
+							open={accordionState.vibrato ?? false}
+							onToggle={(e) => toggleAccordion("vibrato", e.currentTarget.open)}
+							className="collapse collapse-arrow overflow-hidden"
+						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Vibrato
@@ -1662,9 +1782,18 @@ export default function PhaseDistortionVisualizer() {
 									/>
 								</div>
 							</div>
-						</details>
+						</Card>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+						<Card
+							as="details"
+							variant="subtle"
+							padding="none"
+							open={accordionState.portamento ?? false}
+							onToggle={(e) =>
+								toggleAccordion("portamento", e.currentTarget.open)
+							}
+							className="collapse collapse-arrow overflow-hidden"
+						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Portamento
@@ -1722,9 +1851,16 @@ export default function PhaseDistortionVisualizer() {
 									)}
 								</div>
 							</div>
-						</details>
+						</Card>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+						<Card
+							as="details"
+							variant="subtle"
+							padding="none"
+							open={accordionState.lfo ?? false}
+							onToggle={(e) => toggleAccordion("lfo", e.currentTarget.open)}
+							className="collapse collapse-arrow overflow-hidden"
+						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									LFO
@@ -1792,9 +1928,16 @@ export default function PhaseDistortionVisualizer() {
 									</div>
 								</div>
 							</div>
-						</details>
+						</Card>
 
-						<details className="collapse collapse-arrow rounded-2xl border border-base-300/70 bg-base-300/20">
+						<Card
+							as="details"
+							variant="subtle"
+							padding="none"
+							open={accordionState.filter ?? false}
+							onToggle={(e) => toggleAccordion("filter", e.currentTarget.open)}
+							className="collapse collapse-arrow overflow-hidden"
+						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
 								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 									Filter
@@ -1855,142 +1998,197 @@ export default function PhaseDistortionVisualizer() {
 									/>
 								</div>
 							</div>
-						</details>
-					</div>
+						</Card>
+					</Card>
 				</aside>
 
-				<main className="space-y-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
-					<section className="rounded-[1.8rem] border border-base-300/70 bg-[linear-gradient(180deg,rgba(27,29,43,0.95),rgba(17,18,28,0.98))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-						<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
-							FX Rack
-						</div>
-						<div className="grid grid-cols-3 gap-x-3">
-							<ChorusSection
-								rate={chorusRate}
-								setRate={setChorusRate}
-								depth={chorusDepth}
-								setDepth={setChorusDepth}
-								mix={chorusMix}
-								setMix={setChorusMix}
-							/>
-							<DelaySection
-								time={delayTime}
-								setTime={setDelayTime}
-								feedback={delayFeedback}
-								setFeedback={setDelayFeedback}
-								mix={delayMix}
-								setMix={setDelayMix}
-							/>
-							<ReverbSection
-								size={reverbSize}
-								setSize={setReverbSize}
-								mix={reverbMix}
-								setMix={setReverbMix}
-							/>
-						</div>
-					</section>
-
+				<main className="space-y-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto p-1">
 					<section className="space-y-4">
-						<div className="flex justify-center gap-2">
-							<button
-								type="button"
-								className={`btn btn-sm ${activeLineTab === "a" ? "btn-primary" : "btn-outline"}`}
-								onClick={() => setActiveLineTab("a")}
-							>
-								Line A
-							</button>
-							<button
-								type="button"
-								className={`btn btn-sm ${activeLineTab === "b" ? "btn-secondary" : "btn-outline"}`}
-								onClick={() => setActiveLineTab("b")}
-							>
-								Line B
-							</button>
-						</div>
+						{/* Line Select + Modulation — merged panel */}
+						<Card variant="panel" className="space-y-3">
+							<div>
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55 mb-2">
+									Line Select
+								</div>
+								<div className="join w-full">
+									{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
+										(ls) => (
+											<button
+												key={ls}
+												type="button"
+												className={`btn btn-xs join-item flex-1 ${lineSelect === ls ? "btn-primary" : "btn-outline"}`}
+												onClick={() => setLineSelect(ls)}
+											>
+												{ls}
+											</button>
+										),
+									)}
+								</div>
+							</div>
 
-						{activeLineTab === "a" && (
-							<PerLineWarpBlock
-								label={
-									PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
-								}
-								waveform={waveform.out1}
-								color="#3dedff"
-								copyTargetLabel={
-									PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
-								}
-								onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
-								onCopyEnvelopes={() => copyLineSettings("a", "b", "envelopes")}
-								onCopyFull={() => copyLineSettings("a", "b", "full")}
-								algo={warpAAlgo}
-								setAlgo={setWarpAAlgo}
-								algo2={algo2A}
-								setAlgo2={setAlgo2A}
-								algoBlend={algoBlendA}
-								setAlgoBlend={setAlgoBlendA}
-								warpAmount={warpAAmount}
-								setWarpAmount={setWarpAAmount}
-								dcwComp={line1DcwComp}
-								setDcwComp={setLine1DcwComp}
-								level={line1Level}
-								setLevel={setLine1Level}
-								octave={line1Octave}
-								setOctave={setLine1Octave}
-								fineDetune={line1Detune}
-								setFineDetune={setLine1Detune}
-								dcoDepth={line1DcoDepth}
-								setDcoDepth={setLine1DcoDepth}
-								dcoEnv={line1DcoEnv}
-								setDcoEnv={setLine1DcoEnv}
-								dcwEnv={line1DcwEnv}
-								setDcwEnv={setLine1DcwEnv}
-								dcaEnv={line1DcaEnv}
-								setDcaEnv={setLine1DcaEnv}
-								keyFollow={line1DcwKeyFollow}
-								setKeyFollow={setLine1DcwKeyFollow}
-							/>
-						)}
+							<div>
+								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55 mb-2">
+									Modulation
+								</div>
+								<div className="join w-full">
+									{(
+										[
+											["normal", "Normal"],
+											["ring", "Ring"],
+											["noise", "Noise"],
+										] as const
+									).map(([mode, label]) => (
+										<button
+											key={mode}
+											type="button"
+											className={`btn btn-xs join-item flex-1 ${
+												modMode === mode
+													? mode === "ring"
+														? "btn-warning"
+														: mode === "noise"
+															? "btn-info"
+															: "btn-neutral"
+													: "btn-outline"
+											}`}
+											onClick={() => setModMode(mode)}
+										>
+											{label}
+										</button>
+									))}
+								</div>
+							</div>
+						</Card>
+						<CollapsibleCard title="FX Rack" variant="panel">
+							<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								FX Rack
+							</div>
+							<div className="grid grid-cols-3 gap-x-3">
+								<ChorusSection
+									rate={chorusRate}
+									setRate={setChorusRate}
+									depth={chorusDepth}
+									setDepth={setChorusDepth}
+									mix={chorusMix}
+									setMix={setChorusMix}
+								/>
+								<DelaySection
+									time={delayTime}
+									setTime={setDelayTime}
+									feedback={delayFeedback}
+									setFeedback={setDelayFeedback}
+									mix={delayMix}
+									setMix={setDelayMix}
+								/>
+								<ReverbSection
+									size={reverbSize}
+									setSize={setReverbSize}
+									mix={reverbMix}
+									setMix={setReverbMix}
+								/>
+							</div>
+						</CollapsibleCard>
 
-						{activeLineTab === "b" && (
-							<PerLineWarpBlock
-								label={
-									PD_ALGOS.find((a) => a.value === warpBAlgo)?.label ?? "Line B"
-								}
-								waveform={waveform.out2}
-								color="#ff71ce"
-								copyTargetLabel={
-									PD_ALGOS.find((a) => a.value === warpAAlgo)?.label ?? "Line A"
-								}
-								onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
-								onCopyEnvelopes={() => copyLineSettings("b", "a", "envelopes")}
-								onCopyFull={() => copyLineSettings("b", "a", "full")}
-								algo={warpBAlgo}
-								setAlgo={setWarpBAlgo}
-								algo2={algo2B}
-								setAlgo2={setAlgo2B}
-								algoBlend={algoBlendB}
-								setAlgoBlend={setAlgoBlendB}
-								warpAmount={warpBAmount}
-								setWarpAmount={setWarpBAmount}
-								dcwComp={line2DcwComp}
-								setDcwComp={setLine2DcwComp}
-								level={line2Level}
-								setLevel={setLine2Level}
-								octave={line2Octave}
-								setOctave={setLine2Octave}
-								fineDetune={line2Detune}
-								setFineDetune={setLine2Detune}
-								dcoDepth={line2DcoDepth}
-								setDcoDepth={setLine2DcoDepth}
-								dcoEnv={line2DcoEnv}
-								setDcoEnv={setLine2DcoEnv}
-								dcwEnv={line2DcwEnv}
-								setDcwEnv={setLine2DcwEnv}
-								dcaEnv={line2DcaEnv}
-								setDcaEnv={setLine2DcaEnv}
-								keyFollow={line2DcwKeyFollow}
-								setKeyFollow={setLine2DcwKeyFollow}
-							/>
-						)}
+						<CollapsibleCard title="Phase Lines" variant="panel" open>
+							{/* Phase Line Tabs */}
+							<div className="tabs tabs-lift">
+						
+										<input
+											type="radio"
+											name="phase_line_tabs"
+											className="tab"
+											aria-label="Line 1"
+											defaultChecked={true}
+										/>
+										<div className="tab-content bg-base-100 border-base-300 p-4">
+											<PerLineWarpBlock
+												label={"Line 1"}
+												waveform={waveform.out1}
+												color="#3dedff"
+												copyTargetLabel={"Line 2"}
+												onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
+												onCopyEnvelopes={() =>
+													copyLineSettings("a", "b", "envelopes")
+												}
+												onCopyFull={() => copyLineSettings("a", "b", "full")}
+												algo={warpAAlgo}
+												setAlgo={setWarpAAlgo}
+												algo2={algo2A}
+												setAlgo2={setAlgo2A}
+												algoBlend={algoBlendA}
+												setAlgoBlend={setAlgoBlendA}
+												warpAmount={warpAAmount}
+												setWarpAmount={setWarpAAmount}
+												dcwComp={line1DcwComp}
+												setDcwComp={setLine1DcwComp}
+												level={line1Level}
+												setLevel={setLine1Level}
+												octave={line1Octave}
+												setOctave={setLine1Octave}
+												fineDetune={line1Detune}
+												setFineDetune={setLine1Detune}
+												dcoDepth={line1DcoDepth}
+												setDcoDepth={setLine1DcoDepth}
+												dcoEnv={line1DcoEnv}
+												setDcoEnv={setLine1DcoEnv}
+												dcwEnv={line1DcwEnv}
+												setDcwEnv={setLine1DcwEnv}
+												dcaEnv={line1DcaEnv}
+												setDcaEnv={setLine1DcaEnv}
+												keyFollow={line1DcwKeyFollow}
+												setKeyFollow={setLine1DcwKeyFollow}
+											/>
+										</div>
+									
+							
+										<input
+											type="radio"
+											name="phase_line_tabs"
+											className="tab"
+											aria-label="Line 2"
+											defaultChecked={!showLineA}
+										/>
+										<div className="tab-content bg-base-100 border-base-300 p-4">
+											<PerLineWarpBlock
+												label={"Line 2"}
+												waveform={waveform.out2}
+												color="#ff71ce"
+												copyTargetLabel={"Line 1"}
+												onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
+												onCopyEnvelopes={() =>
+													copyLineSettings("b", "a", "envelopes")
+												}
+												onCopyFull={() => copyLineSettings("b", "a", "full")}
+												algo={warpBAlgo}
+												setAlgo={setWarpBAlgo}
+												algo2={algo2B}
+												setAlgo2={setAlgo2B}
+												algoBlend={algoBlendB}
+												setAlgoBlend={setAlgoBlendB}
+												warpAmount={warpBAmount}
+												setWarpAmount={setWarpBAmount}
+												dcwComp={line2DcwComp}
+												setDcwComp={setLine2DcwComp}
+												level={line2Level}
+												setLevel={setLine2Level}
+												octave={line2Octave}
+												setOctave={setLine2Octave}
+												fineDetune={line2Detune}
+												setFineDetune={setLine2Detune}
+												dcoDepth={line2DcoDepth}
+												setDcoDepth={setLine2DcoDepth}
+												dcoEnv={line2DcoEnv}
+												setDcoEnv={setLine2DcoEnv}
+												dcwEnv={line2DcwEnv}
+												setDcwEnv={setLine2DcwEnv}
+												dcaEnv={line2DcaEnv}
+												setDcaEnv={setLine2DcaEnv}
+												keyFollow={line2DcwKeyFollow}
+												setKeyFollow={setLine2DcwKeyFollow}
+											/>
+										</div>
+						
+							</div>
+						</CollapsibleCard>
 					</section>
 				</main>
 			</div>

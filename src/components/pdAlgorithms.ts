@@ -13,6 +13,8 @@ export type PdAlgo =
 	| "clip"
 	| "ripple"
 	| "mirror"
+	| "karpunk"
+	| "fof"
 	| 1
 	| 2
 	| 3
@@ -117,6 +119,16 @@ export const getWarpIcon = (algo: string): string => {
 		case "mirror":
 			// Image_52dc76: Absolute value/rectification style
 			return generatePath((p) => Math.abs(Math.sin(Math.PI * p)) * 2 - 1);
+
+		case "karpunk":
+			return generatePath((p) => Math.sin(TAU * p * 3) * Math.exp(-p * 2.2));
+
+		case "fof":
+			return generatePath((p) => {
+				const carrier = Math.sin(TAU * p * 5);
+				const window = Math.exp(-18 * (p - 0.5) ** 2);
+				return carrier * window;
+			});
 
 		default:
 			return generatePath((p) => Math.sin(2 * Math.PI * p));
@@ -280,6 +292,20 @@ export const PD_ALGOS: PdAlgoDef[] = [
 		waveform: 1,
 		algo: "mirror",
 		icon: getWarpIcon("mirror"), // Reflected peaks
+	},
+	{
+		value: "karpunk",
+		label: "Karpunk",
+		waveform: 1,
+		algo: "karpunk",
+		icon: getWarpIcon("karpunk"),
+	},
+	{
+		value: "fof",
+		label: "FOF",
+		waveform: 1,
+		algo: "fof",
+		icon: getWarpIcon("fof"),
 	},
 ];
 
@@ -570,6 +596,17 @@ export function applyPdAlgo(
 			return pdRipple(phase, amount);
 		case "mirror":
 			return pdMirror(phase, amount);
+		case "karpunk":
+			// Stateless approximation: decaying resonant phase distortion
+			return wrap01(
+				phase + amount * Math.sin(TAU * phase * 3) * Math.exp(-phase * 2.5),
+			);
+		case "fof":
+			// Stateless approximation: gaussian-windowed harmonic carrier
+			return wrap01(
+				phase * 5.0 * (1 - amount * 0.8) +
+					amount * 0.5 * Math.exp(-20 * (phase - 0.5) ** 2),
+			);
 		default:
 			return phase;
 	}

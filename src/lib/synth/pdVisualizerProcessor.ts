@@ -216,7 +216,7 @@ export interface LineParams {
 }
 
 export interface ProcessorParams {
-	lineSelect: "L1" | "L2" | "L1+L2";
+	lineSelect: "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
 	octave: number;
 	line1: LineParams;
 	line2: LineParams;

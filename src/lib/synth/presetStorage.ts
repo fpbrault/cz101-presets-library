@@ -50,10 +50,7 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	reverbSize: 0.5,
 	reverbMix: 0,
 	lineSelect: "L1+L2",
-	line1RingMod: false,
-	line1Noise: false,
-	line2RingMod: false,
-	line2Noise: false,
+	modMode: "normal",
 	line1DcwKeyFollow: 0,
 	line1DcaKeyFollow: 0,
 	line2DcwKeyFollow: 0,
@@ -121,10 +118,7 @@ export interface SynthPresetData {
 	reverbSize: number;
 	reverbMix: number;
 	lineSelect: "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
-	line1RingMod: boolean;
-	line1Noise: boolean;
-	line2RingMod: boolean;
-	line2Noise: boolean;
+	modMode: "normal" | "ring" | "noise";
 	line1DcwKeyFollow: number;
 	line1DcaKeyFollow: number;
 	line2DcwKeyFollow: number;

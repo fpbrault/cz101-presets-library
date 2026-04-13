@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import ControlKnob from "./ControlKnob";
 import type { StepEnvData } from "./pdAlgorithms";
 import { rateToSeconds } from "./pdAlgorithms";
+import Card from "./ui/Card";
 
 const STEP_KEYS = ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7"] as const;
 
@@ -172,7 +173,10 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	}, [dragStep, updateStep]);
 
 	return (
-		<div className="max-w-120 rounded-2xl border border-base-300/70 bg-base-200/70 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.2)] space-y-3">
+		<Card
+			variant="subtle"
+			className="max-w-120 space-y-3 bg-base-200/70 shadow-[0_12px_30px_rgba(0,0,0,0.2)]"
+		>
 			<div className="flex items-center justify-between">
 				<span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-base-content/70">
 					{title}
@@ -274,7 +278,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 					{(env.steps[env.stepCount - 1]?.rate ?? 0).toFixed(0)}
 				</span>
 			</div>
-		</div>
+		</Card>
 	);
 });
 
