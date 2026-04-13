@@ -62,6 +62,58 @@ Tauri 2 desktop app for managing Casio CZ-101 synthesizer `.SYX` presets.
 - `db:migrate` requires `DATABASE_URL` env var
 - `db:generate` works with fallback connection string (no DB access needed)
 
+## React Best Practices
+
+### Folder Structure
+- **Feature-based**: Organize by feature (`features/presets/`, `features/setlists/`) not by file type
+- Keep pages thin — delegate to feature components
+- Create `lib/` for truly reusable code across features
+- Use barrel exports (`index.ts`) for clean imports
+
+### Component Architecture
+- **Single responsibility**: Each component does one thing well
+- **Composition over inheritance**: Use `children` prop and render props for flexibility
+- Split components at ~200+ lines or when reusable
+- Wrap expensive components with `React.memo()`
+- Colocate related files (component + styles + tests + types)
+
+### State Management
+- **Local state first**: Use `useState` / `useReducer` for component-local state
+- **Context**: App-wide state only (theme, auth, MIDI config) — avoid Context for frequently updated data
+- **TanStack Query**: For server state (API data, presets from DB) — handles caching, background updates, deduping
+- **Zustand**: Optional for complex client state without boilerplate
+
+### Performance
+- **Code splitting**: `React.lazy()` + `Suspense` for routes and heavy features
+- **Lazy load third-party libs**: Split large dependencies
+- **useMemo/useCallback**: Only for expensive calculations or stabilizing callback refs — avoid blanket memoization
+- **Virtualization**: For long lists (use `@tanstack/react-virtual`)
+- Measure with React DevTools Profiler before optimizing
+
+### TypeScript
+- Explicit types for component props and function returns
+- Domain types in `src/types/` or alongside feature code
+- Avoid `any` — use `unknown` when type is truly unknown
+- Use `interface` for object shapes, `type` for unions/intersections
+
+### Hooks Patterns
+- Custom hooks for reusable logic (`useXxx.ts`)
+- Always include cleanup functions in `useEffect`
+- List all dependencies in dependency array — lint rule enforces this
+- Use `useCallback` when passing callbacks to memoized components
+
+### Testing
+- **Colocate**: Tests next to code they test (`Component.test.tsx`)
+- **Test pyramid**: 70% unit (components, hooks), 20% integration (feature tests), 10% E2E
+- Test behavior, not implementation — prefer React Testing Library
+- Mock external dependencies (IndexedDB, MIDI)
+
+### Code Style
+- Functional components only
+- Name files: `PascalCase.tsx` for components, `camelCase.ts` for hooks/utils
+- Path alias `@/*` for absolute imports
+- No inline styles — use Tailwind/DaisyUI classes
+
 ## Memory Management
 
 - **Memory Tools**: Use `memory_set`, `memory_replace`, and `memory_list` to:

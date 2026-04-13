@@ -30,7 +30,10 @@ describe("CollapsibleCard", () => {
 
 	it("applies custom classes after the base variant classes", () => {
 		const { container } = renderWithProviders(
-			<CollapsibleCard title={<span>Scoped</span>} className="bg-error/20 custom-class">
+			<CollapsibleCard
+				title={<span>Scoped</span>}
+				className="bg-error/20 custom-class"
+			>
 				Body
 			</CollapsibleCard>,
 		);

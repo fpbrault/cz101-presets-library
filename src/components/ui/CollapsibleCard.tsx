@@ -18,7 +18,13 @@ type CommonProps = {
 };
 
 type DetailsModeProps = CommonProps &
-	Omit<React.DetailedHTMLProps<React.DetailsHTMLAttributes<HTMLDetailsElement>, HTMLDetailsElement>, "children" | "className" | "title"> & {
+	Omit<
+		React.DetailedHTMLProps<
+			React.DetailsHTMLAttributes<HTMLDetailsElement>,
+			HTMLDetailsElement
+		>,
+		"children" | "className" | "title"
+	> & {
 		mode?: "details";
 	};
 
@@ -43,7 +49,6 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 		titleClassName = "",
 		contentClassName = "",
 		arrow = true,
-		
 	} = props;
 
 	const collapseClassName = getCardClassName({
@@ -67,7 +72,9 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 					defaultChecked={defaultOpen}
 					className={inputClassName}
 				/>
-				<div className={joinClasses("collapse-title", titleClassName)}>{title}</div>
+				<div className={joinClasses("collapse-title", titleClassName)}>
+					{title}
+				</div>
 				<div className={joinClasses("collapse-content", contentClassName)}>
 					{children}
 				</div>

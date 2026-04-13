@@ -20,6 +20,11 @@
 	--color-cz-lcd-bg: #051005; /* phosphor display background */
 	--color-cz-lcd-fg: #3dff3d; /* phosphor display trace / fg */
 	--color-cz-lcd-grid: rgba(0, 120, 0, 0.35); /* scope grid lines */
+	--color-cz-led-on: #ff2222; /* CZ-style LED indicator — active */
+	--color-cz-led-off: #3a1414; /* CZ-style LED indicator — inactive */
+	--color-cz-section-bar: #4a6fa5; /* CZ section header bar (blue accent) */
+	--color-cz-btn: #2e2e30; /* CZ hardware button face */
+	--color-cz-btn-border: #555558; /* CZ hardware button border */
 }
 
 @plugin "daisyui" {
@@ -42,5 +47,86 @@
 	::backdrop,
 	::file-selector-button {
 		border-color: var(--color-gray-200, currentcolor);
+	}
+}
+
+/* ─── CZ-101 hardware component classes ─────────────────────────────────── */
+
+@layer components {
+	/* Section header bar — mimics the blue labeled bars on the CZ hardware */
+	.cz-section-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.15rem 0.5rem;
+		background-color: var(--color-cz-section-bar);
+		border-radius: 2px;
+		font-family: var(--font-mono, monospace);
+		font-size: 0.6rem;
+		font-weight: 700;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		color: #e8eaf0;
+	}
+
+	/* LED indicator dot — small square LED above/beside a button */
+	.cz-led {
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		border-radius: 1px;
+		background-color: var(--color-cz-led-off);
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
+		transition:
+			background-color 0.08s ease,
+			box-shadow 0.08s ease;
+	}
+	.cz-led.on {
+		background-color: var(--color-cz-led-on);
+		box-shadow:
+			0 0 4px 1px rgba(255, 30, 30, 0.55),
+			inset 0 1px 0 rgba(255, 180, 180, 0.3);
+	}
+
+	/* Hardware-style selector button — flat face, subtle bevel */
+	.cz-btn {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 3px;
+		padding: 0.3rem 0.6rem 0.25rem;
+		background: linear-gradient(180deg, #363638 0%, #2a2a2c 100%);
+		border: 1px solid var(--color-cz-btn-border);
+		border-bottom-color: #1a1a1c;
+		border-radius: 3px;
+		font-family: var(--font-mono, monospace);
+		font-size: 0.6rem;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--color-cz-cream-dim);
+		cursor: pointer;
+		transition:
+			color 0.08s ease,
+			background 0.08s ease;
+		box-shadow:
+			0 2px 0 #111,
+			inset 0 1px 0 rgba(255, 255, 255, 0.06);
+		user-select: none;
+	}
+	.cz-btn:active {
+		box-shadow:
+			0 1px 0 #111,
+			inset 0 1px 2px rgba(0, 0, 0, 0.4);
+		transform: translateY(1px);
+	}
+	.cz-btn.active .cz-led {
+		background-color: var(--color-cz-led-on);
+		box-shadow:
+			0 0 4px 1px rgba(255, 30, 30, 0.55),
+			inset 0 1px 0 rgba(255, 180, 180, 0.3);
+	}
+	.cz-btn.active {
+		color: var(--color-cz-cream);
 	}
 }

@@ -47,7 +47,11 @@ export const SingleCycleDisplay = memo(function SingleCycleDisplay({
 			<span className="mb-1 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 				{label}
 			</span>
-			<Card variant="subtle" padding="none" className="overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+			<Card
+				variant="subtle"
+				padding="none"
+				className="overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+			>
 				<canvas
 					ref={canvasRef}
 					width={width}

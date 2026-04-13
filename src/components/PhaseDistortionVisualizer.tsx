@@ -1463,10 +1463,10 @@ export default function PhaseDistortionVisualizer() {
 			</header>
 
 			<div className="grid flex-1 min-h-0 w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-				<aside className="overflow-y-auto min-h-0">
+				<aside className="overflow-y-auto min-h-0 pb-4">
 					<Card
 						variant="panel"
-						className="flex flex-col gap-4 bg-cz-panel border-cz-border rounded-sm"
+						className="flex flex-col gap-4 bg-cz-panel border-cz-border rounded-sm overflow-visible"
 					>
 						<div className="border-b border-cz-border pb-3 shrink-0">
 							<div className="text-[10px] font-mono uppercase tracking-[0.4em] text-cz-orange">
@@ -1485,11 +1485,7 @@ export default function PhaseDistortionVisualizer() {
 							open={accordionState.scope ?? true}
 							onToggle={(e) => toggleAccordion("scope", e.currentTarget.open)}
 							titleClassName="pr-3"
-							title={
-								<div className="text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
-									Scope
-								</div>
-							}
+							title={<div className="cz-section-bar">Scope</div>}
 						>
 							<div>
 								<div className="space-y-2">
@@ -1577,9 +1573,7 @@ export default function PhaseDistortionVisualizer() {
 							titleClassName="pr-3 flex items-center justify-between"
 							title={
 								<>
-									<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-										Presets
-									</div>
+									<div className="cz-section-bar">Presets</div>
 									<button
 										type="button"
 										className="btn btn-xs bg-cz-orange border-cz-orange text-white"
@@ -1780,11 +1774,7 @@ export default function PhaseDistortionVisualizer() {
 								toggleAccordion("globalVoice", e.currentTarget.open)
 							}
 							titleClassName="pr-3"
-							title={
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Global Voice
-								</div>
-							}
+							title={<div className="cz-section-bar">Global Voice</div>}
 						>
 							<div>
 								<div className="mb-3 flex justify-center">
@@ -1800,19 +1790,21 @@ export default function PhaseDistortionVisualizer() {
 									/>
 								</div>
 								<div className="space-y-2">
-									<div className="join w-full">
+									<div className="flex w-full gap-1">
 										<button
 											type="button"
-											className={`btn btn-sm join-item flex-1 ${polyMode === "poly8" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											className={`cz-btn flex-1 ${polyMode === "poly8" ? "active" : ""}`}
 											onClick={() => setPolyMode("poly8")}
 										>
+											<span className="cz-led" />
 											Poly 8
 										</button>
 										<button
 											type="button"
-											className={`btn btn-sm join-item flex-1 ${polyMode === "mono" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											className={`cz-btn flex-1 ${polyMode === "mono" ? "active" : ""}`}
 											onClick={() => setPolyMode("mono")}
 										>
+											<span className="cz-led" />
 											Mono
 										</button>
 									</div>
@@ -1830,9 +1822,10 @@ export default function PhaseDistortionVisualizer() {
 									<div className="flex items-center gap-2">
 										<button
 											type="button"
-											className={`btn btn-sm ${sustainOn ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											className={`cz-btn ${sustainOn ? "active" : ""}`}
 											onClick={() => setSustain(!sustainOn)}
 										>
+											<span className="cz-led" />
 											Sustain
 										</button>
 										<span className="text-xs text-cz-cream-dim/45">
@@ -1840,18 +1833,17 @@ export default function PhaseDistortionVisualizer() {
 										</span>
 									</div>
 									<div>
-										<div className="mb-1 text-xs text-cz-cream-dim">
-											Velocity
-										</div>
+										<div className="mb-2 cz-section-bar">Velocity</div>
 										<div className="flex flex-wrap gap-1">
 											{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
 												(target) => (
 													<button
 														key={target}
 														type="button"
-														className={`btn btn-xs ${velocityTarget === target ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+														className={`cz-btn ${velocityTarget === target ? "active" : ""}`}
 														onClick={() => setVelocityTarget(target)}
 													>
+														<span className="cz-led" />
 														{target === "amp"
 															? "Amp"
 															: target === "dcw"
@@ -1865,7 +1857,7 @@ export default function PhaseDistortionVisualizer() {
 										</div>
 									</div>
 									<div>
-										<div className="mb-1 text-xs text-cz-cream-dim">Window</div>
+										<div className="mb-2 cz-section-bar">Window</div>
 										<select
 											className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
 											value={windowType}
@@ -1895,9 +1887,7 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Phase Mod
-								</div>
+								<div className="cz-section-bar">Phase Mod</div>
 							</summary>
 							<div className="collapse-content">
 								<div className="flex justify-center gap-4">
@@ -1943,9 +1933,7 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Vibrato
-								</div>
+								<div className="cz-section-bar">Vibrato</div>
 							</summary>
 							<div className="collapse-content">
 								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
@@ -1962,9 +1950,10 @@ export default function PhaseDistortionVisualizer() {
 										<button
 											key={w}
 											type="button"
-											className={`btn btn-xs ${vibratoWave === i + 1 ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											className={`cz-btn ${vibratoWave === i + 1 ? "active" : ""}`}
 											onClick={() => setVibratoWave(i + 1)}
 										>
+											<span className="cz-led" />
 											{w}
 										</button>
 									))}
@@ -2015,9 +2004,7 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Portamento
-								</div>
+								<div className="cz-section-bar">Portamento</div>
 							</summary>
 							<div className="collapse-content">
 								<label className="label cursor-pointer justify-start gap-2 rounded-xl border border-cz-border bg-cz-surface/40 px-3 py-2 mb-2">
@@ -2029,19 +2016,21 @@ export default function PhaseDistortionVisualizer() {
 									/>
 									<span className="label-text text-xs">Enable Portamento</span>
 								</label>
-								<div className="join w-full mb-2">
+								<div className="flex w-full gap-1 mb-2">
 									<button
 										type="button"
-										className={`btn btn-sm join-item flex-1 ${portamentoMode === "rate" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+										className={`cz-btn flex-1 ${portamentoMode === "rate" ? "active" : ""}`}
 										onClick={() => setPortamentoMode("rate")}
 									>
+										<span className="cz-led" />
 										Rate
 									</button>
 									<button
 										type="button"
-										className={`btn btn-sm join-item flex-1 ${portamentoMode === "time" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+										className={`cz-btn flex-1 ${portamentoMode === "time" ? "active" : ""}`}
 										onClick={() => setPortamentoMode("time")}
 									>
+										<span className="cz-led" />
 										Time
 									</button>
 								</div>
@@ -2082,13 +2071,11 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									LFO
-								</div>
+								<div className="cz-section-bar">LFO</div>
 							</summary>
 							<div className="collapse-content">
 								<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-									<div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+									<div className="mb-2 cz-section-bar justify-between">
 										<span>LFO Visual</span>
 										<span>{lfoTarget}</span>
 									</div>
@@ -2138,9 +2125,10 @@ export default function PhaseDistortionVisualizer() {
 										<button
 											key={w}
 											type="button"
-											className={`btn btn-xs ${lfoWaveform === w ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											className={`cz-btn ${lfoWaveform === w ? "active" : ""}`}
 											onClick={() => setLfoWaveform(w)}
 										>
+											<span className="cz-led" />
 											{w}
 										</button>
 									))}
@@ -2168,15 +2156,16 @@ export default function PhaseDistortionVisualizer() {
 									/>
 								</div>
 								<div className="mt-2">
-									<div className="text-xs text-cz-cream-dim mb-1">Target</div>
+									<div className="mb-2 cz-section-bar">Target</div>
 									<div className="flex flex-wrap gap-1">
 										{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
 											<button
 												key={t}
 												type="button"
-												className={`btn btn-xs ${lfoTarget === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+												className={`cz-btn ${lfoTarget === t ? "active" : ""}`}
 												onClick={() => setLfoTarget(t)}
 											>
+												<span className="cz-led" />
 												{t}
 											</button>
 										))}
@@ -2194,13 +2183,11 @@ export default function PhaseDistortionVisualizer() {
 							className="collapse collapse-arrow overflow-hidden"
 						>
 							<summary className="collapse-title pr-3 cursor-pointer list-none">
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-									Filter
-								</div>
+								<div className="cz-section-bar">Filter</div>
 							</summary>
 							<div className="collapse-content">
 								<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-									<div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
+									<div className="mb-2 cz-section-bar justify-between">
 										<span>Response</span>
 										<span>{filterType.toUpperCase()}</span>
 									</div>
@@ -2246,14 +2233,15 @@ export default function PhaseDistortionVisualizer() {
 									/>
 									<span className="label-text text-xs">Enable Filter</span>
 								</label>
-								<div className="join w-full mb-2">
+								<div className="flex w-full gap-1 mb-2">
 									{(["lp", "hp", "bp"] as const).map((t) => (
 										<button
 											key={t}
 											type="button"
-											className={`btn btn-sm join-item flex-1 ${filterType === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+											className={`cz-btn flex-1 ${filterType === t ? "active" : ""}`}
 											onClick={() => setFilterType(t)}
 										>
+											<span className="cz-led" />
 											{t.toUpperCase()}
 										</button>
 									))}
@@ -2295,23 +2283,22 @@ export default function PhaseDistortionVisualizer() {
 					</Card>
 				</aside>
 
-				<main className="space-y-4 p-1 overflow-y-auto min-h-0">
+				<main className="space-y-4 p-1 pb-4 overflow-y-auto min-h-0">
 					<section className="space-y-4">
 						{/* Line Select + Modulation — merged panel */}
 						<Card variant="panel" className="space-y-3">
 							<div>
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
-									Line Select
-								</div>
-								<div className="join w-full">
+								<div className="mb-2 cz-section-bar">Line Select</div>
+								<div className="flex w-full gap-1">
 									{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
 										(ls) => (
 											<button
 												key={ls}
 												type="button"
-												className={`btn btn-xs join-item flex-1 ${lineSelect === ls ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
+												className={`cz-btn flex-1 ${lineSelect === ls ? "active" : ""}`}
 												onClick={() => setLineSelect(ls)}
 											>
+												<span className="cz-led" />
 												{ls}
 											</button>
 										),
@@ -2320,10 +2307,8 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 
 							<div>
-								<div className="text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim mb-2">
-									Modulation
-								</div>
-								<div className="join w-full">
+								<div className="mb-2 cz-section-bar">Modulation</div>
+								<div className="flex w-full gap-1">
 									{(
 										[
 											["normal", "Normal"],
@@ -2334,13 +2319,12 @@ export default function PhaseDistortionVisualizer() {
 										<button
 											key={mode}
 											type="button"
-											className={`btn btn-xs join-item flex-1 ${
-												modMode === mode
-													? "bg-cz-orange border-cz-orange text-white"
-													: "border-cz-border text-cz-cream"
+											className={`cz-btn flex-1 ${
+												modMode === mode ? "active" : ""
 											}`}
 											onClick={() => setModMode(mode)}
 										>
+											<span className="cz-led" />
 											{label}
 										</button>
 									))}
@@ -2348,9 +2332,7 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 						</Card>
 						<CollapsibleCard title="FX Rack" variant="panel">
-							<div className="mb-3 text-[10px] font-mono uppercase tracking-[0.24em] text-cz-cream-dim">
-								FX Rack
-							</div>
+							<div className="mb-3 cz-section-bar">FX Rack</div>
 							<div className="grid grid-cols-3 gap-x-3">
 								<ChorusSection
 									rate={chorusRate}
