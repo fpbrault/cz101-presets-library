@@ -2088,7 +2088,7 @@ export default function PhaseDistortionVisualizer() {
 									aria-label="Line 1"
 									defaultChecked={true}
 								/>
-								<div className="tab-content bg-base-100 border-base-300 p-4">
+								<div className="tab-content bg-cz-panel border-cz-border p-4">
 									<PerLineWarpBlock
 										label={"Line 1"}
 										waveform={waveform.out1}
@@ -2135,7 +2135,7 @@ export default function PhaseDistortionVisualizer() {
 									aria-label="Line 2"
 									defaultChecked={!showLineA}
 								/>
-								<div className="tab-content bg-base-100 border-base-300 p-4">
+								<div className="tab-content bg-cz-panel border-cz-border p-4">
 									<PerLineWarpBlock
 										label={"Line 2"}
 										waveform={waveform.out2}

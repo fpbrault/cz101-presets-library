@@ -11,24 +11,27 @@ type CardProps<T extends React.ElementType = "div"> = {
 } & Omit<React.ComponentPropsWithoutRef<T>, "as" | "className">;
 
 export const CARD_BASE_CLASSES =
-	"card border border-base-300/70 text-base-content outline-none";
+	"card border border-cz-border text-cz-cream outline-none";
 
 export const CARD_VARIANT_CLASSES: Record<CardVariant, string> = {
-	panel:
-		"rounded-[1.8rem] bg-[linear-gradient(180deg,rgba(27,29,43,0.95),rgba(17,18,28,0.98))]",
-	hero:
-		"rounded-[1.8rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.07),rgba(255,255,255,0)_42%),linear-gradient(180deg,rgba(26,27,40,0.98),rgba(18,19,30,0.98))]",
-	subtle: "rounded-2xl bg-base-300/20",
-	inset: "rounded-xl bg-base-100/30",
+	panel: "rounded-2xl bg-cz-panel",
+	hero: "rounded-2xl bg-cz-surface",
+	subtle: "rounded-xl bg-cz-surface/20",
+	inset: "rounded-lg bg-cz-inset",
 };
 
-export const CARD_PADDING_CLASSES: Record<Exclude<CardPadding, "none">, string> = {
+export const CARD_PADDING_CLASSES: Record<
+	Exclude<CardPadding, "none">,
+	string
+> = {
 	sm: "p-3",
 	md: "p-4",
 	lg: "p-6",
 };
 
-export function joinClasses(...classes: Array<string | false | null | undefined>) {
+export function joinClasses(
+	...classes: Array<string | false | null | undefined>
+) {
 	return classes.filter(Boolean).join(" ");
 }
 
