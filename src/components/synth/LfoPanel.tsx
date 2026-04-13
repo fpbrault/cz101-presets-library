@@ -1,7 +1,7 @@
+import { useMemo } from "react";
 import ControlKnob from "@/components/ControlKnob";
 import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
-import { useMemo } from "react";
 
 type LfoWaveform = "sine" | "triangle" | "square" | "saw";
 type LfoTarget = "pitch" | "dcw" | "dca" | "filter";
@@ -71,7 +71,7 @@ export default function LfoPanel({
 			title="LFO"
 		>
 			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-				<div className="mb-2 cz-section-bar justify-between">
+				<div className="mb-2 cz-light-blue justify-between">
 					<span>LFO Visual</span>
 					<span>{lfoTarget}</span>
 				</div>
@@ -148,7 +148,7 @@ export default function LfoPanel({
 				/>
 			</div>
 			<div className="mt-2">
-				<div className="mb-2 cz-section-bar">Target</div>
+				<div className="mb-2 cz-light-blue">Target</div>
 				<div className="flex flex-wrap gap-1">
 					{(["pitch", "dcw", "dca", "filter"] as const).map((t) => (
 						<CzButton

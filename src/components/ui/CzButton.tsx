@@ -7,6 +7,7 @@ type CzButtonProps = {
 	className?: string;
 	disabled?: boolean;
 	type?: "button" | "submit" | "reset";
+	led?: boolean; // whether to show the LED indicator above the button
 	style?: React.CSSProperties;
 };
 
@@ -27,6 +28,7 @@ export default function CzButton({
 	className = "",
 	disabled = false,
 	type = "button",
+	led = true,
 	style,
 }: CzButtonProps) {
 	return (
@@ -35,6 +37,7 @@ export default function CzButton({
 			style={style}
 		>
 			{/* LED above the button */}
+			{led ? (
 			<span
 				className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
 					active
@@ -43,6 +46,10 @@ export default function CzButton({
 				}`}
 				aria-hidden="true"
 			/>
+			 ) : (
+				// Placeholder to keep buttons aligned when LED is disabled
+				<span className="inline-block h-1 w-3 mb-1" aria-hidden="true" />
+			)}
 			{/* Button face */}
 			<button
 				type={type}

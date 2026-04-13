@@ -19,7 +19,7 @@ export interface BaseFxSectionProps {
 export function BaseFxSection({ title, knobs }: BaseFxSectionProps) {
 	return (
 		<div className="space-y-2 bg-cz-surface border border-cz-border rounded-sm py-3">
-			<div className="cz-section-bar">{title}</div>
+			<div className="cz-light-blue">{title}</div>
 			<div className="flex justify-center gap-2 md:gap-4">
 				{knobs.map((knob) => (
 					<ControlKnob

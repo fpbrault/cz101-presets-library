@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import { type RefObject, useState } from "react";
 import { PerLineWarpBlock } from "@/components/PerLineWarpBlock";
 import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
 import Card from "@/components/ui/Card";
@@ -64,13 +64,29 @@ export default function PhaseLinesSection({
 	phaseCanvasRef,
 }: PhaseLinesSectionProps) {
 	const showLineA = lineSelect !== "L2";
+	const [activeTab, setActiveTab] = useState<"line1" | "line2">("line1");
+
+	const handleCopyAlgos = () =>
+		activeTab === "line1"
+			? onCopyLine1ToLine2("algos")
+			: onCopyLine2ToLine1("algos");
+	const handleCopyEnvelopes = () =>
+		activeTab === "line1"
+			? onCopyLine1ToLine2("envelopes")
+			: onCopyLine2ToLine1("envelopes");
+	const handleCopyFull = () =>
+		activeTab === "line1"
+			? onCopyLine1ToLine2("full")
+			: onCopyLine2ToLine1("full");
+
+	const copyTargetLabel = activeTab === "line1" ? "Line 2" : "Line 1";
 
 	return (
 		<CollapsibleCard title="Phase Lines" variant="panel-slanted" open>
 			{/* Line Select + Modulation */}
 			<div className="mb-3 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-border pb-3">
 				<div className="shrink-0">
-					<div className="mb-1 cz-section-bar">Line Select</div>
+					<div className="mb-1 cz-light-blue">Line Select</div>
 					<div className="flex gap-1">
 						{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map((ls) => (
 							<CzButton
@@ -84,7 +100,7 @@ export default function PhaseLinesSection({
 					</div>
 				</div>
 				<div className="shrink-0">
-					<div className="mb-1 cz-section-bar">Modulation</div>
+					<div className="mb-1 cz-light-blue">Modulation</div>
 					<div className="flex gap-1">
 						{(
 							[
@@ -104,6 +120,21 @@ export default function PhaseLinesSection({
 						))}
 					</div>
 				</div>
+				<div className="shrink-0">
+					<div className="mb-1 cz-light-blue">Clone</div>
+					<div className="flex gap-1">
+						<CzButton led={false} onClick={handleCopyAlgos}>
+							Algo
+						</CzButton>
+						<CzButton led={false} onClick={handleCopyEnvelopes}>
+							Env
+						</CzButton>
+						<CzButton led={false} onClick={handleCopyFull}>
+							All
+						</CzButton>
+					</div>
+				</div>
+
 				{/* Mix A/B + Phase Map */}
 				<div className="ml-auto grid grid-cols-2 gap-3">
 					<Card variant="inset" className="border-cz-border p-2">
@@ -139,16 +170,13 @@ export default function PhaseLinesSection({
 					className="tab bg-cz-surface"
 					aria-label="Line 1"
 					defaultChecked={true}
+					onChange={() => setActiveTab("line1")}
 				/>
 				<div className="tab-content bg-cz-surface p-4">
 					<PerLineWarpBlock
 						label="Line 1"
 						waveform={line1.waveform}
 						color="#3dff3d"
-						copyTargetLabel="Line 2"
-						onCopyAlgos={() => onCopyLine1ToLine2("algos")}
-						onCopyEnvelopes={() => onCopyLine1ToLine2("envelopes")}
-						onCopyFull={() => onCopyLine1ToLine2("full")}
 						algo={line1.algo}
 						setAlgo={line1.setAlgo}
 						algo2={line1.algo2}
@@ -184,16 +212,13 @@ export default function PhaseLinesSection({
 					className="tab"
 					aria-label="Line 2"
 					defaultChecked={!showLineA}
+					onChange={() => setActiveTab("line2")}
 				/>
 				<div className="tab-content bg-cz-panel border-cz-border p-4">
 					<PerLineWarpBlock
 						label="Line 2"
 						waveform={line2.waveform}
 						color="#9cb937"
-						copyTargetLabel="Line 1"
-						onCopyAlgos={() => onCopyLine2ToLine1("algos")}
-						onCopyEnvelopes={() => onCopyLine2ToLine1("envelopes")}
-						onCopyFull={() => onCopyLine2ToLine1("full")}
 						algo={line2.algo}
 						setAlgo={line2.setAlgo}
 						algo2={line2.algo2}

@@ -54,7 +54,7 @@ const VARIANT_TITLE_CLASSES: Partial<Record<CardVariant, string>> = {
 };
 
 const VARIANT_CONTENT_CLASSES: Partial<Record<CardVariant, string>> = {
-	"panel-slanted": "border-1 border-cz-section-bar bg-cz-panel p-2",
+	"panel-slanted": "border-1 border-cz-light-blue bg-cz-panel p-2",
 };
 
 export default function CollapsibleCard(props: CollapsibleCardProps) {

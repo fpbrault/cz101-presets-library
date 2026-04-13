@@ -1,7 +1,7 @@
+import { useMemo } from "react";
 import ControlKnob from "@/components/ControlKnob";
 import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
-import { useMemo } from "react";
 
 type FilterType = "lp" | "hp" | "bp";
 
@@ -75,7 +75,7 @@ export default function SynthFilterPanel({
 			title="Filter"
 		>
 			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-				<div className="mb-2 cz-section-bar justify-between">
+				<div className="mb-2 cz-light-blue justify-between">
 					<span>Response</span>
 					<span>{filterType.toUpperCase()}</span>
 				</div>

@@ -92,7 +92,7 @@ export default function GlobalVoicePanel({
 					<span className="text-xs text-cz-cream-dim/45">Spacebar</span>
 				</div>
 				<div>
-					<div className="mb-2 cz-section-bar">Velocity</div>
+					<div className="mb-2 cz-light-blue">Velocity</div>
 					<div className="flex flex-wrap gap-1">
 						{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
 							(target) => (
@@ -114,7 +114,7 @@ export default function GlobalVoicePanel({
 					</div>
 				</div>
 				<div>
-					<div className="mb-2 cz-section-bar">Window</div>
+					<div className="mb-2 cz-light-blue">Window</div>
 					<select
 						className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
 						value={windowType}

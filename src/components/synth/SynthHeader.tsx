@@ -34,7 +34,7 @@ export default function SynthHeader({
 							PD-101
 						</span>
 					</div>
-					<span className="mt-0.75 block h-0.75 w-full bg-cz-orange rounded-full" />
+					<span className="mt-0.75 block h-0.75 w-full bg-cz-green rounded-full" />
 				</div>
 			</div>
 
@@ -48,7 +48,7 @@ export default function SynthHeader({
 			/>
 
 			<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">
-				<span className="text-[9px] font-mono uppercase tracking-[0.3em] text-cz-section-bar">
+				<span className="text-[9px] font-mono uppercase tracking-[0.3em] text-cz-light-blue">
 					Phase Distortion
 				</span>
 				<span className="text-xs font-mono font-semibold uppercase tracking-[0.18em] text-cz-cream">

@@ -1,5 +1,5 @@
-import type { Preset } from "@/lib/presets/presetManager";
 import { useMemo, useState } from "react";
+import type { Preset } from "@/lib/presets/presetManager";
 
 export type PresetEntry = {
 	id: string;
@@ -70,7 +70,7 @@ export default function PresetNavigator({
 					className="flex min-w-0 flex-1 flex-col items-center justify-center px-4 py-2 text-center transition hover:bg-cz-surface"
 					onClick={() => setPanelOpen((open) => !open)}
 				>
-					<span className="text-[10px] font-mono uppercase tracking-[0.32em] text-cz-orange">
+					<span className="text-[10px] font-mono uppercase tracking-[0.32em] text-cz-green">
 						Preset
 					</span>
 					<span className="truncate text-lg font-mono font-bold text-cz-cream">
@@ -105,7 +105,7 @@ export default function PresetNavigator({
 									type="button"
 									className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${
 										entry.label === activePresetName
-											? "bg-cz-orange text-white"
+											? "bg-cz-green text-white"
 											: "text-cz-cream hover:bg-cz-surface"
 									}`}
 									onClick={() => handleLoad(entry)}

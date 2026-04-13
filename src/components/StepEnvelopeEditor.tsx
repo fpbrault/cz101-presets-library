@@ -175,7 +175,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	return (
 		<Card
 			variant="subtle"
-			className="max-w-120 space-y-3 bg-base-200/70 shadow-[0_12px_30px_rgba(0,0,0,0.2)]"
+			className="space-y-3 bg-base-200/70 shadow-[0_12px_30px_rgba(0,0,0,0.2)]"
 		>
 			<div className="flex items-center justify-between">
 				<span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-base-content/70">
