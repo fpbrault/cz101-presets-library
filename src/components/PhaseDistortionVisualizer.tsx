@@ -1257,22 +1257,22 @@ export default function PhaseDistortionVisualizer() {
 		lineSelect === "L2" || lineSelect === "L1+L2" || lineSelect === "L1+L2'";
 
 	return (
-		<div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,113,206,0.08),transparent_22%),radial-gradient(circle_at_20%_20%,rgba(61,237,255,0.08),transparent_20%),linear-gradient(180deg,#141624_0%,#10111a_100%)] p-4 md:p-6 w-full">
+		<div className="min-h-screen bg-[#1a1a1a] p-4 md:p-6 w-full">
 			<div className="mx-auto grid w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto">
 					<Card
 						variant="panel"
-						className="flex flex-col gap-4 bg-[linear-gradient(180deg,rgba(22,23,36,0.97),rgba(17,18,28,0.98))]"
+						className="flex flex-col gap-4 bg-[#222223] border-[#3a3a3c] rounded-sm"
 					>
-						<div className="border-b border-base-300/50 pb-3 shrink-0">
-							<div className="text-[10px] uppercase tracking-[0.4em] text-primary/80">
-								CZ Lab
+						<div className="border-b border-[#3a3a3c] pb-3 shrink-0">
+							<div className="text-[10px] font-mono uppercase tracking-[0.4em] text-[#e87722]">
+								CASIO CZ-101
 							</div>
-							<h1 className="mt-2 text-2xl font-semibold text-base-content">
-								Phase Distortion Deck
+							<h1 className="mt-1 text-lg font-mono font-bold uppercase tracking-[0.15em] text-[#c8bfab]">
+								Phase Distortion Lab
 							</h1>
-							<p className="mt-2 text-sm text-base-content/55">
-								Retro-cyber patch bay for fast CZ sculpting.
+							<p className="mt-1 text-xs font-mono text-[#7a7060]">
+								Phase distortion synthesis engine
 							</p>
 						</div>
 
@@ -2091,102 +2091,99 @@ export default function PhaseDistortionVisualizer() {
 						<CollapsibleCard title="Phase Lines" variant="panel" open>
 							{/* Phase Line Tabs */}
 							<div className="tabs tabs-lift">
-						
-										<input
-											type="radio"
-											name="phase_line_tabs"
-											className="tab"
-											aria-label="Line 1"
-											defaultChecked={true}
-										/>
-										<div className="tab-content bg-base-100 border-base-300 p-4">
-											<PerLineWarpBlock
-												label={"Line 1"}
-												waveform={waveform.out1}
-												color="#3dedff"
-												copyTargetLabel={"Line 2"}
-												onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
-												onCopyEnvelopes={() =>
-													copyLineSettings("a", "b", "envelopes")
-												}
-												onCopyFull={() => copyLineSettings("a", "b", "full")}
-												algo={warpAAlgo}
-												setAlgo={setWarpAAlgo}
-												algo2={algo2A}
-												setAlgo2={setAlgo2A}
-												algoBlend={algoBlendA}
-												setAlgoBlend={setAlgoBlendA}
-												warpAmount={warpAAmount}
-												setWarpAmount={setWarpAAmount}
-												dcwComp={line1DcwComp}
-												setDcwComp={setLine1DcwComp}
-												level={line1Level}
-												setLevel={setLine1Level}
-												octave={line1Octave}
-												setOctave={setLine1Octave}
-												fineDetune={line1Detune}
-												setFineDetune={setLine1Detune}
-												dcoDepth={line1DcoDepth}
-												setDcoDepth={setLine1DcoDepth}
-												dcoEnv={line1DcoEnv}
-												setDcoEnv={setLine1DcoEnv}
-												dcwEnv={line1DcwEnv}
-												setDcwEnv={setLine1DcwEnv}
-												dcaEnv={line1DcaEnv}
-												setDcaEnv={setLine1DcaEnv}
-												keyFollow={line1DcwKeyFollow}
-												setKeyFollow={setLine1DcwKeyFollow}
-											/>
-										</div>
-									
-							
-										<input
-											type="radio"
-											name="phase_line_tabs"
-											className="tab"
-											aria-label="Line 2"
-											defaultChecked={!showLineA}
-										/>
-										<div className="tab-content bg-base-100 border-base-300 p-4">
-											<PerLineWarpBlock
-												label={"Line 2"}
-												waveform={waveform.out2}
-												color="#ff71ce"
-												copyTargetLabel={"Line 1"}
-												onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
-												onCopyEnvelopes={() =>
-													copyLineSettings("b", "a", "envelopes")
-												}
-												onCopyFull={() => copyLineSettings("b", "a", "full")}
-												algo={warpBAlgo}
-												setAlgo={setWarpBAlgo}
-												algo2={algo2B}
-												setAlgo2={setAlgo2B}
-												algoBlend={algoBlendB}
-												setAlgoBlend={setAlgoBlendB}
-												warpAmount={warpBAmount}
-												setWarpAmount={setWarpBAmount}
-												dcwComp={line2DcwComp}
-												setDcwComp={setLine2DcwComp}
-												level={line2Level}
-												setLevel={setLine2Level}
-												octave={line2Octave}
-												setOctave={setLine2Octave}
-												fineDetune={line2Detune}
-												setFineDetune={setLine2Detune}
-												dcoDepth={line2DcoDepth}
-												setDcoDepth={setLine2DcoDepth}
-												dcoEnv={line2DcoEnv}
-												setDcoEnv={setLine2DcoEnv}
-												dcwEnv={line2DcwEnv}
-												setDcwEnv={setLine2DcwEnv}
-												dcaEnv={line2DcaEnv}
-												setDcaEnv={setLine2DcaEnv}
-												keyFollow={line2DcwKeyFollow}
-												setKeyFollow={setLine2DcwKeyFollow}
-											/>
-										</div>
-						
+								<input
+									type="radio"
+									name="phase_line_tabs"
+									className="tab"
+									aria-label="Line 1"
+									defaultChecked={true}
+								/>
+								<div className="tab-content bg-base-100 border-base-300 p-4">
+									<PerLineWarpBlock
+										label={"Line 1"}
+										waveform={waveform.out1}
+										color="#3dedff"
+										copyTargetLabel={"Line 2"}
+										onCopyAlgos={() => copyLineSettings("a", "b", "algos")}
+										onCopyEnvelopes={() =>
+											copyLineSettings("a", "b", "envelopes")
+										}
+										onCopyFull={() => copyLineSettings("a", "b", "full")}
+										algo={warpAAlgo}
+										setAlgo={setWarpAAlgo}
+										algo2={algo2A}
+										setAlgo2={setAlgo2A}
+										algoBlend={algoBlendA}
+										setAlgoBlend={setAlgoBlendA}
+										warpAmount={warpAAmount}
+										setWarpAmount={setWarpAAmount}
+										dcwComp={line1DcwComp}
+										setDcwComp={setLine1DcwComp}
+										level={line1Level}
+										setLevel={setLine1Level}
+										octave={line1Octave}
+										setOctave={setLine1Octave}
+										fineDetune={line1Detune}
+										setFineDetune={setLine1Detune}
+										dcoDepth={line1DcoDepth}
+										setDcoDepth={setLine1DcoDepth}
+										dcoEnv={line1DcoEnv}
+										setDcoEnv={setLine1DcoEnv}
+										dcwEnv={line1DcwEnv}
+										setDcwEnv={setLine1DcwEnv}
+										dcaEnv={line1DcaEnv}
+										setDcaEnv={setLine1DcaEnv}
+										keyFollow={line1DcwKeyFollow}
+										setKeyFollow={setLine1DcwKeyFollow}
+									/>
+								</div>
+
+								<input
+									type="radio"
+									name="phase_line_tabs"
+									className="tab"
+									aria-label="Line 2"
+									defaultChecked={!showLineA}
+								/>
+								<div className="tab-content bg-base-100 border-base-300 p-4">
+									<PerLineWarpBlock
+										label={"Line 2"}
+										waveform={waveform.out2}
+										color="#ff71ce"
+										copyTargetLabel={"Line 1"}
+										onCopyAlgos={() => copyLineSettings("b", "a", "algos")}
+										onCopyEnvelopes={() =>
+											copyLineSettings("b", "a", "envelopes")
+										}
+										onCopyFull={() => copyLineSettings("b", "a", "full")}
+										algo={warpBAlgo}
+										setAlgo={setWarpBAlgo}
+										algo2={algo2B}
+										setAlgo2={setAlgo2B}
+										algoBlend={algoBlendB}
+										setAlgoBlend={setAlgoBlendB}
+										warpAmount={warpBAmount}
+										setWarpAmount={setWarpBAmount}
+										dcwComp={line2DcwComp}
+										setDcwComp={setLine2DcwComp}
+										level={line2Level}
+										setLevel={setLine2Level}
+										octave={line2Octave}
+										setOctave={setLine2Octave}
+										fineDetune={line2Detune}
+										setFineDetune={setLine2Detune}
+										dcoDepth={line2DcoDepth}
+										setDcoDepth={setLine2DcoDepth}
+										dcoEnv={line2DcoEnv}
+										setDcoEnv={setLine2DcoEnv}
+										dcwEnv={line2DcwEnv}
+										setDcwEnv={setLine2DcwEnv}
+										dcaEnv={line2DcaEnv}
+										setDcaEnv={setLine2DcaEnv}
+										keyFollow={line2DcwKeyFollow}
+										setKeyFollow={setLine2DcwKeyFollow}
+									/>
+								</div>
 							</div>
 						</CollapsibleCard>
 					</section>
