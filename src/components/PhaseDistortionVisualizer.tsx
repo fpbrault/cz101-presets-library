@@ -1380,8 +1380,8 @@ export default function PhaseDistortionVisualizer() {
 	const showLineA = lineSelect !== "L2";
 
 	return (
-		<div className="h-full bg-cz-body flex flex-col overflow-hidden p-4 md:p-6 gap-4 w-full">
-			<header className="shrink-0 flex flex-col gap-3 rounded-2xl border border-cz-border bg-cz-panel px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
+		<div className="h-full bg-cz-body flex flex-col overflow-hidden gap-4 w-full">
+			<header className="shrink-0 flex flex-col gap-3 border-b-4 border-cz-border bg-cz-body px-8 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
 				{/* Hardware nameplate logo */}
 				<div className="flex items-center gap-4 shrink-0">
 					<div className="flex flex-col items-start leading-none select-none">
@@ -1394,29 +1394,15 @@ export default function PhaseDistortionVisualizer() {
 								COSMO
 							</span>
 							<span
-								className="text-[2.1rem] font-black uppercase leading-none"
-								style={{
-									fontFamily: "'Arial Narrow', 'Arial', sans-serif",
-									letterSpacing: "-0.02em",
-									WebkitTextStroke: "1.5px #e87722",
-									color: "transparent",
-								}}
+								className="text-[2.1rem] font-black uppercase leading-none font-['Arial_Narrow','Arial',sans-serif] tracking-[-0.02em] [-webkit-text-stroke:1.5px_#9cb937] text-transparent"
 							>
 								PD-101
 							</span>
 						</div>
 						{/* Orange accent underline bar */}
-						<span className="mt-[3px] block h-[3px] w-full bg-cz-orange rounded-full" />
+						<span className="mt-0.75 block h-0.75 w-full bg-cz-orange rounded-full" />
 					</div>
-					{/* Subtitle */}
-					<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">
-						<span className="text-[9px] font-mono uppercase tracking-[0.3em] text-cz-orange">
-							Phase Distortion
-						</span>
-						<span className="text-xs font-mono font-semibold uppercase tracking-[0.18em] text-cz-cream">
-							Synthesizer Lab
-						</span>
-					</div>
+				
 				</div>
 
 				<div className="relative w-full max-w-3xl">
@@ -1484,20 +1470,26 @@ export default function PhaseDistortionVisualizer() {
 						</div>
 					)}
 				</div>
+				{/* Subtitle */}
+					<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">
+						<span className="text-[9px] font-mono uppercase tracking-[0.3em] text-cz-section-bar">
+							Phase Distortion
+						</span>
+						<span className="text-xs font-mono font-semibold uppercase tracking-[0.18em] text-cz-cream">
+							Synthesizer Lab
+						</span>
+					</div>
 			</header>
 
-			<div className="grid flex-1 min-h-0 w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="overflow-y-auto min-h-0 pb-4">
-					<Card
-						variant="panel"
-						className="flex flex-col gap-4 bg-cz-panel border-cz-border rounded-sm overflow-visible"
-					>
+				
 						<CollapsibleCard
-							variant="subtle"
+							variant="panel-slanted"
 							open={accordionState.scope ?? true}
 							onToggle={(e) => toggleAccordion("scope", e.currentTarget.open)}
 							titleClassName="pr-3"
-							title={<div className="cz-section-bar">Scope</div>}
+							title="Scope"
 						>
 							<div>
 								<div className="space-y-2">
@@ -1578,8 +1570,8 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 						</CollapsibleCard>
 
-						<CollapsibleCard
-							variant="subtle"
+					{/* 	<CollapsibleCard
+							variant="panel-slanted"
 							open={accordionState.presets ?? false}
 							onToggle={(e) => toggleAccordion("presets", e.currentTarget.open)}
 							titleClassName="pr-3 flex items-center justify-between"
@@ -1777,16 +1769,16 @@ export default function PhaseDistortionVisualizer() {
 									</Card>
 								</div>
 							</div>
-						</CollapsibleCard>
+						</CollapsibleCard> */}
 
 						<CollapsibleCard
-							variant="subtle"
+							variant="panel-slanted"
 							open={accordionState.globalVoice ?? false}
 							onToggle={(e) =>
 								toggleAccordion("globalVoice", e.currentTarget.open)
 							}
 							titleClassName="pr-3"
-							title={<div className="cz-section-bar">Global Voice</div>}
+							title="Global Voice"
 						>
 							<div>
 								<div className="mb-3 flex justify-center">
@@ -1880,64 +1872,53 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 						</CollapsibleCard>
 
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
+						<CollapsibleCard
+							variant="panel-slanted"
 							open={accordionState.phaseMod ?? false}
 							onToggle={(e) =>
 								toggleAccordion("phaseMod", e.currentTarget.open)
 							}
-							className="collapse collapse-arrow overflow-hidden"
+							titleClassName="pr-3"
+							title="Phase Mod"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
-								<div className="cz-section-bar">Phase Mod</div>
-							</summary>
-							<div className="collapse-content">
-								<div className="flex justify-center gap-4">
-									<ControlKnob
-										value={intPmAmount}
-										onChange={setIntPmAmount}
-										min={0}
-										max={0.3}
-										size={52}
-										color="#7f9de4"
-										label="Amount"
-										valueFormatter={(value) => value.toFixed(2)}
-									/>
-									<ControlKnob
-										value={intPmRatio}
-										onChange={setIntPmRatio}
-										min={0.5}
-										max={4}
-										size={52}
-										color="#9cb937"
-										label="Ratio"
-										valueFormatter={(value) => value.toFixed(1)}
-									/>
-								</div>
-								<CzButton
-									active={pmPre}
-									onClick={() => setPmPre(!pmPre)}
-									className="mt-3 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-								>
-									Pre-warp PM
-								</CzButton>
+							<div className="flex justify-center gap-4">
+								<ControlKnob
+									value={intPmAmount}
+									onChange={setIntPmAmount}
+									min={0}
+									max={0.3}
+									size={52}
+									color="#7f9de4"
+									label="Amount"
+									valueFormatter={(value) => value.toFixed(2)}
+								/>
+								<ControlKnob
+									value={intPmRatio}
+									onChange={setIntPmRatio}
+									min={0.5}
+									max={4}
+									size={52}
+									color="#9cb937"
+									label="Ratio"
+									valueFormatter={(value) => value.toFixed(1)}
+								/>
 							</div>
-						</Card>
+							<CzButton
+								active={pmPre}
+								onClick={() => setPmPre(!pmPre)}
+								className="mt-3 [&_button]:bg-cz-inset [&_button]:border-cz-border"
+							>
+								Pre-warp PM
+							</CzButton>
+						</CollapsibleCard>
 
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
+						<CollapsibleCard
+							variant="panel-slanted"
 							open={accordionState.vibrato ?? false}
 							onToggle={(e) => toggleAccordion("vibrato", e.currentTarget.open)}
-							className="collapse collapse-arrow overflow-hidden"
+							titleClassName="pr-3"
+							title="Vibrato"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
-								<div className="cz-section-bar">Vibrato</div>
-							</summary>
-							<div className="collapse-content">
 								<CzButton
 									active={vibratoEnabled}
 									onClick={() => setVibratoEnabled(!vibratoEnabled)}
@@ -1988,23 +1969,17 @@ export default function PhaseDistortionVisualizer() {
 										valueFormatter={(v) => `${Math.round(v)}`}
 									/>
 								</div>
-							</div>
-						</Card>
+						</CollapsibleCard>
 
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
+						<CollapsibleCard
+							variant="panel-slanted"
 							open={accordionState.portamento ?? false}
 							onToggle={(e) =>
 								toggleAccordion("portamento", e.currentTarget.open)
 							}
-							className="collapse collapse-arrow overflow-hidden"
+							titleClassName="pr-3"
+							title="Portamento"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
-								<div className="cz-section-bar">Portamento</div>
-							</summary>
-							<div className="collapse-content">
 								<CzButton
 									active={portamentoEnabled}
 									onClick={() => setPortamentoEnabled(!portamentoEnabled)}
@@ -2053,21 +2028,15 @@ export default function PhaseDistortionVisualizer() {
 										/>
 									)}
 								</div>
-							</div>
-						</Card>
+						</CollapsibleCard>
 
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
+						<CollapsibleCard
+							variant="panel-slanted"
 							open={accordionState.lfo ?? false}
 							onToggle={(e) => toggleAccordion("lfo", e.currentTarget.open)}
-							className="collapse collapse-arrow overflow-hidden"
+							titleClassName="pr-3"
+							title="LFO"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
-								<div className="cz-section-bar">LFO</div>
-							</summary>
-							<div className="collapse-content">
 								<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
 									<div className="mb-2 cz-section-bar justify-between">
 										<span>LFO Visual</span>
@@ -2159,21 +2128,15 @@ export default function PhaseDistortionVisualizer() {
 										))}
 									</div>
 								</div>
-							</div>
-						</Card>
+						</CollapsibleCard>
 
-						<Card
-							as="details"
-							variant="subtle"
-							padding="none"
+						<CollapsibleCard
+							variant="panel-slanted"
 							open={accordionState.filter ?? false}
 							onToggle={(e) => toggleAccordion("filter", e.currentTarget.open)}
-							className="collapse collapse-arrow overflow-hidden"
+							titleClassName="pr-3"
+							title="Filter"
 						>
-							<summary className="collapse-title pr-3 cursor-pointer list-none cz-collapse-header">
-								<div className="cz-section-bar">Filter</div>
-							</summary>
-							<div className="collapse-content">
 								<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
 									<div className="mb-2 cz-section-bar justify-between">
 										<span>Response</span>
@@ -2263,15 +2226,13 @@ export default function PhaseDistortionVisualizer() {
 										valueFormatter={(v) => `${Math.round(v * 100)}%`}
 									/>
 								</div>
-							</div>
-						</Card>
-					</Card>
+						</CollapsibleCard>
 				</aside>
 
 				<main className="space-y-4 p-1 pb-4 overflow-y-auto min-h-0">
 					<section className="space-y-4">
 						{/* FX Rack */}
-						<CollapsibleCard title="FX Rack" variant="panel">
+						<CollapsibleCard title="FX Rack" variant="panel-slanted">
 							<div className="grid grid-cols-3 gap-x-3">
 								<ChorusSection
 									rate={chorusRate}
@@ -2298,7 +2259,7 @@ export default function PhaseDistortionVisualizer() {
 							</div>
 						</CollapsibleCard>
 
-						<CollapsibleCard title="Phase Lines" variant="panel" open>
+						<CollapsibleCard title="Phase Lines" variant="panel-slanted" open>
 							{/* Line Select + Modulation — above tabs */}
 							<div className="mb-3 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-border pb-3">
 								<div className="shrink-0">
@@ -2340,15 +2301,15 @@ export default function PhaseDistortionVisualizer() {
 								</div>
 							</div>
 							{/* Phase Line Tabs */}
-							<div className="tabs tabs-lift">
+							<div className="tabs tabs-lift ">
 								<input
 									type="radio"
 									name="phase_line_tabs"
-									className="tab"
+									className="tab bg-cz-surface"
 									aria-label="Line 1"
 									defaultChecked={true}
 								/>
-								<div className="tab-content bg-cz-panel border-cz-border p-4">
+								<div className="tab-content bg-cz-surface p-4 ">
 									<PerLineWarpBlock
 										label={"Line 1"}
 										waveform={waveform.out1}

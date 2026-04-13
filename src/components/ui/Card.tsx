@@ -1,6 +1,6 @@
 import type React from "react";
 
-export type CardVariant = "panel" | "hero" | "subtle" | "inset";
+export type CardVariant = "panel" | "panel-slanted" | "hero" | "subtle" | "inset";
 export type CardPadding = "none" | "sm" | "md" | "lg";
 
 type CardProps<T extends React.ElementType = "div"> = {
@@ -14,8 +14,9 @@ export const CARD_BASE_CLASSES =
 	"card border border-cz-border text-cz-cream outline-none";
 
 export const CARD_VARIANT_CLASSES: Record<CardVariant, string> = {
-	panel: "rounded-2xl bg-cz-panel",
-	hero: "rounded-2xl bg-cz-surface",
+	panel: "rounded-2xl  ",
+	"panel-slanted": "rounded-none cz-section-slanted",
+	hero: "rounded-2xl bg-cz-surface ",
 	subtle: "rounded-xl bg-cz-surface/20",
 	inset: "rounded-lg bg-cz-inset",
 };

@@ -39,6 +39,14 @@ type CollapsibleCardProps = DetailsModeProps | CheckboxModeProps;
 const COLLAPSE_BASE_CLASSES =
 	"border border-base-300/70 text-base-content outline-none";
 
+const VARIANT_TITLE_CLASSES: Partial<Record<CardVariant, string>> = {
+	"panel-slanted": "cz-section-slanted-title py-1",
+};
+
+const VARIANT_CONTENT_CLASSES: Partial<Record<CardVariant, string>> = {
+	"panel-slanted": "border-1 border-cz-section-bar bg-cz-panel p-2",
+};
+
 export default function CollapsibleCard(props: CollapsibleCardProps) {
 	const {
 		variant = "subtle",
@@ -50,6 +58,15 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 		contentClassName = "",
 		arrow = true,
 	} = props;
+
+	const resolvedTitleClassName = joinClasses(
+		VARIANT_TITLE_CLASSES[variant],
+		titleClassName,
+	);
+	const resolvedContentClassName = joinClasses(
+		VARIANT_CONTENT_CLASSES[variant],
+		contentClassName,
+	);
 
 	const collapseClassName = getCardClassName({
 		variant,
@@ -75,12 +92,12 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 				<div
 					className={joinClasses(
 						"collapse-title cz-collapse-header",
-						titleClassName,
+						resolvedTitleClassName,
 					)}
 				>
 					{title}
 				</div>
-				<div className={joinClasses("collapse-content", contentClassName)}>
+				<div className={joinClasses("collapse-content", resolvedContentClassName)}>
 					{children}
 				</div>
 			</div>
@@ -104,13 +121,13 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 		<details className={collapseClassName} {...detailsProps}>
 			<summary
 				className={joinClasses(
-					"collapse-title cursor-pointer list-none cz-collapse-header",
-					titleClassName,
+					"collapse-title cursor-pointer list-none cz-collapse-header after:end-5",
+					resolvedTitleClassName,
 				)}
 			>
 				{title}
 			</summary>
-			<div className={joinClasses("collapse-content", contentClassName)}>
+			<div className={joinClasses("collapse-content", resolvedContentClassName)}>
 				{children}
 			</div>
 		</details>
