@@ -1253,25 +1253,23 @@ export default function PhaseDistortionVisualizer() {
 	}, [sendNoteOff, sendNoteOn, setSustain]);
 
 	const showLineA = lineSelect !== "L2";
-	const showLineB =
-		lineSelect === "L2" || lineSelect === "L1+L2" || lineSelect === "L1+L2'";
 
 	return (
-		<div className="min-h-screen bg-[#1a1a1a] p-4 md:p-6 w-full">
+		<div className="min-h-screen bg-cz-body p-4 md:p-6 w-full">
 			<div className="mx-auto grid w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto">
 					<Card
 						variant="panel"
-						className="flex flex-col gap-4 bg-[#222223] border-[#3a3a3c] rounded-sm"
+						className="flex flex-col gap-4 bg-cz-panel border-cz-border rounded-sm"
 					>
-						<div className="border-b border-[#3a3a3c] pb-3 shrink-0">
-							<div className="text-[10px] font-mono uppercase tracking-[0.4em] text-[#e87722]">
+						<div className="border-b border-cz-border pb-3 shrink-0">
+							<div className="text-[10px] font-mono uppercase tracking-[0.4em] text-cz-orange">
 								CASIO CZ-101
 							</div>
-							<h1 className="mt-1 text-lg font-mono font-bold uppercase tracking-[0.15em] text-[#c8bfab]">
+							<h1 className="mt-1 text-lg font-mono font-bold uppercase tracking-[0.15em] text-cz-cream">
 								Phase Distortion Lab
 							</h1>
-							<p className="mt-1 text-xs font-mono text-[#7a7060]">
+							<p className="mt-1 text-xs font-mono text-cz-cream-dim">
 								Phase distortion synthesis engine
 							</p>
 						</div>
