@@ -25,7 +25,7 @@ export function ChorusSection({
 			min: 0.1,
 			max: 5,
 			size: 44,
-			color: "#60a5fa",
+			color: "#7f9de4",
 			valueFormatter: (value) => value.toFixed(1),
 		},
 		{
@@ -35,7 +35,7 @@ export function ChorusSection({
 			min: 0,
 			max: 3,
 			size: 44,
-			color: "#38bdf8",
+			color: "#7f9de4",
 			valueFormatter: (value) => `${Math.round(value)}`,
 		},
 		{
@@ -45,7 +45,7 @@ export function ChorusSection({
 			min: 0,
 			max: 1,
 			size: 44,
-			color: "#f472b6",
+			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
 		},
 	];

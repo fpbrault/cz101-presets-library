@@ -25,7 +25,7 @@ export function DelaySection({
 			min: 0.01,
 			max: 1,
 			size: 44,
-			color: "#c084fc",
+			color: "#7f9de4",
 			valueFormatter: (value) => `${Math.round(value * 1000)}ms`,
 		},
 		{
@@ -35,7 +35,7 @@ export function DelaySection({
 			min: 0,
 			max: 0.9,
 			size: 42,
-			color: "#e879f9",
+			color: "#7f9de4",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
 		},
 		{
@@ -45,7 +45,7 @@ export function DelaySection({
 			min: 0,
 			max: 1,
 			size: 44,
-			color: "#a78bfa",
+			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
 		},
 	];

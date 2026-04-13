@@ -21,7 +21,7 @@ export function ReverbSection({
 			min: 0,
 			max: 1,
 			size: 44,
-			color: "#fdba74",
+			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
 		},
 		{
@@ -31,7 +31,7 @@ export function ReverbSection({
 			min: 0,
 			max: 1,
 			size: 44,
-			color: "#fda4af",
+			color: "#3dff3d",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
 		},
 	];

@@ -6,6 +6,7 @@ import { PD_ALGOS } from "./pdAlgorithms";
 import { SingleCycleDisplay } from "./SingleCycleDisplay";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
 import Card from "./ui/Card";
+import CzButton from "./ui/CzButton";
 
 interface PerLineWarpBlockProps {
 	label: string;
@@ -100,7 +101,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 			title: `${label} DCO`,
 			env: dcoEnv,
 			setEnv: setDcoEnv,
-			envColor: "#f59e0b",
+			envColor: "#9cb937",
 		},
 		dcw: {
 			title: `${label} DCW`,
@@ -112,7 +113,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 			title: `${label} DCA`,
 			env: dcaEnv,
 			setEnv: setDcaEnv,
-			envColor: "#34d399",
+			envColor: "#3dff3d",
 		},
 	};
 
@@ -122,27 +123,15 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 		<div className="min-w-0">
 			<div>
 				<div className="mb-4 flex flex-wrap gap-2">
-					<button
-						type="button"
-						className="btn btn-xs btn-outline"
-						onClick={onCopyAlgos}
-					>
-						Clone Algo to {copyTargetLabel}
-					</button>
-					<button
-						type="button"
-						className="btn btn-xs btn-outline"
-						onClick={onCopyEnvelopes}
-					>
-						Clone DCA/DCW/DCO to {copyTargetLabel}
-					</button>
-					<button
-						type="button"
-						className="btn btn-xs btn-primary"
-						onClick={onCopyFull}
-					>
-						Clone Full Line to {copyTargetLabel}
-					</button>
+					<CzButton onClick={onCopyAlgos}>
+						Clone Algo → {copyTargetLabel}
+					</CzButton>
+					<CzButton onClick={onCopyEnvelopes}>
+						Clone Envs → {copyTargetLabel}
+					</CzButton>
+					<CzButton onClick={onCopyFull} active>
+						Clone Full → {copyTargetLabel}
+					</CzButton>
 				</div>
 
 				<div className="grid gap-4 min-[1500px]:grid-cols-[220px_minmax(0,1fr)]">
@@ -156,7 +145,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 						/>
 
 						<Card variant="subtle" className="p-3">
-							<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+							<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
 								Algo A
 							</div>
 							<AlgoIconGrid value={algo} onChange={setAlgo} size={36} />
@@ -164,12 +153,11 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 						<Card variant="subtle" className="p-3">
 							<div className="mb-2 flex items-center justify-between">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
 									Algo B
 								</div>
-								<button
-									type="button"
-									className={`btn btn-xs ${algo2Enabled ? "btn-primary" : "btn-outline"}`}
+								<CzButton
+									active={algo2Enabled}
 									onClick={() => {
 										if (algo2Enabled) {
 											setAlgo2(null);
@@ -179,9 +167,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										setAlgo2(PD_ALGOS[0].value as PdAlgo);
 										setAlgo2Enabled(true);
 									}}
+									className="[&_button]:bg-cz-inset [&_button]:border-cz-border"
 								>
 									{algo2Enabled ? "Active" : "Off"}
-								</button>
+								</CzButton>
 							</div>
 							{algo2Enabled ? (
 								<div className="space-y-3">
@@ -197,14 +186,14 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											min={0}
 											max={1}
 											size={50}
-											color="#ff71ce"
+											color="#9cb937"
 											label="Blend"
 											valueFormatter={(value) => `${Math.round(value * 100)}%`}
 										/>
 									</div>
 								</div>
 							) : (
-								<div className="rounded-xl border border-dashed border-base-300/60 px-3 py-4 text-center text-xs text-base-content/45">
+								<div className="rounded border border-dashed border-cz-border px-3 py-4 text-center text-xs text-cz-cream-dim">
 									Stack a second algorithm for denser CZ-style motion.
 								</div>
 							)}
@@ -227,7 +216,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								onChange={setDcwComp}
 								min={0}
 								max={1}
-								color="#7dd3fc"
+								color="#7f9de4"
 								label="DCW Vol Comp"
 								valueFormatter={(value) => `${Math.round(value * 100)}%`}
 							/>
@@ -236,7 +225,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								onChange={setLevel}
 								min={0}
 								max={1}
-								color="#c084fc"
+								color="#9cb937"
 								label="Level"
 								valueFormatter={(value) => `${Math.round(value * 100)}%`}
 							/>
@@ -245,7 +234,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								onChange={(value) => setOctave(Math.round(value))}
 								min={-2}
 								max={2}
-								color="#67e8f9"
+								color="#7f9de4"
 								label="Oct"
 								valueFormatter={(value) =>
 									`${value >= 0 ? "+" : ""}${Math.round(value)}`
@@ -256,7 +245,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								onChange={(value) => setFineDetune(Math.round(value))}
 								min={-50}
 								max={50}
-								color="#fef08a"
+								color="#9cb937"
 								label="Fine"
 								valueFormatter={(value) =>
 									`${value >= 0 ? "+" : ""}${Math.round(value)}`
@@ -267,7 +256,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								onChange={(value) => setDcoDepth(Math.round(value))}
 								min={0}
 								max={24}
-								color="#fdba74"
+								color="#9cb937"
 								label="DCO Range"
 								valueFormatter={(value) => `${Math.round(value)} st`}
 							/>
@@ -275,19 +264,19 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 						<Card variant="subtle" className="p-3">
 							<div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+								<div className="text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
 									Envelope Matrix
 								</div>
-								<div className="join">
+								<div className="flex gap-1">
 									{(["dco", "dcw", "dca"] as EnvTab[]).map((tab) => (
-										<button
+										<CzButton
 											key={tab}
-											type="button"
-											className={`btn btn-xs join-item ${activeEnvTab === tab ? "btn-primary" : "btn-outline"}`}
+											active={activeEnvTab === tab}
 											onClick={() => setActiveEnvTab(tab)}
+											className="[&_button]:bg-cz-inset [&_button]:border-cz-border"
 										>
 											{tab.toUpperCase()}
-										</button>
+										</CzButton>
 									))}
 								</div>
 							</div>
@@ -298,7 +287,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								color={activeEnv.envColor}
 							/>
 							<div className="mt-2 flex items-center gap-2">
-								<span className="text-[10px] text-base-content/55">
+								<span className="text-[10px] text-cz-cream-dim uppercase tracking-[0.2em]">
 									Key Follow:
 								</span>
 								<input
@@ -307,11 +296,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									max={9}
 									value={keyFollow}
 									onChange={(e) => setKeyFollow(Number(e.target.value))}
-									className="range range-xs range-primary"
+									className="range range-xs"
+									style={{ accentColor: "var(--color-cz-orange)" }}
 								/>
-								<span className="text-xs text-base-content/60 w-4">
-									{keyFollow}
-								</span>
+								<span className="text-xs text-cz-cream w-4">{keyFollow}</span>
 							</div>
 						</Card>
 					</div>
