@@ -1376,7 +1376,7 @@ export default function PhaseDistortionVisualizer() {
 									</div>
 									<button
 										type="button"
-										className="btn btn-xs btn-warning"
+										className="btn btn-xs bg-cz-orange border-cz-orange text-white"
 										onClick={(e) => {
 											e.stopPropagation();
 											resetToDefaults();
@@ -1384,7 +1384,7 @@ export default function PhaseDistortionVisualizer() {
 									>
 										Reset
 									</button>
-									<label className="btn btn-xs btn-outline">
+									<label className="btn btn-xs border-cz-border text-cz-cream">
 										Import SysEx
 										<input
 											type="file"
@@ -1411,7 +1411,7 @@ export default function PhaseDistortionVisualizer() {
 							<div>
 								<div className="space-y-2">
 									<select
-										className="select select-bordered select-sm w-full"
+										className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
 										value=""
 										onChange={(e) => {
 											const name = e.target.value;
@@ -1429,7 +1429,7 @@ export default function PhaseDistortionVisualizer() {
 										))}
 									</select>
 									<select
-										className="select select-bordered select-sm w-full"
+										className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
 										value=""
 										onChange={(e) => {
 											const presetId = e.target.value;
@@ -1450,7 +1450,7 @@ export default function PhaseDistortionVisualizer() {
 									</select>
 									<input
 										type="text"
-										className="input input-bordered input-sm w-full"
+										className="input input-sm w-full bg-cz-surface border-cz-border text-cz-cream"
 										placeholder="Preset name"
 										value={presetName}
 										onChange={(e) => setPresetName(e.target.value)}
@@ -1458,7 +1458,7 @@ export default function PhaseDistortionVisualizer() {
 									<div className="grid grid-cols-2 gap-2">
 										<button
 											type="button"
-											className="btn btn-sm btn-primary"
+											className="btn btn-sm bg-cz-orange border-cz-orange text-white"
 											disabled={!presetName.trim()}
 											onClick={() => {
 												savePreset(presetName.trim(), gatherState());
@@ -1470,7 +1470,7 @@ export default function PhaseDistortionVisualizer() {
 										</button>
 										<button
 											type="button"
-											className="btn btn-sm btn-outline"
+											className="btn btn-sm border-cz-border text-cz-cream"
 											disabled={!presetName.trim()}
 											onClick={() => {
 												deletePreset(presetName.trim());
@@ -1484,7 +1484,7 @@ export default function PhaseDistortionVisualizer() {
 									<div className="flex gap-2">
 										<button
 											type="button"
-											className="btn btn-xs btn-outline flex-1"
+											className="btn btn-xs border-cz-border text-cz-cream flex-1"
 											onClick={() => {
 												const exported = exportPreset(presetList[0] ?? "");
 												if (exported) {
@@ -1503,7 +1503,7 @@ export default function PhaseDistortionVisualizer() {
 										>
 											Export
 										</button>
-										<label className="btn btn-xs btn-outline flex-1">
+										<label className="btn btn-xs border-cz-border text-cz-cream flex-1">
 											Import
 											<input
 												type="file"
@@ -1579,14 +1579,14 @@ export default function PhaseDistortionVisualizer() {
 									<div className="join w-full">
 										<button
 											type="button"
-											className={`btn btn-sm join-item flex-1 ${polyMode === "poly8" ? "btn-primary" : "btn-outline"}`}
+											className={`btn btn-sm join-item flex-1 ${polyMode === "poly8" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 											onClick={() => setPolyMode("poly8")}
 										>
 											Poly 8
 										</button>
 										<button
 											type="button"
-											className={`btn btn-sm join-item flex-1 ${polyMode === "mono" ? "btn-primary" : "btn-outline"}`}
+											className={`btn btn-sm join-item flex-1 ${polyMode === "mono" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 											onClick={() => setPolyMode("mono")}
 										>
 											Mono
@@ -1606,7 +1606,7 @@ export default function PhaseDistortionVisualizer() {
 									<div className="flex items-center gap-2">
 										<button
 											type="button"
-											className={`btn btn-sm ${sustainOn ? "btn-primary" : "btn-outline"}`}
+											className={`btn btn-sm ${sustainOn ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 											onClick={() => setSustain(!sustainOn)}
 										>
 											Sustain
@@ -1625,7 +1625,7 @@ export default function PhaseDistortionVisualizer() {
 													<button
 														key={target}
 														type="button"
-														className={`btn btn-xs ${velocityTarget === target ? "btn-primary" : "btn-outline"}`}
+														className={`btn btn-xs ${velocityTarget === target ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 														onClick={() => setVelocityTarget(target)}
 													>
 														{target === "amp"
@@ -1643,7 +1643,7 @@ export default function PhaseDistortionVisualizer() {
 									<div>
 										<div className="mb-1 text-xs text-cz-cream-dim">Window</div>
 										<select
-											className="select select-bordered select-sm w-full"
+											className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
 											value={windowType}
 											onChange={(e) =>
 												setWindowType(
@@ -1738,7 +1738,7 @@ export default function PhaseDistortionVisualizer() {
 										<button
 											key={w}
 											type="button"
-											className={`btn btn-xs ${vibratoWave === i + 1 ? "btn-primary" : "btn-outline"}`}
+											className={`btn btn-xs ${vibratoWave === i + 1 ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 											onClick={() => setVibratoWave(i + 1)}
 										>
 											{w}
@@ -1808,14 +1808,14 @@ export default function PhaseDistortionVisualizer() {
 								<div className="join w-full mb-2">
 									<button
 										type="button"
-										className={`btn btn-sm join-item flex-1 ${portamentoMode === "rate" ? "btn-primary" : "btn-outline"}`}
+										className={`btn btn-sm join-item flex-1 ${portamentoMode === "rate" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 										onClick={() => setPortamentoMode("rate")}
 									>
 										Rate
 									</button>
 									<button
 										type="button"
-										className={`btn btn-sm join-item flex-1 ${portamentoMode === "time" ? "btn-primary" : "btn-outline"}`}
+										className={`btn btn-sm join-item flex-1 ${portamentoMode === "time" ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 										onClick={() => setPortamentoMode("time")}
 									>
 										Time
@@ -1877,7 +1877,7 @@ export default function PhaseDistortionVisualizer() {
 										<button
 											key={w}
 											type="button"
-											className={`btn btn-xs ${lfoWaveform === w ? "btn-primary" : "btn-outline"}`}
+											className={`btn btn-xs ${lfoWaveform === w ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 											onClick={() => setLfoWaveform(w)}
 										>
 											{w}
@@ -1913,7 +1913,7 @@ export default function PhaseDistortionVisualizer() {
 											<button
 												key={t}
 												type="button"
-												className={`btn btn-xs ${lfoTarget === t ? "btn-primary" : "btn-outline"}`}
+												className={`btn btn-xs ${lfoTarget === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 												onClick={() => setLfoTarget(t)}
 											>
 												{t}
@@ -1952,7 +1952,7 @@ export default function PhaseDistortionVisualizer() {
 										<button
 											key={t}
 											type="button"
-											className={`btn btn-sm join-item flex-1 ${filterType === t ? "btn-primary" : "btn-outline"}`}
+											className={`btn btn-sm join-item flex-1 ${filterType === t ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 											onClick={() => setFilterType(t)}
 										>
 											{t.toUpperCase()}
@@ -2010,7 +2010,7 @@ export default function PhaseDistortionVisualizer() {
 											<button
 												key={ls}
 												type="button"
-												className={`btn btn-xs join-item flex-1 ${lineSelect === ls ? "btn-primary" : "btn-outline"}`}
+												className={`btn btn-xs join-item flex-1 ${lineSelect === ls ? "bg-cz-orange border-cz-orange text-white" : "border-cz-border text-cz-cream"}`}
 												onClick={() => setLineSelect(ls)}
 											>
 												{ls}
@@ -2037,12 +2037,8 @@ export default function PhaseDistortionVisualizer() {
 											type="button"
 											className={`btn btn-xs join-item flex-1 ${
 												modMode === mode
-													? mode === "ring"
-														? "btn-warning"
-														: mode === "noise"
-															? "btn-info"
-															: "btn-neutral"
-													: "btn-outline"
+													? "bg-cz-orange border-cz-orange text-white"
+													: "border-cz-border text-cz-cream"
 											}`}
 											onClick={() => setModMode(mode)}
 										>
