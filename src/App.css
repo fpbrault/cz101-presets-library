@@ -130,4 +130,45 @@
 	.cz-btn.active {
 		color: var(--color-cz-cream);
 	}
+
+	.cz-btn-arrow {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 3rem;
+		height: 2.5rem;
+		background: linear-gradient(180deg, #363638 0%, #2a2a2c 100%);
+		border: 1px solid var(--color-cz-btn-border);
+		border-bottom-color: #1a1a1c;
+		border-radius: 2px;
+		cursor: pointer;
+		transition:
+			background 0.08s ease,
+			transform 0.04s ease;
+		box-shadow:
+			0 1px 0 #111,
+			inset 0 1px 0 rgba(255, 255, 255, 0.04);
+		user-select: none;
+	}
+	.cz-btn-arrow:active {
+		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+		transform: translateY(1px);
+	}
+	.cz-btn-arrow:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+	.cz-btn-arrow svg {
+		width: 20px;
+		height: 30px;
+		stroke: var(--color-cz-cream-dim);
+		stroke-width: 2;
+		fill: none;
+	}
+	.cz-btn-arrow:hover:not(:disabled) {
+		background: linear-gradient(180deg, #404044 0%, #363638 100%);
+	}
+	.cz-btn-arrow:hover:not(:disabled) svg {
+		stroke: var(--color-cz-cream);
+	}
 }
