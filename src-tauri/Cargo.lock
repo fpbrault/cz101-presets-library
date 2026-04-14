@@ -298,6 +298,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7a4d3ec6524d28a329fc53654bbadc9bdd7b0431f5d65f1a56ffb28a1ee5283"
 dependencies = [
  "find-msvc-tools",
+ "jobserver",
+ "libc",
  "shlex",
 ]
 
@@ -344,6 +346,21 @@ dependencies = [
  "num-traits",
  "serde",
  "windows-link 0.2.1",
+]
+
+[[package]]
+name = "clap-clap"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d52e7620517ad1878bf38a0f291187953fe52ac55736f7911e902a5b194cd8ea"
+
+[[package]]
+name = "clap-wrapper"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "449b066f2f7c1a4d9472ad6484c624657ebca8d3084681a0f70fa2b3c2f7a259"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -558,6 +575,16 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "cz-synth-vst"
+version = "0.1.0"
+dependencies = [
+ "clap-clap",
+ "clap-wrapper",
+ "cz-synth",
+ "libm",
 ]
 
 [[package]]
@@ -1758,6 +1785,16 @@ checksum = "38c0b942f458fe50cdac086d2f946512305e5631e720728f2a61aabcd47a6264"
 dependencies = [
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "jobserver"
+version = "0.1.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9afb3de4395d6b3e67a780b6de64b51c978ecf11cb9a462c66be7d4ca9039d33"
+dependencies = [
+ "getrandom 0.3.4",
+ "libc",
 ]
 
 [[package]]

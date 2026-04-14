@@ -2,8 +2,7 @@
 members = [
     "tauri-app",
     "cz-synth",
-    # cz-synth-vst added in Phase 3 (requires nih-plug git dep)
-    # "cz-synth-vst",
+    "cz-synth-vst",
 ]
 resolver = "2"
 
