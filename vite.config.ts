@@ -17,6 +17,16 @@ export default defineConfig(async () => ({
 		},
 	},
 
+	// Multi-entry build: main app + plugin WebView UI
+	build: {
+		rollupOptions: {
+			input: {
+				main: fileURLToPath(new URL("./index.html", import.meta.url)),
+				plugin: fileURLToPath(new URL("./plugin.html", import.meta.url)),
+			},
+		},
+	},
+
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
 	// 1. prevent vite from obscuring rust errors

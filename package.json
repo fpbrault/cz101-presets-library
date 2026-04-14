@@ -26,8 +26,8 @@
 		"plugin:build": "bash scripts/build-plugin.sh --release",
 		"plugin:build:debug": "bash scripts/build-plugin.sh debug",
 		"plugin:install": "bash scripts/install-plugin.sh",
-		"plugin:build-install": "bun run plugin:build && bun run plugin:install",
-		"plugin:build-install:debug": "bun run plugin:build:debug && bun run plugin:install"
+		"plugin:build-install": "bun run build && bun run plugin:build && bun run plugin:install",
+		"plugin:build-install:debug": "bun run build && bun run plugin:build:debug && bun run plugin:install"
 	},
 	"dependencies": {
 		"@infinite-table/infinite-react": "^6.2.12",

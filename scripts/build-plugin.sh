@@ -61,8 +61,9 @@ echo "    VST3 -> $VST3"
 COMP="$DIST/$PLUGIN_NAME.component"
 COMP_MACOS="$COMP/Contents/MacOS"
 COMP_RES="$COMP/Contents/Resources/ui"
+VST3_RES="$VST3/Contents/Resources/ui"
 echo "==> Bundling AU component..."
-mkdir -p "$COMP_MACOS" "$COMP_RES"
+mkdir -p "$COMP_MACOS" "$COMP_RES" "$VST3_RES"
 
 # Info.plist
 cat > "$COMP/Contents/Info.plist" <<'PLIST'
@@ -105,13 +106,18 @@ PLIST
 
 cp "$DYLIB" "$COMP_MACOS/$PLUGIN_NAME"
 
-# Embed the Vite UI build if dist/index.html exists
+# Embed the Vite UI build into both AU and VST3 bundles
 if [[ -f "$DIST/index.html" ]]; then
   echo "==> Embedding Vite UI into AU bundle..."
   rsync -a --delete \
     --exclude="*.vst3" \
     --exclude="*.component" \
     "$DIST/" "$COMP_RES/"
+  echo "==> Embedding Vite UI into VST3 bundle..."
+  rsync -a --delete \
+    --exclude="*.vst3" \
+    --exclude="*.component" \
+    "$DIST/" "$VST3_RES/"
 else
   echo "    (no Vite build found in dist/ — skipping UI embed; run 'bun run build' first)"
 fi

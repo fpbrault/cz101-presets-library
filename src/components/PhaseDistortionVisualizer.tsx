@@ -1299,7 +1299,7 @@ export default function PhaseDistortionVisualizer() {
 				onImportPreset={handleImportPreset}
 			/>
 
-			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="overflow-y-auto min-h-0 pb-4 space-y-0 [scrollbar-gutter:stable]">
 					{/* Scope — independently collapsible */}
 					<ScopePanel

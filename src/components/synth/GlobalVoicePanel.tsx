@@ -45,7 +45,7 @@ export default function GlobalVoicePanel({
 			variant="panel-slanted"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title="Global Voice"
+			title="Global"
 		>
 			<div className="mb-3 flex justify-center">
 				<ControlKnob
@@ -53,7 +53,7 @@ export default function GlobalVoicePanel({
 					onChange={setVolume}
 					min={0}
 					max={1}
-					size={58}
+					size={32}
 					color="#9cb937"
 					label="Volume"
 					valueFormatter={(value) => `${Math.round(value * 100)}%`}
@@ -93,7 +93,7 @@ export default function GlobalVoicePanel({
 				</div>
 				<div>
 					<div className="mb-2 cz-light-blue">Velocity</div>
-					<div className="flex flex-wrap gap-1">
+					<div className="flex flex-wrap gap-1 justify-center">
 						{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
 							(target) => (
 								<CzButton

@@ -118,7 +118,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	return (
 		<div className="min-w-0">
 			<div>
-				<div className="grid gap-4 min-[1500px]:grid-cols-[220px_minmax(0,1fr)]">
+				<div className="grid gap-4 grid-cols-[220px_minmax(0,1fr)]">
 					<div className="space-y-4">
 						<SingleCycleDisplay
 							data={waveform}

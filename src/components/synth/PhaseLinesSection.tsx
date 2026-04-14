@@ -167,7 +167,7 @@ export default function PhaseLinesSection({
 					defaultChecked={true}
 					onChange={() => setActiveTab("line1")}
 				/>
-				<div className="tab-content bg-cz-surface p-4">
+				<div className="tab-content bg-cz-surface p-4 ">
 					<PerLineWarpBlock
 						label="Line 1"
 						waveform={line1.waveform}
