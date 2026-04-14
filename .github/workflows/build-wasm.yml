@@ -1,0 +1,34 @@
+name: Build WASM
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src-tauri/cz-synth/**'
+      - 'Cargo.toml'
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: |
+          curl -L https://github.com/rustwasm/wasm-pack/releases/download/v0.13.1/wasm-pack-v0.13.1-x86_64-unknown-linux-musl.tar.gz | tar xz
+          mv wasm-pack-v0.13.1-x86_64-unknown-linux-musl/wasm-pack ~/.cargo/bin/
+
+      - name: Build WASM
+        run: |
+          wasm-pack build src-tauri/cz-synth --target no-modules --out-dir public/cz-synth-wasm --features wasm
+
+      - name: Commit WASM
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "build: compile WASM"
+          file_pattern: public/cz-synth-wasm/*

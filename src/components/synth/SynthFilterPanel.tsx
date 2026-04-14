@@ -72,7 +72,17 @@ export default function SynthFilterPanel({
 			variant="panel-slanted"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title="Filter"
+			title={
+				<span className="flex items-center gap-2">
+					<span>Filter</span>
+					<CzButton
+						active={filterEnabled}
+						onClick={() => setFilterEnabled(!filterEnabled)}
+					>
+						{filterEnabled ? "On" : "Off"}
+					</CzButton>
+				</span>
+			}
 		>
 			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
 				<div className="mb-2 cz-light-blue justify-between">
@@ -112,13 +122,6 @@ export default function SynthFilterPanel({
 					/>
 				</svg>
 			</div>
-			<CzButton
-				active={filterEnabled}
-				onClick={() => setFilterEnabled(!filterEnabled)}
-				className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-			>
-				Enable Filter
-			</CzButton>
 			<div className="flex w-full gap-1 mb-2">
 				{(["lp", "hp", "bp"] as const).map((t) => (
 					<CzButton

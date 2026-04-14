@@ -1,0 +1,12 @@
+{
+  "name": "cz-synth",
+  "description": "CZ-101 Phase Distortion synthesizer DSP core",
+  "version": "0.1.0",
+  "files": [
+    "cz_synth_bg.wasm",
+    "cz_synth.js",
+    "cz_synth.d.ts"
+  ],
+  "browser": "cz_synth.js",
+  "types": "cz_synth.d.ts"
+}

@@ -8,7 +8,7 @@
 		"build": "bun run build:web",
 		"build:all": "bun run build:wasm && bun run build:web && bun run build:plugin",
 		"build:web": "tsc && vite build",
-		"build:wasm": "wasm-pack build src-tauri/cz-synth --target no-modules --out-dir ../../public/cz-synth-wasm --features wasm",
+		"build:wasm": "wasm-pack build src-tauri/cz-synth --target no-modules --out-dir public/cz-synth-wasm --features wasm",
 		"build:tauri": "tauri build --config src-tauri/tauri-app/tauri.conf.json",
 		"build:plugin": "bash scripts/build-plugin.sh --release",
 		"build:plugin:debug": "bash scripts/build-plugin.sh debug",

@@ -7,6 +7,7 @@ const _host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
+	publicDir: "public",
 	plugins: [react(), tailwindcss()],
 	// Ensure .env is resolved relative to this config file even when launched via tauri tooling.
 	envDir: fileURLToPath(new URL(".", import.meta.url)),
