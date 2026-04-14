@@ -10,7 +10,7 @@ use core::array;
 use crate::fx::FxChain;
 use crate::oscillator::lfo_output;
 use crate::params::{PolyMode, SynthParams, NUM_VOICES};
-use crate::voice::{render_voice, Voice};
+use crate::voice::{lcg_rand, render_voice, Voice};
 
 // ---------------------------------------------------------------------------
 // NoteEntry — maps a MIDI note to a voice index
@@ -165,17 +165,21 @@ impl Cz101Processor {
             // Reset envs (borrow ends after this block)
             self.reset_voice_envs(0);
 
-            // KS buffer init: alternating ±0.5 as deterministic substitute for
-            // Math.random() * 2 - 1.  A proper PRNG should be wired in later.
+            // KS buffer init: fill with pseudo-random noise via LCG PRNG.
             {
                 let voice = &mut self.voices[0];
-                for (i, s) in voice.ks_buffer1.iter_mut().enumerate() {
-                    *s = if i % 2 == 0 { 0.5 } else { -0.5 };
+                // Seed the PRNG differently each note-on using the note number.
+                voice.ks_prng = voice
+                    .ks_prng
+                    .wrapping_add(note as u32)
+                    .wrapping_mul(0x9e37_79b9);
+                for s in voice.ks_buffer1.iter_mut() {
+                    *s = lcg_rand(&mut voice.ks_prng);
                 }
                 voice.ks_write_pos1 = 0;
                 voice.ks_last_sample1 = 0.0;
-                for (i, s) in voice.ks_buffer2.iter_mut().enumerate() {
-                    *s = if i % 2 == 0 { 0.5 } else { -0.5 };
+                for s in voice.ks_buffer2.iter_mut() {
+                    *s = lcg_rand(&mut voice.ks_prng);
                 }
                 voice.ks_write_pos2 = 0;
                 voice.ks_last_sample2 = 0.0;
@@ -250,13 +254,18 @@ impl Cz101Processor {
             // KS buffer init
             {
                 let voice = &mut self.voices[vi];
-                for (i, s) in voice.ks_buffer1.iter_mut().enumerate() {
-                    *s = if i % 2 == 0 { 0.5 } else { -0.5 };
+                // Seed differently per note-on.
+                voice.ks_prng = voice
+                    .ks_prng
+                    .wrapping_add(note as u32)
+                    .wrapping_mul(0x9e37_79b9);
+                for s in voice.ks_buffer1.iter_mut() {
+                    *s = lcg_rand(&mut voice.ks_prng);
                 }
                 voice.ks_write_pos1 = 0;
                 voice.ks_last_sample1 = 0.0;
-                for (i, s) in voice.ks_buffer2.iter_mut().enumerate() {
-                    *s = if i % 2 == 0 { 0.5 } else { -0.5 };
+                for s in voice.ks_buffer2.iter_mut() {
+                    *s = lcg_rand(&mut voice.ks_prng);
                 }
                 voice.ks_write_pos2 = 0;
                 voice.ks_last_sample2 = 0.0;

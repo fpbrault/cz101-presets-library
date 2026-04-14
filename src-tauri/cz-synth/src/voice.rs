@@ -53,6 +53,8 @@ pub struct Voice {
     pub note: Option<u8>,
     pub frequency: f32,
     pub velocity: f32,
+    /// LCG PRNG state for Karplus-Strong buffer initialisation.
+    pub ks_prng: u32,
 
     pub line1_env: LineEnvs,
     pub line2_env: LineEnvs,
@@ -87,6 +89,7 @@ impl Voice {
             note: None,
             frequency: 0.0,
             velocity: 1.0,
+            ks_prng: 0x1234_5678,
             line1_env: LineEnvs::default(),
             line2_env: LineEnvs::default(),
             filter_state1: [0.0; 4],
@@ -371,11 +374,15 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
 
     // -----------------------------------------------------------------------
     // Line 1 signal
+    //
+    // KS sample is computed unconditionally when either algo A or algo B2 is
+    // Karpunk, so that the buffer always advances and blending works correctly.
     // -----------------------------------------------------------------------
-    let s1 = if l1.warp_algo == WarpAlgo::Karpunk {
-        // Karplus-Strong string synthesis
-        // Buffer is pre-filled with alternating ±0.5 on note-on
-        // (deterministic substitute for Math.random(); see processor.rs)
+
+    // Advance the KS1 buffer and capture the filtered output for this sample.
+    // This runs even when algo A is not Karpunk, so that blend-to-Karpunk
+    // (algo2 == Karpunk) has a valid, live signal to lerp toward.
+    let ks_raw1 = {
         let ks_size1 = (libm::roundf(
             sr / if effective_freq1 > 0.0 {
                 effective_freq1
@@ -386,42 +393,72 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
             .clamp(2, KS_BUFFER_SIZE - 1);
         let ks_read1 = (voice.ks_write_pos1 + KS_BUFFER_SIZE - ks_size1) % KS_BUFFER_SIZE;
         let ks_out1 = voice.ks_buffer1[ks_read1];
-        // One-pole LPF: damping controlled by dcw (0 = more damp, 1 = brighter)
         let ks_damp1 = 0.4 + final_dcw1 * 0.58;
         let ks_filtered1 = ks_damp1 * ks_out1 + (1.0 - ks_damp1) * voice.ks_last_sample1;
         voice.ks_last_sample1 = ks_filtered1;
-        voice.ks_buffer1[voice.ks_write_pos1] = ks_filtered1;
+        voice.ks_buffer1[voice.ks_write_pos1] = ks_filtered1 * 0.995;
         voice.ks_write_pos1 = (voice.ks_write_pos1 + 1) % KS_BUFFER_SIZE;
-        ks_filtered1 * w1 * final_dca1
-    } else if let Some(a2) = algo2a {
-        // Dual-algorithm blending
+        ks_filtered1
+    };
+
+    let s1 = if let Some(a2) = algo2a {
+        // Dual-algorithm blending — either or both algos may be Karpunk.
         let dcw2a = final_dcw1 * blend_a;
         let dcw1_effective = final_dcw1 * (1.0 - blend_a);
-        let warped_a2 = apply_warp_algo(a2, phase_a_input, dcw2a, l1.waveform2);
-        let phase_a_post2 = wrap01(if p.pm_pre {
-            warped_a2
-        } else {
-            warped_a2 + pm_mod
-        });
-        let sig_a1 = if l1.warp_algo == WarpAlgo::Cz101 {
-            lerp(
+
+        let sig_a1 = match l1.warp_algo {
+            WarpAlgo::Karpunk => ks_raw1,
+            WarpAlgo::Cz101 => lerp(
                 sinf(TWO_PI * phase_a_post),
                 cz_waveform(l1.waveform, phase_a_post),
                 dcw1_effective,
-            )
-        } else {
-            sinf(TWO_PI * phase_a_post)
+            ),
+            _ => sinf(TWO_PI * phase_a_post),
         };
-        let sig_a2 = if a2 == WarpAlgo::Cz101 {
-            lerp(
-                sinf(TWO_PI * phase_a_post2),
-                cz_waveform(l1.waveform2, phase_a_post2),
-                dcw2a,
-            )
-        } else {
-            sinf(TWO_PI * phase_a_post2)
+
+        let sig_a2 = match a2 {
+            WarpAlgo::Karpunk => ks_raw1, // share the same KS output for the blend target
+            WarpAlgo::Cz101 => {
+                let warped_a2 = apply_warp_algo(a2, phase_a_input, dcw2a, l1.waveform2);
+                let phase_a_post2 = wrap01(if p.pm_pre {
+                    warped_a2
+                } else {
+                    warped_a2 + pm_mod
+                });
+                lerp(
+                    sinf(TWO_PI * phase_a_post2),
+                    cz_waveform(l1.waveform2, phase_a_post2),
+                    dcw2a,
+                )
+            }
+            _ => {
+                let warped_a2 = apply_warp_algo(a2, phase_a_input, dcw2a, l1.waveform2);
+                let phase_a_post2 = wrap01(if p.pm_pre {
+                    warped_a2
+                } else {
+                    warped_a2 + pm_mod
+                });
+                sinf(TWO_PI * phase_a_post2)
+            }
         };
-        lerp(sig_a1, sig_a2, blend_a) * w1 * final_dca1
+
+        // Karpunk-aware blending (asymmetric):
+        // - KS as base (A slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
+        // - KS as target (B slot): plain lerp — blend=0 pure osc, blend=1 pure KS (fade into pluck)
+        let combined_a = if l1.warp_algo == WarpAlgo::Karpunk {
+            // KS is the base; morph it toward a ring-modulated version of the other algo
+            let ks = sig_a1;
+            let osc = sig_a2;
+            lerp(ks, ks * osc * 2.0, blend_a)
+        } else if a2 == WarpAlgo::Karpunk {
+            // KS is the target; simple crossfade from osc into KS
+            lerp(sig_a1, sig_a2, blend_a)
+        } else {
+            lerp(sig_a1, sig_a2, blend_a)
+        };
+        combined_a * w1 * final_dca1
+    } else if l1.warp_algo == WarpAlgo::Karpunk {
+        ks_raw1 * w1 * final_dca1
     } else {
         // Standard single-algo path
         if l1.warp_algo == WarpAlgo::Cz101 {
@@ -438,8 +475,11 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
 
     // -----------------------------------------------------------------------
     // Line 2 signal
+    //
+    // Same KS-first extraction pattern as Line 1.
     // -----------------------------------------------------------------------
-    let s2 = if l2.warp_algo == WarpAlgo::Karpunk {
+
+    let ks_raw2 = {
         let ks_size2 = (libm::roundf(
             sr / if effective_freq2 > 0.0 {
                 effective_freq2
@@ -453,37 +493,69 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
         let ks_damp2 = 0.4 + final_dcw2 * 0.58;
         let ks_filtered2 = ks_damp2 * ks_out2 + (1.0 - ks_damp2) * voice.ks_last_sample2;
         voice.ks_last_sample2 = ks_filtered2;
-        voice.ks_buffer2[voice.ks_write_pos2] = ks_filtered2;
+        voice.ks_buffer2[voice.ks_write_pos2] = ks_filtered2 * 0.995;
         voice.ks_write_pos2 = (voice.ks_write_pos2 + 1) % KS_BUFFER_SIZE;
-        ks_filtered2 * w2 * final_dca2
-    } else if let Some(a2) = algo2b {
+        ks_filtered2
+    };
+
+    let s2 = if let Some(a2) = algo2b {
+        // Dual-algorithm blending — either or both algos may be Karpunk.
         let dcw2b = final_dcw2 * blend_b;
         let dcw1_effective_b = final_dcw2 * (1.0 - blend_b);
-        let warped_b2 = apply_warp_algo(a2, phase_b_input, dcw2b, l2.waveform2);
-        let phase_b_post2 = wrap01(if p.pm_pre {
-            warped_b2
-        } else {
-            warped_b2 + pm_mod
-        });
-        let sig_b1 = if l2.warp_algo == WarpAlgo::Cz101 {
-            lerp(
+
+        let sig_b1 = match l2.warp_algo {
+            WarpAlgo::Karpunk => ks_raw2,
+            WarpAlgo::Cz101 => lerp(
                 sinf(TWO_PI * phase_b_post),
                 cz_waveform(l2.waveform, phase_b_post),
                 dcw1_effective_b,
-            )
-        } else {
-            sinf(TWO_PI * phase_b_post)
+            ),
+            _ => sinf(TWO_PI * phase_b_post),
         };
-        let sig_b2 = if a2 == WarpAlgo::Cz101 {
-            lerp(
-                sinf(TWO_PI * phase_b_post2),
-                cz_waveform(l2.waveform2, phase_b_post2),
-                dcw2b,
-            )
-        } else {
-            sinf(TWO_PI * phase_b_post2)
+
+        let sig_b2 = match a2 {
+            WarpAlgo::Karpunk => ks_raw2,
+            WarpAlgo::Cz101 => {
+                let warped_b2 = apply_warp_algo(a2, phase_b_input, dcw2b, l2.waveform2);
+                let phase_b_post2 = wrap01(if p.pm_pre {
+                    warped_b2
+                } else {
+                    warped_b2 + pm_mod
+                });
+                lerp(
+                    sinf(TWO_PI * phase_b_post2),
+                    cz_waveform(l2.waveform2, phase_b_post2),
+                    dcw2b,
+                )
+            }
+            _ => {
+                let warped_b2 = apply_warp_algo(a2, phase_b_input, dcw2b, l2.waveform2);
+                let phase_b_post2 = wrap01(if p.pm_pre {
+                    warped_b2
+                } else {
+                    warped_b2 + pm_mod
+                });
+                sinf(TWO_PI * phase_b_post2)
+            }
         };
-        lerp(sig_b1, sig_b2, blend_b) * w2 * final_dca2
+
+        // Karpunk-aware blending (asymmetric):
+        // - KS as base (B slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
+        // - KS as target (B-target slot): plain lerp — blend=0 pure osc, blend=1 pure KS
+        let combined_b = if l2.warp_algo == WarpAlgo::Karpunk {
+            // KS is the base; morph it toward a ring-modulated version of the other algo
+            let ks = sig_b1;
+            let osc = sig_b2;
+            lerp(ks, ks * osc * 2.0, blend_b)
+        } else if a2 == WarpAlgo::Karpunk {
+            // KS is the target; simple crossfade from osc into KS
+            lerp(sig_b1, sig_b2, blend_b)
+        } else {
+            lerp(sig_b1, sig_b2, blend_b)
+        };
+        combined_b * w2 * final_dca2
+    } else if l2.warp_algo == WarpAlgo::Karpunk {
+        ks_raw2 * w2 * final_dca2
     } else {
         if l2.warp_algo == WarpAlgo::Cz101 {
             lerp(
@@ -635,4 +707,15 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
 #[inline(always)]
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t
+}
+
+/// Simple LCG PRNG — produces a value in [-1.0, 1.0].
+///
+/// Parameters from Numerical Recipes (Knuth): multiplier 1664525, increment 1013904223.
+#[inline(always)]
+pub fn lcg_rand(state: &mut u32) -> f32 {
+    *state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+    // Map top 16 bits to [-1.0, 1.0]
+    let bits = (*state >> 16) as f32;
+    bits / 32767.5 - 1.0
 }
