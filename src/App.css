@@ -13,8 +13,8 @@
 	--color-cz-surface: #2c2c2e; /* raised sub-panel surfaces */
 	--color-cz-inset: #181818; /* recessed / inset areas */
 	--color-cz-border: #3a3a3c; /* panel borders / engraved lines */
-	--color-cz-green: #91ae33; /* primary accent — CZ orange */
-	--color-cz-green-dim: #5e6b1e; /* muted version of primary accent */
+	--color-cz-gold: #bfbd30; /* primary accent — CZ orange */
+	--color-cz-gold-dim: #5e6b1e; /* muted version of primary accent */
 	--color-cz-cream: #c8bfab; /* label text */
 	--color-cz-cream-dim: #7a7060; /* muted label / section titles */
 	--color-cz-lcd-bg: #051005; /* phosphor display background */
@@ -55,7 +55,7 @@
 @layer components {
 	/* Section header bar — mimics the blue labeled bars on the CZ hardware */
 	.cz-light-blue {
-		@apply flex items-center gap-2 py-[0.15rem] px-2 font-mono text-[0.8rem] text-center justify-center font-bold tracking-[0.28em] uppercase text-cz-green;
+		@apply flex items-center gap-2 py-[0.15rem] px-2 font-mono text-[0.8rem] text-center justify-center font-bold tracking-[0.28em] uppercase text-cz-gold;
 	}
 
 	/* Collapsible card header — solid blue bar like CZ hardware section dividers */

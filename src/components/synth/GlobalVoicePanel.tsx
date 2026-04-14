@@ -12,14 +12,8 @@ type GlobalVoicePanelProps = {
 	setVolume: (v: number) => void;
 	polyMode: PolyMode;
 	setPolyMode: (v: PolyMode) => void;
-	legato: boolean;
-	setLegato: (v: boolean) => void;
-	sustainOn: boolean;
-	onSustainToggle: () => void;
 	velocityTarget: VelocityTarget;
 	setVelocityTarget: (v: VelocityTarget) => void;
-	windowType: "off" | "saw" | "triangle";
-	setWindowType: (v: "off" | "saw" | "triangle") => void;
 	pitchBendRange: number;
 	setPitchBendRange: (v: number) => void;
 	modWheelVibratoDepth: number;
@@ -33,14 +27,8 @@ export default function GlobalVoicePanel({
 	setVolume,
 	polyMode,
 	setPolyMode,
-	legato,
-	setLegato,
-	sustainOn,
-	onSustainToggle,
 	velocityTarget,
 	setVelocityTarget,
-	windowType,
-	setWindowType,
 	pitchBendRange,
 	setPitchBendRange,
 	modWheelVibratoDepth,
@@ -84,21 +72,6 @@ export default function GlobalVoicePanel({
 						Mono
 					</CzButton>
 				</div>
-				{polyMode === "mono" && (
-					<CzButton
-						active={legato}
-						onClick={() => setLegato(!legato)}
-						className="[&_button]:bg-cz-inset [&_button]:border-cz-border"
-					>
-						Legato
-					</CzButton>
-				)}
-				<div className="flex items-center gap-2">
-					<CzButton active={sustainOn} onClick={onSustainToggle}>
-						Sustain
-					</CzButton>
-					<span className="text-xs text-cz-cream-dim/45">Spacebar</span>
-				</div>
 				<div>
 					<div className="mb-2 cz-light-blue">Velocity</div>
 					<div className="flex flex-wrap gap-1 justify-center">
@@ -120,20 +93,6 @@ export default function GlobalVoicePanel({
 							),
 						)}
 					</div>
-				</div>
-				<div>
-					<div className="mb-2 cz-light-blue">Window</div>
-					<select
-						className="select select-sm w-full bg-cz-surface border-cz-border text-cz-cream"
-						value={windowType}
-						onChange={(e) =>
-							setWindowType(e.target.value as "off" | "saw" | "triangle")
-						}
-					>
-						<option value="off">Off</option>
-						<option value="saw">Saw</option>
-						<option value="triangle">Triangle</option>
-					</select>
 				</div>
 				<div className="flex justify-around pt-1">
 					<ControlKnob

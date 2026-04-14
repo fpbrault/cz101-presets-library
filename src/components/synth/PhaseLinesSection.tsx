@@ -162,7 +162,7 @@ export default function PhaseLinesSection({
 				<input
 					type="radio"
 					name="phase_line_tabs"
-					className="tab bg-cz-surface"
+					className="tab [--tab-bg:var(--color-cz-surface)]"
 					aria-label="Line 1"
 					defaultChecked={true}
 					onChange={() => setActiveTab("line1")}
@@ -171,7 +171,7 @@ export default function PhaseLinesSection({
 					<PerLineWarpBlock
 						label="Line 1"
 						waveform={line1.waveform}
-						color="#3dff3d"
+						color="#9cb937"
 						algo={line1.algo}
 						setAlgo={line1.setAlgo}
 						algo2={line1.algo2}
@@ -204,12 +204,12 @@ export default function PhaseLinesSection({
 				<input
 					type="radio"
 					name="phase_line_tabs"
-					className="tab"
+					className="tab [--tab-bg:var(--color-cz-surface)]"
 					aria-label="Line 2"
 					defaultChecked={!showLineA}
 					onChange={() => setActiveTab("line2")}
 				/>
-				<div className="tab-content bg-cz-panel border-cz-border p-4">
+				<div className="tab-content  bg-cz-surface border-cz-border p-4">
 					<PerLineWarpBlock
 						label="Line 2"
 						waveform={line2.waveform}

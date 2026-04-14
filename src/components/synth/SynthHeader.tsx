@@ -44,11 +44,11 @@ export default function SynthHeader({
 						>
 							COSMO
 						</span>
-						<span className="text-[2.1rem] font-black uppercase leading-none font-['Arial_Narrow','Arial',sans-serif] tracking-[-0.02em] [-webkit-text-stroke:1.5px_#9cb937] text-transparent">
+						<span className="text-[2.1rem] font-black uppercase leading-none font-['Arial_Narrow','Arial',sans-serif] tracking-[-0.02em] [-webkit-text-stroke:1.5px_var(--color-cz-gold)] text-transparent">
 							PD-101
 						</span>
 					</div>
-					<span className="mt-0.75 block h-0.75 w-full bg-cz-green rounded-full" />
+					<span className="mt-0.75 block h-0.75 w-full bg-cz-gold rounded-full" />
 				</div>
 			</div>
 

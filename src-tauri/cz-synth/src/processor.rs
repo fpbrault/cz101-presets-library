@@ -22,6 +22,13 @@ pub struct NoteEntry {
     pub voice_idx: usize,
 }
 
+/// Full voice state saved when switching notes in mono mode.
+#[derive(Debug, Clone)]
+pub struct MonoStackEntry {
+    note: u8,
+    voice: Voice,
+}
+
 // ---------------------------------------------------------------------------
 // Cz101Processor
 // ---------------------------------------------------------------------------
@@ -31,8 +38,8 @@ pub struct Cz101Processor {
     pub fx: FxChain,
     /// Active note → voice mapping (replaces JS `activeNoteMap`).
     pub active_notes: Vec<NoteEntry>,
-    /// Note stack for mono mode (last-note priority).
-    pub mono_note_stack: Vec<u8>,
+    /// Note stack for mono mode (last-note priority), stores full voice state.
+    pub mono_stack: Vec<MonoStackEntry>,
     pub sustain_on: bool,
     pub lfo_phase: f32,
     pub params: SynthParams,
@@ -51,7 +58,7 @@ impl Cz101Processor {
             voices: array::from_fn(|_| Voice::new()),
             fx: FxChain::new(sample_rate),
             active_notes: Vec::new(),
-            mono_note_stack: Vec::new(),
+            mono_stack: Vec::new(),
             sustain_on: false,
             lfo_phase: 0.0,
             params: SynthParams::default(),
@@ -131,30 +138,64 @@ impl Cz101Processor {
             // ---- Mono mode ----
             let voice = &mut self.voices[0];
 
-            if self.params.legato && !voice.is_silent && voice.note != Some(note) {
-                // Legato: glide to new pitch without retriggering
-                voice.target_freq = frequency;
-                if self.params.portamento.enabled {
-                    voice.glide_progress = 0.0;
+        if self.params.legato && !voice.is_releasing && !voice.is_silent && voice.note != Some(note) {
+                // 1. Fix mono stack logic: push the PREVIOUS note state before overwriting
+                if let Some(prev_note) = voice.note {
+                    self.mono_stack.retain(|e| e.note != prev_note);
+                    self.mono_stack.push(MonoStackEntry {
+                        note: prev_note,
+                        voice: voice.clone(),
+                    });
                 }
+
+                // 2. Legato: glide to new pitch without retriggering envelopes
+                voice.target_freq = frequency;
+                
+                if self.params.portamento.enabled {
+                    voice.glide_start_freq = voice.current_freq;
+                    voice.glide_progress = 0.0;
+                } else {
+                    voice.current_freq = frequency; // Snap frequency instantly if portamento is off
+                }
+                
                 voice.note = Some(note);
-                voice.velocity = vel;
+                voice.frequency = frequency;
+                
+                // GLITCH FIX 1: Do NOT update velocity (remove voice.velocity = vel;)
+                
+                // GLITCH FIX 2: Cancel release if playing legato right after lifting a finger
+                voice.is_releasing = false; 
+
                 // Update active_notes entry for voice 0
                 self.active_notes.retain(|e| e.voice_idx != 0);
                 self.active_notes.push(NoteEntry { note, voice_idx: 0 });
-                // Push to mono stack
-                self.mono_note_stack.retain(|&n| n != note);
-                self.mono_note_stack.push(note);
+                
                 return;
             }
+            // Save current voice state before overwriting (for mono stack restore)
+            let prev_entry = if voice.is_silent {
+                None
+            } else {
+                Some(MonoStackEntry {
+                    note: voice.note.unwrap_or(note),
+                    voice: voice.clone(),
+                })
+            };
 
-            // Hard retrigger
+            // Hard retrigger — start new note with fresh state
             let voice = &mut self.voices[0];
             voice.note = Some(note);
+            voice.env_note = note;
             voice.frequency = frequency;
             voice.target_freq = frequency;
-            voice.current_freq = frequency;
-            voice.glide_progress = 0.0;
+            if self.params.portamento.enabled && !voice.is_silent {
+                voice.glide_start_freq = voice.current_freq;
+                voice.glide_progress = 0.0;
+            } else {
+                voice.current_freq = frequency;
+                voice.glide_start_freq = frequency;
+                voice.glide_progress = 0.0;
+            }
             voice.velocity = vel;
             voice.phi1 = 0.0;
             voice.phi2 = 0.0;
@@ -170,13 +211,11 @@ impl Cz101Processor {
                 voice.vibrato_delay_counter = libm::roundf(delay_ms * sr / 1000.0) as u32;
             }
 
-            // Reset envs (borrow ends after this block)
             self.reset_voice_envs(0);
 
-            // KS buffer init: fill with pseudo-random noise via LCG PRNG.
+            // KS buffer init with fresh noise
             {
                 let voice = &mut self.voices[0];
-                // Seed the PRNG differently each note-on using the note number.
                 voice.ks_prng = voice
                     .ks_prng
                     .wrapping_add(note as u32)
@@ -193,10 +232,14 @@ impl Cz101Processor {
                 voice.ks_last_sample2 = 0.0;
             }
 
+            // Push previous note to stack (it will be resumed on release)
+            if let Some(entry) = prev_entry {
+                self.mono_stack.retain(|e| e.note != entry.note);
+                self.mono_stack.push(entry);
+            }
+
             self.active_notes.retain(|e| e.voice_idx != 0);
             self.active_notes.push(NoteEntry { note, voice_idx: 0 });
-            self.mono_note_stack.retain(|&n| n != note);
-            self.mono_note_stack.push(note);
         } else {
             // ---- Poly8 mode ----
 
@@ -240,8 +283,14 @@ impl Cz101Processor {
             voice.note = Some(note);
             voice.frequency = frequency;
             voice.target_freq = frequency;
-            voice.current_freq = frequency;
-            voice.glide_progress = 0.0;
+            if self.params.portamento.enabled && !voice.is_silent {
+                voice.glide_start_freq = voice.current_freq;
+                voice.glide_progress = 0.0;
+            } else {
+                voice.current_freq = frequency;
+                voice.glide_start_freq = frequency;
+                voice.glide_progress = 0.0;
+            }
             voice.velocity = vel;
             voice.phi1 = 0.0;
             voice.phi2 = 0.0;
@@ -293,10 +342,17 @@ impl Cz101Processor {
     // -----------------------------------------------------------------------
 
     pub fn note_off(&mut self, note: u8) {
-        // Find voice index for this note
+        // 1. ALWAYS remove the note from the mono stack first!
+        // This prevents notes released while buried under a legato note 
+        // from getting stuck in the stack forever.
+        if self.params.poly_mode == PolyMode::Mono {
+            self.mono_stack.retain(|e| e.note != note);
+        }
+
+        // 2. Find voice index for this note
         let entry = match self.active_notes.iter().find(|e| e.note == note).cloned() {
             Some(e) => e,
-            None => return,
+            None => return, // If it was buried in the stack and not active, we safely exit here now.
         };
         self.active_notes.retain(|e| e.note != note);
 
@@ -311,16 +367,19 @@ impl Cz101Processor {
         }
 
         if self.params.poly_mode == PolyMode::Mono {
-            // Remove from mono note stack
-            self.mono_note_stack.retain(|&n| n != note);
+            // (The self.mono_stack.retain(...) line that used to be here is now at the top)
 
-            if let Some(&prev_note) = self.mono_note_stack.last() {
-                // Resume previous note in stack
-                let freq = midi_note_to_freq(prev_note);
+            if let Some(prev) = self.mono_stack.last() {
+                // Resume previous note — restore full voice state
                 let voice = &mut self.voices[0];
-                voice.note = Some(prev_note);
-                voice.frequency = freq;
-                voice.target_freq = freq;
+                *voice = prev.voice.clone();
+                voice.note = Some(prev.note);
+                // Re-add the restored note to active_notes so future noteOff can find it
+                self.active_notes.retain(|e| e.voice_idx != 0);
+                self.active_notes.push(NoteEntry {
+                    note: prev.note,
+                    voice_idx: 0,
+                });
             } else {
                 // Stack empty — release
                 self.start_release(0);
@@ -329,7 +388,6 @@ impl Cz101Processor {
             self.start_release(voice_idx);
         }
     }
-
     // -----------------------------------------------------------------------
     // Sustain pedal
     // -----------------------------------------------------------------------

@@ -120,7 +120,7 @@ export default function PresetNavigator({
 					className="flex min-w-0 flex-1 flex-col items-center justify-center px-4 py-2 text-center transition hover:bg-cz-surface"
 					onClick={() => setPanelOpen((open) => !open)}
 				>
-					<span className="text-[10px] font-mono uppercase tracking-[0.32em] text-cz-green">
+					<span className="text-[10px] font-mono uppercase tracking-[0.32em] text-cz-gold">
 						Preset
 					</span>
 					<span className="truncate text-lg font-mono font-bold text-cz-cream">
@@ -142,13 +142,13 @@ export default function PresetNavigator({
 				<div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-full overflow-hidden rounded-xl border border-cz-border bg-cz-panel shadow-2xl lg:w-[30rem]">
 					{/* Save / Export current state */}
 					<div className="border-b border-cz-border bg-cz-surface px-4 py-2">
-						<p className="mb-1.5 text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream-dim">
+						<p className="mb-1.5 text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream">
 							Save / Export Current State
 						</p>
 						<div className="flex gap-2">
 							<input
 								type="text"
-								className="flex-1 rounded-lg border border-cz-border bg-cz-inset px-3 py-1.5 text-sm text-cz-cream placeholder-cz-cream-dim/50 outline-none focus:border-cz-green"
+								className="flex-1 rounded-lg border border-cz-border bg-cz-inset px-3 py-1.5 text-sm text-cz-cream placeholder-cz-cream-dim/50 outline-none focus:border-cz-gold"
 								placeholder="Preset name…"
 								value={saveName}
 								onChange={(e) => setSaveName(e.target.value)}
@@ -160,7 +160,7 @@ export default function PresetNavigator({
 							<button
 								type="button"
 								disabled={!saveName.trim()}
-								className="rounded-lg bg-cz-green px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
+								className="rounded-lg bg-cz-gold px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
 								onClick={handleSave}
 							>
 								Save
@@ -183,7 +183,7 @@ export default function PresetNavigator({
 
 					{/* Import + Init */}
 					<div className="flex items-center justify-between border-b border-cz-border bg-cz-surface px-4 py-2 gap-2">
-						<span className="text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream-dim shrink-0">
+						<span className="text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream shrink-0">
 							Import from file
 						</span>
 						<div className="flex gap-2 shrink-0">
@@ -221,19 +221,19 @@ export default function PresetNavigator({
 					)}
 
 					{/* Preset list */}
-					<div className="border-b border-cz-border bg-cz-surface px-4 py-2 text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream-dim">
+					<div className="border-b border-cz-border bg-cz-surface px-4 py-2 text-[10px] font-mono uppercase tracking-[0.28em] text-cz-cream">
 						Preset List
 					</div>
 					<div className="max-h-72 overflow-y-auto p-2">
 						{allEntries.length === 0 ? (
-							<div className="px-3 py-4 text-sm text-cz-cream-dim">
+							<div className="px-3 py-4 text-sm text-cz-cream">
 								No presets available.
 							</div>
 						) : (
 							<>
 								{builtinEntries.length > 0 && (
 									<>
-										<p className="px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-cz-cream-dim/60">
+										<p className="px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-cz-cream/60">
 											Built-in
 										</p>
 										{builtinEntries.map((entry) => (
@@ -242,7 +242,7 @@ export default function PresetNavigator({
 												type="button"
 												className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${
 													entry.label === activePresetName
-														? "bg-cz-green text-white"
+														? "bg-cz-gold text-white"
 														: "text-cz-cream hover:bg-cz-surface"
 												}`}
 												onClick={() => handleLoad(entry)}
@@ -264,7 +264,7 @@ export default function PresetNavigator({
 
 								{localEntries.length > 0 && (
 									<>
-										<p className="mt-1 px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-cz-cream-dim/60">
+										<p className="mt-1 px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-cz-cream/60">
 											My Presets
 										</p>
 										{localEntries.map((entry) => (
@@ -272,7 +272,7 @@ export default function PresetNavigator({
 												key={entry.id}
 												className={`group flex w-full items-center rounded-lg px-3 py-2 ${
 													entry.label === activePresetName
-														? "bg-cz-green"
+														? "bg-cz-gold"
 														: "hover:bg-cz-surface"
 												}`}
 											>
@@ -281,7 +281,7 @@ export default function PresetNavigator({
 													<>
 														<input
 															type="text"
-															className="flex-1 rounded border border-cz-green bg-cz-inset px-2 py-0.5 text-sm text-cz-cream outline-none"
+															className="flex-1 rounded border border-cz-gold bg-cz-inset px-2 py-0.5 text-sm text-cz-cream outline-none"
 															value={renameValue}
 															onChange={(e) => setRenameValue(e.target.value)}
 															onKeyDown={(e) => {
@@ -297,7 +297,7 @@ export default function PresetNavigator({
 														<button
 															type="button"
 															title="Confirm rename"
-															className="ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-mono text-cz-green hover:bg-cz-inset"
+															className="ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-mono text-cz-gold hover:bg-cz-inset"
 															onClick={() => commitRename(entry.label)}
 														>
 															✓
@@ -305,7 +305,7 @@ export default function PresetNavigator({
 														<button
 															type="button"
 															title="Cancel"
-															className="rounded px-1.5 py-0.5 text-[10px] font-mono text-cz-cream-dim hover:bg-cz-inset"
+															className="rounded px-1.5 py-0.5 text-[10px] font-mono text-cz-cream hover:bg-cz-inset"
 															onClick={() => {
 																setRenamingId(null);
 																setRenameValue("");
@@ -387,7 +387,7 @@ export default function PresetNavigator({
 
 								{libraryEntries.length > 0 && (
 									<>
-										<p className="mt-1 px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-cz-cream-dim/60">
+										<p className="mt-1 px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-cz-cream/60">
 											Library
 										</p>
 										{libraryEntries.map((entry) => (
@@ -396,7 +396,7 @@ export default function PresetNavigator({
 												type="button"
 												className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${
 													entry.label === activePresetName
-														? "bg-cz-green text-white"
+														? "bg-cz-gold text-white"
 														: "text-cz-cream hover:bg-cz-surface"
 												}`}
 												onClick={() => handleLoad(entry)}

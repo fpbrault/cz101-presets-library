@@ -5,7 +5,9 @@ extern crate alloc;
 
 use alloc::vec;
 use alloc::vec::Vec;
-use libm::sinf;
+use libm::{cosf, sinf};
+
+const SMOOTH_COEFF: f32 = 0.005;
 
 // TWO_PI for f32
 const TWO_PI: f32 = core::f32::consts::PI * 2.0;
@@ -123,12 +125,14 @@ pub struct FxChain {
     pub chorus_rate: f32,
     pub chorus_depth: f32,
     pub chorus_mix: f32,
+    smooth_chorus_depth: f32,
 
     // Simple delay
     pub delay_line: DelayLine,
     pub delay_time: f32,
     pub delay_feedback: f32,
     pub delay_mix: f32,
+    smooth_delay_samples: f32,
 
     // Freeverb-style reverb
     pub reverb_combs: [CombFilter; 4],
@@ -182,11 +186,13 @@ impl FxChain {
             chorus_rate: 0.8,
             chorus_depth: 0.003,
             chorus_mix: 0.0,
+            smooth_chorus_depth: 0.003,
 
             delay_line,
             delay_time: 0.3,
             delay_feedback: 0.35,
             delay_mix: 0.0,
+            smooth_delay_samples: libm::roundf(0.3 * sr) as f32,
 
             reverb_combs,
             reverb_allpass,
@@ -197,19 +203,26 @@ impl FxChain {
         }
     }
 
+    #[inline]
+    fn smooth(current: f32, target: f32, coeff: f32) -> f32 {
+        current + (target - current) * coeff
+    }
+
     /// Process chorus effect.
     ///
-    /// LFO-modulated delay line; pass-through if `chorus_mix <= 0`.
+    /// LFO-modulated delay line with equal-power crossfade and smoothed depth.
     pub fn process_chorus(&mut self, sample: f32) -> f32 {
         if self.chorus_mix <= 0.0 {
             return sample;
         }
+        self.smooth_chorus_depth =
+            Self::smooth(self.smooth_chorus_depth, self.chorus_depth, SMOOTH_COEFF);
         self.chorus_phase += self.chorus_rate / self.sample_rate;
         if self.chorus_phase >= 1.0 {
             self.chorus_phase -= 1.0;
         }
         let mod_val = sinf(TWO_PI * self.chorus_phase);
-        let delay_samples = (0.005 + self.chorus_depth * (mod_val + 1.0)) * self.sample_rate;
+        let delay_samples = (0.005 + self.smooth_chorus_depth * (mod_val + 1.0)) * self.sample_rate;
         let delay_samples = if delay_samples < 1.0 {
             1.0
         } else {
@@ -217,31 +230,39 @@ impl FxChain {
         };
         let wet = self.chorus_delay.read_at_fractional(delay_samples);
         self.chorus_delay.write(sample);
-        sample * (1.0 - self.chorus_mix) + wet * self.chorus_mix
+        // Equal-power crossfade: dry² + wet² = 1
+        let mix_angle = self.chorus_mix * core::f32::consts::PI * 0.5;
+        let dry_gain = cosf(mix_angle);
+        let wet_gain = sinf(mix_angle);
+        sample * dry_gain + wet * wet_gain
     }
 
-    /// Process simple feedback delay.
-    ///
-    /// Pass-through if `delay_mix <= 0`.
+    /// Process simple feedback delay with smoothed delay time.
     pub fn process_delay(&mut self, sample: f32) -> f32 {
         if self.delay_mix <= 0.0 {
             return sample;
         }
-        let delay_samples = self.delay_time * self.sample_rate;
-        let delay_samples = if delay_samples < 1.0 {
+        self.smooth_delay_samples = Self::smooth(
+            self.smooth_delay_samples,
+            self.delay_time * self.sample_rate,
+            SMOOTH_COEFF,
+        );
+        let delay_samples = if self.smooth_delay_samples < 1.0 {
             1.0
         } else {
-            delay_samples
+            self.smooth_delay_samples
         };
         let delayed = self.delay_line.read_at_fractional(delay_samples);
         self.delay_line
             .write(sample + delayed * self.delay_feedback);
-        sample * (1.0 - self.delay_mix) + delayed * self.delay_mix
+        // Equal-power crossfade: dry² + wet² = 1
+        let mix_angle = self.delay_mix * core::f32::consts::PI * 0.5;
+        let dry_gain = cosf(mix_angle);
+        let wet_gain = sinf(mix_angle);
+        sample * dry_gain + delayed * wet_gain
     }
 
-    /// Process Freeverb-style reverb.
-    ///
-    /// 4 comb filters → 4 all-pass filters.  Pass-through if `reverb_mix <= 0`.
+    /// Process Freeverb-style reverb with equal-power wet/dry mix.
     pub fn process_reverb(&mut self, sample: f32) -> f32 {
         if self.reverb_mix <= 0.0 {
             return sample;
@@ -250,14 +271,12 @@ impl FxChain {
         let feedback = 0.28 + size * 0.56;
         let damping = 0.15 + (1.0 - size) * 0.5;
 
-        // Sum 4 comb filters
         let mut sum = 0.0_f32;
         for i in 0..4 {
             sum += self.reverb_combs[i].process(sample, feedback, damping);
         }
         sum /= 4.0;
 
-        // Chain through 4 all-pass filters
         let allpass_feedback = 0.55 + size * 0.1;
         for i in 0..4 {
             self.reverb_allpass[i].feedback = allpass_feedback;
@@ -265,7 +284,11 @@ impl FxChain {
         }
 
         let reverb_gain = 0.3 + size * 0.25;
-        sample * (1.0 - self.reverb_mix) + sum * self.reverb_mix * reverb_gain
+        // Equal-power crossfade: dry² + wet² = 1
+        let mix_angle = self.reverb_mix * core::f32::consts::PI * 0.5;
+        let dry_gain = cosf(mix_angle);
+        let wet_gain = sinf(mix_angle);
+        sample * dry_gain + sum * wet_gain * reverb_gain
     }
 
     /// Run chorus → delay → reverb chain.

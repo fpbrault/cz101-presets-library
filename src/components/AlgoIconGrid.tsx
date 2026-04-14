@@ -28,9 +28,9 @@ export default function AlgoIconGrid({
 					onClick={() => !disabled && onChange(algo.value)}
 					disabled={disabled}
 					className={[
-						"flex  items-center justify-center transition-colors focus:outline-none border-t-0 border-b border-l border-r text-cz-green border-cz-light-blue",
+						"flex  items-center justify-center transition-colors focus:outline-none border-t-0 border-b border-l border-r text-cz-gold border-cz-light-blue",
 						value === algo.value
-							? "border-cz-light-blue bg-cz-inset text-white shadow-[0_0_8px_var(--color-cz-green)/30%]"
+							? "border-cz-light-blue bg-cz-inset text-white shadow-[0_0_8px_var(--color-cz-gold)/30%]"
 							: "border-cz-border bg-cz-surface  hover:border-cz-light-blue hover:text-white",
 					].join(" ")}
 					style={{ height: size, width: size + 4 }}

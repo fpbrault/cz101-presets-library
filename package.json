@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "bun run build:wasm && bun run build:web && bun run build:tauri && bun run build:plugin",
+		"build": "bun run build:wasm && bun run build:web && bun run build:plugin",
 		"build:web": "tsc && vite build",
 		"build:wasm": "wasm-pack build src-tauri/cz-synth --target no-modules --out-dir ../../public/cz-synth-wasm --features wasm",
 		"build:tauri": "tauri build --config src-tauri/tauri-app/tauri.conf.json",

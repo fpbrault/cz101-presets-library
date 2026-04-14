@@ -73,7 +73,7 @@ export default function PhaseDistortionVisualizer() {
 	const [line2Detune, setLine2Detune] = useState(0);
 	const [polyMode, setPolyMode] = useState<PolyMode>("poly8");
 	const [legato, setLegato] = useState(false);
-	const [sustainOn, setSustainOn] = useState(false);
+	const [_sustainOn, setSustainOn] = useState(false);
 	const [velocityTarget, setVelocityTarget] = useState<VelocityTarget>("amp");
 	const [pitchBendRange, setPitchBendRange] = useState(2);
 	const [modWheelVibratoDepth, setModWheelVibratoDepth] = useState(0);
@@ -128,6 +128,7 @@ export default function PhaseDistortionVisualizer() {
 	>("sine");
 	const [lfoRate, setLfoRate] = useState(5);
 	const [lfoDepth, setLfoDepth] = useState(0);
+	const [lfoOffset, setLfoOffset] = useState(0);
 	const [lfoTarget, setLfoTarget] = useState<
 		"pitch" | "dcw" | "dca" | "filter"
 	>("pitch");
@@ -202,6 +203,7 @@ export default function PhaseDistortionVisualizer() {
 			lfoWaveform,
 			lfoRate,
 			lfoDepth,
+			lfoOffset,
 			lfoTarget,
 			filterEnabled,
 			filterType,
@@ -271,6 +273,7 @@ export default function PhaseDistortionVisualizer() {
 			lfoWaveform,
 			lfoRate,
 			lfoDepth,
+			lfoOffset,
 			lfoTarget,
 			filterEnabled,
 			filterType,
@@ -347,6 +350,7 @@ export default function PhaseDistortionVisualizer() {
 		);
 		setLfoRate(safe(data.lfoRate, 5));
 		setLfoDepth(safe(data.lfoDepth, 0));
+		setLfoOffset(safe(data.lfoOffset, 0));
 		setLfoTarget(
 			(data.lfoTarget as "pitch" | "dcw" | "dca" | "filter") ?? "pitch",
 		);
@@ -861,6 +865,7 @@ export default function PhaseDistortionVisualizer() {
 				waveform: lfoWaveform,
 				rate: lfoRate,
 				depth: lfoDepth,
+				offset: lfoOffset,
 				target: lfoTarget,
 			},
 			filter: {
@@ -936,6 +941,7 @@ export default function PhaseDistortionVisualizer() {
 		lfoWaveform,
 		lfoRate,
 		lfoDepth,
+		lfoOffset,
 		lfoTarget,
 		filterEnabled,
 		filterType,
@@ -1155,22 +1161,14 @@ export default function PhaseDistortionVisualizer() {
 
 	// ── Note handling ─────────────────────────────────────────────────────────
 	const activeNotesRef = useRef<Set<number>>(new Set());
-	const monoNoteRef = useRef<number | null>(null);
+	// Notes released while sustain was on — need noteOff when sustain released
+	const sustainedButReleasedRef = useRef<Set<number>>(new Set());
 
 	const sendNoteOn = useCallback(
 		(note: number, velocity = 100) => {
 			if (activeNotesRef.current.has(note)) return;
-			const isMono = polyMode === "mono";
-			const prevMonoNote = monoNoteRef.current;
-			if (isMono && prevMonoNote != null) {
-				activeNotesRef.current.delete(prevMonoNote);
-				workletNodeRef.current?.port.postMessage({
-					type: "noteOff",
-					note: prevMonoNote,
-				});
-			}
 			activeNotesRef.current.add(note);
-			monoNoteRef.current = note;
+			// In mono mode, Rust handles voice transition natively
 			setActiveNotes((prev) => (prev.includes(note) ? prev : [...prev, note]));
 			workletNodeRef.current?.port.postMessage({
 				type: "noteOn",
@@ -1179,26 +1177,33 @@ export default function PhaseDistortionVisualizer() {
 				velocity: velocityTarget !== "off" ? velocity / 127 : 0,
 			});
 		},
-		[polyMode, velocityTarget],
+		[velocityTarget],
 	);
 
-	const sendNoteOff = useCallback(
-		(note: number) => {
-			if (polyMode === "mono" && monoNoteRef.current === note)
-				monoNoteRef.current = null;
-			activeNotesRef.current.delete(note);
-			setActiveNotes((prev) => prev.filter((n) => n !== note));
-			if (!sustainRef.current) {
-				workletNodeRef.current?.port.postMessage({ type: "noteOff", note });
-			}
-		},
-		[polyMode],
-	);
+	const sendNoteOff = useCallback((note: number) => {
+		activeNotesRef.current.delete(note);
+		setActiveNotes((prev) => prev.filter((n) => n !== note));
+		if (sustainRef.current) {
+			// Sustain is on: defer noteOff until sustain released
+			sustainedButReleasedRef.current.add(note);
+		} else {
+			workletNodeRef.current?.port.postMessage({ type: "noteOff", note });
+		}
+	}, []);
 
 	const setSustain = useCallback((on: boolean) => {
 		sustainRef.current = on;
 		setSustainOn(on);
 		workletNodeRef.current?.port.postMessage({ type: "sustain", on });
+		if (!on) {
+			// Sustain released: send deferred noteOffs for notes no longer held
+			for (const note of sustainedButReleasedRef.current) {
+				if (!activeNotesRef.current.has(note)) {
+					workletNodeRef.current?.port.postMessage({ type: "noteOff", note });
+				}
+			}
+			sustainedButReleasedRef.current.clear();
+		}
 	}, []);
 
 	const sendPitchBend = useCallback((value: number) => {
@@ -1358,14 +1363,8 @@ export default function PhaseDistortionVisualizer() {
 						setVolume={setVolume}
 						polyMode={polyMode}
 						setPolyMode={setPolyMode}
-						legato={legato}
-						setLegato={setLegato}
-						sustainOn={sustainOn}
-						onSustainToggle={() => setSustain(!sustainOn)}
 						velocityTarget={velocityTarget}
 						setVelocityTarget={setVelocityTarget}
-						windowType={windowType}
-						setWindowType={setWindowType}
 						pitchBendRange={pitchBendRange}
 						setPitchBendRange={setPitchBendRange}
 						modWheelVibratoDepth={modWheelVibratoDepth}
@@ -1414,6 +1413,8 @@ export default function PhaseDistortionVisualizer() {
 						setLfoRate={setLfoRate}
 						lfoDepth={lfoDepth}
 						setLfoDepth={setLfoDepth}
+						lfoOffset={lfoOffset}
+						setLfoOffset={setLfoOffset}
 						lfoTarget={lfoTarget}
 						setLfoTarget={setLfoTarget}
 					/>

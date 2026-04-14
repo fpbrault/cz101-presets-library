@@ -9,6 +9,7 @@ interface ControlKnobProps {
 	color?: string;
 	size?: number;
 	valueFormatter?: (value: number) => string;
+	defaultValue?: number;
 }
 
 export function ControlKnob({
@@ -20,10 +21,17 @@ export function ControlKnob({
 	color = "#f6f06d",
 	size = 48,
 	valueFormatter,
+	defaultValue,
 }: ControlKnobProps) {
 	const [dragging, setDragging] = useState(false);
+	const [editing, setEditing] = useState(false);
+	const [editValue, setEditValue] = useState("");
 	const startYRef = useRef(0);
 	const startValueRef = useRef(0);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const displayValue = valueFormatter
+		? valueFormatter(value)
+		: value.toFixed(2);
 
 	const normalizedValue = (value - min) / (max - min);
 	const angle = -230 + normalizedValue * 280;
@@ -46,6 +54,40 @@ export function ControlKnob({
 		startYRef.current = event.clientY;
 		startValueRef.current = value;
 	};
+
+	const handleDoubleClick = () => {
+		if (defaultValue !== undefined) {
+			onChange(defaultValue);
+		}
+	};
+
+	const handleDisplayClick = () => {
+		setEditing(true);
+		setEditValue(displayValue);
+	};
+
+	const commitEdit = () => {
+		setEditing(false);
+		const parsed = Number.parseFloat(editValue);
+		if (!Number.isNaN(parsed)) {
+			onChange(Math.max(min, Math.min(max, parsed)));
+		}
+	};
+
+	const handleEditKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === "Enter") {
+			commitEdit();
+		} else if (event.key === "Escape") {
+			setEditing(false);
+		}
+	};
+
+	useEffect(() => {
+		if (editing && inputRef.current) {
+			inputRef.current.focus();
+			inputRef.current.select();
+		}
+	}, [editing]);
 
 	useEffect(() => {
 		if (!dragging) return;
@@ -85,6 +127,7 @@ export function ControlKnob({
 				className="rounded-full border border-base-300/80 bg-base-300/40 p-0 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm touch-none"
 				aria-label={label ?? "knob"}
 				onPointerDown={handlePointerDown}
+				onDoubleClick={handleDoubleClick}
 				style={{ width: size, height: size }}
 			>
 				<svg width={size} height={size} viewBox="0 0 56 56" role="presentation">
@@ -137,9 +180,25 @@ export function ControlKnob({
 			</button>
 			{label && (
 				<div className="space-y-0.5">
-					<div className="text-[11px] font-semibold text-base-content/80">
-						{valueFormatter ? valueFormatter(value) : value.toFixed(2)}
-					</div>
+					{editing ? (
+						<input
+							ref={inputRef}
+							type="text"
+							className="w-14 border border-base-300 bg-cz-surface px-1 text-center text-[11px] font-semibold text-base-content/80 outline-none focus:border-primary"
+							value={editValue}
+							onChange={(e) => setEditValue(e.target.value)}
+							onBlur={commitEdit}
+							onKeyDown={handleEditKeyDown}
+						/>
+					) : (
+						<button
+							type="button"
+							className="text-[11px] font-semibold text-base-content/80 hover:text-base-content cursor-pointer"
+							onClick={handleDisplayClick}
+						>
+							{displayValue}
+						</button>
+					)}
 				</div>
 			)}
 		</div>

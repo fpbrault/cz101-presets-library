@@ -1457,6 +1457,7 @@ fn preset_soft_piano() -> SynthParams {
         waveform: LfoWaveform::Sine,
         rate: 0.467,
         depth: 0.140,
+        offset: 0.0,
         target: LfoTarget::Dcw,
     };
     p
@@ -1681,6 +1682,7 @@ fn preset_plucking() -> SynthParams {
         waveform: LfoWaveform::Triangle,
         rate: 0.526,
         depth: 0.822,
+        offset: 0.0,
         target: LfoTarget::Filter,
     };
     p.filter = FilterParams {

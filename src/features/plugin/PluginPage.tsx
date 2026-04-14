@@ -311,6 +311,7 @@ export default function PluginPage() {
 	>("sine");
 	const [lfoRate, setLfoRate] = useState(5);
 	const [lfoDepth, setLfoDepth] = useState(0);
+	const [lfoOffset, setLfoOffset] = useState(0);
 	const [lfoTarget, setLfoTarget] = useState<
 		"pitch" | "dcw" | "dca" | "filter"
 	>("pitch");
@@ -578,6 +579,7 @@ export default function PluginPage() {
 		lfoWaveform,
 		lfoRate,
 		lfoDepth,
+		lfoOffset,
 		lfoTarget,
 		filterEnabled,
 		filterCutoff,
@@ -1001,6 +1003,7 @@ export default function PluginPage() {
 			lfoWaveform,
 			lfoRate,
 			lfoDepth,
+			lfoOffset,
 			lfoTarget,
 			filterEnabled,
 			filterType,
@@ -1068,6 +1071,7 @@ export default function PluginPage() {
 			lfoWaveform,
 			lfoRate,
 			lfoDepth,
+			lfoOffset,
 			lfoTarget,
 			filterEnabled,
 			filterType,
@@ -1531,14 +1535,8 @@ export default function PluginPage() {
 						setVolume={setVolume}
 						polyMode={polyMode}
 						setPolyMode={setPolyMode}
-						legato={legato}
-						setLegato={setLegato}
-						sustainOn={false}
-						onSustainToggle={() => {}}
 						velocityTarget={velocityTarget}
 						setVelocityTarget={setVelocityTarget}
-						windowType={windowType}
-						setWindowType={setWindowType}
 						pitchBendRange={pitchBendRange}
 						setPitchBendRange={setPitchBendRange}
 						modWheelVibratoDepth={modWheelVibratoDepth}
@@ -1587,6 +1585,8 @@ export default function PluginPage() {
 						setLfoRate={setLfoRate}
 						lfoDepth={lfoDepth}
 						setLfoDepth={setLfoDepth}
+						lfoOffset={lfoOffset}
+						setLfoOffset={setLfoOffset}
 						lfoTarget={lfoTarget}
 						setLfoTarget={setLfoTarget}
 					/>

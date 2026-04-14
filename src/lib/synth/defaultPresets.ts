@@ -265,6 +265,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetData> = {
 		lfoWaveform: "sine",
 		lfoRate: 0.4674183238636367,
 		lfoDepth: 0.14038085937499994,
+		lfoOffset: 0,
 		lfoTarget: "dcw",
 	}),
 
@@ -520,6 +521,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetData> = {
 		lfoWaveform: "triangle",
 		lfoRate: 0.5260120738636367,
 		lfoDepth: 0.8219549005681819,
+		lfoOffset: 0,
 		lfoTarget: "filter",
 		filterCutoff: 2969.007457386366,
 		filterResonance: 0.6904296875,

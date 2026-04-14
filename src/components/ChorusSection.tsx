@@ -36,7 +36,7 @@ export function ChorusSection({
 			max: 3,
 			size: 44,
 			color: "#7f9de4",
-			valueFormatter: (value) => `${Math.round(value)}`,
+			valueFormatter: (value) => `${Math.round((value / 3) * 100)}%`,
 		},
 		{
 			label: "Mix",

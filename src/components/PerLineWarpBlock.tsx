@@ -128,7 +128,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 						<Card variant="subtle" className="p-3">
 							<div className="flex justify-between">
-								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
+								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
 									Algo A
 								</div>
 								<span className="text-[10px] uppercase tracking-[0.2em] text-cz-light-blue font-bold">
@@ -141,7 +141,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 						<Card variant="subtle" className="p-3">
 							<div className="flex justify-between">
-								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
+								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
 									Algo B
 								</div>
 								<span className="text-[10px] uppercase tracking-[0.2em] text-cz-light-blue font-bold">
@@ -150,7 +150,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 							</div>
 							<div className="space-y-3">
 								<div className="space-y-1">
-									<div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
+									<div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cz-cream">
 										<span>Blend</span>
 										<span>{Math.round(algoBlend * 100)}%</span>
 									</div>
@@ -179,7 +179,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 						<div className="flex flex-wrap gap-4">
 							{/* Parameters card */}
 							<Card variant="subtle" className="p-3 shrink-0 h-fit">
-								<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
+								<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
 									Parameters
 								</div>
 								<div className="flex gap-5">
@@ -261,7 +261,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 												key={label}
 												className="flex flex-col items-center gap-1.5"
 											>
-												<span className="text-[9px] uppercase tracking-[0.18em] text-cz-cream-dim whitespace-nowrap">
+												<span className="text-[9px] uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
 													{fmt(value)}
 												</span>
 												<CzVerticalSlider
@@ -273,7 +273,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													onChange={onChange}
 													trackHeight={96}
 												/>
-												<span className="text-[9px] uppercase tracking-[0.18em] text-cz-cream-dim whitespace-nowrap">
+												<span className="text-[9px] uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
 													{label}
 												</span>
 											</div>
@@ -284,7 +284,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 							{/* Envelope Matrix card */}
 							<Card variant="subtle" className="p-3 flex-1 min-w-0">
-								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
+								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
 									Envelope Matrix
 								</div>
 								<div className="mb-2 flex gap-1">
@@ -306,7 +306,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									color={activeEnv.envColor}
 								/>
 								<div className="mt-2 flex items-center gap-2">
-									<span className="text-[10px] text-cz-cream-dim uppercase tracking-[0.2em]">
+									<span className="text-[10px] text-cz-cream uppercase tracking-[0.2em]">
 										Key Follow:
 									</span>
 									<input
@@ -316,7 +316,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										value={keyFollow}
 										onChange={(e) => setKeyFollow(Number(e.target.value))}
 										className="range range-xs"
-										style={{ accentColor: "var(--color-cz-green)" }}
+										style={{ accentColor: "var(--color-cz-gold)" }}
 									/>
 									<span className="text-xs text-cz-cream w-4">{keyFollow}</span>
 								</div>

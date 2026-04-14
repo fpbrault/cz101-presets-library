@@ -440,6 +440,9 @@ pub struct LfoParams {
     /// Depth [0, 1]
     pub depth: f32,
     pub target: LfoTarget,
+    /// DC offset/bias applied to LFO output [-1, 1]
+    #[serde(default)]
+    pub offset: f32,
 }
 
 impl Default for LfoParams {
@@ -450,6 +453,7 @@ impl Default for LfoParams {
             rate: 5.0,
             depth: 0.0,
             target: LfoTarget::Pitch,
+            offset: 0.0,
         }
     }
 }

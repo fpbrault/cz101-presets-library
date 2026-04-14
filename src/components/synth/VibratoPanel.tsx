@@ -83,11 +83,11 @@ export default function VibratoPanel({
 					value={vibratoDelay}
 					onChange={setVibratoDelay}
 					min={0}
-					max={99}
+					max={5000}
 					size={44}
 					color="#7f9de4"
 					label="Delay"
-					valueFormatter={(v) => `${Math.round(v)}`}
+					valueFormatter={(v) => `${Math.round(v)}ms`}
 				/>
 			</div>
 		</CollapsibleCard>

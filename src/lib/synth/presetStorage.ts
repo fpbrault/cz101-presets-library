@@ -68,6 +68,7 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	lfoWaveform: "sine",
 	lfoRate: 5,
 	lfoDepth: 0,
+	lfoOffset: 0,
 	lfoTarget: "pitch",
 	filterEnabled: false,
 	filterType: "lp",
@@ -138,6 +139,7 @@ export interface SynthPresetData {
 	lfoWaveform: "sine" | "triangle" | "square" | "saw" | "random";
 	lfoRate: number;
 	lfoDepth: number;
+	lfoOffset: number;
 	lfoTarget: "pitch" | "dcw" | "dca" | "filter";
 	filterEnabled: boolean;
 	filterType: "lp" | "hp" | "bp";

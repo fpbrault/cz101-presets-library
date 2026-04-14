@@ -46,11 +46,13 @@ pub struct Voice {
     pub current_freq: f32,
     pub target_freq: f32,
     pub glide_progress: f32,
+    pub glide_start_freq: f32,
     pub is_releasing: bool,
     pub is_silent: bool,
     pub sustained: bool,
     pub gate_was_open: bool,
     pub note: Option<u8>,
+    pub env_note: u8, // <-- ADD THIS
     pub frequency: f32,
     pub velocity: f32,
     /// LCG PRNG state for Karplus-Strong buffer initialisation.
@@ -82,10 +84,12 @@ impl Voice {
             current_freq: 0.0,
             target_freq: 0.0,
             glide_progress: 0.0,
+            glide_start_freq: 0.0,
             is_releasing: false,
             is_silent: true,
             sustained: false,
             gate_was_open: false,
+            env_note: 60,
             note: None,
             frequency: 0.0,
             velocity: 1.0,
@@ -152,7 +156,7 @@ pub fn render_voice(
     // -----------------------------------------------------------------------
     // Advance all 6 envelope generators
     // -----------------------------------------------------------------------
-    let note_u8 = voice.note.unwrap_or(60);
+    let note_u8 = voice.env_note;
 
     voice
         .line1_env
@@ -209,6 +213,7 @@ pub fn render_voice(
     if voice.is_releasing && libm::fabsf(dca1) < 0.001 && libm::fabsf(dca2) < 0.001 {
         voice.is_silent = true;
         voice.note = None;
+        voice.env_note = 60;
         voice.line1_env.dca.output = 0.0;
         voice.line2_env.dca.output = 0.0;
         return 0.0;
@@ -261,13 +266,14 @@ pub fn render_voice(
 
     // -----------------------------------------------------------------------
     // Portamento / glide
-    // -----------------------------------------------------------------------
     let port = &p.portamento;
     if port.enabled && (voice.target_freq - voice.current_freq).abs() > 1e-6 {
         match port.mode {
             PortamentoMode::Rate => {
-                voice.current_freq +=
-                    (voice.target_freq - voice.current_freq) * (port.rate / 1000.0);
+                let t = (port.rate / 99.0).clamp(0.0, 1.0);
+                let time_const = 3.0 * (1.0 - t) * (1.0 - t) + 0.001;
+                let alpha = 1.0 - libm::expf(-1.0 / (time_const * sr));
+                voice.current_freq += (voice.target_freq - voice.current_freq) * alpha;
             }
             PortamentoMode::Time => {
                 voice.glide_progress += 1.0 / (port.time * sr);
@@ -276,7 +282,7 @@ pub fn render_voice(
                 } else {
                     let t = voice.glide_progress;
                     voice.current_freq =
-                        voice.current_freq + (voice.target_freq - voice.current_freq) * t;
+                        voice.glide_start_freq + (voice.target_freq - voice.glide_start_freq) * t;
                 }
             }
         }
@@ -314,7 +320,7 @@ pub fn render_voice(
             };
             let lfo_val = lfo_output(voice.vibrato_phase, vib_waveform);
             let effective_depth = vibrato.depth + mod_wheel * p.mod_wheel_vibrato_depth;
-            let pitch_mod = 1.0 + lfo_val * (effective_depth / 1000.0);
+            let pitch_mod = 1.0 + lfo_val * (effective_depth / 100.0);
             effective_freq1 *= pitch_mod;
             effective_freq2 *= pitch_mod;
         }
@@ -322,10 +328,10 @@ pub fn render_voice(
 
     // -----------------------------------------------------------------------
     // Global LFO modulation
-    // -----------------------------------------------------------------------
-    if lfo_mod_val != 0.0 {
+    let lfo_offset = p.lfo.offset;
+    if lfo_mod_val != 0.0 || lfo_offset != 0.0 {
         let lfo = &p.lfo;
-        let mod_val = lfo_mod_val * lfo.depth;
+        let mod_val = lfo_mod_val * lfo.depth + lfo_offset;
         match lfo.target {
             LfoTarget::Pitch => {
                 effective_freq1 *= 1.0 + mod_val;

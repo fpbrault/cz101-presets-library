@@ -17,6 +17,8 @@ type LfoPanelProps = {
 	setLfoRate: (v: number) => void;
 	lfoDepth: number;
 	setLfoDepth: (v: number) => void;
+	lfoOffset: number;
+	setLfoOffset: (v: number) => void;
 	lfoTarget: LfoTarget;
 	setLfoTarget: (v: LfoTarget) => void;
 };
@@ -32,6 +34,8 @@ export default function LfoPanel({
 	setLfoRate,
 	lfoDepth,
 	setLfoDepth,
+	lfoOffset,
+	setLfoOffset,
 	lfoTarget,
 	setLfoTarget,
 }: LfoPanelProps) {
@@ -144,6 +148,16 @@ export default function LfoPanel({
 					size={44}
 					color="#7f9de4"
 					label="Depth"
+					valueFormatter={(v) => `${Math.round(v * 100)}%`}
+				/>
+				<ControlKnob
+					value={lfoOffset}
+					onChange={setLfoOffset}
+					min={-1}
+					max={1}
+					size={44}
+					color="#7f9de4"
+					label="Offset"
 					valueFormatter={(v) => `${Math.round(v * 100)}%`}
 				/>
 			</div>
