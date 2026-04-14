@@ -34,15 +34,18 @@ export default function PortamentoPanel({
 			variant="panel-slanted"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title="Portamento"
+			title={
+				<span className="flex items-center gap-2">
+					<span>Portamento</span>
+					<CzButton
+						active={portamentoEnabled}
+						onClick={() => setPortamentoEnabled(!portamentoEnabled)}
+					>
+						{portamentoEnabled ? "On" : "Off"}
+					</CzButton>
+				</span>
+			}
 		>
-			<CzButton
-				active={portamentoEnabled}
-				onClick={() => setPortamentoEnabled(!portamentoEnabled)}
-				className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-			>
-				Enable Portamento
-			</CzButton>
 			<div className="flex w-full gap-1 mb-2">
 				<CzButton
 					active={portamentoMode === "rate"}

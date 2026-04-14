@@ -38,15 +38,18 @@ export default function VibratoPanel({
 			variant="panel-slanted"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title="Vibrato"
+			title={
+				<span className="flex items-center gap-2">
+					<span>Vibrato</span>
+					<CzButton
+						active={vibratoEnabled}
+						onClick={() => setVibratoEnabled(!vibratoEnabled)}
+					>
+						{vibratoEnabled ? "On" : "Off"}
+					</CzButton>
+				</span>
+			}
 		>
-			<CzButton
-				active={vibratoEnabled}
-				onClick={() => setVibratoEnabled(!vibratoEnabled)}
-				className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-			>
-				Enable Vibrato
-			</CzButton>
 			<div className="flex justify-center gap-2">
 				{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
 					<CzButton

@@ -72,7 +72,17 @@ export default function LfoPanel({
 			variant="panel-slanted"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title="LFO"
+			title={
+				<span className="flex items-center gap-2">
+					<span>LFO</span>
+					<CzButton
+						active={lfoEnabled}
+						onClick={() => setLfoEnabled(!lfoEnabled)}
+					>
+						{lfoEnabled ? "On" : "Off"}
+					</CzButton>
+				</span>
+			}
 		>
 			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
 				<div className="mb-2 cz-light-blue justify-between">
@@ -111,13 +121,6 @@ export default function LfoPanel({
 					/>
 				</svg>
 			</div>
-			<CzButton
-				active={lfoEnabled}
-				onClick={() => setLfoEnabled(!lfoEnabled)}
-				className="mb-2 [&_button]:bg-cz-inset [&_button]:border-cz-border"
-			>
-				Enable LFO
-			</CzButton>
 			<div className="flex flex-wrap gap-1 mb-2">
 				{(["sine", "triangle", "square", "saw"] as const).map((w) => (
 					<CzButton
@@ -148,6 +151,16 @@ export default function LfoPanel({
 					size={44}
 					color="#7f9de4"
 					label="Depth"
+					valueFormatter={(v) => `${Math.round(v * 100)}%`}
+				/>
+				<ControlKnob
+					value={lfoOffset}
+					onChange={setLfoOffset}
+					min={-1}
+					max={1}
+					size={44}
+					color="#7f9de4"
+					label="Offset"
 					valueFormatter={(v) => `${Math.round(v * 100)}%`}
 				/>
 				<ControlKnob
