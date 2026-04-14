@@ -75,12 +75,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 }: PerLineWarpBlockProps) {
 	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
 
-	// Auto-enable algo2 when blend > 0; clear when blend returns to 0
+	// Auto-set algo2 to first algo when blend is raised from 0 with nothing selected
 	useEffect(() => {
 		if (algoBlend > 0 && algo2 == null) {
 			setAlgo2(PD_ALGOS[0].value as PdAlgo);
-		} else if (algoBlend === 0 && algo2 != null) {
-			setAlgo2(null);
 		}
 	}, [algoBlend, algo2, setAlgo2]);
 
@@ -129,17 +127,26 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 						/>
 
 						<Card variant="subtle" className="p-3">
-							<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
-								Algo A
+							<div className="flex justify-between">
+								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
+									Algo A
+								</div>
+								<span className="text-[10px] uppercase tracking-[0.2em] text-cz-light-blue font-bold">
+									{PD_ALGOS.find((a) => a.value === algo)?.label}
+								</span>
 							</div>
+
 							<AlgoIconGrid value={algo} onChange={setAlgo} size={36} />
 						</Card>
 
 						<Card variant="subtle" className="p-3">
-							<div className="mb-2 flex items-center justify-between">
-								<div className="text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
+									<div className="flex justify-between">
+								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
 									Algo B
 								</div>
+								<span className="text-[10px] uppercase tracking-[0.2em] text-cz-light-blue font-bold">
+									{PD_ALGOS.find((b) => b.value === algo2)?.label}
+								</span>
 							</div>
 							<div className="space-y-3">
 								<div className="space-y-1">
