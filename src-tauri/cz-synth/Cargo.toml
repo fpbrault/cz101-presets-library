@@ -7,15 +7,27 @@ description = "CZ-101 Phase Distortion synthesizer DSP core"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+# UniFFI bindgen CLI — run with: cargo run --features uniffi --bin uniffi-bindgen
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+required-features = ["uniffi"]
+
 [features]
 default = ["std"]
 std = ["serde/std", "serde_json"]
 wasm = ["wasm-bindgen", "web-sys", "getrandom/js", "serde_json"]
+uniffi = ["dep:uniffi", "serde_json", "std"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], default-features = false }
 serde_json = { version = "1", optional = true }
 libm = "0.2"
+
+[dependencies.uniffi]
+version = "0.31"
+optional = true
+features = ["cli"]
 
 [dependencies.wasm-bindgen]
 version = "0.2"

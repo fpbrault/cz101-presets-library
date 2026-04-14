@@ -16,3 +16,11 @@ pub mod voice;
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
+
+#[cfg(feature = "uniffi")]
+pub mod uniffi_ffi;
+
+// UniFFI scaffolding must be set up at the crate root so the generated
+// `UniFfiTag` type is in scope for the derive macros in `uniffi_ffi`.
+#[cfg(feature = "uniffi")]
+uniffi::setup_scaffolding!();
