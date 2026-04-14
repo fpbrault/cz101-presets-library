@@ -503,6 +503,17 @@ pub struct SynthParams {
     pub portamento: PortamentoParams,
     pub lfo: LfoParams,
     pub filter: FilterParams,
+    /// Pitch bend wheel range in semitones (1-24). Default 2.
+    #[serde(default = "default_pitch_bend_range")]
+    pub pitch_bend_range: f32,
+    /// How much the mod wheel adds to vibrato depth (0-99 UI units).
+    /// When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
+    #[serde(default)]
+    pub mod_wheel_vibrato_depth: f32,
+}
+
+fn default_pitch_bend_range() -> f32 {
+    2.0
 }
 
 impl Default for SynthParams {
@@ -529,6 +540,8 @@ impl Default for SynthParams {
             portamento: PortamentoParams::default(),
             lfo: LfoParams::default(),
             filter: FilterParams::default(),
+            pitch_bend_range: 2.0,
+            mod_wheel_vibrato_depth: 0.0,
         }
     }
 }

@@ -140,7 +140,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 						</Card>
 
 						<Card variant="subtle" className="p-3">
-									<div className="flex justify-between">
+							<div className="flex justify-between">
 								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream-dim">
 									Algo B
 								</div>

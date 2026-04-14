@@ -320,6 +320,8 @@ export default function PluginPage() {
 	const [filterCutoff, setFilterCutoff] = useState(5000);
 	const [filterResonance, setFilterResonance] = useState(0);
 	const [filterEnvAmount, setFilterEnvAmount] = useState(0);
+	const [pitchBendRange, setPitchBendRange] = useState(2);
+	const [modWheelVibratoDepth, setModWheelVibratoDepth] = useState(0);
 
 	// ── Preset management ────────────────────────────────────────────────────
 	const [presetList, setPresetList] = useState<string[]>([]);
@@ -1005,6 +1007,8 @@ export default function PluginPage() {
 			filterCutoff,
 			filterResonance,
 			filterEnvAmount,
+			pitchBendRange,
+			modWheelVibratoDepth,
 		}),
 		[
 			warpAAmount,
@@ -1070,6 +1074,8 @@ export default function PluginPage() {
 			filterCutoff,
 			filterResonance,
 			filterEnvAmount,
+			pitchBendRange,
+			modWheelVibratoDepth,
 		],
 	);
 
@@ -1143,6 +1149,8 @@ export default function PluginPage() {
 		setFilterCutoff(safe(data.filterCutoff, 5000));
 		setFilterResonance(safe(data.filterResonance, 0));
 		setFilterEnvAmount(safe(data.filterEnvAmount, 0));
+		setPitchBendRange(safe(data.pitchBendRange, 2));
+		setModWheelVibratoDepth(safe(data.modWheelVibratoDepth, 0));
 		// Reset sentParamsRef so all params are re-sent after preset load
 		sentParamsRef.current.clear();
 		sentEnvelopesRef.current.clear();
@@ -1531,6 +1539,10 @@ export default function PluginPage() {
 						setVelocityTarget={setVelocityTarget}
 						windowType={windowType}
 						setWindowType={setWindowType}
+						pitchBendRange={pitchBendRange}
+						setPitchBendRange={setPitchBendRange}
+						modWheelVibratoDepth={modWheelVibratoDepth}
+						setModWheelVibratoDepth={setModWheelVibratoDepth}
 					/>
 					<PhaseModPanel
 						accordionName={ACCORDION_NAME}

@@ -75,6 +75,8 @@ export default function PhaseDistortionVisualizer() {
 	const [legato, setLegato] = useState(false);
 	const [sustainOn, setSustainOn] = useState(false);
 	const [velocityTarget, setVelocityTarget] = useState<VelocityTarget>("amp");
+	const [pitchBendRange, setPitchBendRange] = useState(2);
+	const [modWheelVibratoDepth, setModWheelVibratoDepth] = useState(0);
 	const [activeNotes, setActiveNotes] = useState<number[]>([]);
 	const [line1DcoEnv, setLine1DcoEnv] = useState<StepEnvData>(DEFAULT_DCO_ENV);
 	const [line1DcwEnv, setLine1DcwEnv] = useState<StepEnvData>(DEFAULT_DCW_ENV);
@@ -206,6 +208,8 @@ export default function PhaseDistortionVisualizer() {
 			filterCutoff,
 			filterResonance,
 			filterEnvAmount,
+			pitchBendRange,
+			modWheelVibratoDepth,
 		}),
 		[
 			warpAAmount,
@@ -273,6 +277,8 @@ export default function PhaseDistortionVisualizer() {
 			filterCutoff,
 			filterResonance,
 			filterEnvAmount,
+			pitchBendRange,
+			modWheelVibratoDepth,
 		],
 	);
 
@@ -349,6 +355,8 @@ export default function PhaseDistortionVisualizer() {
 		setFilterCutoff(safe(data.filterCutoff, 5000));
 		setFilterResonance(safe(data.filterResonance, 0));
 		setFilterEnvAmount(safe(data.filterEnvAmount, 0));
+		setPitchBendRange(safe(data.pitchBendRange, 2));
+		setModWheelVibratoDepth(safe(data.modWheelVibratoDepth, 0));
 	}, []);
 
 	const { data: libraryPresets = [] } = useQuery({
@@ -862,6 +870,8 @@ export default function PhaseDistortionVisualizer() {
 				resonance: filterResonance,
 				envAmount: filterEnvAmount,
 			},
+			pitchBendRange,
+			modWheelVibratoDepth,
 		};
 		paramsRef.current = params;
 		if (!workletNodeRef.current) return;
@@ -932,6 +942,8 @@ export default function PhaseDistortionVisualizer() {
 		filterCutoff,
 		filterResonance,
 		filterEnvAmount,
+		pitchBendRange,
+		modWheelVibratoDepth,
 	]);
 
 	// ── Auto-save ─────────────────────────────────────────────────────────────
@@ -1189,6 +1201,16 @@ export default function PhaseDistortionVisualizer() {
 		workletNodeRef.current?.port.postMessage({ type: "sustain", on });
 	}, []);
 
+	const sendPitchBend = useCallback((value: number) => {
+		// value: normalised [-1, 1]
+		workletNodeRef.current?.port.postMessage({ type: "pitchBend", value });
+	}, []);
+
+	const sendModWheel = useCallback((value: number) => {
+		// value: normalised [0, 1]
+		workletNodeRef.current?.port.postMessage({ type: "modWheel", value });
+	}, []);
+
 	// ── Keyboard input ────────────────────────────────────────────────────────
 	useEffect(() => {
 		const isTypingTarget = (e: KeyboardEvent) => {
@@ -1247,8 +1269,21 @@ export default function PhaseDistortionVisualizer() {
 							const data = event.data;
 							if (data == null || data.length < 2) return;
 							const status = data[0] & 0xf0;
-							if (status === 0xb0 && data[1] === 64) {
-								setSustain(data[2] >= 64);
+							// CC messages
+							if (status === 0xb0) {
+								if (data[1] === 1) {
+									// CC1: mod wheel
+									sendModWheel(data[2] / 127);
+								} else if (data[1] === 64) {
+									// CC64: sustain pedal
+									setSustain(data[2] >= 64);
+								}
+								return;
+							}
+							// Pitch bend (0xE0) — 14-bit value in bytes 1+2
+							if (status === 0xe0 && data.length >= 3) {
+								const raw = (data[2] << 7) | data[1];
+								sendPitchBend((raw - 8192) / 8192);
 								return;
 							}
 							if (data.length < 3) return;
@@ -1278,7 +1313,7 @@ export default function PhaseDistortionVisualizer() {
 			disposed = true;
 			cleanupHandlers.forEach((fn) => void fn());
 		};
-	}, [sendNoteOff, sendNoteOn, setSustain]);
+	}, [sendNoteOff, sendNoteOn, setSustain, sendPitchBend, sendModWheel]);
 
 	// ── Render ────────────────────────────────────────────────────────────────
 	return (
@@ -1331,6 +1366,10 @@ export default function PhaseDistortionVisualizer() {
 						setVelocityTarget={setVelocityTarget}
 						windowType={windowType}
 						setWindowType={setWindowType}
+						pitchBendRange={pitchBendRange}
+						setPitchBendRange={setPitchBendRange}
+						modWheelVibratoDepth={modWheelVibratoDepth}
+						setModWheelVibratoDepth={setModWheelVibratoDepth}
 					/>
 					<PhaseModPanel
 						accordionName={ACCORDION_NAME}

@@ -73,7 +73,7 @@ export function ControlKnob({
 
 	return (
 		<div className="flex flex-col items-center gap-1 text-center">
-				{label && (
+			{label && (
 				<div className="space-y-0.5">
 					<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 						{label}
@@ -135,7 +135,7 @@ export function ControlKnob({
 					<circle cx="28" cy="28" r="3" fill={color} fillOpacity="0.85" />
 				</svg>
 			</button>
-						{label && (
+			{label && (
 				<div className="space-y-0.5">
 					<div className="text-[11px] font-semibold text-base-content/80">
 						{valueFormatter ? valueFormatter(value) : value.toFixed(2)}

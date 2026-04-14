@@ -133,7 +133,14 @@ impl Default for Voice {
 /// * `p`           – current synth parameters
 /// * `lfo_mod_val` – pre-computed LFO output value for this sample
 /// * `sr`          – sample rate in Hz
-pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f32) -> f32 {
+pub fn render_voice(
+    voice: &mut Voice,
+    p: &SynthParams,
+    lfo_mod_val: f32,
+    sr: f32,
+    pitch_bend_semitones: f32,
+    mod_wheel: f32,
+) -> f32 {
     let l1 = &p.line1;
     let l2 = &p.line2;
     let base_freq = if voice.frequency > 0.0 {
@@ -279,6 +286,15 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
     }
 
     // -----------------------------------------------------------------------
+    // Pitch bend
+    // -----------------------------------------------------------------------
+    if pitch_bend_semitones != 0.0 {
+        let bend_ratio = libm::powf(2.0, pitch_bend_semitones / 12.0);
+        effective_freq1 *= bend_ratio;
+        effective_freq2 *= bend_ratio;
+    }
+
+    // -----------------------------------------------------------------------
     // Vibrato
     // -----------------------------------------------------------------------
     let vibrato = &p.vibrato;
@@ -297,7 +313,8 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
                 _ => crate::params::LfoWaveform::Sine,
             };
             let lfo_val = lfo_output(voice.vibrato_phase, vib_waveform);
-            let pitch_mod = 1.0 + lfo_val * (vibrato.depth / 1000.0);
+            let effective_depth = vibrato.depth + mod_wheel * p.mod_wheel_vibrato_depth;
+            let pitch_mod = 1.0 + lfo_val * (effective_depth / 1000.0);
             effective_freq1 *= pitch_mod;
             effective_freq2 *= pitch_mod;
         }

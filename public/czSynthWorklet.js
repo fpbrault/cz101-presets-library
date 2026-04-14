@@ -81,6 +81,8 @@ const DEFAULT_PARAMS = {
 		resonance: 0,
 		envAmount: 0,
 	},
+	pitchBendRange: 2,
+	modWheelVibratoDepth: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -136,6 +138,12 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 				break;
 			case "sustain":
 				synth.setSustain(d.on);
+				break;
+			case "pitchBend":
+				synth.setPitchBend(d.value);
+				break;
+			case "modWheel":
+				synth.setModWheel(d.value);
 				break;
 		}
 	}

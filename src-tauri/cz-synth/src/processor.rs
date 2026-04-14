@@ -37,6 +37,12 @@ pub struct Cz101Processor {
     pub lfo_phase: f32,
     pub params: SynthParams,
     pub sample_rate: f32,
+    /// Normalised pitch bend value in [-1.0, 1.0].
+    /// Multiplied by `params.pitch_bend_range` semitones in voice render.
+    pub pitch_bend: f32,
+    /// Normalised mod wheel value in [0.0, 1.0].
+    /// Boosts vibrato depth by `params.mod_wheel_vibrato_depth * mod_wheel`.
+    pub mod_wheel: f32,
 }
 
 impl Cz101Processor {
@@ -50,6 +56,8 @@ impl Cz101Processor {
             lfo_phase: 0.0,
             params: SynthParams::default(),
             sample_rate,
+            pitch_bend: 0.0,
+            mod_wheel: 0.0,
         };
         proc.update_fx();
         proc
@@ -348,6 +356,21 @@ impl Cz101Processor {
     }
 
     // -----------------------------------------------------------------------
+    // Pitch bend & mod wheel
+    // -----------------------------------------------------------------------
+
+    /// Set pitch bend. `value` is normalised [-1.0, 1.0] (from MIDI 14-bit).
+    /// The actual semitone shift = value * params.pitch_bend_range.
+    pub fn set_pitch_bend(&mut self, value: f32) {
+        self.pitch_bend = value.clamp(-1.0, 1.0);
+    }
+
+    /// Set mod wheel. `value` is normalised [0.0, 1.0] (CC1 / 127).
+    pub fn set_mod_wheel(&mut self, value: f32) {
+        self.mod_wheel = value.clamp(0.0, 1.0);
+    }
+
+    // -----------------------------------------------------------------------
     // Audio process loop
     // -----------------------------------------------------------------------
 
@@ -384,10 +407,19 @@ impl Cz101Processor {
             // SAFETY: `voices` and `params` are separate fields; we use raw pointer to avoid
             // simultaneous mutable + immutable borrow of `self`.
             let params_ptr: *const SynthParams = &self.params;
+            let pitch_bend_semitones = self.pitch_bend * self.params.pitch_bend_range;
+            let mod_wheel = self.mod_wheel;
             for v in 0..NUM_VOICES {
                 // SAFETY: params is read-only here and voices[v] is the only mutated field.
                 let p_ref: &SynthParams = unsafe { &*params_ptr };
-                mixed += render_voice(&mut self.voices[v], p_ref, lfo_mod_val, sr);
+                mixed += render_voice(
+                    &mut self.voices[v],
+                    p_ref,
+                    lfo_mod_val,
+                    sr,
+                    pitch_bend_semitones,
+                    mod_wheel,
+                );
             }
 
             mixed *= norm;

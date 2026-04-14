@@ -72,6 +72,19 @@ impl CzSynthProcessor {
         self.inner.set_sustain(on);
     }
 
+    /// Set pitch bend. `value` is normalised [-1.0, 1.0] (MIDI 14-bit mapped to this range).
+    /// Actual pitch shift in semitones = value * params.pitchBendRange.
+    #[wasm_bindgen(js_name = setPitchBend)]
+    pub fn set_pitch_bend(&mut self, value: f32) {
+        self.inner.set_pitch_bend(value);
+    }
+
+    /// Set mod wheel value. `value` is normalised [0.0, 1.0] (CC1 / 127).
+    #[wasm_bindgen(js_name = setModWheel)]
+    pub fn set_mod_wheel(&mut self, value: f32) {
+        self.inner.set_mod_wheel(value);
+    }
+
     /// Fill `output` with mono samples rendered by the DSP engine.
     ///
     /// The caller passes a `Float32Array` slice backed by WASM linear memory.

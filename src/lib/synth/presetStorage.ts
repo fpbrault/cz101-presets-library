@@ -74,6 +74,8 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	filterCutoff: 5000,
 	filterResonance: 0,
 	filterEnvAmount: 0,
+	pitchBendRange: 2,
+	modWheelVibratoDepth: 0,
 };
 
 export interface SynthPresetData {
@@ -142,6 +144,8 @@ export interface SynthPresetData {
 	filterCutoff: number;
 	filterResonance: number;
 	filterEnvAmount: number;
+	pitchBendRange: number;
+	modWheelVibratoDepth: number;
 }
 
 export function savePreset(name: string, data: SynthPresetData): void {

@@ -20,6 +20,10 @@ type GlobalVoicePanelProps = {
 	setVelocityTarget: (v: VelocityTarget) => void;
 	windowType: "off" | "saw" | "triangle";
 	setWindowType: (v: "off" | "saw" | "triangle") => void;
+	pitchBendRange: number;
+	setPitchBendRange: (v: number) => void;
+	modWheelVibratoDepth: number;
+	setModWheelVibratoDepth: (v: number) => void;
 };
 
 export default function GlobalVoicePanel({
@@ -37,6 +41,10 @@ export default function GlobalVoicePanel({
 	setVelocityTarget,
 	windowType,
 	setWindowType,
+	pitchBendRange,
+	setPitchBendRange,
+	modWheelVibratoDepth,
+	setModWheelVibratoDepth,
 }: GlobalVoicePanelProps) {
 	return (
 		<CollapsibleCard
@@ -126,6 +134,28 @@ export default function GlobalVoicePanel({
 						<option value="saw">Saw</option>
 						<option value="triangle">Triangle</option>
 					</select>
+				</div>
+				<div className="flex justify-around pt-1">
+					<ControlKnob
+						value={pitchBendRange}
+						onChange={setPitchBendRange}
+						min={1}
+						max={24}
+						size={28}
+						color="#5bc8d4"
+						label="Bend"
+						valueFormatter={(v) => `${Math.round(v)} st`}
+					/>
+					<ControlKnob
+						value={modWheelVibratoDepth}
+						onChange={setModWheelVibratoDepth}
+						min={0}
+						max={99}
+						size={28}
+						color="#5bc8d4"
+						label="Mod→Vib"
+						valueFormatter={(v) => `${Math.round(v)}`}
+					/>
 				</div>
 			</div>
 		</CollapsibleCard>
