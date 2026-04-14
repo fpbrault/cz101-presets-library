@@ -33,17 +33,14 @@ impl CzSynthProcessor {
 
     /// Replace all synthesis parameters from a JSON string.
     ///
-    /// Accepts the same JSON structure that the JS worklet received via
-    /// `{ type: "setParams", params: { ... } }`.  A full `SynthParams`
-    /// object is expected (partial-update merging is handled in JS before
-    /// calling this method).
+    /// The caller serializes `SynthParams` with `JSON.stringify` and passes
+    /// the result here; we parse it with `serde_json` on the Rust side.
     #[wasm_bindgen(js_name = setParams)]
     pub fn set_params(&mut self, json: &str) {
         match serde_json::from_str::<SynthParams>(json) {
             Ok(p) => self.inner.set_params(p),
             Err(e) => {
-                // Log but do not panic — audio must keep running.
-                web_sys::console::warn_1(&format!("[cz-synth] setParams parse error: {e}").into());
+                web_sys::console::error_1(&format!("[cz-synth] setParams parse error: {e}").into());
             }
         }
     }

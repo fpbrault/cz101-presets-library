@@ -36,7 +36,7 @@ export default function VibratoPanel({
 			mode="radio"
 			name={accordionName}
 			variant="panel-slanted"
-			defaultOpen={defaultOpen}
+			defaultopen={defaultOpen}
 			titleClassName="pr-3"
 			title="Vibrato"
 		>

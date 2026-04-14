@@ -16,7 +16,7 @@ describe("CollapsibleCard", () => {
 
 	it("renders checkbox mode for daisyui collapse input behavior", () => {
 		const { container } = renderWithProviders(
-			<CollapsibleCard mode="checkbox" title={<span>Line 1</span>} defaultOpen>
+			<CollapsibleCard mode="checkbox" title={<span>Line 1</span>} defaultopen>
 				Body
 			</CollapsibleCard>,
 		);

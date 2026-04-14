@@ -281,7 +281,6 @@ export default function PresetNavigator({
 													<>
 														<input
 															type="text"
-															autoFocus
 															className="flex-1 rounded border border-cz-green bg-cz-inset px-2 py-0.5 text-sm text-cz-cream outline-none"
 															value={renameValue}
 															onChange={(e) => setRenameValue(e.target.value)}

@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 pub const NUM_VOICES: usize = 8;
 pub const NUM_ENV_STEPS: usize = 8;
@@ -8,59 +8,109 @@ pub const NUM_ENV_STEPS: usize = 8;
 pub struct EnvStep {
     /// Level [0.0, 1.0]
     pub level: f32,
-    /// Rate [0, 99]
+    /// Rate [0, 99] — JS may send floats; we round to u8.
+    #[serde(deserialize_with = "deserialize_rate")]
     pub rate: u8,
 }
 
+/// Accept rate as either integer or float, round to u8.
+fn deserialize_rate<'de, D: Deserializer<'de>>(d: D) -> Result<u8, D::Error> {
+    let v = f64::deserialize(d)?;
+    Ok(v.round().clamp(0.0, 99.0) as u8)
+}
+
 /// Step envelope data (CZ-style)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
+/// Field names match the JS `StepEnvData` type exactly (camelCase).
+/// `steps` is always stored as a fixed [EnvStep; 8] internally; JS may
+/// send a shorter array which gets padded with silent steps.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StepEnvData {
     pub steps: [EnvStep; NUM_ENV_STEPS],
     /// Which step to sustain on (0-based index into steps)
     pub sustain_step: usize,
+    /// Number of active steps (JS `stepCount`)
+    pub step_count: usize,
     /// Whether envelope loops after end
+    #[serde(rename = "loop")]
     pub loop_: bool,
+}
+
+impl<'de> Deserialize<'de> for StepEnvData {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Raw {
+            steps: Vec<EnvStep>,
+            sustain_step: usize,
+            /// JS `stepCount` — older data may omit it; default to full length
+            #[serde(default)]
+            step_count: usize,
+            #[serde(rename = "loop", default)]
+            loop_: bool,
+        }
+        let mut raw = Raw::deserialize(d)?;
+        // If step_count was missing or 0, use the number of provided steps
+        if raw.step_count == 0 {
+            raw.step_count = raw.steps.len().max(1);
+        }
+        let mut steps = [EnvStep {
+            level: 0.0,
+            rate: 0,
+        }; NUM_ENV_STEPS];
+        for (i, s) in raw.steps.iter().enumerate().take(NUM_ENV_STEPS) {
+            steps[i] = *s;
+        }
+        Ok(StepEnvData {
+            steps,
+            sustain_step: raw.sustain_step,
+            step_count: raw.step_count,
+            loop_: raw.loop_,
+        })
+    }
 }
 
 impl Default for StepEnvData {
     fn default() -> Self {
-        // mirrors DEFAULT_STEP_ENV in the JS
+        // mirrors DEFAULT_DCA_ENV in pdAlgorithms.ts
         Self {
             steps: [
                 EnvStep {
                     level: 1.0,
-                    rate: 90,
+                    rate: 75,
                 },
                 EnvStep {
-                    level: 1.0,
-                    rate: 99,
+                    level: 0.8,
+                    rate: 80,
                 },
                 EnvStep {
-                    level: 1.0,
-                    rate: 99,
-                },
-                EnvStep {
-                    level: 1.0,
-                    rate: 99,
-                },
-                EnvStep {
-                    level: 1.0,
-                    rate: 99,
-                },
-                EnvStep {
-                    level: 1.0,
-                    rate: 99,
-                },
-                EnvStep {
-                    level: 1.0,
-                    rate: 99,
+                    level: 0.8,
+                    rate: 75,
                 },
                 EnvStep {
                     level: 0.0,
-                    rate: 60,
+                    rate: 40,
+                },
+                EnvStep {
+                    level: 0.0,
+                    rate: 50,
+                },
+                EnvStep {
+                    level: 0.0,
+                    rate: 50,
+                },
+                EnvStep {
+                    level: 0.0,
+                    rate: 50,
+                },
+                EnvStep {
+                    level: 0.0,
+                    rate: 50,
                 },
             ],
-            sustain_step: 1,
+            sustain_step: 2,
+            step_count: 4,
             loop_: false,
         }
     }
@@ -88,7 +138,9 @@ pub enum WarpAlgo {
 }
 
 /// CZ waveform id [1-8]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+///
+/// JS sends these as integers (1-8), so we deserialize from `u8`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[repr(u8)]
 pub enum WaveformId {
     #[default]
@@ -115,6 +167,19 @@ impl WaveformId {
             8 => WaveformId::Pulse2,
             _ => WaveformId::Saw,
         }
+    }
+}
+
+impl Serialize for WaveformId {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_u8(*self as u8)
+    }
+}
+
+impl<'de> Deserialize<'de> for WaveformId {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let v = u8::deserialize(d)?;
+        Ok(WaveformId::from_u8(v))
     }
 }
 
@@ -172,6 +237,8 @@ pub enum VelocityTarget {
     Amp,
     Dcw,
     Both,
+    /// JS "off" means velocity is ignored (worklet passes 0 velocity)
+    Off,
 }
 
 /// LFO waveform
@@ -310,7 +377,8 @@ impl Default for ReverbParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VibratoParams {
     pub enabled: bool,
-    pub waveform: LfoWaveform,
+    /// Waveform as integer 1-4 (JS sends a number: 1=sine 2=tri 3=sq 4=saw)
+    pub waveform: u8,
     /// Rate in Hz
     pub rate: f32,
     /// Depth in "per mille" (divide by 1000 for pitch multiplier)
@@ -323,7 +391,7 @@ impl Default for VibratoParams {
     fn default() -> Self {
         Self {
             enabled: false,
-            waveform: LfoWaveform::Sine,
+            waveform: 1,
             rate: 30.0,
             depth: 30.0,
             delay: 0.0,
@@ -388,6 +456,7 @@ impl Default for LfoParams {
 
 /// Filter parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FilterParams {
     pub enabled: bool,
     #[serde(rename = "type")]

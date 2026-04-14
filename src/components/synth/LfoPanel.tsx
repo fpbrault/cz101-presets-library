@@ -66,7 +66,7 @@ export default function LfoPanel({
 			mode="radio"
 			name={accordionName}
 			variant="panel-slanted"
-			defaultOpen={defaultOpen}
+			defaultopen={defaultOpen}
 			titleClassName="pr-3"
 			title="LFO"
 		>

@@ -26,11 +26,15 @@ type DetailsModeProps = CommonProps &
 		"children" | "className" | "title"
 	> & {
 		mode?: "details";
+		/** Initial open state (not controlled). Maps to the native `open` attribute. */
+		defaultopen?: boolean;
 	};
 
 type CheckboxModeProps = CommonProps & {
 	mode: "checkbox";
 	defaultOpen?: boolean;
+	/** Alias accepted from panel components */
+	defaultopen?: boolean;
 	inputClassName?: string;
 };
 
@@ -38,6 +42,8 @@ type RadioModeProps = CommonProps & {
 	mode: "radio";
 	name: string;
 	defaultOpen?: boolean;
+	/** Alias accepted from panel components */
+	defaultopen?: boolean;
 	inputClassName?: string;
 };
 
@@ -54,7 +60,7 @@ const VARIANT_TITLE_CLASSES: Partial<Record<CardVariant, string>> = {
 };
 
 const VARIANT_CONTENT_CLASSES: Partial<Record<CardVariant, string>> = {
-	"panel-slanted": "border-1 border-cz-light-blue bg-cz-panel p-2",
+	"panel-slanted": "border-1 border-cz-section-light-blue bg-cz-panel p-2",
 };
 
 export default function CollapsibleCard(props: CollapsibleCardProps) {
@@ -90,13 +96,14 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 	});
 
 	if (props.mode === "checkbox") {
-		const { defaultOpen = false, inputClassName = "" } = props;
+		const { defaultOpen = false, defaultopen, inputClassName = "" } = props;
+		const isOpen = defaultopen ?? defaultOpen;
 
 		return (
 			<div className={collapseClassName}>
 				<input
 					type="checkbox"
-					defaultChecked={defaultOpen}
+					defaultChecked={isOpen}
 					className={inputClassName}
 				/>
 				<div
@@ -126,11 +133,12 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 		titleClassName: _titleClassName,
 		contentClassName: _contentClassName,
 		arrow: _arrow,
+		defaultopen,
 		...detailsProps
-	} = props;
+	} = props as DetailsModeProps;
 
 	return (
-		<details className={collapseClassName} {...detailsProps}>
+		<details className={collapseClassName} open={defaultopen} {...detailsProps}>
 			<summary
 				className={joinClasses(
 					"collapse-title cursor-pointer list-none cz-collapse-header after:end-5",

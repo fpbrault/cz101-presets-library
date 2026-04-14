@@ -28,7 +28,7 @@ export default function PhaseModPanel({
 			mode="radio"
 			name={accordionName}
 			variant="panel-slanted"
-			defaultOpen={defaultOpen}
+			defaultopen={defaultOpen}
 			titleClassName="pr-3"
 			title="Phase Mod"
 		>

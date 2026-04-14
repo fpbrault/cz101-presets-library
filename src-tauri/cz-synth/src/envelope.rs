@@ -29,7 +29,8 @@ impl EnvGen {
     /// Mirrors `advanceEnv` in pdVisualizerProcessor.js exactly.
     pub fn advance(&mut self, env_data: &StepEnvData, sr: f32, key_follow: f32, note: u8) {
         let steps = &env_data.steps;
-        let step_count = steps.len().max(1); // NUM_ENV_STEPS = 8, always 8 in our fixed array
+        // Use step_count to honour the active-step window (matches JS `stepCount`)
+        let step_count = env_data.step_count.clamp(1, steps.len());
         let sustain_step = env_data.sustain_step.min(step_count - 1);
         let effective_end_step = step_count - 1;
         let current_step = self.step.min(effective_end_step);
@@ -120,7 +121,7 @@ impl EnvGen {
     /// Mirrors `startEnvRelease` in pdVisualizerProcessor.js exactly.
     pub fn start_release(&mut self, env_data: &StepEnvData) {
         let steps = &env_data.steps;
-        let step_count = steps.len().max(1);
+        let step_count = env_data.step_count.clamp(1, steps.len());
         let sustain_step = env_data.sustain_step.min(step_count - 1);
         let effective_end_step = step_count - 1;
 

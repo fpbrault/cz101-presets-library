@@ -287,7 +287,13 @@ pub fn render_voice(voice: &mut Voice, p: &SynthParams, lfo_mod_val: f32, sr: f3
             if voice.vibrato_phase >= 1.0 {
                 voice.vibrato_phase -= 1.0;
             }
-            let lfo_val = lfo_output(voice.vibrato_phase, vibrato.waveform);
+            let vib_waveform = match vibrato.waveform {
+                2 => crate::params::LfoWaveform::Triangle,
+                3 => crate::params::LfoWaveform::Square,
+                4 => crate::params::LfoWaveform::Saw,
+                _ => crate::params::LfoWaveform::Sine,
+            };
+            let lfo_val = lfo_output(voice.vibrato_phase, vib_waveform);
             let pitch_mod = 1.0 + lfo_val * (vibrato.depth / 1000.0);
             effective_freq1 *= pitch_mod;
             effective_freq2 *= pitch_mod;

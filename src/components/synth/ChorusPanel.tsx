@@ -27,7 +27,7 @@ export default function ChorusPanel({
 			mode="radio"
 			name={accordionName}
 			variant="panel-slanted"
-			defaultOpen={defaultOpen}
+			defaultopen={defaultOpen}
 			titleClassName="pr-3"
 			title="Chorus"
 		>

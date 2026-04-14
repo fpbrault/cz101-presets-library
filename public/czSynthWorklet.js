@@ -174,18 +174,116 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 
 	_initWasm(wasmBytes, bindingsJs) {
 		try {
+			// AudioWorklet scope lacks TextDecoder/TextEncoder — polyfill before eval.
+			// These are used by the wasm-bindgen generated bindings for string encoding.
+			if (typeof TextDecoder === "undefined") {
+				globalThis.TextDecoder = class TextDecoder {
+					constructor(encoding = "utf-8", options = {}) {
+						this.encoding = encoding;
+						this.fatal = options.fatal ?? false;
+						this.ignoreBOM = options.ignoreBOM ?? false;
+					}
+					decode(input) {
+						// wasm-bindgen calls decode() with no args as a warm-up — return ""
+						if (input === undefined || input === null) return "";
+						// Minimal UTF-8 decoder sufficient for wasm-bindgen's usage
+						const bytes =
+							input instanceof Uint8Array
+								? input
+								: new Uint8Array(
+										ArrayBuffer.isView(input) ? input.buffer : input,
+									);
+						let out = "";
+						let i = 0;
+						while (i < bytes.length) {
+							const b = bytes[i];
+							if (b < 0x80) {
+								out += String.fromCharCode(b);
+								i++;
+							} else if ((b & 0xe0) === 0xc0) {
+								out += String.fromCharCode(
+									((b & 0x1f) << 6) | (bytes[i + 1] & 0x3f),
+								);
+								i += 2;
+							} else if ((b & 0xf0) === 0xe0) {
+								out += String.fromCharCode(
+									((b & 0x0f) << 12) |
+										((bytes[i + 1] & 0x3f) << 6) |
+										(bytes[i + 2] & 0x3f),
+								);
+								i += 3;
+							} else {
+								const cp =
+									((b & 0x07) << 18) |
+									((bytes[i + 1] & 0x3f) << 12) |
+									((bytes[i + 2] & 0x3f) << 6) |
+									(bytes[i + 3] & 0x3f);
+								const c = cp - 0x10000;
+								out += String.fromCharCode(
+									0xd800 + (c >> 10),
+									0xdc00 + (c & 0x3ff),
+								);
+								i += 4;
+							}
+						}
+						return out;
+					}
+				};
+			}
+			if (typeof TextEncoder === "undefined") {
+				globalThis.TextEncoder = class TextEncoder {
+					get encoding() {
+						return "utf-8";
+					}
+					encode(str) {
+						const buf = [];
+						for (let i = 0; i < str.length; i++) {
+							let cp = str.charCodeAt(i);
+							if (cp >= 0xd800 && cp <= 0xdbff) {
+								cp =
+									0x10000 +
+									((cp - 0xd800) << 10) +
+									(str.charCodeAt(++i) - 0xdc00);
+							}
+							if (cp < 0x80) {
+								buf.push(cp);
+							} else if (cp < 0x800) {
+								buf.push(0xc0 | (cp >> 6), 0x80 | (cp & 0x3f));
+							} else if (cp < 0x10000) {
+								buf.push(
+									0xe0 | (cp >> 12),
+									0x80 | ((cp >> 6) & 0x3f),
+									0x80 | (cp & 0x3f),
+								);
+							} else {
+								buf.push(
+									0xf0 | (cp >> 18),
+									0x80 | ((cp >> 12) & 0x3f),
+									0x80 | ((cp >> 6) & 0x3f),
+									0x80 | (cp & 0x3f),
+								);
+							}
+						}
+						const out = new Uint8Array(buf.length);
+						out.set(buf);
+						return out;
+					}
+				};
+			}
+
 			// The bindings JS is the content of cz_synth.js (no-modules build).
-			// Evaluating it in the worklet scope assigns `wasm_bindgen` globally.
-			// AudioWorklets cannot use importScripts with dynamic paths, and the
-			// no-modules wasm-pack output is designed to be eval'd exactly like this.
+			// The IIFE assigns to `let wasm_bindgen` — not globalThis — so we
+			// rewrite the prefix to force assignment onto globalThis instead.
 			// biome-ignore lint/security/noGlobalEval: required for WASM no-modules init in AudioWorklet
-			globalThis.eval(bindingsJs);
+			globalThis.wasm_bindgen = globalThis.eval(
+				bindingsJs.replace(/^\s*let\s+wasm_bindgen\s*=/, ""),
+			);
 
 			// initSync accepts a compiled WebAssembly.Module or raw bytes.
 			const wasmModule = new WebAssembly.Module(wasmBytes);
-			wasm_bindgen.initSync({ module: wasmModule });
+			globalThis.wasm_bindgen.initSync({ module: wasmModule });
 
-			this._synth = new wasm_bindgen.CzSynthProcessor(sampleRate);
+			this._synth = new globalThis.wasm_bindgen.CzSynthProcessor(sampleRate);
 
 			// Apply params accumulated before WASM was ready
 			this._synth.setParams(JSON.stringify(this._params));
