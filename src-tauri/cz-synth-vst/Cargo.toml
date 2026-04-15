@@ -8,6 +8,10 @@ description = "CZ-101 synthesizer VST3/AU plugin"
 crate-type = ["cdylib"]
 
 [features]
+default = []
+vst3 = ["beamer/vst3"]
+auv2 = ["beamer/au"]
+auv3 = ["beamer/au"]
 # Enable Safari Web Inspector on the plugin WebView and load UI from the repo's
 # dist/ directory (instead of the AU bundle).  Build with:
 #   cargo build -p cz-synth-vst --features debug_gui
@@ -15,14 +19,8 @@ debug_gui = []
 
 [dependencies]
 cz-synth = { path = "../cz-synth" }
-clack-plugin = { git = "https://github.com/prokopyl/clack.git", rev = "5deaa1be9b5af7078d75cbe54abefee12ed40f63" }
-clack-extensions = { git = "https://github.com/prokopyl/clack.git", rev = "5deaa1be9b5af7078d75cbe54abefee12ed40f63", features = ["clack-plugin", "audio-ports", "gui", "note-ports", "params", "raw-window-handle_06"] }
-clap-wrapper = { version = "0.3.0", features = ["vst3", "auv2"] }
-wry = "0.51.2"
-raw-window-handle = "0.6"
+beamer = { workspace = true }
 serde_json = "1.0"
-crossbeam = "0.8.4"
-clap-sys = "0.4.0"
 libm = "0.2"
 libc = "0.2"
 

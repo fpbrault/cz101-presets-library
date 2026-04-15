@@ -8,4 +8,4 @@ email = "felix@perron-brault.com"
 has_gui = true
 gui_size = [1280, 800]
 gui_background_color = "#0a0a0a"
-subcategories = ["Synth", "Piano"]
+subcategories = ["synth", "piano"]
