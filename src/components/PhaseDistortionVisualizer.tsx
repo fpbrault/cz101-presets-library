@@ -1322,7 +1322,7 @@ export default function PhaseDistortionVisualizer() {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 	return (
-		<div className="h-full bg-cz-body flex flex-col overflow-hidden gap-4 w-full">
+		<div className="h-full bg-cz-panel flex flex-col overflow-hidden gap-4 w-full">
 			<SynthHeader
 				allEntries={allPresetEntries}
 				activePresetName={activePresetName}

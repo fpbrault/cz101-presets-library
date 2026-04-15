@@ -3,6 +3,7 @@ import type React from "react";
 export type CardVariant =
 	| "panel"
 	| "panel-slanted"
+	| "panel-gold"
 	| "hero"
 	| "subtle"
 	| "inset";
@@ -21,6 +22,7 @@ export const CARD_BASE_CLASSES =
 export const CARD_VARIANT_CLASSES: Record<CardVariant, string> = {
 	panel: "rounded-2xl  ",
 	"panel-slanted": "rounded-none cz-section-slanted",
+	"panel-gold": "rounded-none cz-section-gold",
 	hero: "rounded-2xl bg-cz-surface ",
 	subtle: "rounded-xl bg-cz-surface/20",
 	inset: "rounded-lg bg-cz-inset",

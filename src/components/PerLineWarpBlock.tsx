@@ -2,7 +2,6 @@ import { memo, useEffect, useState } from "react";
 import AlgoIconGrid from "./AlgoIconGrid";
 import type { PdAlgo, StepEnvData } from "./pdAlgorithms";
 import { PD_ALGOS } from "./pdAlgorithms";
-import { SingleCycleDisplay } from "./SingleCycleDisplay";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
 import Card from "./ui/Card";
 import CzButton from "./ui/CzButton";
@@ -10,7 +9,6 @@ import CzVerticalSlider from "./ui/CzVerticalSlider";
 
 interface PerLineWarpBlockProps {
 	label: string;
-	waveform: Float32Array | number[];
 	color: string;
 	algo: PdAlgo;
 	setAlgo: (a: PdAlgo) => void;
@@ -44,7 +42,6 @@ type EnvTab = "dco" | "dcw" | "dca";
 
 export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	label,
-	waveform,
 	color,
 	algo,
 	setAlgo,
@@ -116,17 +113,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	return (
 		<div className="min-w-0">
 			<div>
-				<div className="grid gap-4 grid-cols-[220px_minmax(0,1fr)]">
-					<div className="space-y-4">
-						<SingleCycleDisplay
-							data={waveform}
-							color={color}
-							label="Single Cycle"
-							width={176}
-							height={64}
-						/>
-
-						<Card variant="subtle" className="p-3">
+				<div className="grid gap-4 grid-cols-2">
+					<div className="grid grid-cols-2 gap-4">
+						<Card variant="subtle" className="p-3 col-span-1 ">
 							<div className="flex justify-between">
 								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
 									Algo A
@@ -135,11 +124,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									{PD_ALGOS.find((a) => a.value === algo)?.label}
 								</span>
 							</div>
-
 							<AlgoIconGrid value={algo} onChange={setAlgo} size={36} />
 						</Card>
-
-						<Card variant="subtle" className="p-3">
+						<Card variant="subtle" className="p-3 col-span-1">
 							<div className="flex justify-between">
 								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
 									Algo B
@@ -148,37 +135,32 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									{PD_ALGOS.find((b) => b.value === algo2)?.label}
 								</span>
 							</div>
-							<div className="space-y-3">
-								<div className="space-y-1">
-									<div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cz-cream">
-										<span>Blend</span>
-										<span>{Math.round(algoBlend * 100)}%</span>
-									</div>
-									<input
-										type="range"
-										min={0}
-										max={100}
-										value={Math.round(algoBlend * 100)}
-										onChange={(e) => setAlgoBlend(Number(e.target.value) / 100)}
-										className="range range-xs w-full"
-										style={{ accentColor: "#9cb937" }}
-									/>
+							<AlgoIconGrid
+								value={algo2 ?? PD_ALGOS[0].value}
+								onChange={setAlgo2}
+								size={36}
+								disabled={algoBlend === 0}
+							/>
+							<div className="space-y-3 mt-2">
+								<div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cz-cream">
+									<span>Blend</span>
+									<span>{Math.round(algoBlend * 100)}%</span>
 								</div>
-								<AlgoIconGrid
-									value={(algo2 ?? PD_ALGOS[0].value) as PdAlgo}
-									onChange={(value) => setAlgo2(value)}
-									size={30}
-									disabled={algoBlend === 0}
+								<input
+									type="range"
+									min={0}
+									max={100}
+									value={Math.round(algoBlend * 100)}
+									onChange={(e) => setAlgoBlend(Number(e.target.value) / 100)}
+									className="range range-xs w-full gh"
+									style={{ accentColor: "#9cb937" }}
 								/>
 							</div>
 						</Card>
-					</div>
 
-					<div className="space-y-4">
-						{/* Sliders + Envelope Matrix side by side */}
-						<div className="flex flex-wrap gap-4">
+						<div className="flex flex-wrap gap-4 col-span-2">
 							{/* Parameters card */}
-							<Card variant="subtle" className="p-3 shrink-0 h-fit">
+							<Card variant="subtle" className="p-3 shrink-0 h-fit w-full">
 								<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
 									Parameters
 								</div>
@@ -281,47 +263,50 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									)}
 								</div>
 							</Card>
-
-							{/* Envelope Matrix card */}
-							<Card variant="subtle" className="p-3 flex-1 min-w-0">
-								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
-									Envelope Matrix
-								</div>
-								<div className="mb-2 flex gap-1">
-									{(["dco", "dcw", "dca"] as EnvTab[]).map((tab) => (
-										<CzButton
-											key={tab}
-											active={activeEnvTab === tab}
-											onClick={() => setActiveEnvTab(tab)}
-											className="[&_button]:bg-cz-inset [&_button]:border-cz-border"
-										>
-											{tab.toUpperCase()}
-										</CzButton>
-									))}
-								</div>
-								<StepEnvelopeEditor
-									title={activeEnv.title}
-									env={activeEnv.env}
-									onChange={activeEnv.setEnv}
-									color={activeEnv.envColor}
-								/>
-								<div className="mt-2 flex items-center gap-2">
-									<span className="text-[10px] text-cz-cream uppercase tracking-[0.2em]">
-										Key Follow:
-									</span>
-									<input
-										type="range"
-										min={0}
-										max={9}
-										value={keyFollow}
-										onChange={(e) => setKeyFollow(Number(e.target.value))}
-										className="range range-xs"
-										style={{ accentColor: "var(--color-cz-gold)" }}
-									/>
-									<span className="text-xs text-cz-cream w-4">{keyFollow}</span>
-								</div>
-							</Card>
 						</div>
+					</div>
+					<div className="col-span-1">
+						{/* Sliders + Envelope Matrix side by side */}
+
+						{/* Envelope Matrix card */}
+						<Card variant="subtle" className="p-3 flex-1 min-w-0">
+							<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
+								Envelope Matrix
+							</div>
+							<div className="mb-2 flex gap-1">
+								{(["dco", "dcw", "dca"] as EnvTab[]).map((tab) => (
+									<CzButton
+										key={tab}
+										active={activeEnvTab === tab}
+										onClick={() => setActiveEnvTab(tab)}
+										className="[&_button]:bg-cz-inset [&_button]:border-cz-border"
+									>
+										{tab.toUpperCase()}
+									</CzButton>
+								))}
+							</div>
+							<StepEnvelopeEditor
+								title={activeEnv.title}
+								env={activeEnv.env}
+								onChange={activeEnv.setEnv}
+								color={activeEnv.envColor}
+							/>
+							<div className="mt-2 flex items-center gap-2">
+								<span className="text-[10px] text-cz-cream uppercase tracking-[0.2em]">
+									Key Follow:
+								</span>
+								<input
+									type="range"
+									min={0}
+									max={9}
+									value={keyFollow}
+									onChange={(e) => setKeyFollow(Number(e.target.value))}
+									className="range range-xs"
+									style={{ accentColor: "var(--color-cz-gold)" }}
+								/>
+								<span className="text-xs text-cz-cream w-4">{keyFollow}</span>
+							</div>
+						</Card>
 					</div>
 				</div>
 			</div>

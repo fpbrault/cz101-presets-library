@@ -26,7 +26,7 @@ export default function ChorusPanel({
 		<CollapsibleCard
 			mode="radio"
 			name={accordionName}
-			variant="panel-slanted"
+			variant="panel-gold"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
 			title="Chorus"

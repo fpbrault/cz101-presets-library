@@ -43,7 +43,7 @@ export const SingleCycleDisplay = memo(function SingleCycleDisplay({
 	}, [data, color, width, height]);
 
 	return (
-		<div className="flex flex-col items-center">
+		<div className="flex flex-col items-center col-span-2">
 			<span className="mb-1 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
 				{label}
 			</span>

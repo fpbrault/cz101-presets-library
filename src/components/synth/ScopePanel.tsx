@@ -29,7 +29,7 @@ export default function ScopePanel({
 }: ScopePanelProps) {
 	return (
 		<CollapsibleCard
-			variant="panel-slanted"
+			variant="panel-gold"
 			open={open}
 			onToggle={onToggle}
 			titleClassName="pr-3"
@@ -57,7 +57,7 @@ export default function ScopePanel({
 						onChange={setScopeCycles}
 						min={0.5}
 						max={8}
-						size={32}
+						size={48}
 						color="#3dff3d"
 						label="Cycles"
 						valueFormatter={(value) => value.toFixed(1)}
@@ -67,7 +67,7 @@ export default function ScopePanel({
 						onChange={setScopeVerticalZoom}
 						min={0.25}
 						max={4}
-						size={32}
+						size={48}
 						color="#9cb937"
 						label="Zoom"
 						valueFormatter={(value) => `${value.toFixed(1)}x`}
@@ -77,7 +77,7 @@ export default function ScopePanel({
 						onChange={(value) => setScopeTriggerLevel(Math.round(value))}
 						min={0}
 						max={255}
-						size={32}
+						size={48}
 						color="#7f9de4"
 						label="Trig"
 						valueFormatter={(value) => `${Math.round(value)}`}

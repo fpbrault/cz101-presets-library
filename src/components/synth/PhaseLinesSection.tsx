@@ -1,6 +1,7 @@
 import { type RefObject, useState } from "react";
 import { PerLineWarpBlock } from "@/components/PerLineWarpBlock";
 import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
+import { SingleCycleDisplay } from "@/components/SingleCycleDisplay";
 import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
 
@@ -118,43 +119,19 @@ export default function PhaseLinesSection({
 				<div className="shrink-0">
 					<div className="mb-1 cz-light-blue">Clone</div>
 					<div className="flex gap-1">
-						<CzButton led={false} onClick={handleCopyAlgos}>
-							Algo
-						</CzButton>
-						<CzButton led={false} onClick={handleCopyEnvelopes}>
-							Env
-						</CzButton>
-						<CzButton led={false} onClick={handleCopyFull}>
-							All
-						</CzButton>
+						<CzButton onClick={handleCopyAlgos}>Algo</CzButton>
+						<CzButton onClick={handleCopyEnvelopes}>Env</CzButton>
+						<CzButton onClick={handleCopyFull}>All</CzButton>
 					</div>
 				</div>
 
-				{/* Mix A/B + Phase Map */}
-				{/* 	<div className="ml-auto grid grid-cols-2 gap-3">
-					<Card variant="inset" className="border-cz-border p-2">
-						<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
-							Mix A/B
-						</div>
-						<canvas
-							ref={combinedCanvasRef as RefObject<HTMLCanvasElement>}
-							width={220}
-							height={70}
-							className="h-17.5 w-full rounded-lg"
-						/>
-					</Card>
-					<Card variant="inset" className="border-cz-border p-2">
-						<div className="mb-1 text-[10px] uppercase tracking-[0.2em] text-cz-cream-dim">
-							Phase Map
-						</div>
-						<canvas
-							ref={phaseCanvasRef as RefObject<HTMLCanvasElement>}
-							width={220}
-							height={70}
-							className="h-17.5 w-full rounded-lg"
-						/>
-					</Card>
-				</div> */}
+				<SingleCycleDisplay
+					data={activeTab === "line1" ? line1.waveform : line2.waveform}
+					color="#9cb937"
+					label="Single Cycle"
+					width={176}
+					height={64}
+				/>
 			</div>
 
 			{/* Phase Line Tabs */}
@@ -170,7 +147,6 @@ export default function PhaseLinesSection({
 				<div className="tab-content bg-cz-surface p-4 ">
 					<PerLineWarpBlock
 						label="Line 1"
-						waveform={line1.waveform}
 						color="#9cb937"
 						algo={line1.algo}
 						setAlgo={line1.setAlgo}
@@ -212,7 +188,6 @@ export default function PhaseLinesSection({
 				<div className="tab-content  bg-cz-surface border-cz-border p-4">
 					<PerLineWarpBlock
 						label="Line 2"
-						waveform={line2.waveform}
 						color="#9cb937"
 						algo={line2.algo}
 						setAlgo={line2.setAlgo}

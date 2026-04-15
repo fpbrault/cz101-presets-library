@@ -69,21 +69,29 @@ export default function LfoPanel({
 		<CollapsibleCard
 			mode="radio"
 			name={accordionName}
-			variant="panel-slanted"
+			variant="panel-gold"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title={
-				<span className="flex items-center gap-2">
-					<span>LFO</span>
-					<CzButton
-						active={lfoEnabled}
-						onClick={() => setLfoEnabled(!lfoEnabled)}
+			title="LFO"
+		>
+			<div className="mb-2 flex items-center justify-center gap-2">
+				<span className="text-[10px] font-mono text-cz-cream-dim uppercase tracking-wider">
+					Enable
+				</span>
+				<button
+					type="button"
+					className={`cz-btn-arrow ${lfoEnabled ? "bg-cz-gold" : ""}`}
+					onClick={() => setLfoEnabled(!lfoEnabled)}
+				>
+					<span
+						className={`text-[8px] font-mono font-bold uppercase tracking-wider ${
+							lfoEnabled ? "text-white" : "text-cz-cream-dim"
+						}`}
 					>
 						{lfoEnabled ? "On" : "Off"}
-					</CzButton>
-				</span>
-			}
-		>
+					</span>
+				</button>
+			</div>
 			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
 				<div className="mb-2 cz-light-blue justify-between">
 					<span>LFO Visual</span>

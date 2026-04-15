@@ -35,21 +35,29 @@ export default function VibratoPanel({
 		<CollapsibleCard
 			mode="radio"
 			name={accordionName}
-			variant="panel-slanted"
+			variant="panel-gold"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title={
-				<span className="flex items-center gap-2">
-					<span>Vibrato</span>
-					<CzButton
-						active={vibratoEnabled}
-						onClick={() => setVibratoEnabled(!vibratoEnabled)}
+			title="Vibrato"
+		>
+			<div className="mb-2 flex items-center justify-center gap-2">
+				<span className="text-[10px] font-mono text-cz-cream-dim uppercase tracking-wider">
+					Enable
+				</span>
+				<button
+					type="button"
+					className={`cz-btn-arrow ${vibratoEnabled ? "bg-cz-gold" : ""}`}
+					onClick={() => setVibratoEnabled(!vibratoEnabled)}
+				>
+					<span
+						className={`text-[8px] font-mono font-bold uppercase tracking-wider ${
+							vibratoEnabled ? "text-white" : "text-cz-cream-dim"
+						}`}
 					>
 						{vibratoEnabled ? "On" : "Off"}
-					</CzButton>
-				</span>
-			}
-		>
+					</span>
+				</button>
+			</div>
 			<div className="flex justify-center gap-2">
 				{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
 					<CzButton

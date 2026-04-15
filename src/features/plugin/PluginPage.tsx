@@ -579,7 +579,6 @@ export default function PluginPage() {
 		lfoWaveform,
 		lfoRate,
 		lfoDepth,
-		lfoOffset,
 		lfoTarget,
 		filterEnabled,
 		filterCutoff,
@@ -599,6 +598,8 @@ export default function PluginPage() {
 		sendEnvelope,
 		algoKeyToId,
 		algoKeyToWaveform,
+		algo2B,
+		algo2A,
 	]);
 
 	// ── Receive params from Rust ───────────────────────────────────────────

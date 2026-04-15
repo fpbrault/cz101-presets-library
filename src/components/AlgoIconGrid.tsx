@@ -15,7 +15,7 @@ export default function AlgoIconGrid({
 	return (
 		<div
 			className={[
-				"grid grid-cols-5 gap-y-1 w-full h-full justify-center transition-opacity",
+				"grid grid-cols-5 gap-y-1 w-full  justify-center transition-opacity",
 				disabled ? "opacity-30" : "",
 			].join(" ")}
 			style={{ pointerEvents: disabled ? "none" : undefined }}

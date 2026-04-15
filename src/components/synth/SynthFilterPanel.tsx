@@ -69,21 +69,29 @@ export default function SynthFilterPanel({
 		<CollapsibleCard
 			mode="radio"
 			name={accordionName}
-			variant="panel-slanted"
+			variant="panel-gold"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
-			title={
-				<span className="flex items-center gap-2">
-					<span>Filter</span>
-					<CzButton
-						active={filterEnabled}
-						onClick={() => setFilterEnabled(!filterEnabled)}
+			title="Filter"
+		>
+			<div className="mb-2 flex items-center justify-center gap-2">
+				<span className="text-[10px] font-mono text-cz-cream-dim uppercase tracking-wider">
+					Enable
+				</span>
+				<button
+					type="button"
+					className={`cz-btn-arrow ${filterEnabled ? "bg-cz-gold" : ""}`}
+					onClick={() => setFilterEnabled(!filterEnabled)}
+				>
+					<span
+						className={`text-[8px] font-mono font-bold uppercase tracking-wider ${
+							filterEnabled ? "text-white" : "text-cz-cream-dim"
+						}`}
 					>
 						{filterEnabled ? "On" : "Off"}
-					</CzButton>
-				</span>
-			}
-		>
+					</span>
+				</button>
+			</div>
 			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
 				<div className="mb-2 cz-light-blue justify-between">
 					<span>Response</span>

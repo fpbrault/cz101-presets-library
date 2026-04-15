@@ -22,7 +22,7 @@ export default function ReverbPanel({
 		<CollapsibleCard
 			mode="radio"
 			name={accordionName}
-			variant="panel-slanted"
+			variant="panel-gold"
 			defaultopen={defaultOpen}
 			titleClassName="pr-3"
 			title="Reverb"

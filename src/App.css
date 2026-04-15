@@ -66,8 +66,17 @@
 	.cz-section-slanted {
 		@apply rounded-none text-center;
 	}
+	.cz-section-gold {
+		@apply rounded-none text-center;
+	}
 	.cz-section-slanted-title {
-		@apply [clip-path:polygon(15px_0%,calc(100%_-_5px)_0%,calc(100%_-_15px)_100%,5px_100%)] text-xl text-cz-panel font-bold;
+		@apply [clip-path:polygon(15px_0%,calc(100%_-_5px)_0%,calc(100%_-_15px)_100%,5px_100%)] text-lg text-cz-panel font-bold;
+	}
+	.cz-section-gold-title {
+		@apply [clip-path:polygon(15px_0%,calc(100%_-_5px)_0%,calc(100%_-_15px)_100%,5px_100%)] text-lg text-cz-gold font-bold bg-cz-panel;
+	}
+	.cz-collapse-header-gold {
+		@apply flex items-center gap-2 py-[0.2rem] px-3 font-mono text-[0.7rem] font-bold tracking-[0.28em] uppercase bg-cz-gold text-cz-body w-full;
 	}
 
 	/* LED indicator dot — small square LED above/beside a button */

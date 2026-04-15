@@ -52,15 +52,18 @@ type CollapsibleCardProps =
 	| CheckboxModeProps
 	| RadioModeProps;
 
-const COLLAPSE_BASE_CLASSES =
-	"border border-base-300/70 text-base-content outline-none";
+const COLLAPSE_BASE_CLASSES = "text-base-content outline-none mb-1";
 
 const VARIANT_TITLE_CLASSES: Partial<Record<CardVariant, string>> = {
 	"panel-slanted": "cz-section-slanted-title py-1",
+	"panel-gold": "cz-section-gold-title py-1",
 };
 
 const VARIANT_CONTENT_CLASSES: Partial<Record<CardVariant, string>> = {
-	"panel-slanted": "border-1 border-cz-section-light-blue bg-cz-panel p-2",
+	"panel-slanted":
+		"border-l-2 border-r-2 border-cz-cream mt-2 mb-1 bg-cz-panel p-2",
+	"panel-gold":
+		"border-l-2 border-r-2 border-cz-cream mt-2 mb-1 bg-cz-panel p-2",
 };
 
 export default function CollapsibleCard(props: CollapsibleCardProps) {
