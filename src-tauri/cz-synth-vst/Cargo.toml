@@ -25,3 +25,7 @@ crossbeam = "0.8.4"
 clap-sys = "0.4.0"
 libm = "0.2"
 libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.25"
+objc = "0.2"

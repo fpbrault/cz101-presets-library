@@ -23,6 +23,13 @@ use std::fmt::Write as FmtWrite;
 use std::io::Write as _;
 use std::sync::{Arc, Mutex};
 
+#[cfg(target_os = "macos")]
+use cocoa::appkit::NSView;
+#[cfg(target_os = "macos")]
+use cocoa::base::{id, YES};
+#[cfg(target_os = "macos")]
+use wry::WebViewExtMacOS;
+
 // ─── Window handle bridge ─────────────────────────────────────────────────────
 //
 // clack-extensions (with raw-window-handle_06 feature) implements the
@@ -74,6 +81,39 @@ fn append_log(msg: &str) {
         .open(LOG_PATH)
     {
         let _ = writeln!(f, "[{ts}] cz101-plugin: {msg}");
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn configure_embedded_webview_for_au(
+    parent_ns_view_ptr: *mut std::ffi::c_void,
+    web_view: &wry::WebView,
+) {
+    // AU hosts (notably Logic's AUHostingService) may not send explicit
+    // resize callbacks on open, so force the child WebView to fill parent
+    // bounds and keep autoresizing in native Cocoa coordinates.
+    unsafe {
+        let parent_nsview = parent_ns_view_ptr as id;
+        if parent_nsview.is_null() {
+            plugin_log!("show: parent NSView pointer was null");
+            return;
+        }
+
+        let webview = web_view.webview();
+        let webview_nsview = (&*webview) as *const _ as id;
+        if webview_nsview.is_null() {
+            plugin_log!("show: unable to resolve WKWebView NSView");
+            return;
+        }
+
+        let bounds = NSView::bounds(parent_nsview);
+        NSView::setWantsLayer(parent_nsview, YES);
+        NSView::setWantsLayer(webview_nsview, YES);
+        NSView::setFrameOrigin(webview_nsview, bounds.origin);
+        NSView::setFrameSize(webview_nsview, bounds.size);
+        // NSViewWidthSizable (2) | NSViewHeightSizable (16)
+        NSView::setAutoresizingMask_(webview_nsview, 18u64);
+        plugin_log!("show: configured child WebView frame/autoresize for AU host");
     }
 }
 
@@ -2706,6 +2746,121 @@ impl PluginAudioProcessorParams for CzAudioProcessor<'_> {
     }
 }
 
+impl<'a> CzMainThread<'a> {
+    fn ensure_webview_created(&mut self, reason: &str) -> Result<(), PluginError> {
+        if self.gui.web_view.is_some() {
+            return Ok(());
+        }
+
+        let Some(ns_view_ptr) = self.gui.pending_ns_view else {
+            return Ok(());
+        };
+
+        plugin_log!(
+            "{reason}: attempting WebView build for parent NSView {:?}",
+            ns_view_ptr
+        );
+
+        let ipc_sender = self.shared.ipc_sender.clone();
+        let request_cb = self.shared.request_callback.clone();
+        let size = self.gui.size;
+
+        #[allow(deprecated)]
+        let raw = {
+            use raw_window_handle::AppKitWindowHandle;
+            let ptr = std::ptr::NonNull::new(ns_view_ptr)
+                .ok_or(PluginError::Message("null NSView pointer"))?;
+            #[allow(deprecated)]
+            raw_window_handle::RawWindowHandle::AppKit(AppKitWindowHandle::new(ptr))
+        };
+        let bridge = RwhBridge(raw);
+
+        use wry::WebViewBuilder;
+
+        let resource_dir = gui::plugin_resource_dir();
+        let resource_dir_clone = resource_dir.clone();
+
+        match WebViewBuilder::new()
+            .with_custom_protocol("cz".into(), move |_webview_id, req| {
+                plugin_log!("custom_protocol: request {}", req.uri());
+                let path_str = req.uri().path().trim_start_matches('/');
+                let decoded = percent_decode(path_str);
+                let full_path = if let Some(ref dir) = resource_dir_clone {
+                    dir.join(&decoded)
+                } else {
+                    std::path::PathBuf::from(&decoded)
+                };
+                match std::fs::read(&full_path) {
+                    Ok(bytes) => {
+                        let mime = mime_for_path(&full_path);
+                        let body: std::borrow::Cow<'static, [u8]> = std::borrow::Cow::Owned(bytes);
+                        wry::http::Response::builder()
+                            .header("Content-Type", mime)
+                            .header("Access-Control-Allow-Origin", "*")
+                            .body(body)
+                            .unwrap_or_else(|_| {
+                                wry::http::Response::builder()
+                                    .status(500)
+                                    .body(std::borrow::Cow::Owned(Vec::<u8>::new()))
+                                    .unwrap()
+                            })
+                    }
+                    Err(_) => {
+                        plugin_log!("custom_protocol: 404 {}", full_path.display());
+                        wry::http::Response::builder()
+                            .status(404)
+                            .body(std::borrow::Cow::Owned(Vec::<u8>::new()))
+                            .unwrap()
+                    }
+                }
+            })
+            .with_url("cz://localhost/plugin.html")
+            .with_navigation_handler(|url| {
+                append_log(&format!("navigation: {url}"));
+                true
+            })
+            .with_ipc_handler(move |req: wry::http::Request<String>| {
+                let body = req.into_body();
+                append_log(&format!("ipc_handler: raw body = {body}"));
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&body) {
+                    let _ = ipc_sender.send(val);
+                    request_cb();
+                } else {
+                    append_log(&format!("ipc_handler: JSON parse failed for: {body}"));
+                }
+            })
+            .with_initialization_script(r#"
+                window.addEventListener('load', function() {
+                    if (window.ipc) {
+                        window.ipc.postMessage(JSON.stringify({__diag: "ipc_ready"}));
+                    } else {
+                        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ipc) {
+                            window.webkit.messageHandlers.ipc.postMessage(JSON.stringify({__diag: "webkit_ipc_ready"}));
+                        }
+                    }
+                });
+            "#)
+            .with_bounds(wry::Rect {
+                position: wry::dpi::LogicalPosition::new(0.0, 0.0).into(),
+                size: wry::dpi::LogicalSize::new(size.width, size.height).into(),
+            })
+            .build_as_child(&bridge)
+        {
+            Ok(wv) => {
+                plugin_log!("{reason}: WebView created successfully");
+                #[cfg(target_os = "macos")]
+                configure_embedded_webview_for_au(ns_view_ptr, &wv);
+                self.gui.web_view = Some(wv);
+            }
+            Err(e) => {
+                plugin_log!("{reason}: WebView build deferred/error: {e}");
+            }
+        }
+
+        Ok(())
+    }
+}
+
 // GUI
 impl PluginGuiImpl for CzMainThread<'_> {
     fn is_api_supported(&mut self, configuration: GuiConfiguration) -> bool {
@@ -2767,6 +2922,7 @@ impl PluginGuiImpl for CzMainThread<'_> {
             width: size.width as f64,
             height: size.height as f64,
         };
+        let _ = self.ensure_webview_created("set_size");
         if let Some(ref wv) = self.gui.web_view {
             let _ = wv.set_bounds(wry::Rect {
                 position: wry::dpi::LogicalPosition::new(0.0, 0.0).into(),
@@ -2802,6 +2958,7 @@ impl PluginGuiImpl for CzMainThread<'_> {
         };
 
         self.gui.pending_ns_view = Some(ns_view_ptr);
+        let _ = self.ensure_webview_created("set_parent");
         Ok(())
     }
 
@@ -2810,117 +2967,7 @@ impl PluginGuiImpl for CzMainThread<'_> {
     }
 
     fn show(&mut self) -> Result<(), PluginError> {
-        // If we have a pending parent NSView and no WebView yet, build it now.
-        // At show() time the view should be attached to an NSWindow.
-        if self.gui.web_view.is_none() {
-            if let Some(ns_view_ptr) = self.gui.pending_ns_view {
-                plugin_log!("show: building WebView for parent NSView {:?}", ns_view_ptr);
-                let ipc_sender = self.shared.ipc_sender.clone();
-                // Clone the request_callback Arc so the IPC closure (background thread)
-                // can schedule on_main_thread() after each param message.
-                let request_cb = self.shared.request_callback.clone();
-                let size = self.gui.size;
-
-                // Reconstruct the RawWindowHandle from the stored pointer.
-                #[allow(deprecated)]
-                let raw = {
-                    use raw_window_handle::AppKitWindowHandle;
-                    let ptr = std::ptr::NonNull::new(ns_view_ptr)
-                        .ok_or(PluginError::Message("null NSView pointer"))?;
-                    #[allow(deprecated)]
-                    raw_window_handle::RawWindowHandle::AppKit(AppKitWindowHandle::new(ptr))
-                };
-                let bridge = RwhBridge(raw);
-
-                use wry::WebViewBuilder;
-
-                // Use a custom protocol ("cz://") to serve the React bundle from
-                // the bundle's Resources/ui/ directory.  This avoids all file://
-                // cross-origin security restrictions that WKWebView imposes.
-                let resource_dir = gui::plugin_resource_dir();
-                let resource_dir_clone = resource_dir.clone();
-
-                match WebViewBuilder::new()
-                    .with_custom_protocol("cz".into(), move |_webview_id, req| {
-                        // Strip the cz://localhost/ prefix to get a relative path.
-                        let path_str = req.uri().path().trim_start_matches('/');
-                        // Decode %20 etc. (simple decoder for common cases).
-                        let decoded = percent_decode(path_str);
-                        // Resolve against the resource directory.
-                        let full_path = if let Some(ref dir) = resource_dir_clone {
-                            dir.join(&decoded)
-                        } else {
-                            std::path::PathBuf::from(&decoded)
-                        };
-                        match std::fs::read(&full_path) {
-                            Ok(bytes) => {
-                                let mime = mime_for_path(&full_path);
-                                let body: std::borrow::Cow<'static, [u8]> =
-                                    std::borrow::Cow::Owned(bytes);
-                                wry::http::Response::builder()
-                                    .header("Content-Type", mime)
-                                    .header("Access-Control-Allow-Origin", "*")
-                                    .body(body)
-                                    .unwrap_or_else(|_| {
-                                        wry::http::Response::builder()
-                                            .status(500)
-                                            .body(std::borrow::Cow::Owned(Vec::<u8>::new()))
-                                            .unwrap()
-                                    })
-                            }
-                            Err(_) => {
-                                plugin_log!("custom_protocol: 404 {}", full_path.display());
-                                wry::http::Response::builder()
-                                    .status(404)
-                                    .body(std::borrow::Cow::Owned(Vec::<u8>::new()))
-                                    .unwrap()
-                            }
-                        }
-                    })
-                    .with_url("cz://localhost/plugin.html")
-                    .with_ipc_handler(move |req: wry::http::Request<String>| {
-                        let body = req.into_body();
-                        append_log(&format!("ipc_handler: raw body = {body}"));
-                        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&body) {
-                            let _ = ipc_sender.send(val);
-                            // Tell the host to schedule on_main_thread() so the
-                            // param change is applied on the correct thread.
-                            request_cb();
-                        } else {
-                            append_log(&format!("ipc_handler: JSON parse failed for: {body}"));
-                        }
-                    })
-                    .with_initialization_script(r#"
-                        // Diagnostic: confirm window.ipc availability after page load
-                        window.addEventListener('load', function() {
-                            if (window.ipc) {
-                                window.ipc.postMessage(JSON.stringify({__diag: "ipc_ready"}));
-                            } else {
-                                // window.ipc not available - try webkit handler directly
-                                if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ipc) {
-                                    window.webkit.messageHandlers.ipc.postMessage(JSON.stringify({__diag: "webkit_ipc_ready"}));
-                                }
-                            }
-                        });
-                    "#)
-                    .with_bounds(wry::Rect {
-                        position: wry::dpi::LogicalPosition::new(0.0, 0.0).into(),
-                        size: wry::dpi::LogicalSize::new(size.width, size.height).into(),
-                    })
-                    .build_as_child(&bridge)
-                {
-                    Ok(wv) => {
-                        plugin_log!("show: WebView created successfully");
-                        self.gui.web_view = Some(wv);
-                    }
-                    Err(e) => {
-                        plugin_log!("show: WebView build error: {e}");
-                        // Don't return an error — some hosts call show() before the
-                        // view is in a window; a blank GUI is better than a crash.
-                    }
-                }
-            }
-        }
+        let _ = self.ensure_webview_created("show");
         Ok(())
     }
 

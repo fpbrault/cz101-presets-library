@@ -38,8 +38,8 @@
 
 // ─── GUI size constraints ─────────────────────────────────────────────────────
 
-pub const DEFAULT_WIDTH: u32 = 800;
-pub const DEFAULT_HEIGHT: u32 = 600;
+pub const DEFAULT_WIDTH: u32 = 1280;
+pub const DEFAULT_HEIGHT: u32 = 800;
 
 pub const MIN_WIDTH: u32 = 400;
 pub const MIN_HEIGHT: u32 = 300;
