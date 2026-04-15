@@ -280,11 +280,13 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 			}
 
 			// The bindings JS is the content of cz_synth.js (no-modules build).
-			// The IIFE assigns to `let wasm_bindgen` — not globalThis — so we
+			// The IIFE assigns to a local variable — not globalThis — so we
 			// rewrite the prefix to force assignment onto globalThis instead.
+			// Handles both old format (`let wasm_bindgen =`) and new format
+			// (`const _wasm_bindgen =`) produced by different wasm-bindgen versions.
 			// biome-ignore lint/security/noGlobalEval: required for WASM no-modules init in AudioWorklet
 			globalThis.wasm_bindgen = globalThis.eval(
-				bindingsJs.replace(/^\s*let\s+wasm_bindgen\s*=/, ""),
+				bindingsJs.replace(/^\s*(?:let|const|var)\s+_?wasm_bindgen\s*=/, ""),
 			);
 
 			// initSync accepts a compiled WebAssembly.Module or raw bytes.
