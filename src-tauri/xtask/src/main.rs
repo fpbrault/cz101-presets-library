@@ -260,12 +260,20 @@ fn bundle(config: &BundleConfig) -> Result<(), String> {
 
     // Build and bundle AU (macOS only) - build once, bundle for each requested format
     if (config.build_auv2 || config.build_auv3) && cfg!(target_os = "macos") {
+        let au_features = if config.build_auv2 && config.build_auv3 {
+            "auv2,auv3"
+        } else if config.build_auv2 {
+            "auv2"
+        } else {
+            "auv3"
+        };
+
         let dylib_path = if config.arch == Arch::Universal {
             build::build_universal(
                 &config.package,
                 config.release,
                 &workspace_root,
-                "au",
+                au_features,
                 config.verbose,
             )?
         } else {
@@ -273,7 +281,7 @@ fn bundle(config: &BundleConfig) -> Result<(), String> {
                 &config.package,
                 config.release,
                 &workspace_root,
-                "au",
+                au_features,
                 config.arch,
                 config.verbose,
             )?

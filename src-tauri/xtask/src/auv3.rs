@@ -320,7 +320,7 @@ pub fn bundle_auv3(
         arch_str
     );
 
-    let stub_main_path = workspace_root.join("src-tauri/xtask/au-support/objc/stub_main.c");
+    let stub_main_path = workspace_root.join("xtask/au-support/objc/stub_main.c");
     let host_binary_dst = app_macos_dir.join(executable_name);
 
     let mut host_built_paths: Vec<PathBuf> = Vec::new();
@@ -354,8 +354,7 @@ pub fn bundle_auv3(
     crate::verbose!(verbose, "    Signing...");
     codesign_bundle(&framework_dir, None, "Framework", verbose);
 
-    let entitlements_path =
-        workspace_root.join("src-tauri/xtask/au-support/resources/appex.entitlements");
+    let entitlements_path = workspace_root.join("xtask/au-support/resources/appex.entitlements");
     codesign_bundle(&appex_dir, Some(&entitlements_path), "Appex", verbose);
 
     codesign_bundle(&bundle_dir, None, "Container app", verbose);

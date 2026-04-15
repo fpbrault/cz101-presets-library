@@ -107,8 +107,8 @@ pub fn bundle_auv2(
     crate::verbose!(verbose, "    Building component ({})...", arch_str);
 
     // Header search paths for clang
-    let bridge_header_dir = workspace_root.join("src-tauri/xtask/au-support/objc");
-    let ipc_header_dir = workspace_root.join("src-tauri/xtask/src/au_codegen");
+    let bridge_header_dir = workspace_root.join("xtask/au-support/objc");
+    let ipc_header_dir = workspace_root.join("xtask/src/au_codegen");
 
     let executable_name = bundle_name.trim_end_matches(".component");
     let binary_dest = macos_dir.join(executable_name);
@@ -166,6 +166,36 @@ pub fn bundle_auv2(
     let dylib_name = dylib_path.file_name().unwrap();
     let dylib_dest = macos_dir.join(dylib_name);
     fs::copy(dylib_path, &dylib_dest).map_err(|e| format!("Failed to copy dylib: {}", e))?;
+
+    // Rewrite the linked dylib install name from the build-time absolute path
+    // to the bundle-relative location that will exist on user machines.
+    let dylib_name_str = dylib_name
+        .to_str()
+        .ok_or_else(|| "Invalid dylib file name".to_string())?;
+    let load_path = format!("@loader_path/{}", dylib_name_str);
+
+    // Inspect the actual linked path first because clang may canonicalize it.
+    let linked_old_path = Command::new("otool")
+        .args(["-L", binary_dest.to_str_safe()?])
+        .output()
+        .ok()
+        .and_then(|out| {
+            let text = String::from_utf8_lossy(&out.stdout);
+            text.lines()
+                .skip(1)
+                .filter_map(|line| line.split_whitespace().next())
+                .find(|path| path.contains(dylib_name_str) && !path.starts_with("@"))
+                .map(|s| s.to_string())
+        })
+        .unwrap_or_else(|| dylib_path.to_str_safe().unwrap_or("").to_string());
+
+    let status = Command::new("install_name_tool")
+        .args(["-change", &linked_old_path, &load_path, binary_dest.to_str_safe()?])
+        .status()
+        .map_err(|e| format!("Failed to run install_name_tool: {}", e))?;
+    if !status.success() {
+        return Err("Failed to rewrite AUv2 dylib load path".to_string());
+    }
 
     // Create Info.plist with factoryFunction
     let info_plist = create_component_info_plist(&ComponentPlistConfig {

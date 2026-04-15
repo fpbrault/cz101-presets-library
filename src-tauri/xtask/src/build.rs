@@ -119,40 +119,20 @@ fn get_au_rustflags(plugin_name: &str, objc_lib_dir: &Path) -> Result<String, St
     Ok(flags.join(" "))
 }
 
-/// Build beamer-au to ensure static libraries exist before building plugins.
+fn is_au_build(format: &str) -> bool {
+    format.split(',').any(|f| f == "au" || f == "auv2" || f == "auv3")
+}
+
+/// Legacy hook kept for compatibility with older bundling flow.
+///
+/// Recent beamer versions are consumed through the top-level `beamer` crate,
+/// and `beamer-au` is not necessarily a workspace package. Attempting
+/// `cargo build -p beamer-au` can fail with "did not match any packages".
 fn ensure_beamer_au_built(
-    workspace_root: &Path,
-    target: &str,
-    release: bool,
+    _workspace_root: &Path,
+    _target: &str,
+    _release: bool,
 ) -> Result<(), String> {
-    let profile = if release { "release" } else { "debug" };
-
-    // Check if already built
-    if find_beamer_au_out_dir(workspace_root, target, profile).is_some() {
-        return Ok(());
-    }
-
-    println!("Building beamer-au for {}...", target);
-    let mut cmd = Command::new("cargo");
-    cmd.arg("build")
-        .arg("-p")
-        .arg("beamer-au")
-        .arg("--target")
-        .arg(target)
-        .current_dir(workspace_root);
-
-    if release {
-        cmd.arg("--release");
-    }
-
-    let status = cmd
-        .status()
-        .map_err(|e| format!("Failed to build beamer-au: {}", e))?;
-
-    if !status.success() {
-        return Err("Failed to build beamer-au".to_string());
-    }
-
     Ok(())
 }
 
@@ -197,7 +177,7 @@ pub fn build_native(
     let dylib_name = format!("lib{}.dylib", lib_name);
 
     // AU requires additional setup (beamer-au and ObjC code)
-    let rustflags = if format == "au" {
+    let rustflags = if is_au_build(format) {
         ensure_beamer_au_built(workspace_root, target, release)?;
         crate::verbose!(
             verbose,
@@ -211,21 +191,35 @@ pub fn build_native(
     };
 
     let mut cmd = Command::new("cargo");
-    cmd.arg("build")
-        .arg("-p")
-        .arg(package)
-        .arg("--target")
-        .arg(target)
-        .arg("--features")
-        .arg(format)
-        .current_dir(workspace_root);
-
-    if release {
-        cmd.arg("--release");
-    }
-
     if let Some(flags) = &rustflags {
-        cmd.env("RUSTFLAGS", flags);
+        // AU build needs linker args only on the final plugin crate, not dependencies.
+        cmd.arg("rustc")
+            .arg("-p")
+            .arg(package)
+            .arg("--target")
+            .arg(target)
+            .arg("--features")
+            .arg(format)
+            .current_dir(workspace_root);
+        if release {
+            cmd.arg("--release");
+        }
+        cmd.arg("--");
+        for token in flags.split_whitespace() {
+            cmd.arg(token);
+        }
+    } else {
+        cmd.arg("build")
+            .arg("-p")
+            .arg(package)
+            .arg("--target")
+            .arg(target)
+            .arg("--features")
+            .arg(format)
+            .current_dir(workspace_root);
+        if release {
+            cmd.arg("--release");
+        }
     }
 
     let status = cmd
@@ -265,7 +259,7 @@ pub fn build_universal(
     let dylib_name = format!("lib{}.dylib", lib_name);
 
     // AU requires additional setup (beamer-au and ObjC code)
-    let (rustflags_x86, rustflags_arm) = if format == "au" {
+    let (rustflags_x86, rustflags_arm) = if is_au_build(format) {
         ensure_beamer_au_built(workspace_root, "x86_64-apple-darwin", release)?;
         ensure_beamer_au_built(workspace_root, "aarch64-apple-darwin", release)?;
 
@@ -289,21 +283,34 @@ pub fn build_universal(
     // Build for x86_64
     crate::verbose!(verbose, "    Building for x86_64...");
     let mut cmd = Command::new("cargo");
-    cmd.arg("build")
-        .arg("-p")
-        .arg(package)
-        .arg("--target")
-        .arg("x86_64-apple-darwin")
-        .arg("--features")
-        .arg(format)
-        .current_dir(workspace_root);
-
-    if release {
-        cmd.arg("--release");
-    }
-
     if let Some(flags) = &rustflags_x86 {
-        cmd.env("RUSTFLAGS", flags);
+        cmd.arg("rustc")
+            .arg("-p")
+            .arg(package)
+            .arg("--target")
+            .arg("x86_64-apple-darwin")
+            .arg("--features")
+            .arg(format)
+            .current_dir(workspace_root);
+        if release {
+            cmd.arg("--release");
+        }
+        cmd.arg("--");
+        for token in flags.split_whitespace() {
+            cmd.arg(token);
+        }
+    } else {
+        cmd.arg("build")
+            .arg("-p")
+            .arg(package)
+            .arg("--target")
+            .arg("x86_64-apple-darwin")
+            .arg("--features")
+            .arg(format)
+            .current_dir(workspace_root);
+        if release {
+            cmd.arg("--release");
+        }
     }
 
     let status = cmd
@@ -316,21 +323,34 @@ pub fn build_universal(
     // Build for arm64
     crate::verbose!(verbose, "    Building for arm64...");
     let mut cmd = Command::new("cargo");
-    cmd.arg("build")
-        .arg("-p")
-        .arg(package)
-        .arg("--target")
-        .arg("aarch64-apple-darwin")
-        .arg("--features")
-        .arg(format)
-        .current_dir(workspace_root);
-
-    if release {
-        cmd.arg("--release");
-    }
-
     if let Some(flags) = &rustflags_arm {
-        cmd.env("RUSTFLAGS", flags);
+        cmd.arg("rustc")
+            .arg("-p")
+            .arg(package)
+            .arg("--target")
+            .arg("aarch64-apple-darwin")
+            .arg("--features")
+            .arg(format)
+            .current_dir(workspace_root);
+        if release {
+            cmd.arg("--release");
+        }
+        cmd.arg("--");
+        for token in flags.split_whitespace() {
+            cmd.arg(token);
+        }
+    } else {
+        cmd.arg("build")
+            .arg("-p")
+            .arg(package)
+            .arg("--target")
+            .arg("aarch64-apple-darwin")
+            .arg("--features")
+            .arg(format)
+            .current_dir(workspace_root);
+        if release {
+            cmd.arg("--release");
+        }
     }
 
     let status = cmd
@@ -509,8 +529,8 @@ pub fn compile_plugin_objc(
         .map_err(|e| format!("Failed to write AuExtension.m: {}", e))?;
 
     // Header search paths for clang
-    let bridge_header_dir = workspace_root.join("src-tauri/xtask/au-support/objc");
-    let ipc_header_dir = workspace_root.join("src-tauri/xtask/src/au_codegen");
+    let bridge_header_dir = workspace_root.join("xtask/au-support/objc");
+    let ipc_header_dir = workspace_root.join("xtask/src/au_codegen");
 
     // Determine architecture for clang
     let arch = match target {

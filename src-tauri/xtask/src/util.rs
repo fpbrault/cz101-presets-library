@@ -358,10 +358,7 @@ pub fn detect_au_component_info(
     let has_gui = detect_has_gui(package, workspace_root);
 
     // Try Config.toml first
-    let config_path = workspace_root
-        .join("src-tauri")
-        .join(package)
-        .join("Config.toml");
+    let config_path = workspace_root.join(package).join("Config.toml");
     if let Ok(toml_str) = fs::read_to_string(&config_path) {
         if let Ok(config) = toml::from_str::<ConfigFile>(&toml_str) {
             let component_type = match config.category.as_str() {
@@ -383,10 +380,7 @@ pub fn detect_au_component_info(
     }
 
     // Fall back to source code parsing
-    let lib_path = workspace_root
-        .join("src-tauri")
-        .join(package)
-        .join("src/lib.rs");
+    let lib_path = workspace_root.join(package).join("src/lib.rs");
 
     if let Ok(content) = fs::read_to_string(&lib_path) {
         // Detect component type from Category enum in Config::new()

@@ -9,9 +9,10 @@ crate-type = ["cdylib"]
 
 [features]
 default = []
+au = ["beamer/au"]
 vst3 = ["beamer/vst3"]
-auv2 = ["beamer/au"]
-auv3 = ["beamer/au"]
+auv2 = ["au"]
+auv3 = ["au"]
 # Enable Safari Web Inspector on the plugin WebView and load UI from the repo's
 # dist/ directory (instead of the AU bundle).  Build with:
 #   cargo build -p cz-synth-vst --features debug_gui

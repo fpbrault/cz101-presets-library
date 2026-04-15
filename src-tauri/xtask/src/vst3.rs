@@ -4,6 +4,7 @@
 
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 
 use crate::build::get_version_info;
 use crate::util::{install_bundle, shorten_path, to_vst3_bundle_name};
@@ -57,6 +58,13 @@ pub fn bundle_vst3(
     // Copy dylib
     let plugin_binary = macos_dir.join(bundle_name.trim_end_matches(".vst3"));
     fs::copy(dylib_path, &plugin_binary).map_err(|e| format!("Failed to copy dylib: {}", e))?;
+
+    // Rewrite install name to avoid embedding a build-machine absolute path.
+    let executable_name = bundle_name.trim_end_matches(".vst3");
+    let install_id = format!("@rpath/{}", executable_name);
+    let _ = Command::new("install_name_tool")
+        .args(["-id", &install_id, plugin_binary.to_str().unwrap_or("")])
+        .status();
 
     // Create Info.plist
     let info_plist = create_vst3_info_plist(package, &bundle_name, &version_string);

@@ -1,39 +1,53 @@
 #!/usr/bin/env bash
-# Install built plugin bundles from dist/ to system plugin directories
+# Install built plugin bundles from src-tauri/target/ to system plugin directories
 # Usage: ./scripts/install-plugin.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR/.."
-DIST="$ROOT/dist"
+TAURI="$ROOT/src-tauri"
 
+# Use release by default, allow override via PROFILE env var
+PROFILE="${PROFILE:-release}"
 PLUGIN_NAME="CZ-101 Phase Distortion"
+TARGET_DIR="$TAURI/target/$PROFILE"
+
 VST3_SYSTEM="$HOME/Library/Audio/Plug-Ins/VST3"
 AU_SYSTEM="$HOME/Library/Audio/Plug-Ins/Components"
 
-VST3_SRC="$DIST/$PLUGIN_NAME.vst3"
-COMP_SRC="$DIST/$PLUGIN_NAME.component"
+VST3_SRC="$TARGET_DIR/CzSynthVst.vst3"
+AUV2_SRC="$TARGET_DIR/CzSynthVst.component"
+AUV3_SRC="$TARGET_DIR/CzSynthVst.app"
 
 if [[ ! -d "$VST3_SRC" ]]; then
-  echo "ERROR: $VST3_SRC not found. Run 'bun run plugin:build' first." >&2
+  echo "ERROR: $VST3_SRC not found. Run 'bun run build:plugin' first." >&2
   exit 1
 fi
-if [[ ! -d "$COMP_SRC" ]]; then
-  echo "ERROR: $COMP_SRC not found. Run 'bun run plugin:build' first." >&2
+if [[ ! -d "$AUV2_SRC" ]]; then
+  echo "ERROR: $AUV2_SRC not found. Run 'bun run build:plugin' first." >&2
   exit 1
 fi
 
 mkdir -p "$VST3_SYSTEM" "$AU_SYSTEM"
 
 echo "==> Installing VST3..."
-rm -rf "$VST3_SYSTEM/$PLUGIN_NAME.vst3"
-cp -r "$VST3_SRC" "$VST3_SYSTEM/"
-echo "    -> $VST3_SYSTEM/$PLUGIN_NAME.vst3"
+rm -rf "$VST3_SYSTEM/CzSynthVst.vst3"
+ditto "$VST3_SRC" "$VST3_SYSTEM/CzSynthVst.vst3"
+echo "    -> $VST3_SYSTEM/CzSynthVst.vst3"
 
-echo "==> Installing AU component..."
-rm -rf "$AU_SYSTEM/$PLUGIN_NAME.component"
-cp -r "$COMP_SRC" "$AU_SYSTEM/"
-echo "    -> $AU_SYSTEM/$PLUGIN_NAME.component"
+echo "==> Installing AUv2 component..."
+rm -rf "$AU_SYSTEM/CzSynthVst.component"
+ditto "$AUV2_SRC" "$AU_SYSTEM/CzSynthVst.component"
+echo "    -> $AU_SYSTEM/CzSynthVst.component"
+
+if [[ -d "$AUV3_SRC" ]]; then
+  echo "==> Installing AUv3 app..."
+  rm -rf "$HOME/Applications/CzSynthVst.app"
+  ditto "$AUV3_SRC" "$HOME/Applications/CzSynthVst.app"
+  echo "    -> $HOME/Applications/CzSynthVst.app"
+else
+  echo "==> Skipping AUv3 app install (bundle not built)"
+fi
 
 # Invalidate AU cache so the host re-scans
 echo "==> Invalidating AU cache..."

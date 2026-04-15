@@ -2,8 +2,6 @@
 //!
 //! Uses beamer for VST3/AU plugin hosting and cz-synth for the DSP engine.
 
-use std::sync::Arc;
-
 use beamer::prelude::*;
 use cz_synth::params::{PolyMode, SynthParams};
 use cz_synth::processor::{midi_note_to_freq, Cz101Processor};
@@ -423,6 +421,26 @@ impl Descriptor for CzDescriptor {
     type Setup = SampleRate;
     type Processor = CzProcessor;
 
+    fn input_bus_count(&self) -> usize {
+        0
+    }
+
+    fn input_bus_info(&self, _index: usize) -> Option<BusInfo> {
+        None
+    }
+
+    fn output_bus_info(&self, index: usize) -> Option<BusInfo> {
+        if index == 0 {
+            Some(BusInfo::stereo("Output"))
+        } else {
+            None
+        }
+    }
+
+    fn wants_midi(&self) -> bool {
+        true
+    }
+
     fn prepare(self, setup: SampleRate) -> CzProcessor {
         let mut processor = Cz101Processor::new(setup.hz() as f32);
         processor.set_params(self.parameters.to_synth_params());
@@ -430,10 +448,6 @@ impl Descriptor for CzDescriptor {
             parameters: self.parameters,
             processor,
         }
-    }
-
-    fn webview_handler(&self) -> Option<Arc<dyn WebViewHandler>> {
-        None
     }
 }
 
@@ -515,3 +529,4 @@ impl Processor for CzProcessor {
         0
     }
 }
+

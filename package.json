@@ -12,6 +12,9 @@
 		"build:tauri": "tauri build --config src-tauri/tauri-app/tauri.conf.json",
 		"build:plugin": "bash scripts/build-plugin.sh --release",
 		"build:plugin:debug": "bash scripts/build-plugin.sh debug",
+		"plugin:install": "bash scripts/install-plugin.sh",
+		"plugin:build-install": "bash scripts/build-plugin.sh --release && bun run plugin:install",
+		"plugin:build-install:debug": "bash scripts/build-plugin.sh debug && bun run plugin:install",
 		"preview": "vite preview",
 		"tauri": "tauri",
 		"tauri:dev": "tauri dev --config src-tauri/tauri-app/tauri.conf.json",
@@ -28,10 +31,7 @@
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest --coverage --project unit",
 		"lint": "biome check .",
-		"lint:fix": "biome check --write .",
-		"plugin:install": "bash scripts/install-plugin.sh",
-		"plugin:build-install": "bun run build && bun run plugin:install",
-		"plugin:build-install:debug": "bun run build:wasm && bun run build:web && bun run build:plugin:debug && bun run plugin:install"
+		"lint:fix": "biome check --write ."
 	},
 	"dependencies": {
 		"@infinite-table/infinite-react": "^6.2.12",

@@ -5,7 +5,6 @@ members = [
     "cz-synth-vst",
     "xtask",
 ]
-resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
@@ -14,9 +13,16 @@ edition = "2021"
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
 beamer = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+beamer-au = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+beamer-core = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+beamer-macros = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+beamer-utils = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+beamer-vst3 = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+beamer-webview = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
 
 [workspace.lints]
 clippy.unused_async = "warn"
+
 
 [profile.release]
 lto = true
