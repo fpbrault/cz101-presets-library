@@ -3,11 +3,16 @@
 		"target": "ES2020",
 		"module": "ESNext",
 		"moduleResolution": "bundler",
+		"ignoreDeprecations": "6.0",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["../../../src/*"]
+		},
 		"jsx": "react-jsx",
 		"strict": true,
 		"skipLibCheck": true,
 		"isolatedModules": true,
 		"noEmit": true
 	},
-	"include": ["src"]
+	"include": ["src", "../../../src", "../../../src/vite-env.d.ts"]
 }

@@ -6,6 +6,8 @@
 @import AudioToolbox;
 @import CoreAudioKit;
 @import Foundation;
+#include <stdio.h>
+#include <unistd.h>
 #include "BeamerAuBridge.h"
 #include "au_ipc_helpers.h"
 
@@ -39,6 +41,22 @@
 - (void)_startSyncTimer;
 - (void)_pollParams;
 @end
+
+static void beamer_debug_log(NSString* message) {
+    if (message == nil) {
+        return;
+    }
+
+    @autoreleasepool {
+        FILE* file = fopen("/tmp/cz101-plugin.log", "a");
+        if (file == NULL) {
+            return;
+        }
+
+        fprintf(file, "[auv3-ext pid=%d] %s\n", getpid(), message.UTF8String);
+        fclose(file);
+    }
+}
 
 // =============================================================================
 // MARK: - WebView IPC Callbacks
@@ -98,6 +116,7 @@ static void beamer_auv3_ext_on_message(void* context, const uint8_t* json, size_
 static void beamer_auv3_ext_on_loaded(void* context) {
     {{EXTENSION_CLASS}}* ext = (__bridge {{EXTENSION_CLASS}}*)context;
     ext->_webviewLoaded = YES;
+    beamer_debug_log(@"webview loaded callback fired");
 
     // If the wrapper is already available, send the parameter init dump
     // and start the sync timer. Otherwise createAudioUnitWithComponentDescription:
@@ -120,11 +139,13 @@ static void beamer_auv3_ext_on_loaded(void* context) {
         beamer_au_ensure_factory_registered();
         beamer_au_get_gui_size(NULL, &_guiWidth, &_guiHeight);
         self.preferredContentSize = NSMakeSize(_guiWidth, _guiHeight);
+        beamer_debug_log([NSString stringWithFormat:@"extension init gui=%ux%u", _guiWidth, _guiHeight]);
     }
     return self;
 }
 
 - (void)loadView {
+    beamer_debug_log(@"loadView");
     NSView* container = [[NSView alloc]
         initWithFrame:NSMakeRect(0, 0, _guiWidth, _guiHeight)];
     self.view = container;
@@ -151,8 +172,11 @@ static void beamer_auv3_ext_on_loaded(void* context) {
 
 - (void)_ensureWebView {
     if (_webviewHandle != NULL) {
+        beamer_debug_log(@"_ensureWebView skipped existing handle");
         return;
     }
+
+    beamer_debug_log(@"_ensureWebView creating webview");
 
 #ifdef DEBUG
     bool devTools = true;
@@ -171,22 +195,30 @@ static void beamer_auv3_ext_on_loaded(void* context) {
     // it's safe even if the audio unit hasn't been created yet.
     const char* devUrl = beamer_au_get_gui_url(NULL);
     if (devUrl != NULL) {
+        beamer_debug_log([NSString stringWithFormat:@"_ensureWebView using dev url %s", devUrl]);
         _webviewHandle = beamer_webview_create_url_with_ipc(
             (__bridge void*)self.view, devUrl, pluginCode, devTools, bgColor,
             beamer_auv3_ext_on_message, beamer_auv3_ext_on_loaded,
             (__bridge void*)self);
     } else {
+        beamer_debug_log(@"_ensureWebView using embedded assets");
         const void* assets = beamer_au_get_gui_assets();
         _webviewHandle = beamer_webview_create_with_ipc(
             (__bridge void*)self.view, assets, pluginCode, devTools, bgColor,
             beamer_auv3_ext_on_message, beamer_auv3_ext_on_loaded,
             (__bridge void*)self);
     }
+
+    beamer_debug_log(_webviewHandle != NULL ? @"_ensureWebView created webview" : @"_ensureWebView FAILED to create webview");
 }
 
 - (void)_sendInitDump {
-    if (!_webviewHandle || !_wrapper) return;
+    if (!_webviewHandle || !_wrapper) {
+        beamer_debug_log(@"_sendInitDump skipped missing webview or wrapper");
+        return;
+    }
     BeamerAuInstanceHandle instance = [_wrapper rustInstance];
+    beamer_debug_log(@"_sendInitDump sending init dump");
     beamer_au_ipc_send_init_dump(instance, _webviewHandle);
 }
 
@@ -284,7 +316,9 @@ static void beamer_auv3_ext_on_loaded(void* context) {
 
 - (AUAudioUnit *)createAudioUnitWithComponentDescription:(AudioComponentDescription)desc
                                                    error:(NSError **)error {
+    beamer_debug_log(@"createAudioUnitWithComponentDescription");
     if (!beamer_au_ensure_factory_registered()) {
+        beamer_debug_log(@"createAudioUnitWithComponentDescription failed factory registration");
         if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain
                                          code:kAudioUnitErr_FailedInitialization
@@ -294,9 +328,13 @@ static void beamer_auv3_ext_on_loaded(void* context) {
     }
 
     {{WRAPPER_CLASS}}* wrapper = [[{{WRAPPER_CLASS}} alloc] initWithComponentDescription:desc options:0 error:error];
-    if (!wrapper) return nil;
+    if (!wrapper) {
+        beamer_debug_log(@"createAudioUnitWithComponentDescription wrapper init returned nil");
+        return nil;
+    }
 
     _wrapper = wrapper;
+    beamer_debug_log([NSString stringWithFormat:@"createAudioUnitWithComponentDescription wrapper ready webviewLoaded=%d", _webviewLoaded]);
 
     // If the WebView already finished loading, send the init dump and
     // start the parameter sync timer now. Otherwise the on_loaded

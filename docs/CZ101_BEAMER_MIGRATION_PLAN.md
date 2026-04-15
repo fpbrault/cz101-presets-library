@@ -7,6 +7,14 @@ Replace the `cz-synth-vst` crate's clack/CLAP layer with [beamer](https://github
 **Current stack:** clack (CLAP) → clap-wrapper (AUv2, VST3) — AUv3 is empty stubs
 **Target stack:** beamer (AUv2, AUv3, VST3) — single codebase, one xtask bundler
 
+## Execution Status (2026-04-15)
+
+- Phase 1 is implemented in `cz-synth-vst`: beamer `#[derive(Parameters)]` is live.
+- Phase 2 processor wiring has a critical AU host-control fix:
+    - `CzProcessor::process()` now applies the full beamer parameter snapshot to DSP every block.
+    - `CzParameters::to_synth_params()` now maps global, line, FX, LFO, filter, and portamento controls instead of only a small global subset.
+- Impact: AU default (host-native) controls and automation now propagate to the synth engine, not just the custom web UI path.
+
 ## Why beamer
 
 - Native AUv2 + AUv3 support via shared C-ABI bridge with ObjC wrapper
@@ -420,6 +428,57 @@ impl WebViewHandler for CzWebViewHandler {
 | Release: `dladdr()` + `Contents/Resources/ui/` | Release: embedded at compile time via `#[beamer::export]` |
 
 For development, configure the WebViewConfig to use the dev server URL. For release builds, the `#[beamer::export]` macro embeds `webview/dist/` bytes.
+
+### 3.5 Standalone AUv3 UI Host App
+
+Goal: provide a real standalone app that opens a window and can play the plugin without a DAW.
+
+Important distinction:
+- Current AUv3 container app is registration-only (`LSBackgroundOnly`), so launching it shows no UI.
+- This phase adds a foreground macOS host app that instantiates the AUv3 extension and embeds its view controller.
+
+Implementation outline:
+
+1) App behavior and lifecycle
+- Change AUv3 container app plist generation to foreground mode for standalone builds (`LSBackgroundOnly = false`).
+- Add `NSApplicationSceneManifest` / normal app lifecycle so the app opens a main window.
+- Keep existing registration behavior for non-standalone packaging path if needed (build flag split).
+
+2) Standalone host runtime (Swift/ObjC shim)
+- Add a tiny host binary in the app target that:
+    - Creates an `AVAudioEngine`.
+    - Locates the plugin `AudioComponentDescription` (type `aumu`, subtype `CZpd`, manufacturer `FpbC`).
+    - Instantiates `AUAudioUnit` via `AVAudioUnit.instantiate`.
+    - Connects plugin node to output (`engine.outputNode`) and starts engine.
+- Add MIDI input path:
+    - Listen to CoreMIDI sources.
+    - Forward MIDI to AU event API so external keyboard works.
+    - Optionally add a computer-keyboard fallback for smoke tests.
+
+3) UI embedding
+- Request plugin view controller from AU (`requestViewController`).
+- Embed in host app window (AppKit `NSViewController` container).
+- Window size policy:
+    - Default 1280x800 from Config.
+    - Respect plugin-provided preferred size when available.
+
+4) Preset and state wiring
+- Ensure host can trigger AU state save/load (factory presets + user patch recall).
+- Keep parameter automation path host-native (same AU params as DAW).
+
+5) Build integration
+- Add `--standalone` (or `--auv3-standalone`) mode to xtask AUv3 bundler.
+- Produce two AUv3 app variants if needed:
+    - Registration container (background-only).
+    - Standalone host app (foreground).
+- Default local dev command should build/install standalone variant for quick manual testing.
+
+6) Validation checklist
+- Double-clicking `CzSynthVst.app` opens a visible window.
+- On-screen UI is interactive and audible without DAW.
+- External MIDI keyboard triggers notes.
+- AUv3 still appears in Logic/GarageBand instrument menus.
+- No AUv2/AUv3 duplicate ObjC class collisions at runtime.
 
 ---
 

@@ -308,7 +308,7 @@ pub fn render_voice(
         if voice.vibrato_delay_counter > 0 {
             voice.vibrato_delay_counter -= 1;
         } else {
-            voice.vibrato_phase += vibrato.rate / sr;
+            voice.vibrato_phase += (vibrato.rate * 0.1) / sr;
             if voice.vibrato_phase >= 1.0 {
                 voice.vibrato_phase -= 1.0;
             }
@@ -320,7 +320,7 @@ pub fn render_voice(
             };
             let lfo_val = lfo_output(voice.vibrato_phase, vib_waveform);
             let effective_depth = vibrato.depth + mod_wheel * p.mod_wheel_vibrato_depth;
-            let pitch_mod = 1.0 + lfo_val * (effective_depth / 100.0);
+            let pitch_mod = 1.0 + lfo_val * (effective_depth / 1000.0);
             effective_freq1 *= pitch_mod;
             effective_freq2 *= pitch_mod;
         }

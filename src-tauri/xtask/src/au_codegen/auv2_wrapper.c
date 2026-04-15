@@ -7,10 +7,12 @@
 #include <AudioToolbox/AudioToolbox.h>
 #include <AudioUnit/AudioUnit.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #include <stdatomic.h>
+#include <unistd.h>
 
 #import <Cocoa/Cocoa.h>
 #import <AudioUnit/AUCocoaUIView.h>
@@ -49,6 +51,22 @@
 // Private property for view factory to retrieve the Rust instance handle.
 // Uses the AU custom property range (64000+).
 #define kBeamerAuPropertyRustInstance 64000
+
+static void beamer_debug_log(NSString* message) {
+    if (message == nil) {
+        return;
+    }
+
+    @autoreleasepool {
+        FILE* file = fopen("/tmp/cz101-plugin.log", "a");
+        if (file == NULL) {
+            return;
+        }
+
+        fprintf(file, "[auv2 pid=%d] %s\n", getpid(), message.UTF8String);
+        fclose(file);
+    }
+}
 
 // =============================================================================
 // MARK: - Data Structures
@@ -1872,6 +1890,7 @@ static void beamer_auv2_on_message(void* context, const uint8_t* json, size_t le
 
 static void beamer_auv2_on_loaded(void* context) {
     {{COCOA_GUI_VIEW_CLASS}}* self = (__bridge {{COCOA_GUI_VIEW_CLASS}}*)context;
+    beamer_debug_log(@"webview loaded callback fired");
     beamer_au_ipc_send_init_dump(self->_rustInstance, self->_webviewHandle);
 }
 
@@ -2025,11 +2044,13 @@ static void beamer_auv2_on_loaded(void* context) {
             audioUnit:audioUnit];
 
     if (devUrl != NULL) {
+        beamer_debug_log([NSString stringWithFormat:@"create cocoa view using dev url %s", devUrl]);
         webviewHandle = beamer_webview_create_url_with_ipc(
             (__bridge void*)container, devUrl, pluginCode, devTools, bgColor,
             beamer_auv2_on_message, beamer_auv2_on_loaded,
             (__bridge void*)guiView);
     } else {
+        beamer_debug_log(@"create cocoa view using embedded assets");
         const void* assets = beamer_au_get_gui_assets();
         webviewHandle = beamer_webview_create_with_ipc(
             (__bridge void*)container, assets, pluginCode, devTools, bgColor,
@@ -2037,11 +2058,13 @@ static void beamer_auv2_on_loaded(void* context) {
             (__bridge void*)guiView);
     }
     if (webviewHandle == NULL) {
+        beamer_debug_log(@"create cocoa view FAILED to create webview");
         return nil;
     }
 
     // Store the webview handle in the GUI view
     guiView->_webviewHandle = webviewHandle;
+    beamer_debug_log(@"create cocoa view created webview");
 
     // Re-parent the WebView's container into the GUI view
     [container setFrame:guiView.bounds];

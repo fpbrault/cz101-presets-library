@@ -224,6 +224,14 @@ declare global {
 		ipc?: { postMessage: (msg: string) => void };
 		__czOnParams?: (json: string) => void;
 		__czOnScope?: (samples: number[], sampleRate: number, hz: number) => void;
+		__czGetEnvelopes?: () => Promise<
+			Partial<
+				Record<
+					"l1_dco" | "l1_dcw" | "l1_dca" | "l2_dco" | "l2_dcw" | "l2_dca",
+					StepEnvData
+				>
+			>
+		>;
 	}
 }
 
@@ -1297,9 +1305,42 @@ export default function PluginPage() {
 	// ── Load saved state on mount ─────────────────────────────────────────────
 	useEffect(() => {
 		setPresetList(listPresets());
+		if (window.ipc) {
+			return;
+		}
 		const saved = loadCurrentState();
 		if (saved) applyPreset(saved);
 	}, [applyPreset]);
+
+	useEffect(() => {
+		if (!window.__czGetEnvelopes) {
+			return;
+		}
+
+		let cancelled = false;
+
+		void window
+			.__czGetEnvelopes()
+			.then((envelopes) => {
+				if (cancelled || !envelopes) {
+					return;
+				}
+
+				if (envelopes.l1_dco) setLine1DcoEnv(envelopes.l1_dco);
+				if (envelopes.l1_dcw) setLine1DcwEnv(envelopes.l1_dcw);
+				if (envelopes.l1_dca) setLine1DcaEnv(envelopes.l1_dca);
+				if (envelopes.l2_dco) setLine2DcoEnv(envelopes.l2_dco);
+				if (envelopes.l2_dcw) setLine2DcwEnv(envelopes.l2_dcw);
+				if (envelopes.l2_dca) setLine2DcaEnv(envelopes.l2_dca);
+			})
+			.catch((error) => {
+				console.error("[PluginPage] Failed to load envelope state:", error);
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	// ── Auto-save current state ───────────────────────────────────────────────
 	useEffect(() => {

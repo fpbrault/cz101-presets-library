@@ -5,6 +5,8 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreAudioKit/CoreAudioKit.h>
 #import <Foundation/Foundation.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <os/lock.h>
 #include <os/log.h>
 
@@ -17,6 +19,22 @@
 
 static const double kDefaultSampleRate = 44100.0;
 static const AUAudioFrameCount kDefaultMaxFrames = 4096;
+
+static void beamer_debug_log(NSString* message) {
+    if (message == nil) {
+        return;
+    }
+
+    @autoreleasepool {
+        FILE* file = fopen("/tmp/cz101-plugin.log", "a");
+        if (file == NULL) {
+            return;
+        }
+
+        fprintf(file, "[auv3-wrapper pid=%d] %s\n", getpid(), message.UTF8String);
+        fclose(file);
+    }
+}
 
 // =============================================================================
 // MARK: - {{WRAPPER_CLASS}} Interface
@@ -82,8 +100,10 @@ static NSUInteger {{WRAPPER_CLASS}}InstanceCounter = 0;
                                      options:(AudioComponentInstantiationOptions)options
                                        error:(NSError**)outError {
     NSUInteger instanceId = [[self class] nextInstanceId];
+    beamer_debug_log([NSString stringWithFormat:@"init instance=%lu", (unsigned long)instanceId]);
 
     if (!beamer_au_ensure_factory_registered()) {
+        beamer_debug_log(@"init failed factory registration");
         if (outError != NULL) {
             *outError = [NSError errorWithDomain:NSOSStatusErrorDomain
                                             code:kAudioUnitErr_FailedInitialization
@@ -126,6 +146,7 @@ static NSUInteger {{WRAPPER_CLASS}}InstanceCounter = 0;
 
     _rustInstance = beamer_au_create_instance();
     if (_rustInstance == NULL) {
+        beamer_debug_log(@"init failed beamer_au_create_instance");
         if (outError != NULL) {
             *outError = [NSError errorWithDomain:NSOSStatusErrorDomain
                                             code:kAudioUnitErr_FailedInitialization
@@ -135,6 +156,7 @@ static NSUInteger {{WRAPPER_CLASS}}InstanceCounter = 0;
     }
 
     _instanceValid = YES;
+    beamer_debug_log(@"init created Rust instance");
 
     if (![self setupBusArraysWithError:outError]) {
         _instanceValid = NO;
@@ -202,6 +224,7 @@ static void beamer_auv3_on_message(void* context, const uint8_t* json, size_t le
 
 static void beamer_auv3_on_loaded(void* context) {
     {{WRAPPER_CLASS}}* self = (__bridge {{WRAPPER_CLASS}}*)context;
+    beamer_debug_log(@"webview loaded callback fired");
     beamer_au_ipc_send_init_dump(self->_rustInstance, self->_webviewHandle);
 }
 
@@ -1046,7 +1069,9 @@ static void beamer_auv3_on_loaded(void* context) {
 // provides the UI independently.
 - (void)requestViewControllerWithCompletionHandler:
     (void (^)(NSViewController* _Nullable))completionHandler {
+    beamer_debug_log(@"requestViewControllerWithCompletionHandler");
     if (!beamer_au_has_gui(_rustInstance)) {
+        beamer_debug_log(@"requestViewController no GUI available");
         completionHandler(nil);
         return;
     }
@@ -1081,11 +1106,13 @@ static void beamer_auv3_on_loaded(void* context) {
     const char* devUrl = beamer_au_get_gui_url(_rustInstance);
     void* webviewHandle;
     if (devUrl != NULL) {
+        beamer_debug_log([NSString stringWithFormat:@"requestViewController using dev url %s", devUrl]);
         webviewHandle = beamer_webview_create_url_with_ipc(
             (__bridge void*)container, devUrl, pluginCode, devTools, bgColor,
             beamer_auv3_on_message, beamer_auv3_on_loaded,
             (__bridge void*)self);
     } else {
+        beamer_debug_log(@"requestViewController using embedded assets");
         const void* assets = beamer_au_get_gui_assets();
         webviewHandle = beamer_webview_create_with_ipc(
             (__bridge void*)container, assets, pluginCode, devTools, bgColor,
@@ -1093,11 +1120,13 @@ static void beamer_auv3_on_loaded(void* context) {
             (__bridge void*)self);
     }
     if (webviewHandle == NULL) {
+        beamer_debug_log(@"requestViewController FAILED to create webview");
         completionHandler(nil);
         return;
     }
 
     _webviewHandle = webviewHandle;
+    beamer_debug_log(@"requestViewController created webview");
 
     // NAN sentinel: NAN != NAN (IEEE 754) ensures the first sync tick sends all values.
     _paramCount = beamer_au_get_parameter_count(_rustInstance);

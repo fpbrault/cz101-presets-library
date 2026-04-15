@@ -844,7 +844,7 @@ export default function PhaseDistortionVisualizer() {
 			polyMode,
 			legato,
 			velocityTarget,
-			chorus: { rate: chorusRate, depth: chorusDepth / 1000, mix: chorusMix },
+			chorus: { rate: chorusRate, depth: chorusDepth , mix: chorusMix },
 			delay: { time: delayTime, feedback: delayFeedback, mix: delayMix },
 			reverb: { size: reverbSize, mix: reverbMix },
 			vibrato: {

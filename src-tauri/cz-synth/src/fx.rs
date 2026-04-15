@@ -216,7 +216,7 @@ impl FxChain {
             return sample;
         }
         self.smooth_chorus_depth =
-            Self::smooth(self.smooth_chorus_depth, self.chorus_depth, SMOOTH_COEFF);
+            Self::smooth(self.smooth_chorus_depth, self.chorus_depth, SMOOTH_COEFF) / 10.0;
         self.chorus_phase += self.chorus_rate / self.sample_rate;
         if self.chorus_phase >= 1.0 {
             self.chorus_phase -= 1.0;
