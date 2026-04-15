@@ -3,11 +3,20 @@ members = [
     "tauri-app",
     "cz-synth",
     "cz-synth-vst",
+    "xtask",
 ]
 resolver = "2"
 
-[patch."https://github.com/helpermedia/beamer"]
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
 beamer = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+
+[workspace.lints]
+clippy.unused_async = "warn"
 
 [profile.release]
 lto = true
