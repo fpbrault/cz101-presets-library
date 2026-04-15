@@ -6,6 +6,9 @@ members = [
 ]
 resolver = "2"
 
+[patch."https://github.com/helpermedia/beamer"]
+beamer = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+
 [profile.release]
 lto = true
 strip = "symbols"
