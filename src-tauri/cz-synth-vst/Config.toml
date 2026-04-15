@@ -1,0 +1,11 @@
+name = "CZ-101 Phase Distortion"
+category = "instrument"
+manufacturer_code = "FpbC"
+plugin_code = "CZpd"
+vendor = "Felix Perron-Brault"
+url = "https://github.com/fpbrault/cz101-presets-library"
+email = "felix@perron-brault.com"
+has_gui = true
+gui_size = [1280, 800]
+gui_background_color = "#0a0a0a"
+subcategories = ["Synth", "Piano"]
