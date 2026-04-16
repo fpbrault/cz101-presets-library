@@ -176,7 +176,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 						<div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
 							<FormField
 								label="Name"
-								labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+								labelClassName="text-3xs uppercase tracking-wider text-base-content/40"
 							>
 								{editMode ? (
 									<TextInput
@@ -198,7 +198,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 						<div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
 							<FormField
 								label="Tags"
-								labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+								labelClassName="text-3xs uppercase tracking-wider text-base-content/40"
 							>
 								{editMode ? (
 									<TextInput
@@ -232,7 +232,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 							<div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
 								<FormField
 									label="Author"
-									labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+									labelClassName="text-3xs uppercase tracking-wider text-base-content/40"
 								>
 									{editMode ? (
 										<TextInput
@@ -255,7 +255,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 						<div className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
 							<FormField
 								label="Description"
-								labelClassName="text-[10px] uppercase tracking-wider text-base-content/40"
+								labelClassName="text-3xs uppercase tracking-wider text-base-content/40"
 							>
 								{editMode ? (
 									<TextAreaInput
@@ -275,7 +275,7 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 						</div>
 
 						<details className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
-							<summary className="text-[10px] font-bold uppercase tracking-wider cursor-pointer text-base-content/60">
+							<summary className="text-3xs font-bold uppercase tracking-wider cursor-pointer text-base-content/60">
 								Additional Data
 							</summary>
 							<div className="grid grid-cols-1 gap-2 mt-2">
@@ -296,10 +296,10 @@ const PresetDetails: React.FC<PresetDetailsProps> = ({
 						</details>
 
 						<details className="p-2 border rounded-md border-base-content/10 bg-base-200/30">
-							<summary className="text-[10px] font-bold uppercase tracking-wider cursor-pointer text-base-content/60">
+							<summary className="text-3xs font-bold uppercase tracking-wider cursor-pointer text-base-content/60">
 								Raw SysEx Data
 							</summary>
-							<div className="mt-2 max-h-40 overflow-auto text-[10px] font-mono font-semibold whitespace-pre-wrap break-all opacity-80">
+							<div className="mt-2 max-h-40 overflow-auto text-3xs font-mono font-semibold whitespace-pre-wrap break-all opacity-80">
 								{buf2hex(currentPreset?.sysexData || [])}
 							</div>
 						</details>

@@ -1,37 +1,54 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@plugin "daisyui" {
+  themes:
+    dracula --default,
+    cyberpunk;
+}
 
 @source "../index.html";
 @source "./**/*.{js,ts,jsx,tsx}";
 
 @theme {
-	--font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-	--font-performanceMode: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-performanceMode: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 
-	/* CZ-101 hardware panel palette */
-	--color-cz-body: #171615; /* page background */
-	--color-cz-panel: #424241; /* panel / card background */
-	--color-cz-surface: #2c2c2e; /* raised sub-panel surfaces */
-	--color-cz-inset: #181818; /* recessed / inset areas */
-	--color-cz-border: #3a3a3c; /* panel borders / engraved lines */
-	--color-cz-gold: #bfbd30; /* primary accent — CZ orange */
-	--color-cz-gold-dim: #5e6b1e; /* muted version of primary accent */
-	--color-cz-cream: #c8bfab; /* label text */
-	--color-cz-cream-dim: #7a7060; /* muted label / section titles */
-	--color-cz-lcd-bg: #051005; /* phosphor display background */
-	--color-cz-lcd-fg: #3dff3d; /* phosphor display trace / fg */
-	--color-cz-lcd-grid: rgba(0, 120, 0, 0.35); /* scope grid lines */
-	--color-cz-led-on: #ff2222; /* CZ-style LED indicator — active */
-	--color-cz-led-off: #3a1414; /* CZ-style LED indicator — inactive */
-	--color-cz-light-blue: #7f9de4; /* CZ section header bar (blue accent) */
-	--color-cz-btn: #b5b5b5; /* CZ hardware button face */
-	--color-cz-btn-border: #555558; /* CZ hardware button border */
+  /* Extended text-size scale below Tailwind's default xs (12px) */
+  --text-2xs: 11px;
+  --text-3xs: 10px;
+  --text-4xs: 9px;
+  --text-5xs: 8px;
+
+  /* CZ-101 hardware panel palette */
+  --color-cz-body: #171615; /* page background */
+  --color-cz-panel: #424241; /* panel / card background */
+  --color-cz-surface: #2c2c2e; /* raised sub-panel surfaces */
+  --color-cz-inset: #181818; /* recessed / inset areas */
+  --color-cz-border: #3a3a3c; /* panel borders / engraved lines */
+  --color-cz-gold: #bfbd30; /* primary accent — CZ orange */
+  --color-cz-gold-dim: #5e6b1e; /* muted version of primary accent */
+  --color-cz-cream: #c8bfab; /* label text */
+  --color-cz-cream-dim: #7a7060; /* muted label / section titles */
+  --color-cz-lcd-bg: #051005; /* phosphor display background */
+  --color-cz-lcd-fg: #3dff3d; /* phosphor display trace / fg */
+  --color-cz-lcd-grid: rgba(0, 120, 0, 0.35); /* scope grid lines */
+  --color-cz-led-on: #ff2222; /* CZ-style LED indicator — active */
+  --color-cz-led-off: #3a1414; /* CZ-style LED indicator — inactive */
+  --color-cz-light-blue: #7f9de4; /* CZ section header bar (blue accent) */
+  --color-cz-btn: #b5b5b5; /* CZ hardware button face */
+  --color-cz-btn-border: #555558; /* CZ hardware button border */
+
+  /* Synth-style tab button palette */
+  --color-cz-tab-blue: #6b8ace; /* synth blue tab — active / hover target */
+  --color-cz-tab-blue-dim: #5c7bbd; /* synth blue tab — inactive */
+  --color-cz-tab-grey: #9a9fa8; /* synth grey tab — active / hover target */
+  --color-cz-tab-grey-dim: #8a9199; /* synth grey tab — inactive */
+  --color-cz-tab-dark: #383d42; /* synth dark tab — active / hover target */
+  --color-cz-tab-dark-dim: #2d3136; /* synth dark tab — inactive */
+  --color-cz-tab-red: #d85c5c; /* synth red tab — active / hover target */
+  --color-cz-tab-red-dim: #c94b4b; /* synth red tab — inactive */
 }
 
-@plugin "daisyui" {
-	themes:
-		dracula --default,
-		cyberpunk;
-}
 /*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
@@ -70,10 +87,10 @@
 		@apply rounded-none text-center;
 	}
 	.cz-section-slanted-title {
-		@apply [clip-path:polygon(15px_0%,calc(100%_-_5px)_0%,calc(100%_-_15px)_100%,5px_100%)] text-sm text-cz-panel font-bold;
+		@apply [clip-path:polygon(15px_0%,calc(100%-5px)_0%,calc(100%-15px)_100%,5px_100%)] text-sm text-cz-panel font-bold;
 	}
 	.cz-section-gold-title {
-		@apply [clip-path:polygon(15px_0%,calc(100%_-_5px)_0%,calc(100%_-_15px)_100%,5px_100%)] text-sm text-cz-gold font-bold bg-cz-panel;
+		@apply [clip-path:polygon(15px_0%,calc(100%-5px)_0%,calc(100%-15px)_100%,5px_100%)] text-sm text-cz-gold font-bold bg-cz-panel;
 	}
 	.cz-collapse-header-gold {
 		@apply flex items-center gap-2 py-[0.2rem] px-3 font-mono text-[0.7rem] font-bold tracking-[0.28em] uppercase bg-cz-gold text-cz-body w-full;

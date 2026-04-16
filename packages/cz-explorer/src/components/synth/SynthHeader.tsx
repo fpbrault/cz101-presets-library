@@ -69,7 +69,7 @@ export default function SynthHeader({
 			/>
 
 			<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">
-				<span className="text-[9px] font-mono uppercase tracking-[0.3em] text-cz-light-blue">
+				<span className="text-4xs font-mono uppercase tracking-[0.3em] text-cz-light-blue">
 					Phase Distortion
 				</span>
 				<span className="text-xs font-mono font-semibold uppercase tracking-[0.18em] text-cz-cream">

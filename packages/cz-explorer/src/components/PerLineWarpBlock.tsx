@@ -36,9 +36,7 @@ interface PerLineWarpBlockProps {
 	setDcaEnv: (e: StepEnvData) => void;
 	keyFollow: number;
 	setKeyFollow: (v: number) => void;
-	showSectionTabs?: boolean;
 	activeSection?: SectionTab;
-	onActiveSectionChange?: (section: SectionTab) => void;
 }
 
 type EnvTab = "dco" | "dcw" | "dca";
@@ -73,15 +71,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setDcaEnv,
 	keyFollow,
 	setKeyFollow,
-	showSectionTabs = true,
 	activeSection: activeSectionProp,
-	onActiveSectionChange,
 }: PerLineWarpBlockProps) {
 	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
-	const [internalActiveSection, setInternalActiveSection] =
-		useState<SectionTab>("algos");
-	const activeSection = activeSectionProp ?? internalActiveSection;
-	const setActiveSection = onActiveSectionChange ?? setInternalActiveSection;
+	const activeSection = activeSectionProp;
 
 	// Auto-set algo2 to first algo when blend is raised from 0 with nothing selected
 	useEffect(() => {
@@ -121,51 +114,20 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 	const activeEnv = envMap[activeEnvTab];
 
-	const sectionTabClass = (tab: SectionTab) =>
-		`flex-1 flex items-center justify-center rounded-lg border uppercase tracking-[0.2em] text-[11px] font-semibold transition-colors ${
-			activeSection === tab
-				? "w-full px-1 py-3 text-cz-gold border-cz-gold bg-cz-card/40"
-				: "w-full px-1 py-3 text-cz-light-blue border-cz-border bg-cz-panel hover:border-cz-gold/60"
-		}`;
 
 	return (
 		<div className="min-w-0 min-h-0 flex-1 flex flex-col">
-			<div className="flex flex-1 min-h-0 gap-2 items-stretch">
-				{showSectionTabs && (
-					<div className="w-12 shrink-0 self-stretch flex flex-col gap-2">
-						<button
-							type="button"
-							className={sectionTabClass("algos")}
-							onClick={() => setActiveSection("algos")}
-							aria-pressed={activeSection === "algos"}
-						>
-							<span className="[writing-mode:vertical-rl] [text-orientation:mixed]">
-								ALGORITHMS + PARAMETERS
-							</span>
-						</button>
-						<button
-							type="button"
-							className={sectionTabClass("envelopes")}
-							onClick={() => setActiveSection("envelopes")}
-							aria-pressed={activeSection === "envelopes"}
-						>
-							<span className="[writing-mode:vertical-rl] [text-orientation:mixed]">
-								ENVELOPES
-							</span>
-						</button>
-					</div>
-				)}
-
-				<div className="min-h-0 min-w-0 h-full flex-1 flex flex-col overflow-hidden rounded-lg border border-cz-gold bg-cz-card/30">
+			<div className="flex flex-1 min-h-0 items-stretch">
+				<div className="min-h-0 min-w-0 h-full flex-1 flex flex-col overflow-hidden">
 					{activeSection === "algos" ? (
-						<div className="flex-1 min-h-0 overflow-y-auto p-3">
-							<div className="grid min-h-full content-start gap-4 md:grid-cols-2 md:grid-rows-[auto_minmax(0,1fr)]">
+						<div className="flex-1 min-h-0 flex flex-col p-3">
+							<div className="flex-1 min-h-0 grid gap-4 md:grid-cols-2 md:grid-rows-[auto_minmax(0,1fr)]">
 								<Card variant="subtle" className="p-3 col-span-1">
 									<div className="flex justify-between">
-										<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
+										<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 											Algo A
 										</div>
-										<span className="text-[10px] uppercase tracking-[0.2em] text-cz-light-blue font-bold">
+										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
 											{PD_ALGOS.find((a) => a.value === algo)?.label}
 										</span>
 									</div>
@@ -173,10 +135,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								</Card>
 								<Card variant="subtle" className="p-3 col-span-1">
 									<div className="flex justify-between">
-										<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
+										<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 											Algo B
 										</div>
-										<span className="text-[10px] uppercase tracking-[0.2em] text-cz-light-blue font-bold">
+										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
 											{PD_ALGOS.find((b) => b.value === algo2)?.label}
 										</span>
 									</div>
@@ -187,7 +149,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										disabled={algoBlend === 0}
 									/>
 									<div className="space-y-3 mt-2">
-										<div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cz-cream">
+										<div className="flex items-center justify-between text-3xs uppercase tracking-[0.2em] text-cz-cream">
 											<span>Blend</span>
 											<span>{Math.round(algoBlend * 100)}%</span>
 										</div>
@@ -198,16 +160,19 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											value={Math.round(algoBlend * 100)}
 											onChange={(e) => setAlgoBlend(Number(e.target.value) / 100)}
 											className="range range-xs w-full gh"
-											style={{ accentColor: "#9cb937" }}
+											style={{ accentColor: "#9cb937", touchAction: "none" }}
 										/>
 									</div>
 								</Card>
 
-								<Card variant="subtle" className="p-3 md:col-span-2 h-full">
-									<div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
+								<Card
+									variant="subtle"
+									className="p-3 md:col-span-2 min-h-0 flex flex-col"
+								>
+									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 										Parameters
 									</div>
-									<div className="flex flex-wrap gap-5">
+									<div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 items-stretch">
 										{[
 											{
 												label: "DCW Amt",
@@ -282,22 +247,21 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 												fmt,
 												onChange,
 											}) => (
-												<div key={label} className="flex flex-col items-center gap-1.5">
-													<span className="text-[9px] uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
+												<div key={label} className="min-h-0 h-full flex flex-col items-center gap-1.5">
+													<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
 														{fmt(value)}
 													</span>
-													<CzVerticalSlider
-														value={value}
-														min={min}
-														max={max}
-														step={step}
-														color={c}
-														onChange={onChange}
-														trackHeight={96}
-													/>
-													<span className="text-[9px] uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
-														{label}
-													</span>
+													<div className="flex-1 min-h-0 w-[30px]">
+														<CzVerticalSlider
+															value={value}
+															min={min}
+															max={max}
+															step={step}
+															color={c}
+															label={label}
+															onChange={onChange}
+														/>
+													</div>
 												</div>
 											),
 										)}
@@ -308,7 +272,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 					) : (
 						<div className="flex-1 min-h-0 overflow-y-auto p-3">
 							<Card variant="subtle" className="p-3 min-w-0">
-								<div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-cz-cream">
+								<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 									Envelope Matrix
 								</div>
 								<div className="mb-2 flex gap-1">
@@ -331,7 +295,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									compact
 								/>
 								<div className="mt-2 flex items-center gap-2">
-									<span className="text-[10px] text-cz-cream uppercase tracking-[0.2em]">
+									<span className="text-3xs text-cz-cream uppercase tracking-[0.2em]">
 										Key Follow:
 									</span>
 									<input

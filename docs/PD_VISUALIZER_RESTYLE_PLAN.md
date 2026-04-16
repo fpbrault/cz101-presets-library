@@ -31,8 +31,8 @@ No wood end-caps. No neon rainbow / synthwave glow palette.
 
 ## Typography
 
-- Section labels: `font-mono uppercase tracking-[0.3em] text-[#7a7060]`
-- LCD readouts: `font-mono text-[#3dff3d]`
+- Section labels: `font-mono uppercase tracking-[0.3em] text-cz-cream-dim`
+- LCD readouts: `font-mono text-cz-lcd-fg`
 - Branding: "CASIO CZ-101" orange mono, "PHASE DISTORTION LAB" cream mono
 
 ---
@@ -45,35 +45,35 @@ Write `docs/PD_VISUALIZER_RESTYLE_PLAN.md`
 
 ### Step 2 — Page background + sidebar panel + branding header
 - Outer wrapper: `bg-[#1a1a1a]`, remove pink/cyan radial gradients
-- Sidebar Card: `bg-[#222223] border-[#3a3a3c] rounded-sm`
+- Sidebar Card: `bg-[#222223] border-cz-border rounded-sm`
 - Header: "CASIO CZ-101" in orange mono, "PHASE DISTORTION LAB" in cream
 → commit: `style: restyle page background and sidebar panel`
 
 ### Step 3 — Oscilloscope / scope section
-- Scope wrapper: `bg-[#051005] border-[#3a3a3c]`
+- Scope wrapper: `bg-cz-lcd-bg border-cz-border`
 - CSS scanline overlay: `repeating-linear-gradient` dark stripes
-- Hz / CH1 labels: `text-[#3dff3d] font-mono`
+- Hz / CH1 labels: `text-cz-lcd-fg font-mono`
 - Scope ControlKnob color: uniform `#e87722`
 - Canvas `useEffect` code: update grid color to `rgba(0,120,0,0.25)`, center line `rgba(0,180,0,0.5)`, trace `#3dff3d`
 → commit: `style: restyle oscilloscope panel with CRT phosphor display`
 
 ### Step 4 — Collapsible section titles + sidebar section backgrounds
-- All section label text → `text-[#7a7060] font-mono uppercase tracking-[0.3em]`
-- Collapse/Card borders → `border-[#3a3a3c]`
+- All section label text → `text-cz-cream-dim font-mono uppercase tracking-[0.3em]`
+- Collapse/Card borders → `border-cz-border`
 - Background of collapsible cards → `bg-[#222223]`
-- Inset content backgrounds → `bg-[#181818]`
+- Inset content backgrounds → `bg-cz-inset`
 → commit: `style: restyle sidebar section headers to engraved hardware label style`
 
 ### Step 5 — All buttons, selects, and inputs
 - Active/selected buttons: `bg-[#e87722] text-[#111111] border-[#e87722] rounded-sm` (solid orange fill — LED button style)
-- Inactive buttons: `bg-[#2c2c2e] text-[#c8bfab] border-[#3a3a3c] rounded-sm`
+- Inactive buttons: `bg-cz-surface text-cz-cream border-cz-border rounded-sm`
 - Remove all `btn-primary` (blue) — replace with orange inline classes
-- Selects: `bg-[#181818] border-[#3a3a3c] text-[#c8bfab] font-mono`
+- Selects: `bg-cz-inset border-cz-border text-cz-cream font-mono`
 - Text inputs: same as selects
 → commit: `style: restyle all buttons, selects, and inputs to CZ-101 hardware look`
 
 ### Step 6 — Main area panels
-- All main `Card variant="panel"` → `bg-[#222223] border-[#3a3a3c] rounded-sm`
+- All main `Card variant="panel"` → `bg-[#222223] border-cz-border rounded-sm`
 - Section labels in main area → orange mono uppercase
 - Phase Lines tabs: orange active, dark inactive
 → commit: `style: restyle main content panels (line select, FX rack, phase lines)`

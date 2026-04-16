@@ -397,7 +397,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 			}`}
 		>
 			<div className="flex items-center justify-between">
-				<span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-base-content/70">
+				<span className="text-2xs font-semibold uppercase tracking-[0.24em] text-base-content/70">
 					{title}
 				</span>
 				<div className="flex items-center gap-2">
@@ -459,7 +459,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 							compact ? "py-1.5" : "py-2"
 						}`}
 					>
-						<div className="mb-1 text-center text-[9px] uppercase tracking-[0.2em] text-base-content/45">
+						<div className="mb-1 text-center text-4xs uppercase tracking-[0.2em] text-base-content/45">
 							{i + 1}
 						</div>
 						<div className="flex flex-col items-center justify-center gap-2">

@@ -33,7 +33,7 @@ const ParamRow: React.FC<{
 	mono?: boolean;
 }> = ({ label, value, mono }) => (
 	<div className="flex justify-between items-center gap-2 py-0.5">
-		<span className="text-[10px] uppercase tracking-wider text-base-content/40 shrink-0">
+		<span className="text-3xs uppercase tracking-wider text-base-content/40 shrink-0">
 			{label}
 		</span>
 		<span
@@ -46,7 +46,7 @@ const ParamRow: React.FC<{
 
 const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
 	<div className="flex items-center gap-2 mt-3 mb-1">
-		<span className="text-[9px] uppercase tracking-widest font-bold text-primary/70">
+		<span className="text-4xs uppercase tracking-widest font-bold text-primary/70">
 			{children}
 		</span>
 		<div className="flex-1 h-px bg-primary/20" />
@@ -66,7 +66,7 @@ const ValueBar: React.FC<{
 				value={clamped}
 				max={max}
 			></progress>
-			<span className="w-8 text-[10px] font-mono text-right text-base-content/70">
+			<span className="w-8 text-3xs font-mono text-right text-base-content/70">
 				{clamped}
 			</span>
 		</div>
@@ -91,7 +91,7 @@ const EnvelopeGroup: React.FC<{
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex items-center gap-2 mt-1">
-				<span className="badge badge-outline badge-xs text-[9px] font-mono">
+				<span className="badge badge-outline badge-xs text-4xs font-mono">
 					{lineId}
 				</span>
 			</div>
@@ -129,7 +129,7 @@ const CollapsibleSection: React.FC<{
 		className="group rounded-lg border border-base-content/10 bg-base-300/20 overflow-hidden"
 	>
 		<summary className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none hover:bg-base-300/40 transition-colors">
-			<span className="text-[10px] uppercase tracking-widest font-bold text-primary/80">
+			<span className="text-3xs uppercase tracking-widest font-bold text-primary/80">
 				{title}
 			</span>
 			<span className="ml-auto text-xs text-base-content/35 group-open:rotate-90 transition-transform">

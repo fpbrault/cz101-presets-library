@@ -17,14 +17,14 @@ type CardProps<T extends React.ElementType = "div"> = {
 } & Omit<React.ComponentPropsWithoutRef<T>, "as" | "className">;
 
 export const CARD_BASE_CLASSES =
-	"card border border-cz-border text-cz-cream outline-none";
+	"card text-cz-cream outline-none";
 
 export const CARD_VARIANT_CLASSES: Record<CardVariant, string> = {
 	panel: "rounded-2xl  ",
 	"panel-slanted": "rounded-none cz-section-slanted",
 	"panel-gold": "rounded-none cz-section-gold",
-	hero: "rounded-2xl bg-cz-surface ",
-	subtle: "rounded-xl bg-cz-surface/20",
+	hero: "rounded-2xl bg-cz-surface",
+	subtle: "rounded-xl bg-cz-surface/50 ",
 	inset: "rounded-lg bg-cz-inset",
 };
 

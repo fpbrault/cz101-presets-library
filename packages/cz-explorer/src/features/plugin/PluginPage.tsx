@@ -1430,7 +1430,7 @@ export default function PluginPage() {
 
 			{/* UI Scale selector */}
 			<div className="flex items-center gap-2 px-8 -mt-2">
-				<span className="text-[10px] font-mono uppercase tracking-[0.2em] text-base-content/50">
+				<span className="text-3xs font-mono uppercase tracking-[0.2em] text-base-content/50">
 					UI Scale
 				</span>
 				<div className="flex gap-1">

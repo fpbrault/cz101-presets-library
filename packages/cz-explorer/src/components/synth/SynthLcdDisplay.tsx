@@ -15,7 +15,7 @@ function SynthLcdDisplay({
 	transientReadout = null,
 }: SynthLcdDisplayProps) {
 	return (
-		<div className="relative w-112 rounded-xl border border-cz-btn-border bg-linear-to-b from-[#3f3e3c] to-[#252422] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_3px_10px_rgba(0,0,0,0.35)]">
+		<div className="relative w-md rounded-xl border border-cz-btn-border bg-linear-to-b from-[#3f3e3c] to-[#252422] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_3px_10px_rgba(0,0,0,0.35)]">
 			<div className="absolute right-3 top-3 flex gap-1.5">
 				{[0, 1, 2, 3, 4].map((index) => (
 					<span
@@ -30,7 +30,7 @@ function SynthLcdDisplay({
 			</div>
 
 			<div className="rounded-lg border border-black/80 bg-[#1a1a18] px-3 pb-3 pt-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-				<div className="mb-2 flex items-center justify-between text-[9px] font-mono uppercase tracking-[0.22em] text-cz-cream-dim">
+				<div className="mb-2 flex items-center justify-between text-4xs font-mono uppercase tracking-[0.22em] text-cz-cream-dim">
 					<span>COSMO</span>
 					<span>Digital Synthesizer</span>
 				</div>

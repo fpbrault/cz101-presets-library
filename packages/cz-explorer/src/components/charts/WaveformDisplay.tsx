@@ -142,7 +142,7 @@ const WaveformSlot: React.FC<{
 			<div
 				className={`flex items-center gap-3 rounded-md px-3 py-2 border border-dashed border-base-content/10 w-full min-w-0 ${dim ? "opacity-30" : "opacity-60"}`}
 			>
-				<span className="text-[9px] font-mono text-base-content/40 uppercase tracking-widest shrink-0">
+				<span className="text-4xs font-mono text-base-content/40 uppercase tracking-widest shrink-0">
 					{label}
 				</span>
 				<span className="text-xs text-base-content/20 ml-auto">—</span>
@@ -154,11 +154,11 @@ const WaveformSlot: React.FC<{
 		<div
 			className={`flex items-center gap-3 rounded-md px-3 py-2 border border-base-content/20 bg-base-300/40 w-full min-w-0 transition-opacity ${dim ? "opacity-40" : "opacity-100"}`}
 		>
-			<span className="text-[9px] font-mono text-base-content/50 uppercase tracking-widest shrink-0">
+			<span className="text-4xs font-mono text-base-content/50 uppercase tracking-widest shrink-0">
 				{label}
 			</span>
 			<WaveIcon id={waveform} size={24} />
-			<span className="text-[10px] font-mono leading-tight text-base-content/70 text-right flex-1">
+			<span className="text-3xs font-mono leading-tight text-base-content/70 text-right flex-1">
 				{WF_NAMES[waveform]}
 			</span>
 		</div>
@@ -184,7 +184,7 @@ const WaveformDisplay: React.FC<WaveformDisplayProps> = memo(
 				className={`flex flex-col gap-2 overflow-x-hidden ${disabled ? "opacity-40" : ""}`}
 			>
 				<div className="flex items-center justify-between">
-					<span className="text-[10px] font-mono text-base-content/50 uppercase tracking-widest">
+					<span className="text-3xs font-mono text-base-content/50 uppercase tracking-widest">
 						{line}
 					</span>
 					<span className={`badge badge-xs ${MOD_COLORS[config.modulation]}`}>

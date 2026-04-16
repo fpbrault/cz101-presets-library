@@ -14,7 +14,7 @@ const KeyValueBlock: React.FC<KeyValueBlockProps> = ({
 }) => {
 	return (
 		<div className={className}>
-			<div className="text-[10px] uppercase tracking-wider text-base-content/40">
+			<div className="text-3xs uppercase tracking-wider text-base-content/40">
 				{label}
 			</div>
 			<div className="mt-1 text-xs font-mono font-semibold break-all">

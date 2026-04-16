@@ -72,11 +72,30 @@ export default function PhaseLinesSection({
 	}, [activeLine, onActiveTabChange]);
 
 	const panelClassName = joinClasses("h-full min-h-0 flex flex-col", className);
-	const leftTabs: Array<{ id: SidePanelTab; topLabel: string; bottomLabel: string }> = [
-		{ id: "line1-algos", topLabel: "L1", bottomLabel: "PARAM" },
-		{ id: "line2-algos", topLabel: "L2", bottomLabel: "PARAM" },
-		{ id: "line1-envelopes", topLabel: "L1", bottomLabel: "ENV" },
-		{ id: "line2-envelopes", topLabel: "L2", bottomLabel: "ENV" },
+	const leftTabGroups: Array<{
+		label: "L1" | "L2";
+		color: "red" | "blue";
+		tabs: Array<{
+			id: SidePanelTab;
+			bottomLabel: string;
+		}>;
+	}> = [
+		{
+			label: "L1",
+			color: "red",
+			tabs: [
+				{ id: "line1-algos", bottomLabel: "WAVE FORM" },
+				{ id: "line1-envelopes", bottomLabel: "ENV" },
+			],
+		},
+		{
+			label: "L2",
+			color: "blue",
+			tabs: [
+				{ id: "line2-algos", bottomLabel: "WAVE FORM" },
+				{ id: "line2-envelopes", bottomLabel: "ENV" },
+			],
+		},
 	];
 
 	return (
@@ -84,56 +103,65 @@ export default function PhaseLinesSection({
 			<div className="cz-collapse-header cz-section-slanted-title py-0 shrink-0 justify-center">
 				Phase Lines
 			</div>
-			<div className="border-l-2 border-r-2 border-cz-cream mt-2 mb-1 bg-cz-panel p-2 flex-1 min-h-0 min-w-0 flex overflow-hidden">
+			<div className="bg-cz-panel p-2 flex-1 min-h-0 min-w-0 flex overflow-hidden">
 				<div className="flex-1 min-h-0 min-w-0 flex gap-2 items-stretch">
-					<div className="w-14 shrink-0 self-stretch flex flex-col gap-2 justify-around">
-						{leftTabs.map((tab) => (
-							<CzTabButton
-								key={tab.id}
-								active={activeTab === tab.id}
-								onClick={() => setActiveTab(tab.id)}
-								topLabel={tab.topLabel}
-								bottomLabel={tab.bottomLabel}
-								color="black"
-								styleVariant="cz"
-								showLed
-							/>
+					<div className="w-16 shrink-0 self-stretch flex flex-col gap-5 justify-center">
+						{leftTabGroups.map((group) => (
+							<div
+								key={group.label}
+								className="flex flex-col gap-4 bg-cz-inset/80 rounded-lg p-1.5 py-3"
+							>
+								<div className="text-center text-[0.6rem] font-bold tracking-[0.12em] text-cz-cream">
+									{group.label}
+								</div>
+								{group.tabs.map((tab) => (
+									<CzTabButton
+										key={tab.id}
+										active={activeTab === tab.id}
+										onClick={() => setActiveTab(tab.id)}
+										topLabel=""
+										bottomLabel={tab.bottomLabel}
+										color={group.color}
+										showLed
+									/>
+								))}
+							</div>
 						))}
 					</div>
 
-				<PerLineWarpBlock
-					key={activeLineLabel}
-					label={activeLineLabel}
-					color="#9cb937"
-					algo={activeLineConfig.algo}
-					setAlgo={activeLineConfig.setAlgo}
-					algo2={activeLineConfig.algo2}
-					setAlgo2={activeLineConfig.setAlgo2}
-					algoBlend={activeLineConfig.algoBlend}
-					setAlgoBlend={activeLineConfig.setAlgoBlend}
-					warpAmount={activeLineConfig.warpAmount}
-					setWarpAmount={activeLineConfig.setWarpAmount}
-					dcwComp={activeLineConfig.dcwComp}
-					setDcwComp={activeLineConfig.setDcwComp}
-					level={activeLineConfig.level}
-					setLevel={activeLineConfig.setLevel}
-					octave={activeLineConfig.octave}
-					setOctave={activeLineConfig.setOctave}
-					fineDetune={activeLineConfig.fineDetune}
-					setFineDetune={activeLineConfig.setFineDetune}
-					dcoDepth={activeLineConfig.dcoDepth}
-					setDcoDepth={activeLineConfig.setDcoDepth}
-					dcoEnv={activeLineConfig.dcoEnv}
-					setDcoEnv={activeLineConfig.setDcoEnv}
-					dcwEnv={activeLineConfig.dcwEnv}
-					setDcwEnv={activeLineConfig.setDcwEnv}
-					dcaEnv={activeLineConfig.dcaEnv}
-					setDcaEnv={activeLineConfig.setDcaEnv}
-					keyFollow={activeLineConfig.keyFollow}
-					setKeyFollow={activeLineConfig.setKeyFollow}
-					showSectionTabs={false}
-					activeSection={activeSection}
-				/>
+					<PerLineWarpBlock
+						key={activeLineLabel}
+						label={activeLineLabel}
+						color="#9cb937"
+						algo={activeLineConfig.algo}
+						setAlgo={activeLineConfig.setAlgo}
+						algo2={activeLineConfig.algo2}
+						setAlgo2={activeLineConfig.setAlgo2}
+						algoBlend={activeLineConfig.algoBlend}
+						setAlgoBlend={activeLineConfig.setAlgoBlend}
+						warpAmount={activeLineConfig.warpAmount}
+						setWarpAmount={activeLineConfig.setWarpAmount}
+						dcwComp={activeLineConfig.dcwComp}
+						setDcwComp={activeLineConfig.setDcwComp}
+						level={activeLineConfig.level}
+						setLevel={activeLineConfig.setLevel}
+						octave={activeLineConfig.octave}
+						setOctave={activeLineConfig.setOctave}
+						fineDetune={activeLineConfig.fineDetune}
+						setFineDetune={activeLineConfig.setFineDetune}
+						dcoDepth={activeLineConfig.dcoDepth}
+						setDcoDepth={activeLineConfig.setDcoDepth}
+						dcoEnv={activeLineConfig.dcoEnv}
+						setDcoEnv={activeLineConfig.setDcoEnv}
+						dcwEnv={activeLineConfig.dcwEnv}
+						setDcwEnv={activeLineConfig.setDcwEnv}
+						dcaEnv={activeLineConfig.dcaEnv}
+						setDcaEnv={activeLineConfig.setDcaEnv}
+						keyFollow={activeLineConfig.keyFollow}
+						setKeyFollow={activeLineConfig.setKeyFollow}
+						showSectionTabs={false}
+						activeSection={activeSection}
+					/>
 				</div>
 			</div>
 		</Card>

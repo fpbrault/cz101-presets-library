@@ -37,10 +37,10 @@ export default function ScopePanel({
 		>
 			<div className="space-y-2">
 				<div className="relative overflow-hidden rounded-lg border border-cz-border bg-cz-lcd-bg">
-					<div className="absolute left-2 top-1 text-[8px] font-mono text-cz-lcd-fg/60">
+					<div className="absolute left-2 top-1 text-5xs font-mono text-cz-lcd-fg/60">
 						CH1
 					</div>
-					<div className="absolute right-3 top-3 text-[10px] font-mono uppercase tracking-[0.2em] text-cz-lcd-fg/60">
+					<div className="absolute right-3 top-3 text-3xs font-mono uppercase tracking-[0.2em] text-cz-lcd-fg/60">
 						{effectivePitchHz.toFixed(1)} Hz
 					</div>
 					<canvas

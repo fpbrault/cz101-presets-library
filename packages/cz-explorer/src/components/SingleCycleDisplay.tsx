@@ -44,7 +44,7 @@ export const SingleCycleDisplay = memo(function SingleCycleDisplay({
 
 	return (
 		<div className="flex flex-col items-center col-span-2">
-			<span className="mb-1 text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+			<span className="mb-1 text-3xs uppercase tracking-[0.24em] text-base-content/55">
 				{label}
 			</span>
 			<Card

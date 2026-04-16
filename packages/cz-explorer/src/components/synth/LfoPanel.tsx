@@ -75,7 +75,7 @@ export default function LfoPanel({
 			title="LFO"
 		>
 			<div className="mb-2 flex items-center justify-center gap-2">
-				<span className="text-[10px] font-mono text-cz-cream-dim uppercase tracking-wider">
+				<span className="text-3xs font-mono text-cz-cream-dim uppercase tracking-wider">
 					Enable
 				</span>
 				<button
@@ -84,7 +84,7 @@ export default function LfoPanel({
 					onClick={() => setLfoEnabled(!lfoEnabled)}
 				>
 					<span
-						className={`text-[8px] font-mono font-bold uppercase tracking-wider ${
+						className={`text-5xs font-mono font-bold uppercase tracking-wider ${
 							lfoEnabled ? "text-white" : "text-cz-cream-dim"
 						}`}
 					>

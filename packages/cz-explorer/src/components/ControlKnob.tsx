@@ -117,7 +117,7 @@ export function ControlKnob({
 		<div className="flex flex-col items-center gap-1 text-center">
 			{label && (
 				<div className="space-y-0.5">
-					<div className="text-[10px] uppercase tracking-[0.24em] text-base-content/55">
+					<div className="text-3xs uppercase tracking-[0.24em] text-base-content/55">
 						{label}
 					</div>
 				</div>
@@ -184,7 +184,7 @@ export function ControlKnob({
 						<input
 							ref={inputRef}
 							type="text"
-							className="w-14 border border-base-300 bg-cz-surface px-1 text-center text-[11px] font-semibold text-base-content/80 outline-none focus:border-primary"
+							className="w-14 border border-base-300 bg-cz-surface px-1 text-center text-2xs font-semibold text-base-content/80 outline-none focus:border-primary"
 							value={editValue}
 							onChange={(e) => setEditValue(e.target.value)}
 							onBlur={commitEdit}
@@ -193,7 +193,7 @@ export function ControlKnob({
 					) : (
 						<button
 							type="button"
-							className="text-[11px] font-semibold text-base-content/80 hover:text-base-content cursor-pointer"
+							className="text-2xs font-semibold text-base-content/80 hover:text-base-content cursor-pointer"
 							onClick={handleDisplayClick}
 						>
 							{displayValue}
