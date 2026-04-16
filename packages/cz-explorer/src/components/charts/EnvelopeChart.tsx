@@ -198,9 +198,7 @@ const EnvelopeChart: React.FC<EnvelopeChartProps> = memo(
 										: "border-base-content/10 text-base-content/60"
 								}`}
 							>
-								<div className="text-5xs leading-tight font-mono">
-									{i + 1}
-								</div>
+								<div className="text-5xs leading-tight font-mono">{i + 1}</div>
 								<div className="text-5xs leading-tight font-mono">
 									{inactive ? "--" : `R${step.rate}`}
 								</div>

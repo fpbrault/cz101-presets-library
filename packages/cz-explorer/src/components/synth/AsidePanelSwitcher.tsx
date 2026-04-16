@@ -28,7 +28,11 @@ export default function AsidePanelSwitcher<T extends string>({
 	const getTabColor = (tabId: T): CzTabButtonColor => {
 		const normalizedTabId = String(tabId).toLowerCase();
 
-		if (normalizedTabId === "phasemod" || normalizedTabId === "vibrato" || normalizedTabId === "lfo") {
+		if (
+			normalizedTabId === "phasemod" ||
+			normalizedTabId === "vibrato" ||
+			normalizedTabId === "lfo"
+		) {
 			return "red";
 		}
 
@@ -39,9 +43,7 @@ export default function AsidePanelSwitcher<T extends string>({
 		) {
 			return "blue";
 		}
-		if (
-			normalizedTabId === "scope" 
-		) {
+		if (normalizedTabId === "scope") {
 			return "cyan";
 		}
 

@@ -16,8 +16,7 @@ type CardProps<T extends React.ElementType = "div"> = {
 	className?: string;
 } & Omit<React.ComponentPropsWithoutRef<T>, "as" | "className">;
 
-export const CARD_BASE_CLASSES =
-	"card text-cz-cream outline-none";
+export const CARD_BASE_CLASSES = "card text-cz-cream outline-none";
 
 export const CARD_VARIANT_CLASSES: Record<CardVariant, string> = {
 	panel: "rounded-2xl  ",

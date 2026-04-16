@@ -18,7 +18,10 @@ type CzTabButtonProps = {
 	ledColor?: CzTabButtonLedColor;
 };
 
-const colorStyles: Record<CzTabButtonColor, { active: string; inactive: string }> = {
+const colorStyles: Record<
+	CzTabButtonColor,
+	{ active: string; inactive: string }
+> = {
 	black: {
 		active:
 			"text-white border-cz-btn-border bg-[linear-gradient(180deg,#3b3b3e_0%,#2f2f31_100%)] shadow-[0_1px_0_#111,inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.28)]",
@@ -71,17 +74,22 @@ export default function CzTabButton({
 	const resolvedLedColor = ledColor ?? (active ? "red" : "off");
 
 	return (
-		<div className={joinClasses("w-full flex flex-col items-center gap-1", className)}>
+		<div
+			className={joinClasses(
+				"w-full flex flex-col items-center gap-1",
+				className,
+			)}
+		>
 			{showLed ? (
 				<span
 					className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
 						resolvedLedColor === "blue"
 							? "bg-[#7aa8ff] shadow-[0_0_4px_1px_rgba(122,168,255,0.55),inset_0_1px_0_rgba(190,215,255,0.35)]"
 							: resolvedLedColor === "green"
-							? "bg-[#5dff63] shadow-[0_0_4px_1px_rgba(93,255,99,0.55),inset_0_1px_0_rgba(180,255,185,0.35)]"
-							: resolvedLedColor === "red"
-								? "bg-cz-led-on shadow-[0_0_4px_1px_rgba(255,30,30,0.55),inset_0_1px_0_rgba(255,180,180,0.3)]"
-								: "bg-cz-led-off shadow-[inset_0_1px_1px_rgba(0,0,0,0.6)]"
+								? "bg-[#5dff63] shadow-[0_0_4px_1px_rgba(93,255,99,0.55),inset_0_1px_0_rgba(180,255,185,0.35)]"
+								: resolvedLedColor === "red"
+									? "bg-cz-led-on shadow-[0_0_4px_1px_rgba(255,30,30,0.55),inset_0_1px_0_rgba(255,180,180,0.3)]"
+									: "bg-cz-led-off shadow-[inset_0_1px_1px_rgba(0,0,0,0.6)]"
 					}`}
 					aria-hidden="true"
 				/>

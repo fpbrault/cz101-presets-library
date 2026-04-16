@@ -90,7 +90,11 @@ export default function CzVerticalSlider({
 			onPointerDown={handlePointerDown}
 			onWheel={handleWheel}
 			className="relative h-full min-h-8 select-none cursor-ns-resize"
-			style={{ width: trackW, height: trackHeight ?? "100%", touchAction: "none" }}
+			style={{
+				width: trackW,
+				height: trackHeight ?? "100%",
+				touchAction: "none",
+			}}
 			role="slider"
 			aria-valuenow={value}
 			aria-valuemin={min}
@@ -162,7 +166,8 @@ export default function CzVerticalSlider({
 				className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 rounded-full"
 				style={{
 					width: 2,
-					background: "linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0.04))",
+					background:
+						"linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0.04))",
 				}}
 			/>
 

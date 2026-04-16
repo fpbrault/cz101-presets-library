@@ -114,7 +114,6 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 	const activeEnv = envMap[activeEnvTab];
 
-
 	return (
 		<div className="min-w-0 min-h-0 flex-1 flex flex-col">
 			<div className="flex flex-1 min-h-0 items-stretch">
@@ -158,7 +157,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											min={0}
 											max={100}
 											value={Math.round(algoBlend * 100)}
-											onChange={(e) => setAlgoBlend(Number(e.target.value) / 100)}
+											onChange={(e) =>
+												setAlgoBlend(Number(e.target.value) / 100)
+											}
 											className="range range-xs w-full gh"
 											style={{ accentColor: "#9cb937", touchAction: "none" }}
 										/>
@@ -247,7 +248,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 												fmt,
 												onChange,
 											}) => (
-												<div key={label} className="min-h-0 h-full flex flex-col items-center gap-1.5">
+												<div
+													key={label}
+													className="min-h-0 h-full flex flex-col items-center gap-1.5"
+												>
 													<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
 														{fmt(value)}
 													</span>
@@ -258,7 +262,6 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 															max={max}
 															step={step}
 															color={c}
-															label={label}
 															onChange={onChange}
 														/>
 													</div>

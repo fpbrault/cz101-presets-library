@@ -60,7 +60,12 @@ export async function checkForDesktopUpdate(): Promise<UpdateInfo | null> {
 		}
 
 		const latest = (await response.json()) as GitHubLatestReleaseResponse;
-		if (latest.draft || latest.prerelease || !latest.tag_name || !latest.html_url) {
+		if (
+			latest.draft ||
+			latest.prerelease ||
+			!latest.tag_name ||
+			!latest.html_url
+		) {
 			return null;
 		}
 

@@ -299,6 +299,10 @@ export default function PluginPage() {
 	const [modMode, setModMode] = useState<"normal" | "ring" | "noise">("normal");
 	const [line1DcwKeyFollow, setLine1DcwKeyFollow] = useState(0);
 	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
+	const [phaseModEnabled, setPhaseModEnabled] = useState(false);
+	const [chorusEnabled, setChorusEnabled] = useState(false);
+	const [delayEnabled, setDelayEnabled] = useState(false);
+	const [reverbEnabled, setReverbEnabled] = useState(false);
 
 	const [vibratoEnabled, setVibratoEnabled] = useState(false);
 	const [vibratoWave, setVibratoWave] = useState(1);
@@ -913,6 +917,10 @@ export default function PluginPage() {
 			filterEnvAmount,
 			pitchBendRange,
 			modWheelVibratoDepth,
+			phaseModEnabled: false,
+			chorusEnabled: false,
+			delayEnabled: false,
+			reverbEnabled: false
 		}),
 		[
 			warpAAmount,
@@ -1474,6 +1482,8 @@ export default function PluginPage() {
 						setModWheelVibratoDepth={setModWheelVibratoDepth}
 					/>
 					<PhaseModPanel
+						phaseModEnabled={phaseModEnabled}
+						setPhaseModEnabled={setPhaseModEnabled}
 						intPmAmount={intPmAmount}
 						setIntPmAmount={setIntPmAmount}
 						intPmRatio={intPmRatio}
@@ -1530,6 +1540,8 @@ export default function PluginPage() {
 						setFilterEnvAmount={setFilterEnvAmount}
 					/>
 					<ChorusPanel
+						enabled={chorusEnabled}
+						setEnabled={setChorusEnabled}
 						rate={chorusRate}
 						setRate={setChorusRate}
 						depth={chorusDepth}
@@ -1538,6 +1550,8 @@ export default function PluginPage() {
 						setMix={setChorusMix}
 					/>
 					<DelayPanel
+						enabled={delayEnabled}
+						setEnabled={setDelayEnabled}
 						time={delayTime}
 						setTime={setDelayTime}
 						feedback={delayFeedback}
@@ -1546,6 +1560,8 @@ export default function PluginPage() {
 						setMix={setDelayMix}
 					/>
 					<ReverbPanel
+						enabled={reverbEnabled}
+						setEnabled={setReverbEnabled}
 						size={reverbSize}
 						setSize={setReverbSize}
 						mix={reverbMix}

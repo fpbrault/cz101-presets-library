@@ -44,7 +44,11 @@ type PhaseLinesSectionProps = {
 	line2: LineConfig;
 };
 
-type SidePanelTab = "line1-algos" | "line2-algos" | "line1-envelopes" | "line2-envelopes";
+type SidePanelTab =
+	| "line1-algos"
+	| "line2-algos"
+	| "line1-envelopes"
+	| "line2-envelopes";
 
 export default function PhaseLinesSection({
 	lineSelect,
@@ -159,7 +163,6 @@ export default function PhaseLinesSection({
 						setDcaEnv={activeLineConfig.setDcaEnv}
 						keyFollow={activeLineConfig.keyFollow}
 						setKeyFollow={activeLineConfig.setKeyFollow}
-						showSectionTabs={false}
 						activeSection={activeSection}
 					/>
 				</div>
