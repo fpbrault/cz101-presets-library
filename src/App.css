@@ -28,9 +28,36 @@
 }
 
 @plugin "daisyui" {
-	themes:
-		dracula --default,
-		cyberpunk;
+	themes: cz101 --default;
+}
+
+@plugin "daisyui/theme" {
+	name: "cz101";
+	--color-primary: #bfbd30;
+	--color-primary-content: #171615;
+	--color-secondary: #7f9de4;
+	--color-secondary-content: #171615;
+	--color-accent: #3dff3d;
+	--color-accent-content: #051005;
+	--color-neutral: #424241;
+	--color-neutral-content: #c8bfab;
+	--color-base-100: #2c2c2e;
+	--color-base-200: #424241;
+	--color-base-300: #3a3a3c;
+	--color-base-content: #c8bfab;
+	--color-info: #3dff3d;
+	--color-info-content: #051005;
+	--color-success: #5e6b1e;
+	--color-success-content: #c8bfab;
+	--color-warning: #ff2222;
+	--color-warning-content: #171615;
+	--color-error: #ff2222;
+	--color-error-content: #171615;
+	--radius-btn: 3px;
+	--radius-box: 6px;
+	--radius-badge: 4px;
+	--animation-btn: 0.08s;
+	--animation-input: 0.08s;
 }
 /*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,
@@ -48,6 +75,11 @@
 	::file-selector-button {
 		border-color: var(--color-gray-200, currentcolor);
 	}
+}
+
+:root {
+	background-color: var(--color-cz-body);
+	color: var(--color-cz-cream);
 }
 
 /* ─── CZ-101 hardware component classes ─────────────────────────────────── */
