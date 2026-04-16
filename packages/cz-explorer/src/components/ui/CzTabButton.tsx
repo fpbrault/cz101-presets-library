@@ -77,7 +77,7 @@ export default function CzTabButton({
 				disabled={disabled}
 				onClick={onClick}
 				className={joinClasses(
-					"h-12 w-full shrink-0 flex items-center justify-center rounded-[2px] border uppercase tracking-[0.06em] text-[0.56rem] leading-[1.08] font-bold transition-colors px-1 py-1 shadow-[0_2px_0_#111,inset_0_1px_0_rgba(255,255,255,0.18)]",
+					"h-12 w-full shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold transition-colors px-1 py-1 shadow-[0_2px_0_#111,inset_0_1px_0_rgba(255,255,255,0.18)]",
 					"disabled:opacity-40 disabled:cursor-not-allowed",
 					active ? palette.active : palette.inactive,
 					buttonClassName,
