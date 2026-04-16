@@ -37,7 +37,7 @@ const routeToMode: Record<string, AppMode> = {
 	"/setlists": "setlists",
 	"/tags": "tagManager",
 	"/duplicates": "duplicateFinder",
-	"/lab": "visualizer",
+	"/pd101": "visualizer",
 };
 
 const modeToRoute: Record<AppMode, string> = {
@@ -47,7 +47,7 @@ const modeToRoute: Record<AppMode, string> = {
 	setlists: "/setlists",
 	tagManager: "/tags",
 	duplicateFinder: "/duplicates",
-	visualizer: "/lab",
+	visualizer: "/pd101",
 };
 
 interface AppSidebarProps {

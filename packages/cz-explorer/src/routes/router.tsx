@@ -85,7 +85,7 @@ const duplicatesRoute = createRoute({
 
 const visualizerRoute = createRoute({
 	getParentRoute: () => rootRoute,
-	path: "/lab",
+	path: "/pd101",
 	component: VisualizerPage,
 });
 

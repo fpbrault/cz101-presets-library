@@ -544,7 +544,7 @@ export default function PhaseDistortionVisualizer() {
 	}, []);
 
 	const { data: libraryPresets = [] } = useQuery({
-		queryKey: ["presets", "lab-library"],
+		queryKey: ["presets", "pd101-library"],
 		queryFn: async () => {
 			const result = await fetchPresetData(
 				0,
@@ -590,7 +590,7 @@ export default function PhaseDistortionVisualizer() {
 				label: name,
 				type: "local" as const,
 			})),
-			...libraryPresets.map((preset) => ({
+			...libraryPresets.map((preset: Preset) => ({
 				id: `library:${preset.id}`,
 				label: preset.name,
 				type: "library" as const,
