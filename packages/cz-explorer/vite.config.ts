@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { watch } from "node:fs";
+import { existsSync, rmSync, watch } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -9,18 +9,18 @@ const wasmOutDir = fileURLToPath(
 	new URL("./public/cz-synth-wasm", import.meta.url),
 );
 const wasmCargoTargetDir = fileURLToPath(
-	new URL("./packages/cz-synth/target", import.meta.url),
+	new URL("../cz-synth/target", import.meta.url),
 );
 
 function wasmDevPlugin() {
 	const wasmSrcDir = fileURLToPath(
-		new URL("./packages/cz-synth/src", import.meta.url),
+		new URL("../cz-synth/src", import.meta.url),
 	);
 	const buildWasm = () => {
 		console.log("[wasm-dev] Building WASM...");
 		try {
 			execSync(
-				`wasm-pack build packages/cz-synth --target no-modules --out-dir ${wasmOutDir} --features wasm`,
+				`wasm-pack build ../cz-synth --target no-modules --out-dir ${wasmOutDir} --features wasm`,
 				{
 					stdio: "inherit",
 					env: {
@@ -29,6 +29,10 @@ function wasmDevPlugin() {
 					},
 				},
 			);
+			const generatedGitignore = `${wasmOutDir}/.gitignore`;
+			if (existsSync(generatedGitignore)) {
+				rmSync(generatedGitignore);
+			}
 			console.log("[wasm-dev] WASM build complete.");
 		} catch {
 			console.error("[wasm-dev] WASM build failed.");

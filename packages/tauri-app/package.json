@@ -1,0 +1,10 @@
+{
+	"name": "@cz101/tauri-app",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"dev": "tauri dev --config tauri.conf.json",
+		"build": "tauri build --config tauri.conf.json"
+	}
+}

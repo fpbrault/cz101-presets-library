@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Install built plugin bundles from src-tauri/target/ to system plugin directories
+# Install built plugin bundles from target/ to system plugin directories
 # Usage: ./scripts/install-plugin.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR/.."
-TAURI="$ROOT/src-tauri"
+RUST_WORKSPACE="$ROOT"
 
 # Use release by default, allow override via PROFILE env var
 PROFILE="${PROFILE:-release}"
@@ -14,7 +14,7 @@ INSTALL_AUV3="${INSTALL_AUV3:-0}"
 REMOVE_INSTALLED_AUV2="${REMOVE_INSTALLED_AUV2:-0}"
 REMOVE_INSTALLED_AUV3="${REMOVE_INSTALLED_AUV3:-1}"
 PLUGIN_NAME="CZ-101 Phase Distortion"
-TARGET_DIR="$TAURI/target/$PROFILE"
+TARGET_DIR="$RUST_WORKSPACE/target/$PROFILE"
 
 VST3_SYSTEM="$HOME/Library/Audio/Plug-Ins/VST3"
 AU_SYSTEM="$HOME/Library/Audio/Plug-Ins/Components"

@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR/.."
-TAURI="$ROOT/src-tauri"
+RUST_WORKSPACE="$ROOT"
 
 PROFILE="${1:-release}"
 BUILD_AUV3="${BUILD_AUV3:-0}"
@@ -25,8 +25,8 @@ fi
 echo "==> Building CZ-101 Phase Distortion plugin ($PROFILE)..."
 echo "    Using beamer xtask: cargo xtask bundle cz-synth-vst ${FORMAT_FLAGS[*]}"
 
-cd "$TAURI"
+cd "$RUST_WORKSPACE"
 cargo run -p xtask -- bundle cz-synth-vst "${FORMAT_FLAGS[@]}" $PROFILE_ARG
 
-echo "==> Done. Bundles are in $TAURI/target/$PROFILE/"
+echo "==> Done. Bundles are in $RUST_WORKSPACE/target/$PROFILE/"
 echo "    Run 'bun run plugin:install' to copy to system plugin dirs."

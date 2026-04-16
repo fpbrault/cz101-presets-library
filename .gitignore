@@ -38,3 +38,5 @@ venv/
 
 # Plans (local only)
 plans/
+
+target/

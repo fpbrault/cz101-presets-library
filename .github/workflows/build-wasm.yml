@@ -2,10 +2,12 @@ name: Build WASM
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
     paths:
-      - 'src-tauri/cz-synth/**'
+      - 'packages/cz-synth/**'
+      - 'Cargo.lock'
       - 'Cargo.toml'
+      - '.github/workflows/build-wasm.yml'
 
 jobs:
   build-wasm:
@@ -25,10 +27,11 @@ jobs:
 
       - name: Build WASM
         run: |
-          wasm-pack build src-tauri/cz-synth --target no-modules --out-dir ${{ github.workspace }}/public --features wasm
+          CARGO_TARGET_DIR=packages/cz-synth/target wasm-pack build packages/cz-synth --target no-modules --out-dir ${{ github.workspace }}/packages/cz-explorer/public/cz-synth-wasm --features wasm
+          rm -f ${{ github.workspace }}/packages/cz-explorer/public/cz-synth-wasm/.gitignore
 
       - name: Commit WASM
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "build: compile WASM"
-          file_pattern: public/*
+          file_pattern: packages/cz-explorer/public/cz-synth-wasm/**
