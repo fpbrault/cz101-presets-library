@@ -10,6 +10,7 @@ interface StepEnvelopeEditorProps {
 	env: StepEnvData;
 	onChange: (env: StepEnvData) => void;
 	color?: string;
+	compact?: boolean;
 }
 
 type EnvPoint = {
@@ -176,6 +177,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	env,
 	onChange,
 	color = "#60a5fa",
+	compact = false,
 }: StepEnvelopeEditorProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [hoverStep, setHoverStep] = useState<number | null>(null);
@@ -390,7 +392,9 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	return (
 		<Card
 			variant="subtle"
-			className="space-y-3 bg-base-200/70 shadow-[0_12px_30px_rgba(0,0,0,0.2)]"
+			className={`bg-base-200/70 shadow-[0_12px_30px_rgba(0,0,0,0.2)] ${
+				compact ? "space-y-2" : "space-y-3"
+			}`}
 		>
 			<div className="flex items-center justify-between">
 				<span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-base-content/70">
@@ -431,7 +435,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 			<canvas
 				ref={canvasRef}
 				width={1000}
-				height={200}
+				height={compact ? 150 : 200}
 				className="max-w-full rounded-xl cursor-crosshair border border-base-300/60 bg-base-300/30 touch-none"
 				style={{ imageRendering: "auto" }}
 				onPointerDown={handleCanvasPointerDown}
@@ -441,11 +445,19 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 				onPointerLeave={handleCanvasPointerLeave}
 			/>
 
-			<div className="grid grid-cols-2 gap-2 sm:grid-cols-4 2xl:grid-cols-8">
+			<div
+				className={
+					compact
+						? "grid grid-cols-4 gap-2 lg:grid-cols-8"
+						: "grid grid-cols-2 gap-2 sm:grid-cols-4 2xl:grid-cols-8"
+				}
+			>
 				{env.steps.slice(0, env.stepCount).map((step, i) => (
 					<div
 						key={STEP_KEYS[i]}
-						className="rounded-xl border border-base-300/60 bg-base-300/20 px-1 py-2"
+						className={`rounded-xl border border-base-300/60 bg-base-300/20 px-1 ${
+							compact ? "py-1.5" : "py-2"
+						}`}
 					>
 						<div className="mb-1 text-center text-[9px] uppercase tracking-[0.2em] text-base-content/45">
 							{i + 1}
@@ -457,7 +469,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 								label="Lvl"
 								valueFormatter={(v) => `${Math.round(v * 99)}`}
 								color={color}
-								size={30}
+								size={compact ? 26 : 30}
 							/>
 							<ControlKnob
 								value={step.rate}
@@ -467,7 +479,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 								label="Rate"
 								valueFormatter={(v) => `${Math.round(v)}`}
 								color="#a3a3a3"
-								size={30}
+								size={compact ? 26 : 30}
 							/>
 						</div>
 					</div>

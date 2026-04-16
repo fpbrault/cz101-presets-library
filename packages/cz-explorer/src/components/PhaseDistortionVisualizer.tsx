@@ -34,6 +34,7 @@ import {
 	type StepEnvData,
 } from "./pdAlgorithms";
 import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
+import { SingleCycleDisplay } from "./SingleCycleDisplay";
 import ChorusPanel from "./synth/ChorusPanel";
 import DelayPanel from "./synth/DelayPanel";
 import GlobalVoicePanel from "./synth/GlobalVoicePanel";
@@ -47,6 +48,7 @@ import SynthFilterPanel from "./synth/SynthFilterPanel";
 import SynthHeader from "./synth/SynthHeader";
 import SynthLcdDisplay from "./synth/SynthLcdDisplay";
 import VibratoPanel from "./synth/VibratoPanel";
+import CzButton from "./ui/CzButton";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
@@ -228,6 +230,9 @@ export default function PhaseDistortionVisualizer() {
 		"L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'"
 	>("L1+L2");
 	const [modMode, setModMode] = useState<"normal" | "ring" | "noise">("normal");
+	const [activePhaseLineTab, setActivePhaseLineTab] = useState<
+		"line1" | "line2"
+	>("line1");
 	const [line1DcwKeyFollow, setLine1DcwKeyFollow] = useState(0);
 	const [line1DcaKeyFollow, setLine1DcaKeyFollow] = useState(0);
 	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
@@ -674,111 +679,6 @@ export default function PhaseDistortionVisualizer() {
 			URL.revokeObjectURL(url);
 		},
 		[gatherState],
-	);
-
-	const copyLineSettings = useCallback(
-		(
-			source: "a" | "b",
-			target: "a" | "b",
-			mode: "algos" | "envelopes" | "full",
-		) => {
-			const src =
-				source === "a"
-					? {
-							warpAmount: warpAAmount,
-							algo: warpAAlgo,
-							algo2: algo2A,
-							algoBlend: algoBlendA,
-							dcwComp: line1DcwComp,
-							level: line1Level,
-							octave: line1Octave,
-							fineDetune: line1Detune,
-							dcoDepth: line1DcoDepth,
-							dcoEnv: line1DcoEnv,
-							dcwEnv: line1DcwEnv,
-							dcaEnv: line1DcaEnv,
-						}
-					: {
-							warpAmount: warpBAmount,
-							algo: warpBAlgo,
-							algo2: algo2B,
-							algoBlend: algoBlendB,
-							dcwComp: line2DcwComp,
-							level: line2Level,
-							octave: line2Octave,
-							fineDetune: line2Detune,
-							dcoDepth: line2DcoDepth,
-							dcoEnv: line2DcoEnv,
-							dcwEnv: line2DcwEnv,
-							dcaEnv: line2DcaEnv,
-						};
-
-			if (target === "a") {
-				if (mode === "algos" || mode === "full") {
-					setWarpAAlgo(src.algo);
-					setAlgo2A(src.algo2);
-					setAlgoBlendA(src.algoBlend);
-					setWarpAAmount(src.warpAmount);
-				}
-				if (mode === "envelopes" || mode === "full") {
-					setLine1DcoEnv(src.dcoEnv);
-					setLine1DcwEnv(src.dcwEnv);
-					setLine1DcaEnv(src.dcaEnv);
-				}
-				if (mode === "full") {
-					setLine1DcwComp(src.dcwComp);
-					setLine1Level(src.level);
-					setLine1Octave(src.octave);
-					setLine1Detune(src.fineDetune);
-					setLine1DcoDepth(src.dcoDepth);
-				}
-			} else {
-				if (mode === "algos" || mode === "full") {
-					setWarpBAlgo(src.algo);
-					setAlgo2B(src.algo2);
-					setAlgoBlendB(src.algoBlend);
-					setWarpBAmount(src.warpAmount);
-				}
-				if (mode === "envelopes" || mode === "full") {
-					setLine2DcoEnv(src.dcoEnv);
-					setLine2DcwEnv(src.dcwEnv);
-					setLine2DcaEnv(src.dcaEnv);
-				}
-				if (mode === "full") {
-					setLine2DcwComp(src.dcwComp);
-					setLine2Level(src.level);
-					setLine2Octave(src.octave);
-					setLine2Detune(src.fineDetune);
-					setLine2DcoDepth(src.dcoDepth);
-				}
-			}
-		},
-		[
-			algo2A,
-			algo2B,
-			algoBlendA,
-			algoBlendB,
-			line1DcaEnv,
-			line1DcoDepth,
-			line1DcoEnv,
-			line1DcwComp,
-			line1DcwEnv,
-			line1Detune,
-			line1Level,
-			line1Octave,
-			line2DcaEnv,
-			line2DcoDepth,
-			line2DcoEnv,
-			line2DcwComp,
-			line2DcwEnv,
-			line2Detune,
-			line2Level,
-			line2Octave,
-			warpAAlgo,
-			warpAAmount,
-			warpBAlgo,
-			warpBAmount,
-		],
 	);
 
 	// ── Audio engine ──────────────────────────────────────────────────────────
@@ -1728,7 +1628,7 @@ export default function PhaseDistortionVisualizer() {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 	return (
-		<div className="h-full bg-cz-panel flex flex-col overflow-hidden gap-4 w-full">
+		<div className="h-full min-h-0 min-w-0 bg-cz-panel flex flex-col overflow-hidden w-full">
 			<SynthHeader
 				allEntries={allPresetEntries}
 				activePresetName={activePresetName}
@@ -1745,16 +1645,15 @@ export default function PhaseDistortionVisualizer() {
 				onImportPreset={handleImportPreset}
 			/>
 
-			<div className="px-4 md:px-6 -mt-1 mx-auto">
-				<SynthLcdDisplay
-					primaryText={lcdPrimaryText}
-					secondaryText={lcdSecondaryText}
-					transientReadout={lcdControlReadout}
-				/>
-			</div>
-
-			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)]">
-				<aside className="overflow-y-auto min-h-0 pb-4 space-y-0 [scrollbar-gutter:stable]">
+			<div className="px-1 grid flex-1 min-h-0 min-w-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)] overflow-hidden">
+				<aside className="overflow-y-auto min-h-0 space-y-0 [scrollbar-gutter:stable]">
+					<div className="px-4 md:px-6 -mt-1 mx-auto">
+						<SynthLcdDisplay
+							primaryText={lcdPrimaryText}
+							secondaryText={lcdSecondaryText}
+							transientReadout={lcdControlReadout}
+						/>
+					</div>
 					{/* Scope — independently collapsible */}
 					<ScopePanel
 						oscilloscopeCanvasRef={oscilloscopeCanvasRef}
@@ -1872,16 +1771,61 @@ export default function PhaseDistortionVisualizer() {
 					/>
 				</aside>
 
-				<main className="space-y-4 p-1 pb-4 overflow-y-auto min-h-0">
+				<main className="flex flex-col gap-4 p-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
+					<div className="mb-3 shrink-0 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-cream pb-3">
+						<div className="shrink-0">
+							<div className="mb-1 cz-light-blue">Line Select</div>
+							<div className="grid grid-cols-5 gap-1">
+								{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
+									(ls) => (
+										<CzButton
+											key={ls}
+											active={lineSelect === ls}
+											onClick={() => setLineSelect(ls)}
+										>
+											{ls}
+										</CzButton>
+									),
+								)}
+							</div>
+						</div>
+						<div className="shrink-0">
+							<div className="mb-1 cz-light-blue">Modulation</div>
+							<div className="flex gap-1">
+								{(
+									[
+										["normal", "Normal"],
+										["ring", "Ring"],
+										["noise", "Noise"],
+									] as const
+								).map(([mode, label]) => (
+									<CzButton
+										key={mode}
+										active={modMode === mode}
+										onClick={() => setModMode(mode)}
+										className="flex-1"
+									>
+										{label}
+									</CzButton>
+								))}
+							</div>
+						</div>
+
+						<SingleCycleDisplay
+							data={
+								activePhaseLineTab === "line1" ? waveform.out1 : waveform.out2
+							}
+							color="#9cb937"
+							label="Single Cycle"
+							width={176}
+							height={64}
+						/>
+					</div>
+
 					<PhaseLinesSection
+						className="flex-1 min-h-0"
 						lineSelect={lineSelect}
-						setLineSelect={setLineSelect}
-						modMode={modMode}
-						setModMode={setModMode}
-						combinedCanvasRef={combinedCanvasRef}
-						phaseCanvasRef={phaseCanvasRef}
-						onCopyLine1ToLine2={(mode) => copyLineSettings("a", "b", mode)}
-						onCopyLine2ToLine1={(mode) => copyLineSettings("b", "a", mode)}
+						onActiveTabChange={setActivePhaseLineTab}
 						line1={{
 							warpAmount: warpAAmount,
 							setWarpAmount: setWarpAAmount,

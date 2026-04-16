@@ -844,112 +844,6 @@ export default function PluginPage() {
 		};
 	}, []);
 
-	// ── Copy line settings ─────────────────────────────────────────────────
-	const copyLineSettings = useCallback(
-		(
-			source: "a" | "b",
-			target: "a" | "b",
-			mode: "algos" | "envelopes" | "full",
-		) => {
-			const src =
-				source === "a"
-					? {
-							warpAmount: warpAAmount,
-							algo: warpAAlgo,
-							algo2: algo2A,
-							algoBlend: algoBlendA,
-							dcwComp: line1DcwComp,
-							level: line1Level,
-							octave: line1Octave,
-							fineDetune: line1Detune,
-							dcoDepth: line1DcoDepth,
-							dcoEnv: line1DcoEnv,
-							dcwEnv: line1DcwEnv,
-							dcaEnv: line1DcaEnv,
-						}
-					: {
-							warpAmount: warpBAmount,
-							algo: warpBAlgo,
-							algo2: algo2B,
-							algoBlend: algoBlendB,
-							dcwComp: line2DcwComp,
-							level: line2Level,
-							octave: line2Octave,
-							fineDetune: line2Detune,
-							dcoDepth: line2DcoDepth,
-							dcoEnv: line2DcoEnv,
-							dcwEnv: line2DcwEnv,
-							dcaEnv: line2DcaEnv,
-						};
-
-			if (target === "a") {
-				if (mode === "algos" || mode === "full") {
-					setWarpAAlgo(src.algo);
-					setAlgo2A(src.algo2);
-					setAlgoBlendA(src.algoBlend);
-					setWarpAAmount(src.warpAmount);
-				}
-				if (mode === "envelopes" || mode === "full") {
-					setLine1DcoEnv(src.dcoEnv);
-					setLine1DcwEnv(src.dcwEnv);
-					setLine1DcaEnv(src.dcaEnv);
-				}
-				if (mode === "full") {
-					setLine1DcwComp(src.dcwComp);
-					setLine1Level(src.level);
-					setLine1Octave(src.octave);
-					setLine1Detune(src.fineDetune);
-					setLine1DcoDepth(src.dcoDepth);
-				}
-			} else {
-				if (mode === "algos" || mode === "full") {
-					setWarpBAlgo(src.algo);
-					setAlgo2B(src.algo2);
-					setAlgoBlendB(src.algoBlend);
-					setWarpBAmount(src.warpAmount);
-				}
-				if (mode === "envelopes" || mode === "full") {
-					setLine2DcoEnv(src.dcoEnv);
-					setLine2DcwEnv(src.dcwEnv);
-					setLine2DcaEnv(src.dcaEnv);
-				}
-				if (mode === "full") {
-					setLine2DcwComp(src.dcwComp);
-					setLine2Level(src.level);
-					setLine2Octave(src.octave);
-					setLine2Detune(src.fineDetune);
-					setLine2DcoDepth(src.dcoDepth);
-				}
-			}
-		},
-		[
-			algo2A,
-			algo2B,
-			algoBlendA,
-			algoBlendB,
-			line1DcaEnv,
-			line1DcoDepth,
-			line1DcoEnv,
-			line1DcwComp,
-			line1DcwEnv,
-			line1Detune,
-			line1Level,
-			line1Octave,
-			line2DcaEnv,
-			line2DcoDepth,
-			line2DcoEnv,
-			line2DcwComp,
-			line2DcwEnv,
-			line2Detune,
-			line2Level,
-			line2Octave,
-			warpAAlgo,
-			warpAAmount,
-			warpBAlgo,
-			warpBAmount,
-		],
-	);
-
 	// ── Gather / apply preset ─────────────────────────────────────────────────
 	const gatherState = useCallback(
 		(): SynthPresetData => ({
@@ -1675,13 +1569,6 @@ export default function PluginPage() {
 				<main className="space-y-4 p-1 pb-4 overflow-y-auto min-h-0">
 					<PhaseLinesSection
 						lineSelect={lineSelect}
-						setLineSelect={setLineSelect}
-						modMode={modMode}
-						setModMode={setModMode}
-						combinedCanvasRef={combinedCanvasRef}
-						phaseCanvasRef={phaseCanvasRef}
-						onCopyLine1ToLine2={(mode) => copyLineSettings("a", "b", mode)}
-						onCopyLine2ToLine1={(mode) => copyLineSettings("b", "a", mode)}
 						line1={{
 							warpAmount: warpAAmount,
 							setWarpAmount: setWarpAAmount,

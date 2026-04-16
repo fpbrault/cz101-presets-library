@@ -1,12 +1,10 @@
-import { type RefObject, useState } from "react";
+import { useEffect, useState } from "react";
 import { PerLineWarpBlock } from "@/components/PerLineWarpBlock";
 import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
-import { SingleCycleDisplay } from "@/components/SingleCycleDisplay";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
-import CzButton from "@/components/ui/CzButton";
+import Card, { joinClasses } from "@/components/ui/Card";
+import CzTabButton from "@/components/ui/CzTabButton";
 
 type LineSelect = "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
-type ModMode = "normal" | "ring" | "noise";
 
 type LineConfig = {
 	warpAmount: number;
@@ -40,184 +38,104 @@ type LineConfig = {
 
 type PhaseLinesSectionProps = {
 	lineSelect: LineSelect;
-	setLineSelect: (v: LineSelect) => void;
-	modMode: ModMode;
-	setModMode: (v: ModMode) => void;
+	onActiveTabChange?: (v: "line1" | "line2") => void;
+	className?: string;
 	line1: LineConfig;
 	line2: LineConfig;
-	onCopyLine1ToLine2: (mode: "algos" | "envelopes" | "full") => void;
-	onCopyLine2ToLine1: (mode: "algos" | "envelopes" | "full") => void;
-	combinedCanvasRef: RefObject<HTMLCanvasElement | null>;
-	phaseCanvasRef: RefObject<HTMLCanvasElement | null>;
 };
+
+type SidePanelTab = "line1-algos" | "line2-algos" | "line1-envelopes" | "line2-envelopes";
 
 export default function PhaseLinesSection({
 	lineSelect,
-	setLineSelect,
-	modMode,
-	setModMode,
+	onActiveTabChange,
+	className,
 	line1,
 	line2,
-	onCopyLine1ToLine2,
-	onCopyLine2ToLine1,
 }: PhaseLinesSectionProps) {
 	const showLineA = lineSelect !== "L2";
-	const [activeTab, setActiveTab] = useState<"line1" | "line2">("line1");
+	const [activeTab, setActiveTab] = useState<SidePanelTab>(
+		showLineA ? "line1-algos" : "line2-algos",
+	);
 
-	const handleCopyAlgos = () =>
-		activeTab === "line1"
-			? onCopyLine1ToLine2("algos")
-			: onCopyLine2ToLine1("algos");
-	const handleCopyEnvelopes = () =>
-		activeTab === "line1"
-			? onCopyLine1ToLine2("envelopes")
-			: onCopyLine2ToLine1("envelopes");
-	const handleCopyFull = () =>
-		activeTab === "line1"
-			? onCopyLine1ToLine2("full")
-			: onCopyLine2ToLine1("full");
+	const activeLine: "line1" | "line2" = activeTab.startsWith("line1")
+		? "line1"
+		: "line2";
+	const activeSection: "algos" | "envelopes" = activeTab.endsWith("algos")
+		? "algos"
+		: "envelopes";
+	const activeLineConfig = activeLine === "line1" ? line1 : line2;
+	const activeLineLabel = activeLine === "line1" ? "Line 1" : "Line 2";
+
+	useEffect(() => {
+		onActiveTabChange?.(activeLine);
+	}, [activeLine, onActiveTabChange]);
+
+	const panelClassName = joinClasses("h-full min-h-0 flex flex-col", className);
+	const leftTabs: Array<{ id: SidePanelTab; topLabel: string; bottomLabel: string }> = [
+		{ id: "line1-algos", topLabel: "L1", bottomLabel: "PARAM" },
+		{ id: "line2-algos", topLabel: "L2", bottomLabel: "PARAM" },
+		{ id: "line1-envelopes", topLabel: "L1", bottomLabel: "ENV" },
+		{ id: "line2-envelopes", topLabel: "L2", bottomLabel: "ENV" },
+	];
 
 	return (
-		<CollapsibleCard title="Phase Lines" variant="panel-slanted" open>
-			{/* Line Select + Modulation */}
-			<div className="mb-3 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-border pb-3">
-				<div className="shrink-0">
-					<div className="mb-1 cz-light-blue">Line Select</div>
-					<div className="flex gap-1">
-						{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map((ls) => (
-							<CzButton
-								key={ls}
-								active={lineSelect === ls}
-								onClick={() => setLineSelect(ls)}
-							>
-								{ls}
-							</CzButton>
+		<Card variant="panel-slanted" padding="none" className={panelClassName}>
+			<div className="cz-collapse-header cz-section-slanted-title py-0 shrink-0 justify-center">
+				Phase Lines
+			</div>
+			<div className="border-l-2 border-r-2 border-cz-cream mt-2 mb-1 bg-cz-panel p-2 flex-1 min-h-0 min-w-0 flex overflow-hidden">
+				<div className="flex-1 min-h-0 min-w-0 flex gap-2 items-stretch">
+					<div className="w-14 shrink-0 self-stretch flex flex-col gap-2 justify-around">
+						{leftTabs.map((tab) => (
+							<CzTabButton
+								key={tab.id}
+								active={activeTab === tab.id}
+								onClick={() => setActiveTab(tab.id)}
+								topLabel={tab.topLabel}
+								bottomLabel={tab.bottomLabel}
+								color="black"
+								styleVariant="cz"
+								showLed
+							/>
 						))}
 					</div>
-				</div>
-				<div className="shrink-0">
-					<div className="mb-1 cz-light-blue">Modulation</div>
-					<div className="flex gap-1">
-						{(
-							[
-								["normal", "Normal"],
-								["ring", "Ring"],
-								["noise", "Noise"],
-							] as const
-						).map(([mode, label]) => (
-							<CzButton
-								key={mode}
-								active={modMode === mode}
-								onClick={() => setModMode(mode)}
-								className="flex-1"
-							>
-								{label}
-							</CzButton>
-						))}
-					</div>
-				</div>
-				<div className="shrink-0">
-					<div className="mb-1 cz-light-blue">Clone</div>
-					<div className="flex gap-1">
-						<CzButton onClick={handleCopyAlgos}>Algo</CzButton>
-						<CzButton onClick={handleCopyEnvelopes}>Env</CzButton>
-						<CzButton onClick={handleCopyFull}>All</CzButton>
-					</div>
-				</div>
 
-				<SingleCycleDisplay
-					data={activeTab === "line1" ? line1.waveform : line2.waveform}
+				<PerLineWarpBlock
+					key={activeLineLabel}
+					label={activeLineLabel}
 					color="#9cb937"
-					label="Single Cycle"
-					width={176}
-					height={64}
+					algo={activeLineConfig.algo}
+					setAlgo={activeLineConfig.setAlgo}
+					algo2={activeLineConfig.algo2}
+					setAlgo2={activeLineConfig.setAlgo2}
+					algoBlend={activeLineConfig.algoBlend}
+					setAlgoBlend={activeLineConfig.setAlgoBlend}
+					warpAmount={activeLineConfig.warpAmount}
+					setWarpAmount={activeLineConfig.setWarpAmount}
+					dcwComp={activeLineConfig.dcwComp}
+					setDcwComp={activeLineConfig.setDcwComp}
+					level={activeLineConfig.level}
+					setLevel={activeLineConfig.setLevel}
+					octave={activeLineConfig.octave}
+					setOctave={activeLineConfig.setOctave}
+					fineDetune={activeLineConfig.fineDetune}
+					setFineDetune={activeLineConfig.setFineDetune}
+					dcoDepth={activeLineConfig.dcoDepth}
+					setDcoDepth={activeLineConfig.setDcoDepth}
+					dcoEnv={activeLineConfig.dcoEnv}
+					setDcoEnv={activeLineConfig.setDcoEnv}
+					dcwEnv={activeLineConfig.dcwEnv}
+					setDcwEnv={activeLineConfig.setDcwEnv}
+					dcaEnv={activeLineConfig.dcaEnv}
+					setDcaEnv={activeLineConfig.setDcaEnv}
+					keyFollow={activeLineConfig.keyFollow}
+					setKeyFollow={activeLineConfig.setKeyFollow}
+					showSectionTabs={false}
+					activeSection={activeSection}
 				/>
-			</div>
-
-			{/* Phase Line Tabs */}
-			<div className="tabs tabs-lift">
-				<input
-					type="radio"
-					name="phase_line_tabs"
-					className="tab [--tab-bg:var(--color-cz-surface)]"
-					aria-label="Line 1"
-					defaultChecked={true}
-					onChange={() => setActiveTab("line1")}
-				/>
-				<div className="tab-content bg-cz-surface p-4 ">
-					<PerLineWarpBlock
-						label="Line 1"
-						color="#9cb937"
-						algo={line1.algo}
-						setAlgo={line1.setAlgo}
-						algo2={line1.algo2}
-						setAlgo2={line1.setAlgo2}
-						algoBlend={line1.algoBlend}
-						setAlgoBlend={line1.setAlgoBlend}
-						warpAmount={line1.warpAmount}
-						setWarpAmount={line1.setWarpAmount}
-						dcwComp={line1.dcwComp}
-						setDcwComp={line1.setDcwComp}
-						level={line1.level}
-						setLevel={line1.setLevel}
-						octave={line1.octave}
-						setOctave={line1.setOctave}
-						fineDetune={line1.fineDetune}
-						setFineDetune={line1.setFineDetune}
-						dcoDepth={line1.dcoDepth}
-						setDcoDepth={line1.setDcoDepth}
-						dcoEnv={line1.dcoEnv}
-						setDcoEnv={line1.setDcoEnv}
-						dcwEnv={line1.dcwEnv}
-						setDcwEnv={line1.setDcwEnv}
-						dcaEnv={line1.dcaEnv}
-						setDcaEnv={line1.setDcaEnv}
-						keyFollow={line1.keyFollow}
-						setKeyFollow={line1.setKeyFollow}
-					/>
-				</div>
-
-				<input
-					type="radio"
-					name="phase_line_tabs"
-					className="tab [--tab-bg:var(--color-cz-surface)]"
-					aria-label="Line 2"
-					defaultChecked={!showLineA}
-					onChange={() => setActiveTab("line2")}
-				/>
-				<div className="tab-content  bg-cz-surface border-cz-border p-4">
-					<PerLineWarpBlock
-						label="Line 2"
-						color="#9cb937"
-						algo={line2.algo}
-						setAlgo={line2.setAlgo}
-						algo2={line2.algo2}
-						setAlgo2={line2.setAlgo2}
-						algoBlend={line2.algoBlend}
-						setAlgoBlend={line2.setAlgoBlend}
-						warpAmount={line2.warpAmount}
-						setWarpAmount={line2.setWarpAmount}
-						dcwComp={line2.dcwComp}
-						setDcwComp={line2.setDcwComp}
-						level={line2.level}
-						setLevel={line2.setLevel}
-						octave={line2.octave}
-						setOctave={line2.setOctave}
-						fineDetune={line2.fineDetune}
-						setFineDetune={line2.setFineDetune}
-						dcoDepth={line2.dcoDepth}
-						setDcoDepth={line2.setDcoDepth}
-						dcoEnv={line2.dcoEnv}
-						setDcoEnv={line2.setDcoEnv}
-						dcwEnv={line2.dcwEnv}
-						setDcwEnv={line2.setDcwEnv}
-						dcaEnv={line2.dcaEnv}
-						setDcaEnv={line2.setDcaEnv}
-						keyFollow={line2.keyFollow}
-						setKeyFollow={line2.setKeyFollow}
-					/>
 				</div>
 			</div>
-		</CollapsibleCard>
+		</Card>
 	);
 }

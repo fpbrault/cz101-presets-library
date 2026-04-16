@@ -144,7 +144,7 @@ export default function CollapsibleCard(props: CollapsibleCardProps) {
 		<details className={collapseClassName} open={defaultopen} {...detailsProps}>
 			<summary
 				className={joinClasses(
-					"collapse-title cursor-pointer list-none cz-collapse-header after:end-5",
+					"collapse-title cursor-pointer list-none cz-collapse-header after:inset-e-5",
 					resolvedTitleClassName,
 				)}
 			>
