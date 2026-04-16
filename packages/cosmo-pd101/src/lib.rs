@@ -1,4 +1,4 @@
-//! CZ-101 Phase Distortion synthesizer — VST3/AU plugin via Beamer.
+//! Cosmo PD-101 Phase Distortion synthesizer — VST3/AU plugin via Beamer.
 //!
 //! Uses beamer for VST3/AU plugin hosting and cosmo-synth-engine for the DSP engine.
 
@@ -9,9 +9,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use beamer::prelude::*;
 use cosmo_synth_engine::params::{PolyMode, StepEnvData, SynthParams};
-use cosmo_synth_engine::processor::{midi_note_to_freq, Cz101Processor};
+use cosmo_synth_engine::processor::{midi_note_to_freq, CosmoProcessor};
 
-const PLUGIN_LOG_PATH: &str = "/tmp/cz101-plugin.log";
+const PLUGIN_LOG_PATH: &str = "/tmp/cosmo-plugin.log";
 
 fn log_timestamp_ms() -> u128 {
     SystemTime::now()
@@ -268,7 +268,7 @@ pub enum PortamentoMode {
 // Parameters
 // =============================================================================
 
-/// Parameters for the CZ-101 Phase Distortion synthesizer.
+/// Parameters for the Cosmo PD-101 Phase Distortion synthesizer.
 #[derive(Parameters)]
 pub struct CzParameters {
     // Global
@@ -843,7 +843,7 @@ impl Descriptor for CzDescriptor {
             setup.hz(),
             plugin_log_path()
         ));
-        let mut processor = Cz101Processor::new(setup.hz() as f32);
+        let mut processor = CosmoProcessor::new(setup.hz() as f32);
         let mut synth_params = self.parameters.to_synth_params();
         let cached_envelopes = self
             .envelopes
@@ -870,7 +870,7 @@ impl Descriptor for CzDescriptor {
 pub struct CzProcessor {
     #[parameters]
     pub parameters: CzParameters,
-    processor: Cz101Processor,
+    processor: CosmoProcessor,
     envelopes: Arc<RwLock<EnvelopeState>>,
     cached_envelopes: EnvelopeState,
     scope_buffer: ScopeBuffer,

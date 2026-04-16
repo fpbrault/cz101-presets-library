@@ -1,4 +1,4 @@
-/// Per-voice state and sample rendering for the CZ-101 engine.
+/// Per-voice state and sample rendering for the Cosmo PD-101 engine.
 ///
 /// Ported from `createVoice` / `renderVoice` in `pdVisualizerProcessor.js`
 /// (lines 488-1257).

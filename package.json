@@ -1,5 +1,5 @@
 {
-	"name": "cz101-presets-library",
+	"name": "cosmo-presets-library",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
@@ -7,14 +7,21 @@
 		"packages/*"
 	],
 	"scripts": {
-		"dev": "bun --filter @cz101/cz-explorer dev",
+		"dev": "bun --filter @cosmo/cz-explorer dev",
 		"build": "bun run build:web && bun run build:plugin && bun run build:standalone",
-		"build:engine": "bun --filter @cz101/cosmo-synth-engine build:wasm",
-		"build:web": "bun --filter @cz101/cosmo-synth-engine build:wasm && bun --filter @cz101/cz-explorer build",
-		"build:plugin": "bun --filter @cz101/cosmo-pd101 bundle:release",
-		"build:standalone": "bun --filter @cz101/cz-explorer-desktop build",
-		"test": "bun --filter @cz101/cz-explorer test:all && cargo test --workspace",
-		"lint": "bun --filter @cz101/cz-explorer lint && cargo fmt --all --check && cargo clippy --workspace --all-targets",
+		"build:engine": "bun --filter @cosmo/cosmo-synth-engine build:wasm",
+		"build:web": "bun --filter @cosmo/cosmo-synth-engine build:wasm && bun --filter @cosmo/cz-explorer build",
+		"build:plugin": "bun --filter @cosmo/cosmo-pd101 bundle:release",
+		"build:plugin:universal": "ARCH=universal bash ./scripts/build-plugin.sh --release",
+		"build:plugin:windows": "PLUGIN_PLATFORM=windows bash ./scripts/build-plugin.sh --release",
+		"build:plugin:linux": "PLUGIN_PLATFORM=linux bash ./scripts/build-plugin.sh --release",
+		"build:standalone": "bun --filter @cosmo/cz-explorer-desktop build",
+		"package:plugin:installer": "bun run package:plugin:installer:macos && bun run package:plugin:installer:windows && bun run package:plugin:installer:linux",
+		"package:plugin:installer:macos": "bun run scripts/package-plugin-installers.mjs --platform macos",
+		"package:plugin:installer:windows": "bun run scripts/package-plugin-installers.mjs --platform windows",
+		"package:plugin:installer:linux": "bun run scripts/package-plugin-installers.mjs --platform linux",
+		"test": "bun --filter @cosmo/cz-explorer test:all && cargo test --workspace",
+		"lint": "bun --filter @cosmo/cz-explorer lint && cargo fmt --all --check && cargo clippy --workspace --all-targets",
 		"clean": "find . -type d \\( -name dist -o -name target \\) -not -path '*/node_modules/*' -not -path '*/.git/*' -exec rm -rf {} +",
 		"ci": "bun run lint && bun run build && bun run test"
 	}

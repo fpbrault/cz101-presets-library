@@ -48,7 +48,7 @@ static void beamer_debug_log(NSString* message) {
     }
 
     @autoreleasepool {
-        FILE* file = fopen("/tmp/cz101-plugin.log", "a");
+        FILE* file = fopen("/tmp/cosmo-plugin.log", "a");
         if (file == NULL) {
             return;
         }

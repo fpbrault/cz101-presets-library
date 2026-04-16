@@ -2,7 +2,7 @@
 name = "cosmo-pd101"
 version = "0.1.0"
 edition = "2021"
-description = "CZ-101 synthesizer VST3/AU plugin"
+description = "Cosmo PD-101 synthesizer VST3/AU plugin"
 
 [lib]
 crate-type = ["cdylib"]

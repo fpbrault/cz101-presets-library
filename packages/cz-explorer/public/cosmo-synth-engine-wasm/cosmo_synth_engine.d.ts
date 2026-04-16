@@ -3,7 +3,7 @@ declare namespace wasm_bindgen {
     /* eslint-disable */
 
     /**
-     * WebAssembly wrapper around [`Cz101Processor`].
+     * WebAssembly wrapper around [`CosmoProcessor`].
      *
      * All public methods map 1-to-1 to the messages the AudioWorklet receives
      * from the main thread so the JS worklet shim stays minimal.

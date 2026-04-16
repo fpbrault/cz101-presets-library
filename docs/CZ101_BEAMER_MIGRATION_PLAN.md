@@ -65,7 +65,7 @@ Or use a path override during development.
 **File:** `src-tauri/cosmo-pd101/Config.toml`
 
 ```toml
-name = "CZ-101 Phase Distortion"
+name = "Cosmo PD-101 Phase Distortion"
 category = "instrument"
 manufacturer_code = "FpbC"
 plugin_code = "CZpd"
@@ -543,9 +543,9 @@ cargo xtask bundle cosmo-pd101 --auv2 --auv3 --vst3 --release --install
 
 | Format | Output Location |
 |--------|-----------------|
-| AUv2 | `~/Library/Audio/Plug-Ins/Components/CZ-101 Phase Distortion.component` |
-| AUv3 | `~/Applications/CZ-101 Phase Distortion.app` (with embedded `CZ-101 Phase Distortion.appex`) |
-| VST3 | `~/Library/Audio/Plug-Ins/VST3/CZ-101 Phase Distortion.vst3` |
+| AUv2 | `~/Library/Audio/Plug-Ins/Components/Cosmo PD-101 Phase Distortion.component` |
+| AUv3 | `~/Applications/Cosmo PD-101 Phase Distortion.app` (with embedded `Cosmo PD-101 Phase Distortion.appex`) |
+| VST3 | `~/Library/Audio/Plug-Ins/VST3/Cosmo PD-101 Phase Distortion.vst3` |
 
 ### 5.3 Dependencies to Remove
 

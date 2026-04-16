@@ -1,4 +1,4 @@
-//! CZ-101 Phase Distortion synthesizer DSP core.
+//! Cosmo PD-101 Phase Distortion synthesizer DSP core.
 //!
 //! Compiles to:
 //! - Native (Tauri desktop, VST3/AU)

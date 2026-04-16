@@ -1,6 +1,6 @@
-/// Top-level CZ-101 synthesizer engine.
+/// Top-level Cosmo PD-101 synthesizer engine.
 ///
-/// Ported from `Cz101Processor` in `pdVisualizerProcessor.js`
+/// Ported from `CosmoProcessor` in `pdVisualizerProcessor.js`
 /// (lines 542-1293).
 extern crate alloc;
 
@@ -30,10 +30,10 @@ pub struct MonoStackEntry {
 }
 
 // ---------------------------------------------------------------------------
-// Cz101Processor
+// CosmoProcessor
 // ---------------------------------------------------------------------------
 
-pub struct Cz101Processor {
+pub struct CosmoProcessor {
     pub voices: [Voice; NUM_VOICES],
     pub fx: FxChain,
     /// Active note → voice mapping (replaces JS `activeNoteMap`).
@@ -52,7 +52,7 @@ pub struct Cz101Processor {
     pub mod_wheel: f32,
 }
 
-impl Cz101Processor {
+impl CosmoProcessor {
     pub fn new(sample_rate: f32) -> Self {
         let mut proc = Self {
             voices: array::from_fn(|_| Voice::new()),

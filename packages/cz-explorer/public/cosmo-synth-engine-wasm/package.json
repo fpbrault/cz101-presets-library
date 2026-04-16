@@ -1,6 +1,6 @@
 {
   "name": "cosmo-synth-engine",
-  "description": "CZ-101 Phase Distortion synthesizer DSP core",
+  "description": "Cosmo PD-101 Phase Distortion synthesizer DSP core",
   "version": "0.1.0",
   "files": [
     "cosmo_synth_engine_bg.wasm",

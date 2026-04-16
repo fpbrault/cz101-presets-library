@@ -1,4 +1,4 @@
-//! UniFFI bindings for the CZ-101 DSP engine.
+//! UniFFI bindings for the Cosmo PD-101 DSP engine.
 //!
 //! Exposes `CzSynthEngine` to Swift (iOS) and Kotlin (Android).
 //!
@@ -31,19 +31,19 @@
 use std::sync::Mutex;
 
 use crate::params::SynthParams;
-use crate::processor::Cz101Processor;
+use crate::processor::CosmoProcessor;
 
 // ---------------------------------------------------------------------------
-// CzSynthEngine — thread-safe wrapper around Cz101Processor
+// CzSynthEngine — thread-safe wrapper around CosmoProcessor
 // ---------------------------------------------------------------------------
 
-/// Thread-safe CZ-101 synthesizer engine for use from Swift/Kotlin.
+/// Thread-safe Cosmo PD-101 synthesizer engine for use from Swift/Kotlin.
 ///
 /// All methods are safe to call from any thread; a `Mutex` serialises access
-/// to the underlying `Cz101Processor`.  Create one instance per audio stream.
+/// to the underlying `CosmoProcessor`.  Create one instance per audio stream.
 #[derive(uniffi::Object)]
 pub struct CzSynthEngine {
-    inner: Mutex<Cz101Processor>,
+    inner: Mutex<CosmoProcessor>,
 }
 
 #[uniffi::export]
@@ -52,7 +52,7 @@ impl CzSynthEngine {
     #[uniffi::constructor]
     pub fn new(sample_rate: f32) -> std::sync::Arc<Self> {
         std::sync::Arc::new(Self {
-            inner: Mutex::new(Cz101Processor::new(sample_rate)),
+            inner: Mutex::new(CosmoProcessor::new(sample_rate)),
         })
     }
 

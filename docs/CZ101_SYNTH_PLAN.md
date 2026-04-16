@@ -1,4 +1,4 @@
-# CZ-101 Phase Distortion Synthesizer — Implementation Plan
+# Cosmo PD-101 Phase Distortion Synthesizer — Implementation Plan
 
 ## Overview
 

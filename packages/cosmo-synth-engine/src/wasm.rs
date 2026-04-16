@@ -1,4 +1,4 @@
-//! wasm-bindgen glue for the CZ-101 DSP engine.
+//! wasm-bindgen glue for the Cosmo PD-101 DSP engine.
 //!
 //! Exposes `CzSynthProcessor` to JavaScript — used by `czSynthWorklet.js`
 //! which runs inside an AudioWorklet scope.
@@ -10,15 +10,15 @@
 use wasm_bindgen::prelude::*;
 
 use crate::params::SynthParams;
-use crate::processor::Cz101Processor;
+use crate::processor::CosmoProcessor;
 
-/// WebAssembly wrapper around [`Cz101Processor`].
+/// WebAssembly wrapper around [`CosmoProcessor`].
 ///
 /// All public methods map 1-to-1 to the messages the AudioWorklet receives
 /// from the main thread so the JS worklet shim stays minimal.
 #[wasm_bindgen]
 pub struct CzSynthProcessor {
-    inner: Cz101Processor,
+    inner: CosmoProcessor,
 }
 
 #[wasm_bindgen]
@@ -27,7 +27,7 @@ impl CzSynthProcessor {
     #[wasm_bindgen(constructor)]
     pub fn new(sample_rate: f32) -> CzSynthProcessor {
         CzSynthProcessor {
-            inner: Cz101Processor::new(sample_rate),
+            inner: CosmoProcessor::new(sample_rate),
         }
     }
 

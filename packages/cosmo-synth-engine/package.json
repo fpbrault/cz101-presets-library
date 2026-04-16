@@ -1,5 +1,5 @@
 {
-	"name": "@cz101/cosmo-synth-engine",
+	"name": "@cosmo/cosmo-synth-engine",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",

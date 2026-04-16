@@ -396,5 +396,5 @@ if (typeof AudioWorkletProcessor !== "undefined") {
 		}
 	}
 
-	registerProcessor("cz101-processor", Cz101VisualizerProcessor);
+	registerProcessor("cosmo-processor", Cz101VisualizerProcessor);
 }

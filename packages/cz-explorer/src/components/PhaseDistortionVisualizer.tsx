@@ -4,7 +4,11 @@ import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
-import { pdVisualizerWorkletUrl } from "@/lib/synth/pdVisualizerWorkletUrl";
+import {
+	pdVisualizerWorkletUrl,
+	synthBindingsUrl,
+	synthWasmUrl,
+} from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
 	DEFAULT_PRESET,
 	deletePreset,
@@ -1374,15 +1378,25 @@ export default function PhaseDistortionVisualizer() {
 				// Fetch WASM binary and JS bindings in parallel before loading worklet.
 				// The worklet renders silence until it receives the "init" message.
 				const [wasmResponse, bindingsResponse] = await Promise.all([
-					fetch("/cosmo-synth-engine-wasm/cz_synth_bg.wasm"),
-					fetch("/cosmo-synth-engine-wasm/cz_synth.js"),
+					fetch(synthWasmUrl),
+					fetch(synthBindingsUrl),
 				]);
+				if (!wasmResponse.ok) {
+					throw new Error(
+						`Failed to fetch WASM (${wasmResponse.status}): ${synthWasmUrl}`,
+					);
+				}
+				if (!bindingsResponse.ok) {
+					throw new Error(
+						`Failed to fetch WASM bindings (${bindingsResponse.status}): ${synthBindingsUrl}`,
+					);
+				}
 				const [wasmBytes, bindingsJs] = await Promise.all([
 					wasmResponse.arrayBuffer(),
 					bindingsResponse.text(),
 				]);
 				await ctx.audioWorklet.addModule(pdVisualizerWorkletUrl);
-				const workletNode = new AudioWorkletNode(ctx, "cz101-processor");
+				const workletNode = new AudioWorkletNode(ctx, "cosmo-processor");
 				if (disposed) {
 					workletNode.disconnect();
 					ctx.close();

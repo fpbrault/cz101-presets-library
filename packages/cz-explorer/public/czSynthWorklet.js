@@ -279,7 +279,7 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 				};
 			}
 
-			// The bindings JS is the content of cz_synth.js (no-modules build).
+			// The bindings JS is the content of cosmo_synth_engine.js (no-modules build).
 			// The IIFE assigns to a local variable — not globalThis — so we
 			// rewrite the prefix to force assignment onto globalThis instead.
 			// Handles both old format (`let wasm_bindgen =`) and new format
@@ -334,4 +334,4 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 	}
 }
 
-registerProcessor("cz101-processor", CzSynthWorkletProcessor);
+registerProcessor("cosmo-processor", CzSynthWorkletProcessor);

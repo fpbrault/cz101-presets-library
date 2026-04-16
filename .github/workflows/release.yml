@@ -1,0 +1,160 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-web:
+    name: Build web app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build web app
+        run: bun run build:web
+
+      - name: Upload web artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: packages/cz-explorer/dist/**
+          if-no-files-found: warn
+
+  build-plugins:
+    name: Build and package plugins (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+            build_cmd: bun run build:plugin:universal
+            plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
+            installer_primary: dist/plugin-installers/macos/cosmo-plugins-macos-universal-${{ github.ref_name }}.pkg
+            artifact_paths: |
+              dist/plugin-installers/macos/cosmo-plugins-macos-universal-${{ github.ref_name }}.pkg
+              dist/plugin-installers/macos/cosmo-plugins-macos-universal-${{ github.ref_name }}.zip
+              packages/cosmo-pd101/target/release/CosmoPd101.vst3
+              packages/cosmo-pd101/target/release/CosmoPd101.component
+          - os: windows-latest
+            platform: windows
+            build_cmd: bash ./scripts/build-plugin.sh --release
+            plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
+            installer_primary: dist/plugin-installers/windows/cosmo-plugins-windows-${{ github.ref_name }}.zip
+            artifact_paths: |
+              dist/plugin-installers/windows/cosmo-plugins-windows-${{ github.ref_name }}.zip
+              packages/cosmo-pd101/target/release/CosmoPd101.vst3
+          - os: ubuntu-latest
+            platform: linux
+            build_cmd: bash ./scripts/build-plugin.sh --release
+            plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
+            installer_primary: dist/plugin-installers/linux/cosmo-plugins-linux-${{ github.ref_name }}.tar.gz
+            artifact_paths: |
+              dist/plugin-installers/linux/cosmo-plugins-linux-${{ github.ref_name }}.tar.gz
+              packages/cosmo-pd101/target/release/CosmoPd101.vst3
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build plugins
+        run: ${{ matrix.build_cmd }}
+
+      - name: Package plugin installers
+        run: bun run scripts/package-plugin-installers.mjs --platform ${{ matrix.platform }}
+
+      - name: Validate plugin release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -e "${{ matrix.plugin_bundle_path }}"
+          test -e "${{ matrix.installer_primary }}"
+          if [[ "${{ matrix.platform }}" == "macos" ]]; then
+            test -e "dist/plugin-installers/macos/cosmo-plugins-macos-universal-${{ github.ref_name }}.zip"
+            test -e "packages/cosmo-pd101/target/release/CosmoPd101.component"
+          fi
+
+      - name: Upload plugin artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins-${{ matrix.platform }}
+          path: ${{ matrix.artifact_paths }}
+          if-no-files-found: error
+
+  build-desktop:
+    name: Build desktop app (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build desktop app
+        run: bun --filter @cosmo/cz-explorer-desktop run build
+
+      - name: Upload desktop artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.platform }}
+          path: packages/cz-explorer-desktop/src-tauri/target/release/bundle/**
+          if-no-files-found: error
+
+  create-release:
+    name: Create GitHub release
+    needs: [build-web, build-plugins, build-desktop]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Validate all installer assets are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          test -e "release-assets/cosmo-plugins-macos-universal-${tag}.pkg"
+          test -e "release-assets/cosmo-plugins-macos-universal-${tag}.zip"
+          test -e "release-assets/cosmo-plugins-windows-${tag}.zip"
+          test -e "release-assets/cosmo-plugins-linux-${tag}.tar.gz"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/**

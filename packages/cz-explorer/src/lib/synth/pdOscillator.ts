@@ -1,5 +1,5 @@
 /**
- * CZ-101 Phase Distortion Oscillator
+ * Cosmo PD-101 Phase Distortion Oscillator
  *
  * Implements the 8 basic waveform transfer functions and combination wave logic.
  * Each transfer function maps linear phase φ ∈ [0,1) to a distorted phase,

@@ -2,7 +2,7 @@
 name = "cosmo-synth-engine"
 version = "0.1.0"
 edition = "2021"
-description = "CZ-101 Phase Distortion synthesizer DSP core"
+description = "Cosmo PD-101 Phase Distortion synthesizer DSP core"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

@@ -1,13 +1,13 @@
-//! GUI helpers for the CZ-101 plugin WebView.
+//! GUI helpers for the Cosmo PD-101 plugin WebView.
 //!
 //! # Debugging the plugin UI
 //!
 //! ## Log file
-//! All Rust-side events are written to `/tmp/cz101-plugin.log`.
+//! All Rust-side events are written to `/tmp/cosmo-plugin.log`.
 //! Tail it while the DAW is running:
 //!
 //! ```sh
-//! tail -f /tmp/cz101-plugin.log
+//! tail -f /tmp/cosmo-plugin.log
 //! ```
 //!
 //! ## Safari Web Inspector (WebKit DevTools)

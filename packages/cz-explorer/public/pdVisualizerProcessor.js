@@ -539,7 +539,7 @@ const DEFAULT_STEP_ENV = {
 	releaseRate: 60,
 };
 
-class Cz101Processor extends AudioWorkletProcessor {
+class CosmoProcessor extends AudioWorkletProcessor {
 	constructor() {
 		super();
 
@@ -1293,4 +1293,4 @@ class Cz101Processor extends AudioWorkletProcessor {
 	}
 }
 
-registerProcessor("cz101-processor", Cz101Processor);
+registerProcessor("cosmo-processor", CosmoProcessor);
