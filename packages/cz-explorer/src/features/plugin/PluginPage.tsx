@@ -139,6 +139,8 @@ const P_PORT_TIME = 902;
 
 // ── Scale selector ─────────────────────────────────────────────────────────────
 const UI_SCALE_KEY = "cz-plugin-ui-scale";
+const BASE_PLUGIN_WIDTH = 1280;
+const BASE_PLUGIN_HEIGHT = 800;
 
 // ── Enum ↔ f64 tables ─────────────────────────────────────────────────────────
 const LINE_SELECT_IDS: Record<string, number> = {
@@ -353,6 +355,7 @@ export default function PluginPage() {
 		},
 	);
 	const { scopeCycles, scopeVerticalZoom, scopeTriggerLevel, uiScale } = uiState;
+	const isPluginRuntime = typeof window !== "undefined" && typeof window.ipc !== "undefined";
 	const setUiScale = useCallback((value: number) => {
 		if (!isUiScale(value)) return;
 		dispatchUiState({ type: "setUiScale", value });
@@ -1275,6 +1278,14 @@ export default function PluginPage() {
 	// ── Persist UI scale ──────────────────────────────────────────────────────
 	useEffect(() => {
 		localStorage.setItem(UI_SCALE_KEY, String(uiScale));
+
+		if (!window.ipc || typeof window.resizeTo !== "function") {
+			return;
+		}
+
+		const width = Math.round((BASE_PLUGIN_WIDTH * uiScale) / 100);
+		const height = Math.round((BASE_PLUGIN_HEIGHT * uiScale) / 100);
+		window.resizeTo(width, height);
 	}, [uiScale]);
 
 	// ── Live oscilloscope ────────────────────────────────────────────────────
@@ -1433,7 +1444,7 @@ export default function PluginPage() {
 	return (
 		<div
 			className="h-full bg-cz-panel flex flex-col overflow-hidden gap-4 w-full"
-			style={{ zoom: `${uiScale}%` }}
+			style={isPluginRuntime ? undefined : { zoom: `${uiScale}%` }}
 		>
 			<SynthHeader
 				allEntries={allPresetEntries}
