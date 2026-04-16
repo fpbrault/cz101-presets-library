@@ -4,6 +4,7 @@ import {
 	createInitialPd101UiState,
 	pd101UiReducer,
 } from "@/features/pd101/state/pd101UiState";
+import { PD101_LIBRARY_QUERY_KEY } from "@/features/pd101/constants";
 import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
@@ -560,7 +561,7 @@ export default function PhaseDistortionVisualizer() {
 	}, []);
 
 	const { data: libraryPresets = [] } = useQuery({
-		queryKey: ["presets", "pd101-library"],
+		queryKey: PD101_LIBRARY_QUERY_KEY,
 		queryFn: async () => {
 			const result = await fetchPresetData(
 				0,
