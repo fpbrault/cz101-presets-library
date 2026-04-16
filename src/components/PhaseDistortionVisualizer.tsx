@@ -846,9 +846,8 @@ export default function PhaseDistortionVisualizer() {
 
 	const heldNote =
 		activeNotes.length > 0 ? activeNotes[activeNotes.length - 1] : null;
-	const previousControlSnapshotRef = useRef<
-		Record<string, string | number | boolean>
-	>();
+	const previousControlSnapshotRef =
+		useRef<Record<string, string | number | boolean>>();
 	const lcdReadoutTimeoutRef = useRef<number | null>(null);
 	let effectivePitchHz = lastHeldFreqRef.current;
 	if (heldNote != null) {
@@ -888,38 +887,45 @@ export default function PhaseDistortionVisualizer() {
 		}, 1200);
 	}, []);
 
-	const formatEnvReadout = useCallback((prev: StepEnvData, next: StepEnvData) => {
-		if (prev.stepCount !== next.stepCount) {
-			return `STEPS ${next.stepCount}`;
-		}
-		if (prev.loop !== next.loop) {
-			return `LOOP ${next.loop ? "ON" : "OFF"}`;
-		}
-		if (prev.sustainStep !== next.sustainStep) {
-			return `SUS S${next.sustainStep + 1}`;
-		}
-
-		const maxSteps = Math.max(prev.steps.length, next.steps.length);
-		for (let index = 0; index < maxSteps; index++) {
-			const prevStep = prev.steps[index];
-			const nextStep = next.steps[index];
-			if (!nextStep) continue;
-			if (!prevStep || prevStep.level !== nextStep.level || prevStep.rate !== nextStep.rate) {
-				const level = Math.round(nextStep.level * 99);
-				const rate = Math.round(nextStep.rate);
-				return `S${index + 1} L${level} R${rate}`;
+	const formatEnvReadout = useCallback(
+		(prev: StepEnvData, next: StepEnvData) => {
+			if (prev.stepCount !== next.stepCount) {
+				return `STEPS ${next.stepCount}`;
 			}
-		}
+			if (prev.loop !== next.loop) {
+				return `LOOP ${next.loop ? "ON" : "OFF"}`;
+			}
+			if (prev.sustainStep !== next.sustainStep) {
+				return `SUS S${next.sustainStep + 1}`;
+			}
 
-		const sustainIndex = Math.max(
-			0,
-			Math.min(next.sustainStep, next.steps.length - 1),
-		);
-		const sustain = next.steps[sustainIndex];
-		const sustainLevel = Math.round((sustain?.level ?? 0) * 99);
-		const sustainRate = Math.round(sustain?.rate ?? 0);
-		return `S${sustainIndex + 1} L${sustainLevel} R${sustainRate}`;
-	}, []);
+			const maxSteps = Math.max(prev.steps.length, next.steps.length);
+			for (let index = 0; index < maxSteps; index++) {
+				const prevStep = prev.steps[index];
+				const nextStep = next.steps[index];
+				if (!nextStep) continue;
+				if (
+					!prevStep ||
+					prevStep.level !== nextStep.level ||
+					prevStep.rate !== nextStep.rate
+				) {
+					const level = Math.round(nextStep.level * 99);
+					const rate = Math.round(nextStep.rate);
+					return `S${index + 1} L${level} R${rate}`;
+				}
+			}
+
+			const sustainIndex = Math.max(
+				0,
+				Math.min(next.sustainStep, next.steps.length - 1),
+			);
+			const sustain = next.steps[sustainIndex];
+			const sustainLevel = Math.round((sustain?.level ?? 0) * 99);
+			const sustainRate = Math.round(sustain?.rate ?? 0);
+			return `S${sustainIndex + 1} L${sustainLevel} R${sustainRate}`;
+		},
+		[],
+	);
 
 	const handleLine1DcoEnvChange = useCallback(
 		(next: StepEnvData) => {
@@ -1230,7 +1236,7 @@ export default function PhaseDistortionVisualizer() {
 			polyMode,
 			legato,
 			velocityTarget,
-			chorus: { rate: chorusRate, depth: chorusDepth , mix: chorusMix },
+			chorus: { rate: chorusRate, depth: chorusDepth, mix: chorusMix },
 			delay: { time: delayTime, feedback: delayFeedback, mix: delayMix },
 			reverb: { size: reverbSize, mix: reverbMix },
 			vibrato: {

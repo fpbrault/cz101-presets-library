@@ -93,7 +93,7 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 	constructor() {
 		super();
 
-		/** @type {import('./cz-synth-wasm/cz_synth').CzSynthProcessor | null} */
+		/** @type {import('./cz_synth').CzSynthProcessor | null} */
 		this._synth = null;
 		// structuredClone is not available in AudioWorklet scope — use JSON round-trip
 		this._params = JSON.parse(JSON.stringify(DEFAULT_PARAMS));

@@ -142,11 +142,15 @@ function toNormalized(plainValue: number, info: BeamerParamInfo): number {
 }
 
 function toLegacyPlainValue(stringId: string, runtimeValue: number): number {
-	return PARAM_TRANSFORMS[stringId]?.runtimeToLegacy?.(runtimeValue) ?? runtimeValue;
+	return (
+		PARAM_TRANSFORMS[stringId]?.runtimeToLegacy?.(runtimeValue) ?? runtimeValue
+	);
 }
 
 function toRuntimePlainValue(stringId: string, legacyValue: number): number {
-	return PARAM_TRANSFORMS[stringId]?.legacyToRuntime?.(legacyValue) ?? legacyValue;
+	return (
+		PARAM_TRANSFORMS[stringId]?.legacyToRuntime?.(legacyValue) ?? legacyValue
+	);
 }
 
 function emitLegacyParams(payload: Record<number, number>) {
@@ -186,7 +190,10 @@ function onInit(params: BeamerParamInfo[]) {
 		if (legacyId === undefined) {
 			continue;
 		}
-		legacyPayload[legacyId] = toLegacyPlainValue(info.stringId, info.plainValue);
+		legacyPayload[legacyId] = toLegacyPlainValue(
+			info.stringId,
+			info.plainValue,
+		);
 	}
 
 	emitLegacyParams(legacyPayload);
@@ -230,10 +237,7 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 					return;
 				}
 
-				const runtimePlainValue = toRuntimePlainValue(
-					stringId,
-					payload.value,
-				);
+				const runtimePlainValue = toRuntimePlainValue(stringId, payload.value);
 				const normalized = toNormalized(runtimePlainValue, info);
 				runtime.params.beginEdit(stringId);
 				runtime.params.set(stringId, normalized);
@@ -329,9 +333,7 @@ function installScopePolling(runtime: BeamerRuntime) {
 		lastScheduled = now;
 
 		try {
-			const raw = (await runtime.invoke(
-				"getScopeData",
-			)) as ScopeDataResponse;
+			const raw = (await runtime.invoke("getScopeData")) as ScopeDataResponse;
 			if (raw && raw.samples.length > 0 && window.__czOnScope) {
 				// Rust sends i8 integers (–127..127); rescale to float32 [-1, 1].
 				const floats = raw.samples.map((s) => s * SCALE);

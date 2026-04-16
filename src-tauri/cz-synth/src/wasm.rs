@@ -4,7 +4,7 @@
 //! which runs inside an AudioWorklet scope.
 //!
 //! Compile with:
-//!   wasm-pack build --target no-modules --out-dir ../../public/cz-synth-wasm \
+//!   wasm-pack build --target no-modules --out-dir $(pwd)/public \
 //!     -- --features wasm
 
 use wasm_bindgen::prelude::*;

@@ -144,13 +144,13 @@ function drawEnvPreview(
 	const susStep = Math.min(env.sustainStep, env.stepCount - 1);
 	if (susStep >= 0 && susStep < points.length) {
 		const sp = points[susStep];
-			ctx.strokeStyle = "rgba(255,200,0,0.6)";
-			ctx.setLineDash([3, 3]);
-			ctx.beginPath();
-			ctx.moveTo(sp.x, CHART_PADDING_Y);
-			ctx.lineTo(sp.x, h - CHART_PADDING_Y);
-			ctx.stroke();
-			ctx.setLineDash([]);
+		ctx.strokeStyle = "rgba(255,200,0,0.6)";
+		ctx.setLineDash([3, 3]);
+		ctx.beginPath();
+		ctx.moveTo(sp.x, CHART_PADDING_Y);
+		ctx.lineTo(sp.x, h - CHART_PADDING_Y);
+		ctx.stroke();
+		ctx.setLineDash([]);
 	}
 
 	for (let i = 0; i < points.length; i++) {
@@ -263,15 +263,18 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 		[env.stepCount, env.steps],
 	);
 
-	const getRelativePointerPosition = useCallback((clientX: number, clientY: number) => {
-		const canvas = canvasRef.current;
-		if (!canvas) return null;
+	const getRelativePointerPosition = useCallback(
+		(clientX: number, clientY: number) => {
+			const canvas = canvasRef.current;
+			if (!canvas) return null;
 
-		const rect = canvas.getBoundingClientRect();
-		const x = ((clientX - rect.left) / rect.width) * canvas.width;
-		const y = ((clientY - rect.top) / rect.height) * canvas.height;
-		return { x, y, rect };
-	}, []);
+			const rect = canvas.getBoundingClientRect();
+			const x = ((clientX - rect.left) / rect.width) * canvas.width;
+			const y = ((clientY - rect.top) / rect.height) * canvas.height;
+			return { x, y, rect };
+		},
+		[],
+	);
 
 	const getClosestStepAtPointer = useCallback(
 		(clientX: number, clientY: number) => {
@@ -320,7 +323,8 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 				const pos = getRelativePointerPosition(e.clientX, e.clientY);
 				if (!pos) return;
 
-				const levelDelta = (dragState.startClientY - e.clientY) / pos.rect.height;
+				const levelDelta =
+					(dragState.startClientY - e.clientY) / pos.rect.height;
 				const level = clamp(dragState.startLevel + levelDelta, 0, 1);
 				const isLastActiveStep = dragState.stepIndex === env.stepCount - 1;
 				const allowed = getStepAllowedXRange(
@@ -343,7 +347,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 							dragState.stepIndex,
 							clampedX,
 							canvasRef.current?.width ?? 1000,
-					  );
+						);
 				updateStepValues(dragState.stepIndex, level, rate);
 				setHoverStep(dragState.stepIndex);
 				return;

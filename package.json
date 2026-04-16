@@ -5,9 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "bun run build:wasm && bun run build:web && bun run build:plugin",
-		"build:web": "mkdir -p public/cz-synth-wasm && tsc && vite build",
-		"build:wasm": "wasm-pack build src-tauri/cz-synth --target no-modules --out-dir public/cz-synth-wasm --features wasm",
+		"build": "tsc && vite build",
+		"build:full": "bun run build:wasm && bun run build && bun run build:plugin",
+		"build:wasm": "wasm-pack build src-tauri/cz-synth --target no-modules --out-dir $(pwd)/public --features wasm",
 		"build:tauri": "tauri build --config src-tauri/tauri-app/tauri.conf.json",
 		"build:plugin": "bash scripts/build-plugin.sh --release",
 		"build:plugin:all": "BUILD_AUV3=1 bash scripts/build-plugin.sh --release",
