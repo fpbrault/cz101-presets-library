@@ -39,7 +39,7 @@ describe("CollapsibleCard", () => {
 		);
 
 		const details = container.querySelector("details");
-		expect(details?.className).toContain("bg-base-300/20");
+		expect(details?.className).toContain("bg-cz-surface/50");
 		expect(details?.className).toContain("bg-error/20");
 		expect(details?.className).toContain("custom-class");
 	});

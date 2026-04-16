@@ -13,7 +13,7 @@ describe("Card", () => {
 	it("supports named variants", () => {
 		renderWithProviders(<Card variant="hero">Hero panel</Card>);
 		expect(screen.getByText("Hero panel").className).toContain(
-			"rounded-[1.8rem]",
+			"rounded-2xl",
 		);
 	});
 
@@ -31,7 +31,7 @@ describe("Card", () => {
 			</Card>,
 		);
 		const card = screen.getByText("Custom panel");
-		expect(card.className).toContain("bg-base-300/20");
+		expect(card.className).toContain("bg-cz-surface/50");
 		expect(card.className).toContain("bg-error/20");
 		expect(card.className).toContain("custom-class");
 	});

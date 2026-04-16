@@ -21,7 +21,7 @@ jobs:
         run: bun install
 
       - name: Run unit tests
-        run: bun --filter @cosmo/cz-explorer run test:unit --run
+        run: bun --filter @cosmo/cz-explorer test:unit
 
   browser-tests:
     name: Browser Tests (Vitest Browser Mode)
@@ -40,4 +40,4 @@ jobs:
         run: bunx playwright install chromium chromium-headless-shell --with-deps
 
       - name: Run browser tests
-        run: bun --filter @cosmo/cz-explorer run test:browser --run
+        run: bun --filter @cosmo/cz-explorer test:browser
