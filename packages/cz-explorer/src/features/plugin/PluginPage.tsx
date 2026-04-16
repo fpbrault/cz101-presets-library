@@ -11,7 +11,7 @@
  * - UI scale selector (50–100%) persisted in localStorage
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
 	computeWaveform,
 	DEFAULT_DCA_ENV,
@@ -40,6 +40,12 @@ import SynthFilterPanel from "@/components/synth/SynthFilterPanel";
 import SynthHeader from "@/components/synth/SynthHeader";
 import VibratoPanel from "@/components/synth/VibratoPanel";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
+import {
+	createInitialPd101UiState,
+	isUiScale,
+	pd101UiReducer,
+	PD101_UI_SCALE_OPTIONS,
+} from "@/features/pd101/state/pd101UiState";
 import {
 	DEFAULT_PRESET,
 	deletePreset,
@@ -133,8 +139,6 @@ const P_PORT_TIME = 902;
 
 // ── Scale selector ─────────────────────────────────────────────────────────────
 const UI_SCALE_KEY = "cz-plugin-ui-scale";
-const UI_SCALE_OPTIONS = [50, 60, 70, 80, 90, 100] as const;
-type UiScale = (typeof UI_SCALE_OPTIONS)[number];
 
 // ── Enum ↔ f64 tables ─────────────────────────────────────────────────────────
 const LINE_SELECT_IDS: Record<string, number> = {
@@ -338,12 +342,30 @@ export default function PluginPage() {
 	const [presetList, setPresetList] = useState<string[]>([]);
 	const [activePresetName, setActivePresetName] = useState("Current State");
 
-	// ── UI scale ─────────────────────────────────────────────────────────────
-	const [uiScale, setUiScale] = useState<UiScale>(() => {
-		const saved = localStorage.getItem(UI_SCALE_KEY);
-		const n = saved ? Number(saved) : 100;
-		return (UI_SCALE_OPTIONS.includes(n as UiScale) ? n : 100) as UiScale;
-	});
+	const [uiState, dispatchUiState] = useReducer(
+		pd101UiReducer,
+		undefined,
+		() => {
+			const initial = createInitialPd101UiState();
+			const saved = localStorage.getItem(UI_SCALE_KEY);
+			const n = saved ? Number(saved) : initial.uiScale;
+			return isUiScale(n) ? { ...initial, uiScale: n } : initial;
+		},
+	);
+	const { scopeCycles, scopeVerticalZoom, scopeTriggerLevel, uiScale } = uiState;
+	const setUiScale = useCallback((value: number) => {
+		if (!isUiScale(value)) return;
+		dispatchUiState({ type: "setUiScale", value });
+	}, []);
+	const setScopeCycles = useCallback((value: number) => {
+		dispatchUiState({ type: "setScopeCycles", value });
+	}, []);
+	const setScopeVerticalZoom = useCallback((value: number) => {
+		dispatchUiState({ type: "setScopeVerticalZoom", value });
+	}, []);
+	const setScopeTriggerLevel = useCallback((value: number) => {
+		dispatchUiState({ type: "setScopeTriggerLevel", value });
+	}, []);
 
 	// ── Canvas refs ─────────────────────────────────────────────────────────
 	const line1CanvasRef = useRef<HTMLCanvasElement>(null);
@@ -1255,11 +1277,6 @@ export default function PluginPage() {
 		localStorage.setItem(UI_SCALE_KEY, String(uiScale));
 	}, [uiScale]);
 
-	// ── Scope state (static — no live audio in plugin) ────────────────────────
-	const [scopeCycles, setScopeCycles] = useState(2);
-	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(1.0);
-	const [scopeTriggerLevel, setScopeTriggerLevel] = useState(128);
-
 	// ── Live oscilloscope ────────────────────────────────────────────────────
 	// Register window.__czOnScope so Rust can push PCM batches.
 	// Signature matches Rust: (samples: float32[], sampleRate: number, hz: number)
@@ -1440,7 +1457,7 @@ export default function PluginPage() {
 					UI Scale
 				</span>
 				<div className="flex gap-1">
-					{UI_SCALE_OPTIONS.map((s) => (
+					{PD101_UI_SCALE_OPTIONS.map((s) => (
 						<button
 							key={s}
 							type="button"

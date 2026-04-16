@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import {
+	createInitialPd101UiState,
+	pd101UiReducer,
+} from "@/features/pd101/state/pd101UiState";
 import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
@@ -244,10 +248,22 @@ export default function PhaseDistortionVisualizer() {
 	const [line2DcoDepth, setLine2DcoDepth] = useState(0);
 	const [line1DcwComp, setLine1DcwComp] = useState(0);
 	const [line2DcwComp, setLine2DcwComp] = useState(0);
-	const [scopeCycles, setScopeCycles] = useState(2);
-	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(1.0);
+	const [uiState, dispatchUiState] = useReducer(
+		pd101UiReducer,
+		undefined,
+		createInitialPd101UiState,
+	);
+	const { scopeCycles, scopeVerticalZoom, scopeTriggerLevel } = uiState;
+	const setScopeCycles = useCallback((value: number) => {
+		dispatchUiState({ type: "setScopeCycles", value });
+	}, []);
+	const setScopeVerticalZoom = useCallback((value: number) => {
+		dispatchUiState({ type: "setScopeVerticalZoom", value });
+	}, []);
 	const [scopeTriggerMode] = useState<"off" | "rise" | "fall">("rise");
-	const [scopeTriggerLevel, setScopeTriggerLevel] = useState(128);
+	const setScopeTriggerLevel = useCallback((value: number) => {
+		dispatchUiState({ type: "setScopeTriggerLevel", value });
+	}, []);
 
 	const [chorusRate, setChorusRate] = useState(0.8);
 	const [chorusDepth, setChorusDepth] = useState(3);

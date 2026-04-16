@@ -24,8 +24,11 @@ export function createInitialPd101UiState(): Pd101UiState {
 	};
 }
 
-export function isUiScale(value: number): value is UiScale {
-	return PD101_UI_SCALE_OPTIONS.includes(value as UiScale);
+export function isUiScale(value: unknown): value is UiScale {
+	return (
+		typeof value === "number" &&
+		PD101_UI_SCALE_OPTIONS.includes(value as UiScale)
+	);
 }
 
 export function pd101UiReducer(
@@ -41,7 +44,9 @@ export function pd101UiReducer(
 			return { ...state, scopeTriggerLevel: action.value };
 		case "setUiScale":
 			return { ...state, uiScale: action.value };
-		default:
-			return state;
+		default: {
+			const exhaustiveAction: never = action;
+			return exhaustiveAction;
+		}
 	}
 }
