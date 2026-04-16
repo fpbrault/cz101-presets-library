@@ -15,6 +15,7 @@ struct ConfigFile {
     plugin_code: String,
     vendor: Option<String>,
     has_gui: Option<bool>,
+    bundle_identifier_prefix: Option<String>,
 }
 
 /// Extension trait for converting paths to strings with proper error handling.
@@ -327,6 +328,28 @@ pub fn detect_has_gui(package: &str, workspace_root: &Path) -> bool {
 
     // Also check for webview/index.html (mirrors macro behavior)
     pkg_dir.join("webview/index.html").exists()
+}
+
+/// Detect bundle identifier prefix for generated plugin bundles.
+///
+/// Reads `bundle_identifier_prefix` from `Config.toml` and falls back to
+/// `com.beamer` for compatibility if the field is not present.
+#[must_use]
+pub fn detect_bundle_identifier_prefix(package: &str, workspace_root: &Path) -> String {
+    let config_path = workspace_root.join(package).join("Config.toml");
+
+    if let Ok(toml_str) = fs::read_to_string(&config_path) {
+        if let Ok(config) = toml::from_str::<ConfigFile>(&toml_str) {
+            if let Some(prefix) = config.bundle_identifier_prefix {
+                let trimmed = prefix.trim();
+                if !trimmed.is_empty() {
+                    return trimmed.to_string();
+                }
+            }
+        }
+    }
+
+    "com.beamer".to_string()
 }
 
 // =============================================================================

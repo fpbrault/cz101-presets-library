@@ -3,6 +3,7 @@ category = "instrument"
 manufacturer_code = "FpbC"
 plugin_code = "CZpd"
 vendor = "Felix Perron-Brault"
+bundle_identifier_prefix = "ca.fpbrault"
 url = "https://github.com/fpbrault/cz101-presets-library"
 email = "felix@perron-brault.com"
 has_gui = true

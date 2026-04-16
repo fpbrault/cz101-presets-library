@@ -40,6 +40,7 @@ impl EnvGen {
 
         let step_data = &steps[current_step];
         let target_level = step_data.level;
+        let frozen_step = is_frozen_step(self.prev_level, target_level, step_data.rate);
         let raw_duration = step_duration_samples(self.prev_level, target_level, step_data.rate, sr);
         // Apply key-follow speed multiplier, ensure at least 1
         let duration = if raw_duration == 0 {
@@ -49,6 +50,13 @@ impl EnvGen {
         };
 
         if self.releasing {
+            if frozen_step {
+                // CZ-style hold: rate=0 means no progression toward target.
+                // Keep current level indefinitely while key is released.
+                self.output = self.prev_level;
+                return;
+            }
+
             if duration == 0 {
                 self.output = target_level;
             } else {
@@ -78,7 +86,15 @@ impl EnvGen {
         // Re-read using current_step (matches JS which re-assigns stepData)
         let step_data2 = &steps[current_step];
         let target_level2 = step_data2.level;
+        let frozen_step2 = is_frozen_step(self.prev_level, target_level2, step_data2.rate);
         let duration2 = step_duration_samples(self.prev_level, target_level2, step_data2.rate, sr);
+
+        if frozen_step2 {
+            // CZ-style hold: stop advancing this envelope step.
+            self.output = self.prev_level;
+            return;
+        }
+
         let progress = if duration2 == 0 {
             1.0_f32
         } else {
@@ -147,7 +163,8 @@ fn lerp(a: f32, b: f32, t: f32) -> f32 {
 /// JS: `Math.max(1, Math.round(sr * 5.0 * 0.0002 ** (rate / 99)))`
 #[inline]
 fn rate_to_samples(rate: u8, sr: f32) -> u32 {
-    let r = rate as f32 / 99.0;
+    let clamped_rate = rate.min(99);
+    let r = clamped_rate as f32 / 99.0;
     let v = sr * 5.0 * libm::powf(0.0002_f32, r);
     v.max(1.0).round() as u32
 }
@@ -164,4 +181,9 @@ fn step_duration_samples(from_level: f32, to_level: f32, rate: u8, sr: f32) -> u
     }
     let base = rate_to_samples(rate, sr);
     ((base as f32 * distance).max(1.0).round()) as u32
+}
+
+#[inline]
+fn is_frozen_step(from_level: f32, to_level: f32, rate: u8) -> bool {
+    rate == 0 && libm::fabsf(to_level - from_level) > 0.0
 }

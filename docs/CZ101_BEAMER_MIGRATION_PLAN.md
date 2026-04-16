@@ -14,6 +14,11 @@ Replace the `cz-synth-vst` crate's clack/CLAP layer with [beamer](https://github
     - `CzProcessor::process()` now applies the full beamer parameter snapshot to DSP every block.
     - `CzParameters::to_synth_params()` now maps global, line, FX, LFO, filter, and portamento controls instead of only a small global subset.
 - Impact: AU default (host-native) controls and automation now propagate to the synth engine, not just the custom web UI path.
+- Bundle metadata is now project-branded instead of hardcoded beamer defaults:
+    - `bundle_identifier_prefix` is read from `Config.toml` and applied to AUv2, AUv3, and VST3 `CFBundleIdentifier` values.
+- Build workflow now supports an AUv3-inclusive path without changing the stable default:
+    - default scripts still build/install AUv2 + VST3.
+    - full-format scripts are available via `build:plugin:all` and `plugin:build-install:all`.
 
 ## Why beamer
 

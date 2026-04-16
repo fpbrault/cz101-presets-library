@@ -45,6 +45,7 @@ declare global {
 		ipc?: { postMessage: (msg: string) => void };
 		__czOnParams?: (json: string) => void;
 		__czGetEnvelopes?: () => Promise<EnvelopeMap>;
+		__czOnScope?: (samples: number[], sampleRate: number, hz: number) => void;
 	}
 }
 
@@ -302,4 +303,49 @@ export function ensureBeamerLegacyBridge() {
 
 	installLegacyIpc(runtime);
 	syncExistingParams(runtime);
+	installScopePolling(runtime);
+}
+
+// ---------------------------------------------------------------------------
+// Scope polling
+// ---------------------------------------------------------------------------
+// Polls getScopeData from Rust at ~30 fps and forwards to window.__czOnScope.
+
+type ScopeDataResponse = {
+	samples: number[];
+	sampleRate: number;
+	hz: number;
+};
+
+function installScopePolling(runtime: BeamerRuntime) {
+	const INTERVAL_MS = 33; // ~30 fps
+	const SCALE = 1 / 127.0;
+	let rafId = 0;
+	let lastScheduled = 0;
+
+	const tick = async (now: number) => {
+		rafId = requestAnimationFrame(tick);
+		if (now - lastScheduled < INTERVAL_MS) return;
+		lastScheduled = now;
+
+		try {
+			const raw = (await runtime.invoke(
+				"getScopeData",
+			)) as ScopeDataResponse;
+			if (raw && raw.samples.length > 0 && window.__czOnScope) {
+				// Rust sends i8 integers (–127..127); rescale to float32 [-1, 1].
+				const floats = raw.samples.map((s) => s * SCALE);
+				window.__czOnScope(floats, raw.sampleRate, raw.hz);
+			}
+		} catch {
+			// Ignore — plugin may not be producing audio yet.
+		}
+	};
+
+	rafId = requestAnimationFrame(tick);
+
+	// Clean up on page unload so the interval doesn't dangle.
+	window.addEventListener("pagehide", () => {
+		cancelAnimationFrame(rafId);
+	});
 }

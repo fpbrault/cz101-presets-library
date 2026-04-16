@@ -20,6 +20,7 @@ use util::{print_error, Arch};
 /// Configuration for creating appex Info.plist (AUv3)
 pub struct AppexPlistConfig<'a> {
     pub package: &'a str,
+    pub bundle_identifier_prefix: &'a str,
     pub executable_name: &'a str,
     pub component_type: &'a str,
     pub manufacturer: Option<&'a str>,
@@ -35,6 +36,7 @@ pub struct AppexPlistConfig<'a> {
 /// Configuration for creating AUv2 component Info.plist
 pub struct ComponentPlistConfig<'a> {
     pub package: &'a str,
+    pub bundle_identifier_prefix: &'a str,
     pub executable_name: &'a str,
     pub component_type: &'a str,
     pub manufacturer: Option<&'a str>,

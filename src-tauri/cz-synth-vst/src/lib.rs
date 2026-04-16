@@ -4,7 +4,7 @@
 
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use beamer::prelude::*;
@@ -39,6 +39,68 @@ pub fn append_log(message: &str) {
 pub fn plugin_log_path() -> &'static str {
     PLUGIN_LOG_PATH
 }
+
+// =============================================================================
+// Scope ring buffer
+// =============================================================================
+
+/// Number of PCM samples kept in the scope ring buffer.
+/// 4096 samples ≈ 93 ms at 44.1 kHz — enough to cover ≥2 cycles at ~22 Hz.
+const SCOPE_CAPACITY: usize = 4096;
+
+/// Rolling PCM buffer written by the audio thread and read by the GUI thread.
+struct ScopeFrame {
+    /// Circular buffer of mono samples in [-1, 1].
+    samples: Vec<f32>,
+    /// Write cursor (next position to overwrite once the buffer is full).
+    cursor: usize,
+    /// Sample rate reported by the audio engine.
+    sample_rate: f32,
+    /// Fundamental frequency of the currently sounding voice, or 0 if silent.
+    hz: f32,
+}
+
+impl Default for ScopeFrame {
+    fn default() -> Self {
+        Self {
+            samples: Vec::with_capacity(SCOPE_CAPACITY),
+            cursor: 0,
+            sample_rate: 44100.0,
+            hz: 0.0,
+        }
+    }
+}
+
+impl ScopeFrame {
+    /// Append one audio block to the ring buffer (non-allocating once full).
+    fn push_block(&mut self, mono: &[f32], sample_rate: f32, hz: f32) {
+        self.sample_rate = sample_rate;
+        self.hz = hz;
+        for &s in mono {
+            if self.samples.len() < SCOPE_CAPACITY {
+                self.samples.push(s);
+            } else {
+                self.samples[self.cursor] = s;
+                self.cursor = (self.cursor + 1) % SCOPE_CAPACITY;
+            }
+        }
+    }
+
+    /// Return all buffered samples in chronological order (oldest → newest).
+    fn to_linear(&self) -> Vec<f32> {
+        if self.samples.len() < SCOPE_CAPACITY {
+            self.samples.clone()
+        } else {
+            let mut out = Vec::with_capacity(SCOPE_CAPACITY);
+            out.extend_from_slice(&self.samples[self.cursor..]);
+            out.extend_from_slice(&self.samples[..self.cursor]);
+            out
+        }
+    }
+}
+
+/// Thread-safe scope buffer shared between the audio thread and the GUI thread.
+type ScopeBuffer = Arc<Mutex<ScopeFrame>>;
 
 // =============================================================================
 // Enum Types for EnumParameter
@@ -636,6 +698,7 @@ impl EnvelopeState {
 
 struct CzWebViewHandler {
     envelopes: Arc<RwLock<EnvelopeState>>,
+    scope_buffer: ScopeBuffer,
 }
 
 impl CzWebViewHandler {
@@ -696,6 +759,31 @@ impl WebViewHandler for CzWebViewHandler {
                 append_log("getEnvelopes");
                 Ok(envelopes.to_json())
             }
+            "getScopeData" => {
+                let scope = self
+                    .scope_buffer
+                    .lock()
+                    .map_err(|_| "scope buffer is poisoned".to_string())?;
+                if scope.samples.is_empty() {
+                    return Ok(serde_json::json!({
+                        "samples": serde_json::Value::Array(vec![]),
+                        "sampleRate": scope.sample_rate,
+                        "hz": 0.0_f64,
+                    }));
+                }
+                let linear = scope.to_linear();
+                // Quantise to i8 (–127..127) for a compact JSON payload.
+                // The JS side rescales by dividing by 127.0.
+                let int_samples: Vec<i8> = linear
+                    .iter()
+                    .map(|&s| (s.clamp(-1.0, 1.0) * 127.0) as i8)
+                    .collect();
+                Ok(serde_json::json!({
+                    "samples": int_samples,
+                    "sampleRate": scope.sample_rate,
+                    "hz": scope.hz,
+                }))
+            }
             _ => {
                 append_log(&format!("unknown webview method={method}"));
                 Err(format!("unknown method: {method}"))
@@ -714,6 +802,7 @@ pub struct CzDescriptor {
     #[parameters]
     pub parameters: CzParameters,
     envelopes: Arc<RwLock<EnvelopeState>>,
+    scope_buffer: ScopeBuffer,
 }
 
 impl Descriptor for CzDescriptor {
@@ -744,6 +833,7 @@ impl Descriptor for CzDescriptor {
         append_log("descriptor created webview handler");
         Some(Arc::new(CzWebViewHandler {
             envelopes: self.envelopes.clone(),
+            scope_buffer: self.scope_buffer.clone(),
         }))
     }
 
@@ -767,6 +857,7 @@ impl Descriptor for CzDescriptor {
             processor,
             envelopes: self.envelopes,
             cached_envelopes,
+            scope_buffer: self.scope_buffer,
         }
     }
 }
@@ -782,6 +873,7 @@ pub struct CzProcessor {
     processor: Cz101Processor,
     envelopes: Arc<RwLock<EnvelopeState>>,
     cached_envelopes: EnvelopeState,
+    scope_buffer: ScopeBuffer,
 }
 
 impl Processor for CzProcessor {
@@ -808,6 +900,19 @@ impl Processor for CzProcessor {
         // Process mono output from synth
         let mut mono_output = vec![0.0f32; num_samples];
         self.processor.process(&mut mono_output);
+
+        // Feed scope buffer (non-blocking try_lock; skip if GUI is reading).
+        let hz = self
+            .processor
+            .voices
+            .iter()
+            .filter(|v| !v.is_silent && !v.is_releasing && v.note.is_some())
+            .map(|v| v.current_freq)
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            .unwrap_or(0.0);
+        if let Ok(mut scope) = self.scope_buffer.try_lock() {
+            scope.push_block(&mono_output, self.processor.sample_rate, hz);
+        }
 
         // Write to all output channels
         for ch in 0..num_channels {

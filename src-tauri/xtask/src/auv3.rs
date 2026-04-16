@@ -9,8 +9,9 @@ use std::process::Command;
 
 use crate::build::get_version_info;
 use crate::util::{
-    codesign_bundle, combine_or_rename_binaries, detect_au_component_info, generate_au_subtype,
-    get_au_tags, install_bundle, shorten_path, to_au_bundle_name, to_pascal_case, Arch, PathExt,
+    codesign_bundle, combine_or_rename_binaries, detect_au_component_info,
+    detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags, install_bundle,
+    shorten_path, to_au_bundle_name, to_pascal_case, Arch, PathExt,
 };
 use crate::AppexPlistConfig;
 
@@ -75,6 +76,7 @@ pub fn bundle_auv3(
 
     // Create the .appex bundle structure
     let executable_name = bundle_name.trim_end_matches(".app");
+    let bundle_identifier_prefix = detect_bundle_identifier_prefix(package, workspace_root);
     let appex_name = format!("{}.appex", executable_name);
     let appex_dir = plugins_dir.join(&appex_name);
     let appex_contents_dir = appex_dir.join("Contents");
@@ -99,7 +101,7 @@ pub fn bundle_auv3(
     //     │   └── _CodeSignature/
     //     └── Current -> A  (symlink)
     let framework_name = format!("{}AU", executable_name);
-    let framework_bundle_id = format!("com.beamer.{}.framework", package);
+    let framework_bundle_id = format!("{}.{}.framework", bundle_identifier_prefix, package);
     let framework_dir = frameworks_dir.join(format!("{}.framework", framework_name));
 
     // Create versioned directory structure
@@ -288,6 +290,7 @@ pub fn bundle_auv3(
     // Create appex Info.plist with NSExtension (out-of-process/XPC mode)
     let appex_info_plist = create_appex_info_plist(&AppexPlistConfig {
         package,
+        bundle_identifier_prefix: &bundle_identifier_prefix,
         executable_name,
         component_type: &component_type,
         manufacturer: detected_manufacturer.as_deref(),
@@ -303,7 +306,12 @@ pub fn bundle_auv3(
         .map_err(|e| format!("Failed to write appex Info.plist: {}", e))?;
 
     // Create container app Info.plist
-    let app_info_plist = create_app_info_plist(package, executable_name, &version_string);
+    let app_info_plist = create_app_info_plist(
+        package,
+        &bundle_identifier_prefix,
+        executable_name,
+        &version_string,
+    );
     fs::write(contents_dir.join("Info.plist"), app_info_plist)
         .map_err(|e| format!("Failed to write app Info.plist: {}", e))?;
 
@@ -399,7 +407,12 @@ fn generate_appex_stub_source(plugin_name: &str) -> String {
 ///
 /// The container app is a minimal stub that triggers pluginkit registration.
 /// It's marked as LSBackgroundOnly so it doesn't show in the Dock.
-fn create_app_info_plist(package: &str, executable_name: &str, version: &str) -> String {
+fn create_app_info_plist(
+    package: &str,
+    bundle_identifier_prefix: &str,
+    executable_name: &str,
+    version: &str,
+) -> String {
     format!(
         r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -410,7 +423,7 @@ fn create_app_info_plist(package: &str, executable_name: &str, version: &str) ->
     <key>CFBundleExecutable</key>
     <string>{executable}</string>
     <key>CFBundleIdentifier</key>
-    <string>com.beamer.{package}</string>
+    <string>{bundle_identifier_prefix}.{package}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -431,6 +444,7 @@ fn create_app_info_plist(package: &str, executable_name: &str, version: &str) ->
 </plist>
 "#,
         executable = executable_name,
+        bundle_identifier_prefix = bundle_identifier_prefix,
         package = package,
         version = version
     )
@@ -477,7 +491,7 @@ fn create_appex_info_plist(config: &AppexPlistConfig) -> String {
     <key>CFBundleExecutable</key>
     <string>{executable}</string>
     <key>CFBundleIdentifier</key>
-    <string>com.beamer.{package}.audiounit</string>
+    <string>{bundle_identifier_prefix}.{package}.audiounit</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -537,6 +551,7 @@ fn create_appex_info_plist(config: &AppexPlistConfig) -> String {
 </plist>
 "#,
         executable = config.executable_name,
+        bundle_identifier_prefix = config.bundle_identifier_prefix,
         package = config.package,
         extension_point = extension_point,
         extension_class = extension_class,

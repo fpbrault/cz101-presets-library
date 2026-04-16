@@ -6,9 +6,9 @@ use std::process::Command;
 
 use crate::build::get_version_info;
 use crate::util::{
-    codesign_bundle, combine_or_rename_binaries, detect_au_component_info, generate_au_subtype,
-    get_au_tags, install_bundle, shorten_path, to_auv2_component_name, to_pascal_case, Arch,
-    PathExt,
+    codesign_bundle, combine_or_rename_binaries, detect_au_component_info,
+    detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags, install_bundle,
+    shorten_path, to_auv2_component_name, to_pascal_case, Arch, PathExt,
 };
 use crate::ComponentPlistConfig;
 
@@ -198,8 +198,11 @@ pub fn bundle_auv2(
     }
 
     // Create Info.plist with factoryFunction
+    let bundle_identifier_prefix = detect_bundle_identifier_prefix(package, workspace_root);
+
     let info_plist = create_component_info_plist(&ComponentPlistConfig {
         package,
+        bundle_identifier_prefix: &bundle_identifier_prefix,
         executable_name,
         component_type: &component_type,
         manufacturer: detected_manufacturer.as_deref(),
@@ -262,7 +265,7 @@ fn create_component_info_plist(config: &ComponentPlistConfig) -> String {
     <key>CFBundleExecutable</key>
     <string>{executable}</string>
     <key>CFBundleIdentifier</key>
-    <string>com.beamer.{package}.component</string>
+    <string>{bundle_identifier_prefix}.{package}.component</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -312,6 +315,7 @@ fn create_component_info_plist(config: &ComponentPlistConfig) -> String {
 </plist>
 "#,
         executable = config.executable_name,
+        bundle_identifier_prefix = config.bundle_identifier_prefix,
         package = config.package,
         manufacturer = manufacturer,
         component_type = config.component_type,

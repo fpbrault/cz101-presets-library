@@ -7,7 +7,9 @@ use std::path::Path;
 use std::process::Command;
 
 use crate::build::get_version_info;
-use crate::util::{install_bundle, shorten_path, to_vst3_bundle_name};
+use crate::util::{
+    detect_bundle_identifier_prefix, install_bundle, shorten_path, to_vst3_bundle_name,
+};
 
 /// Creates a VST3 bundle from a compiled dylib.
 ///
@@ -67,7 +69,13 @@ pub fn bundle_vst3(
         .status();
 
     // Create Info.plist
-    let info_plist = create_vst3_info_plist(package, &bundle_name, &version_string);
+    let bundle_identifier_prefix = detect_bundle_identifier_prefix(package, workspace_root);
+    let info_plist = create_vst3_info_plist(
+        package,
+        &bundle_name,
+        &version_string,
+        &bundle_identifier_prefix,
+    );
     fs::write(contents_dir.join("Info.plist"), info_plist)
         .map_err(|e| format!("Failed to write Info.plist: {}", e))?;
 
@@ -86,7 +94,12 @@ pub fn bundle_vst3(
 }
 
 /// Creates the Info.plist content for a VST3 bundle.
-fn create_vst3_info_plist(package: &str, bundle_name: &str, version: &str) -> String {
+fn create_vst3_info_plist(
+    package: &str,
+    bundle_name: &str,
+    version: &str,
+    bundle_identifier_prefix: &str,
+) -> String {
     let executable_name = bundle_name.trim_end_matches(".vst3");
 
     format!(
@@ -99,7 +112,7 @@ fn create_vst3_info_plist(package: &str, bundle_name: &str, version: &str) -> St
     <key>CFBundleExecutable</key>
     <string>{executable}</string>
     <key>CFBundleIdentifier</key>
-    <string>com.beamer.{package}</string>
+    <string>{bundle_identifier_prefix}.{package}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -116,6 +129,7 @@ fn create_vst3_info_plist(package: &str, bundle_name: &str, version: &str) -> St
 </plist>
 "#,
         executable = executable_name,
+        bundle_identifier_prefix = bundle_identifier_prefix,
         package = package,
         version = version
     )

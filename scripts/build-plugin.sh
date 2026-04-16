@@ -8,6 +8,7 @@ ROOT="$SCRIPT_DIR/.."
 TAURI="$ROOT/src-tauri"
 
 PROFILE="${1:-release}"
+BUILD_AUV3="${BUILD_AUV3:-0}"
 PROFILE_ARG=""
 if [[ "$PROFILE" == "--release" || "$PROFILE" == "release" ]]; then
   PROFILE_ARG="--release"
@@ -16,11 +17,16 @@ else
   PROFILE="debug"
 fi
 
+FORMAT_FLAGS=(--vst3 --auv2)
+if [[ "$BUILD_AUV3" == "1" ]]; then
+  FORMAT_FLAGS+=(--auv3)
+fi
+
 echo "==> Building CZ-101 Phase Distortion plugin ($PROFILE)..."
-echo "    Using beamer xtask: cargo xtask bundle cz-synth-vst --vst3 --auv2"
+echo "    Using beamer xtask: cargo xtask bundle cz-synth-vst ${FORMAT_FLAGS[*]}"
 
 cd "$TAURI"
-cargo run -p xtask -- bundle cz-synth-vst --vst3 --auv2 $PROFILE_ARG
+cargo run -p xtask -- bundle cz-synth-vst "${FORMAT_FLAGS[@]}" $PROFILE_ARG
 
 echo "==> Done. Bundles are in $TAURI/target/$PROFILE/"
 echo "    Run 'bun run plugin:install' to copy to system plugin dirs."

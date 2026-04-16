@@ -41,12 +41,130 @@ import ReverbPanel from "./synth/ReverbPanel";
 import ScopePanel from "./synth/ScopePanel";
 import SynthFilterPanel from "./synth/SynthFilterPanel";
 import SynthHeader from "./synth/SynthHeader";
+import SynthLcdDisplay from "./synth/SynthLcdDisplay";
 import VibratoPanel from "./synth/VibratoPanel";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
 
 const ACCORDION_NAME = "synth-aside-accordion";
+
+const LCD_CONTROL_LABELS: Record<string, string> = {
+	warpAAmount: "Line 1 DCW",
+	warpBAmount: "Line 2 DCW",
+	warpAAlgo: "Line 1 Wave",
+	warpBAlgo: "Line 2 Wave",
+	algoBlendA: "Line 1 Blend",
+	algoBlendB: "Line 2 Blend",
+	intPmAmount: "PM Amount",
+	intPmRatio: "PM Ratio",
+	pmPre: "PM Mode",
+	windowType: "Window",
+	volume: "Volume",
+	line1Level: "Line 1 Level",
+	line2Level: "Line 2 Level",
+	line1Octave: "Line 1 Octave",
+	line2Octave: "Line 2 Octave",
+	line1Detune: "Line 1 Detune",
+	line2Detune: "Line 2 Detune",
+	line1DcoDepth: "Line 1 Pitch Env",
+	line2DcoDepth: "Line 2 Pitch Env",
+	line1DcoEnv: "Line 1 DCO Env",
+	line1DcwEnv: "Line 1 DCW Env",
+	line1DcaEnv: "Line 1 DCA Env",
+	line2DcoEnv: "Line 2 DCO Env",
+	line2DcwEnv: "Line 2 DCW Env",
+	line2DcaEnv: "Line 2 DCA Env",
+	line1DcwComp: "Line 1 Key Follow",
+	line2DcwComp: "Line 2 Key Follow",
+	polyMode: "Voice Mode",
+	velocityTarget: "Velocity",
+	pitchBendRange: "Bend Range",
+	modWheelVibratoDepth: "Mod to Vibrato",
+	lineSelect: "Line Select",
+	modMode: "Modulation",
+	vibratoEnabled: "Vibrato",
+	vibratoWave: "Vibrato Wave",
+	vibratoRate: "Vibrato Rate",
+	vibratoDepth: "Vibrato Depth",
+	vibratoDelay: "Vibrato Delay",
+	portamentoEnabled: "Portamento",
+	portamentoMode: "Portamento Mode",
+	portamentoRate: "Portamento Rate",
+	portamentoTime: "Portamento Time",
+	lfoEnabled: "LFO",
+	lfoWaveform: "LFO Wave",
+	lfoRate: "LFO Rate",
+	lfoDepth: "LFO Depth",
+	lfoOffset: "LFO Offset",
+	lfoTarget: "LFO Target",
+	filterEnabled: "Filter",
+	filterType: "Filter Type",
+	filterCutoff: "Filter Cutoff",
+	filterResonance: "Filter Resonance",
+	filterEnvAmount: "Filter Env",
+	chorusRate: "Chorus Rate",
+	chorusDepth: "Chorus Depth",
+	chorusMix: "Chorus Mix",
+	delayTime: "Delay Time",
+	delayFeedback: "Delay Feedback",
+	delayMix: "Delay Mix",
+	reverbSize: "Reverb Size",
+	reverbMix: "Reverb Mix",
+	scopeCycles: "Scope Cycles",
+	scopeVerticalZoom: "Scope Zoom",
+	scopeTriggerLevel: "Scope Trigger",
+};
+
+function formatLcdControlValue(
+	key: string,
+	value: string | number | boolean,
+): string {
+	if (typeof value === "boolean") return value ? "ON" : "OFF";
+
+	if (typeof value === "string") {
+		if (key === "polyMode") return value === "poly8" ? "POLY 8" : "MONO";
+		if (key === "windowType") return value.toUpperCase();
+		if (key === "velocityTarget") return value.toUpperCase();
+		if (key === "lineSelect") return value;
+		if (key === "modMode") return value.toUpperCase();
+		if (key === "lfoTarget") return value.toUpperCase();
+		if (key === "filterType") return value.toUpperCase();
+		if (key === "lfoWaveform") return value.toUpperCase();
+		if (key === "portamentoMode") return value.toUpperCase();
+		return value.toUpperCase();
+	}
+
+	if (key === "volume") return `${Math.round(value * 100)}%`;
+	if (key === "line1Level" || key === "line2Level")
+		return `${Math.round(value * 100)}%`;
+	if (key === "pitchBendRange") return `${Math.round(value)} ST`;
+	if (key === "vibratoDelay") return `${Math.round(value)} MS`;
+	if (key === "filterCutoff") return `${Math.round(value)} HZ`;
+	if (key === "delayTime") return `${value.toFixed(2)} S`;
+	if (key === "portamentoTime") return `${value.toFixed(2)} S`;
+	if (
+		key === "chorusMix" ||
+		key === "delayMix" ||
+		key === "reverbMix" ||
+		key === "filterResonance" ||
+		key === "filterEnvAmount"
+	) {
+		return value.toFixed(2);
+	}
+	if (
+		key === "intPmAmount" ||
+		key === "intPmRatio" ||
+		key === "chorusRate" ||
+		key === "chorusDepth" ||
+		key === "reverbSize" ||
+		key === "scopeVerticalZoom"
+	) {
+		return value.toFixed(2);
+	}
+
+	return Number.isInteger(value) ? `${value}` : value.toFixed(2);
+}
 
 export default function PhaseDistortionVisualizer() {
 	const [warpAAmount, setWarpAAmount] = useState(0);
@@ -141,6 +259,10 @@ export default function PhaseDistortionVisualizer() {
 
 	const [presetList, setPresetList] = useState<string[]>([]);
 	const [activePresetName, setActivePresetName] = useState("Current State");
+	const [lcdControlReadout, setLcdControlReadout] = useState<{
+		label: string;
+		value: string;
+	} | null>(null);
 
 	const gatherState = useCallback(
 		(): SynthPresetData => ({
@@ -724,6 +846,10 @@ export default function PhaseDistortionVisualizer() {
 
 	const heldNote =
 		activeNotes.length > 0 ? activeNotes[activeNotes.length - 1] : null;
+	const previousControlSnapshotRef = useRef<
+		Record<string, string | number | boolean>
+	>();
+	const lcdReadoutTimeoutRef = useRef<number | null>(null);
 	let effectivePitchHz = lastHeldFreqRef.current;
 	if (heldNote != null) {
 		lastHeldFreqRef.current = noteToFreq(heldNote);
@@ -739,6 +865,266 @@ export default function PhaseDistortionVisualizer() {
 	const effectiveWarpB = warpBAmount * sustainLevel2;
 	const effectiveLevelA = line1Level * sustainLevelA;
 	const effectiveLevelB = line2Level * sustainLevelB;
+
+	const pushLcdControlReadout = useCallback((key: string, value: unknown) => {
+		if (!(key in LCD_CONTROL_LABELS)) return;
+		if (
+			typeof value !== "string" &&
+			typeof value !== "number" &&
+			typeof value !== "boolean"
+		) {
+			return;
+		}
+
+		setLcdControlReadout({
+			label: LCD_CONTROL_LABELS[key] ?? key,
+			value: formatLcdControlValue(key, value),
+		});
+		if (lcdReadoutTimeoutRef.current != null) {
+			window.clearTimeout(lcdReadoutTimeoutRef.current);
+		}
+		lcdReadoutTimeoutRef.current = window.setTimeout(() => {
+			setLcdControlReadout(null);
+		}, 1200);
+	}, []);
+
+	const formatEnvReadout = useCallback((prev: StepEnvData, next: StepEnvData) => {
+		if (prev.stepCount !== next.stepCount) {
+			return `STEPS ${next.stepCount}`;
+		}
+		if (prev.loop !== next.loop) {
+			return `LOOP ${next.loop ? "ON" : "OFF"}`;
+		}
+		if (prev.sustainStep !== next.sustainStep) {
+			return `SUS S${next.sustainStep + 1}`;
+		}
+
+		const maxSteps = Math.max(prev.steps.length, next.steps.length);
+		for (let index = 0; index < maxSteps; index++) {
+			const prevStep = prev.steps[index];
+			const nextStep = next.steps[index];
+			if (!nextStep) continue;
+			if (!prevStep || prevStep.level !== nextStep.level || prevStep.rate !== nextStep.rate) {
+				const level = Math.round(nextStep.level * 99);
+				const rate = Math.round(nextStep.rate);
+				return `S${index + 1} L${level} R${rate}`;
+			}
+		}
+
+		const sustainIndex = Math.max(
+			0,
+			Math.min(next.sustainStep, next.steps.length - 1),
+		);
+		const sustain = next.steps[sustainIndex];
+		const sustainLevel = Math.round((sustain?.level ?? 0) * 99);
+		const sustainRate = Math.round(sustain?.rate ?? 0);
+		return `S${sustainIndex + 1} L${sustainLevel} R${sustainRate}`;
+	}, []);
+
+	const handleLine1DcoEnvChange = useCallback(
+		(next: StepEnvData) => {
+			setLine1DcoEnv(next);
+			pushLcdControlReadout("line1DcoEnv", formatEnvReadout(line1DcoEnv, next));
+		},
+		[formatEnvReadout, line1DcoEnv, pushLcdControlReadout],
+	);
+
+	const handleLine1DcwEnvChange = useCallback(
+		(next: StepEnvData) => {
+			setLine1DcwEnv(next);
+			pushLcdControlReadout("line1DcwEnv", formatEnvReadout(line1DcwEnv, next));
+		},
+		[formatEnvReadout, line1DcwEnv, pushLcdControlReadout],
+	);
+
+	const handleLine1DcaEnvChange = useCallback(
+		(next: StepEnvData) => {
+			setLine1DcaEnv(next);
+			pushLcdControlReadout("line1DcaEnv", formatEnvReadout(line1DcaEnv, next));
+		},
+		[formatEnvReadout, line1DcaEnv, pushLcdControlReadout],
+	);
+
+	const handleLine2DcoEnvChange = useCallback(
+		(next: StepEnvData) => {
+			setLine2DcoEnv(next);
+			pushLcdControlReadout("line2DcoEnv", formatEnvReadout(line2DcoEnv, next));
+		},
+		[formatEnvReadout, line2DcoEnv, pushLcdControlReadout],
+	);
+
+	const handleLine2DcwEnvChange = useCallback(
+		(next: StepEnvData) => {
+			setLine2DcwEnv(next);
+			pushLcdControlReadout("line2DcwEnv", formatEnvReadout(line2DcwEnv, next));
+		},
+		[formatEnvReadout, line2DcwEnv, pushLcdControlReadout],
+	);
+
+	const handleLine2DcaEnvChange = useCallback(
+		(next: StepEnvData) => {
+			setLine2DcaEnv(next);
+			pushLcdControlReadout("line2DcaEnv", formatEnvReadout(line2DcaEnv, next));
+		},
+		[formatEnvReadout, line2DcaEnv, pushLcdControlReadout],
+	);
+
+	useEffect(() => {
+		return () => {
+			if (lcdReadoutTimeoutRef.current != null) {
+				window.clearTimeout(lcdReadoutTimeoutRef.current);
+			}
+		};
+	}, []);
+
+	useEffect(() => {
+		const snapshot: Record<string, string | number | boolean> = {
+			warpAAmount,
+			warpBAmount,
+			warpAAlgo,
+			warpBAlgo,
+			algoBlendA,
+			algoBlendB,
+			intPmAmount,
+			intPmRatio,
+			pmPre,
+			windowType,
+			volume,
+			line1Level,
+			line2Level,
+			line1Octave,
+			line2Octave,
+			line1Detune,
+			line2Detune,
+			line1DcoDepth,
+			line2DcoDepth,
+			line1DcwComp,
+			line2DcwComp,
+			polyMode,
+			velocityTarget,
+			pitchBendRange,
+			modWheelVibratoDepth,
+			lineSelect,
+			modMode,
+			vibratoEnabled,
+			vibratoWave,
+			vibratoRate,
+			vibratoDepth,
+			vibratoDelay,
+			portamentoEnabled,
+			portamentoMode,
+			portamentoRate,
+			portamentoTime,
+			lfoEnabled,
+			lfoWaveform,
+			lfoRate,
+			lfoDepth,
+			lfoOffset,
+			lfoTarget,
+			filterEnabled,
+			filterType,
+			filterCutoff,
+			filterResonance,
+			filterEnvAmount,
+			chorusRate,
+			chorusDepth,
+			chorusMix,
+			delayTime,
+			delayFeedback,
+			delayMix,
+			reverbSize,
+			reverbMix,
+			scopeCycles,
+			scopeVerticalZoom,
+			scopeTriggerLevel,
+		};
+
+		const previous = previousControlSnapshotRef.current;
+		previousControlSnapshotRef.current = snapshot;
+		if (!previous) return;
+
+		const changed = Object.entries(snapshot).filter(
+			([key, value]) => previous[key] !== value,
+		);
+		if (changed.length === 0 || changed.length > 3) return;
+
+		const latestChange = changed[changed.length - 1];
+		if (!latestChange) return;
+		const [changedKey, changedValue] = latestChange;
+		pushLcdControlReadout(changedKey, changedValue);
+	}, [
+		warpAAmount,
+		warpBAmount,
+		warpAAlgo,
+		warpBAlgo,
+		algoBlendA,
+		algoBlendB,
+		intPmAmount,
+		intPmRatio,
+		pmPre,
+		windowType,
+		volume,
+		line1Level,
+		line2Level,
+		line1Octave,
+		line2Octave,
+		line1Detune,
+		line2Detune,
+		line1DcoDepth,
+		line2DcoDepth,
+		line1DcwComp,
+		line2DcwComp,
+		polyMode,
+		velocityTarget,
+		pitchBendRange,
+		modWheelVibratoDepth,
+		lineSelect,
+		modMode,
+		vibratoEnabled,
+		vibratoWave,
+		vibratoRate,
+		vibratoDepth,
+		vibratoDelay,
+		portamentoEnabled,
+		portamentoMode,
+		portamentoRate,
+		portamentoTime,
+		lfoEnabled,
+		lfoWaveform,
+		lfoRate,
+		lfoDepth,
+		lfoOffset,
+		lfoTarget,
+		filterEnabled,
+		filterType,
+		filterCutoff,
+		filterResonance,
+		filterEnvAmount,
+		chorusRate,
+		chorusDepth,
+		chorusMix,
+		delayTime,
+		delayFeedback,
+		delayMix,
+		reverbSize,
+		reverbMix,
+		scopeCycles,
+		scopeVerticalZoom,
+		scopeTriggerLevel,
+		pushLcdControlReadout,
+	]);
+
+	const lcdPrimaryText = useMemo(() => {
+		if (heldNote != null) {
+			return `NOTE ${heldNote}  ${effectivePitchHz.toFixed(1)} HZ`;
+		}
+		return `PRESET ${activePresetName.toUpperCase()}`;
+	}, [heldNote, effectivePitchHz, activePresetName]);
+
+	const lcdSecondaryText = useMemo(() => {
+		const filterStatus = filterEnabled ? "FILT ON" : "FILT OFF";
+		return `LINE ${lineSelect} | ${polyMode.toUpperCase()} | ${filterStatus}`;
+	}, [lineSelect, polyMode, filterEnabled]);
 
 	const waveform = useMemo(
 		() =>
@@ -1339,6 +1725,14 @@ export default function PhaseDistortionVisualizer() {
 				onImportPreset={handleImportPreset}
 			/>
 
+			<div className="px-4 md:px-6 -mt-1 mx-auto">
+				<SynthLcdDisplay
+					primaryText={lcdPrimaryText}
+					secondaryText={lcdSecondaryText}
+					transientReadout={lcdControlReadout}
+				/>
+			</div>
+
 			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="overflow-y-auto min-h-0 pb-4 space-y-0 [scrollbar-gutter:stable]">
 					{/* Scope — independently collapsible */}
@@ -1488,11 +1882,11 @@ export default function PhaseDistortionVisualizer() {
 							dcoDepth: line1DcoDepth,
 							setDcoDepth: setLine1DcoDepth,
 							dcoEnv: line1DcoEnv,
-							setDcoEnv: setLine1DcoEnv,
+							setDcoEnv: handleLine1DcoEnvChange,
 							dcwEnv: line1DcwEnv,
-							setDcwEnv: setLine1DcwEnv,
+							setDcwEnv: handleLine1DcwEnvChange,
 							dcaEnv: line1DcaEnv,
-							setDcaEnv: setLine1DcaEnv,
+							setDcaEnv: handleLine1DcaEnvChange,
 							keyFollow: line1DcwKeyFollow,
 							setKeyFollow: setLine1DcwKeyFollow,
 							waveform: waveform.out1,
@@ -1517,11 +1911,11 @@ export default function PhaseDistortionVisualizer() {
 							dcoDepth: line2DcoDepth,
 							setDcoDepth: setLine2DcoDepth,
 							dcoEnv: line2DcoEnv,
-							setDcoEnv: setLine2DcoEnv,
+							setDcoEnv: handleLine2DcoEnvChange,
 							dcwEnv: line2DcwEnv,
-							setDcwEnv: setLine2DcwEnv,
+							setDcwEnv: handleLine2DcwEnvChange,
 							dcaEnv: line2DcaEnv,
-							setDcaEnv: setLine2DcaEnv,
+							setDcaEnv: handleLine2DcaEnvChange,
 							keyFollow: line2DcwKeyFollow,
 							setKeyFollow: setLine2DcwKeyFollow,
 							waveform: waveform.out2,
