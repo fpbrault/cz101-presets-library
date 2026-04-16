@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "bun run build:wasm && bun run build:web && bun run build:plugin",
-		"build:web": "mkdir -p public/cz-synth-wasm && cp src-tauri/cz-synth/public/cz-synth-wasm/* public/cz-synth-wasm && tsc && vite build",
+		"build:web": "tsc && vite build",
 		"build:wasm": "wasm-pack build src-tauri/cz-synth --target no-modules --out-dir public/cz-synth-wasm --features wasm",
 		"build:tauri": "tauri build --config src-tauri/tauri-app/tauri.conf.json",
 		"build:plugin": "bash scripts/build-plugin.sh --release",
