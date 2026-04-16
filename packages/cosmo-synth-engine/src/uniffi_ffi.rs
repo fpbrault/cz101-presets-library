@@ -69,7 +69,7 @@ impl CzSynthEngine {
             }
             Err(e) => {
                 // Best-effort: log to stderr; host should check return value
-                eprintln!("[cz-synth] set_params_json error: {e}");
+                eprintln!("[cosmo-synth-engine] set_params_json error: {e}");
             }
         }
     }

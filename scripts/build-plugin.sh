@@ -23,10 +23,10 @@ if [[ "$BUILD_AUV3" == "1" ]]; then
 fi
 
 echo "==> Building CZ-101 Phase Distortion plugin ($PROFILE)..."
-echo "    Using beamer xtask: cargo xtask bundle cz-synth-vst ${FORMAT_FLAGS[*]}"
+echo "    Using beamer xtask: cargo xtask bundle cosmo-pd101 ${FORMAT_FLAGS[*]}"
 
 cd "$RUST_WORKSPACE"
-cargo run -p xtask -- bundle cz-synth-vst "${FORMAT_FLAGS[@]}" $PROFILE_ARG
+cargo run -p xtask -- bundle cosmo-pd101 "${FORMAT_FLAGS[@]}" $PROFILE_ARG
 
 echo "==> Done. Bundles are in $RUST_WORKSPACE/target/$PROFILE/"
 echo "    Run 'bun run plugin:install' to copy to system plugin dirs."

@@ -1,6 +1,6 @@
 //! CZ-101 Phase Distortion synthesizer — VST3/AU plugin via Beamer.
 //!
-//! Uses beamer for VST3/AU plugin hosting and cz-synth for the DSP engine.
+//! Uses beamer for VST3/AU plugin hosting and cosmo-synth-engine for the DSP engine.
 
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -8,8 +8,8 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use beamer::prelude::*;
-use cz_synth::params::{PolyMode, StepEnvData, SynthParams};
-use cz_synth::processor::{midi_note_to_freq, Cz101Processor};
+use cosmo_synth_engine::params::{PolyMode, StepEnvData, SynthParams};
+use cosmo_synth_engine::processor::{midi_note_to_freq, Cz101Processor};
 
 const PLUGIN_LOG_PATH: &str = "/tmp/cz101-plugin.log";
 
@@ -466,89 +466,89 @@ pub struct CzParameters {
 }
 
 impl CzParameters {
-    fn map_waveform(value: Waveform) -> cz_synth::params::WaveformId {
+    fn map_waveform(value: Waveform) -> cosmo_synth_engine::params::WaveformId {
         match value {
-            Waveform::Saw => cz_synth::params::WaveformId::Saw,
-            Waveform::Square => cz_synth::params::WaveformId::Square,
-            Waveform::Pulse => cz_synth::params::WaveformId::Pulse,
-            Waveform::Null => cz_synth::params::WaveformId::Null,
-            Waveform::SinePulse => cz_synth::params::WaveformId::SinePulse,
-            Waveform::SawPulse => cz_synth::params::WaveformId::SawPulse,
-            Waveform::MultiSine => cz_synth::params::WaveformId::MultiSine,
-            Waveform::Pulse2 => cz_synth::params::WaveformId::Pulse2,
+            Waveform::Saw => cosmo_synth_engine::params::WaveformId::Saw,
+            Waveform::Square => cosmo_synth_engine::params::WaveformId::Square,
+            Waveform::Pulse => cosmo_synth_engine::params::WaveformId::Pulse,
+            Waveform::Null => cosmo_synth_engine::params::WaveformId::Null,
+            Waveform::SinePulse => cosmo_synth_engine::params::WaveformId::SinePulse,
+            Waveform::SawPulse => cosmo_synth_engine::params::WaveformId::SawPulse,
+            Waveform::MultiSine => cosmo_synth_engine::params::WaveformId::MultiSine,
+            Waveform::Pulse2 => cosmo_synth_engine::params::WaveformId::Pulse2,
         }
     }
 
-    fn map_warp_algo(value: WarpAlgo) -> cz_synth::params::WarpAlgo {
+    fn map_warp_algo(value: WarpAlgo) -> cosmo_synth_engine::params::WarpAlgo {
         match value {
-            WarpAlgo::Cz101 => cz_synth::params::WarpAlgo::Cz101,
-            WarpAlgo::Bend => cz_synth::params::WarpAlgo::Bend,
-            WarpAlgo::Sync => cz_synth::params::WarpAlgo::Sync,
-            WarpAlgo::Pinch => cz_synth::params::WarpAlgo::Pinch,
-            WarpAlgo::Fold => cz_synth::params::WarpAlgo::Fold,
-            WarpAlgo::Skew => cz_synth::params::WarpAlgo::Skew,
-            WarpAlgo::Quantize => cz_synth::params::WarpAlgo::Quantize,
-            WarpAlgo::Twist => cz_synth::params::WarpAlgo::Twist,
-            WarpAlgo::Clip => cz_synth::params::WarpAlgo::Clip,
-            WarpAlgo::Ripple => cz_synth::params::WarpAlgo::Ripple,
-            WarpAlgo::Mirror => cz_synth::params::WarpAlgo::Mirror,
-            WarpAlgo::Fof => cz_synth::params::WarpAlgo::Fof,
-            WarpAlgo::Karpunk => cz_synth::params::WarpAlgo::Karpunk,
-            WarpAlgo::Sine => cz_synth::params::WarpAlgo::Sine,
+            WarpAlgo::Cz101 => cosmo_synth_engine::params::WarpAlgo::Cz101,
+            WarpAlgo::Bend => cosmo_synth_engine::params::WarpAlgo::Bend,
+            WarpAlgo::Sync => cosmo_synth_engine::params::WarpAlgo::Sync,
+            WarpAlgo::Pinch => cosmo_synth_engine::params::WarpAlgo::Pinch,
+            WarpAlgo::Fold => cosmo_synth_engine::params::WarpAlgo::Fold,
+            WarpAlgo::Skew => cosmo_synth_engine::params::WarpAlgo::Skew,
+            WarpAlgo::Quantize => cosmo_synth_engine::params::WarpAlgo::Quantize,
+            WarpAlgo::Twist => cosmo_synth_engine::params::WarpAlgo::Twist,
+            WarpAlgo::Clip => cosmo_synth_engine::params::WarpAlgo::Clip,
+            WarpAlgo::Ripple => cosmo_synth_engine::params::WarpAlgo::Ripple,
+            WarpAlgo::Mirror => cosmo_synth_engine::params::WarpAlgo::Mirror,
+            WarpAlgo::Fof => cosmo_synth_engine::params::WarpAlgo::Fof,
+            WarpAlgo::Karpunk => cosmo_synth_engine::params::WarpAlgo::Karpunk,
+            WarpAlgo::Sine => cosmo_synth_engine::params::WarpAlgo::Sine,
         }
     }
 
-    fn map_lfo_waveform(value: LfoWaveform) -> cz_synth::params::LfoWaveform {
+    fn map_lfo_waveform(value: LfoWaveform) -> cosmo_synth_engine::params::LfoWaveform {
         match value {
-            LfoWaveform::Sine => cz_synth::params::LfoWaveform::Sine,
-            LfoWaveform::Triangle => cz_synth::params::LfoWaveform::Triangle,
-            LfoWaveform::Square => cz_synth::params::LfoWaveform::Square,
-            LfoWaveform::Saw => cz_synth::params::LfoWaveform::Saw,
+            LfoWaveform::Sine => cosmo_synth_engine::params::LfoWaveform::Sine,
+            LfoWaveform::Triangle => cosmo_synth_engine::params::LfoWaveform::Triangle,
+            LfoWaveform::Square => cosmo_synth_engine::params::LfoWaveform::Square,
+            LfoWaveform::Saw => cosmo_synth_engine::params::LfoWaveform::Saw,
         }
     }
 
-    fn map_lfo_target(value: LfoTarget) -> cz_synth::params::LfoTarget {
+    fn map_lfo_target(value: LfoTarget) -> cosmo_synth_engine::params::LfoTarget {
         match value {
-            LfoTarget::Pitch => cz_synth::params::LfoTarget::Pitch,
-            LfoTarget::Dcw => cz_synth::params::LfoTarget::Dcw,
-            LfoTarget::Dca => cz_synth::params::LfoTarget::Dca,
-            LfoTarget::Filter => cz_synth::params::LfoTarget::Filter,
+            LfoTarget::Pitch => cosmo_synth_engine::params::LfoTarget::Pitch,
+            LfoTarget::Dcw => cosmo_synth_engine::params::LfoTarget::Dcw,
+            LfoTarget::Dca => cosmo_synth_engine::params::LfoTarget::Dca,
+            LfoTarget::Filter => cosmo_synth_engine::params::LfoTarget::Filter,
         }
     }
 
-    fn map_filter_type(value: FilterType) -> cz_synth::params::FilterType {
+    fn map_filter_type(value: FilterType) -> cosmo_synth_engine::params::FilterType {
         match value {
-            FilterType::Lp => cz_synth::params::FilterType::Lp,
-            FilterType::Hp => cz_synth::params::FilterType::Hp,
-            FilterType::Bp => cz_synth::params::FilterType::Bp,
+            FilterType::Lp => cosmo_synth_engine::params::FilterType::Lp,
+            FilterType::Hp => cosmo_synth_engine::params::FilterType::Hp,
+            FilterType::Bp => cosmo_synth_engine::params::FilterType::Bp,
         }
     }
 
-    fn map_portamento_mode(value: PortamentoMode) -> cz_synth::params::PortamentoMode {
+    fn map_portamento_mode(value: PortamentoMode) -> cosmo_synth_engine::params::PortamentoMode {
         match value {
-            PortamentoMode::Rate => cz_synth::params::PortamentoMode::Rate,
-            PortamentoMode::Time => cz_synth::params::PortamentoMode::Time,
+            PortamentoMode::Rate => cosmo_synth_engine::params::PortamentoMode::Rate,
+            PortamentoMode::Time => cosmo_synth_engine::params::PortamentoMode::Time,
         }
     }
 
-    fn map_optional_warp(value: f32) -> Option<cz_synth::params::WarpAlgo> {
+    fn map_optional_warp(value: f32) -> Option<cosmo_synth_engine::params::WarpAlgo> {
         let id = value.round() as i32;
         match id {
             -1 => None,
-            0 => Some(cz_synth::params::WarpAlgo::Cz101),
-            1 => Some(cz_synth::params::WarpAlgo::Bend),
-            2 => Some(cz_synth::params::WarpAlgo::Sync),
-            3 => Some(cz_synth::params::WarpAlgo::Pinch),
-            4 => Some(cz_synth::params::WarpAlgo::Fold),
-            5 => Some(cz_synth::params::WarpAlgo::Skew),
-            6 => Some(cz_synth::params::WarpAlgo::Quantize),
-            7 => Some(cz_synth::params::WarpAlgo::Twist),
-            8 => Some(cz_synth::params::WarpAlgo::Clip),
-            9 => Some(cz_synth::params::WarpAlgo::Ripple),
-            10 => Some(cz_synth::params::WarpAlgo::Mirror),
-            11 => Some(cz_synth::params::WarpAlgo::Fof),
-            12 => Some(cz_synth::params::WarpAlgo::Karpunk),
-            13 => Some(cz_synth::params::WarpAlgo::Sine),
+            0 => Some(cosmo_synth_engine::params::WarpAlgo::Cz101),
+            1 => Some(cosmo_synth_engine::params::WarpAlgo::Bend),
+            2 => Some(cosmo_synth_engine::params::WarpAlgo::Sync),
+            3 => Some(cosmo_synth_engine::params::WarpAlgo::Pinch),
+            4 => Some(cosmo_synth_engine::params::WarpAlgo::Fold),
+            5 => Some(cosmo_synth_engine::params::WarpAlgo::Skew),
+            6 => Some(cosmo_synth_engine::params::WarpAlgo::Quantize),
+            7 => Some(cosmo_synth_engine::params::WarpAlgo::Twist),
+            8 => Some(cosmo_synth_engine::params::WarpAlgo::Clip),
+            9 => Some(cosmo_synth_engine::params::WarpAlgo::Ripple),
+            10 => Some(cosmo_synth_engine::params::WarpAlgo::Mirror),
+            11 => Some(cosmo_synth_engine::params::WarpAlgo::Fof),
+            12 => Some(cosmo_synth_engine::params::WarpAlgo::Karpunk),
+            13 => Some(cosmo_synth_engine::params::WarpAlgo::Sine),
             _ => None,
         }
     }
@@ -558,16 +558,16 @@ impl CzParameters {
             volume: self.volume.get() as f32,
             octave: self.octave.get() as f32,
             line_select: match self.line_select.get() {
-                LineSelect::L1PlusL2 => cz_synth::params::LineSelect::L1PlusL2,
-                LineSelect::L1 => cz_synth::params::LineSelect::L1,
-                LineSelect::L2 => cz_synth::params::LineSelect::L2,
-                LineSelect::L1PlusL1Prime => cz_synth::params::LineSelect::L1PlusL1Prime,
-                LineSelect::L1PlusL2Prime => cz_synth::params::LineSelect::L1PlusL2Prime,
+                LineSelect::L1PlusL2 => cosmo_synth_engine::params::LineSelect::L1PlusL2,
+                LineSelect::L1 => cosmo_synth_engine::params::LineSelect::L1,
+                LineSelect::L2 => cosmo_synth_engine::params::LineSelect::L2,
+                LineSelect::L1PlusL1Prime => cosmo_synth_engine::params::LineSelect::L1PlusL1Prime,
+                LineSelect::L1PlusL2Prime => cosmo_synth_engine::params::LineSelect::L1PlusL2Prime,
             },
             mod_mode: match self.mod_mode.get() {
-                ModMode::Normal => cz_synth::params::ModMode::Normal,
-                ModMode::Ring => cz_synth::params::ModMode::Ring,
-                ModMode::Noise => cz_synth::params::ModMode::Noise,
+                ModMode::Normal => cosmo_synth_engine::params::ModMode::Normal,
+                ModMode::Ring => cosmo_synth_engine::params::ModMode::Ring,
+                ModMode::Noise => cosmo_synth_engine::params::ModMode::Noise,
             },
             poly_mode: match self.poly_mode.get() {
                 PolyModeParam::Poly8 => PolyMode::Poly8,
@@ -575,10 +575,10 @@ impl CzParameters {
             },
             legato: self.legato.get() >= 0.5,
             velocity_target: match self.vel_target.get() {
-                VelocityTarget::Amp => cz_synth::params::VelocityTarget::Amp,
-                VelocityTarget::Dcw => cz_synth::params::VelocityTarget::Dcw,
-                VelocityTarget::Both => cz_synth::params::VelocityTarget::Both,
-                VelocityTarget::Off => cz_synth::params::VelocityTarget::Off,
+                VelocityTarget::Amp => cosmo_synth_engine::params::VelocityTarget::Amp,
+                VelocityTarget::Dcw => cosmo_synth_engine::params::VelocityTarget::Dcw,
+                VelocityTarget::Both => cosmo_synth_engine::params::VelocityTarget::Both,
+                VelocityTarget::Off => cosmo_synth_engine::params::VelocityTarget::Off,
             },
             int_pm_amount: self.int_pm_amount.get() as f32,
             int_pm_ratio: self.int_pm_ratio.get() as f32,

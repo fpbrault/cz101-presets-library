@@ -104,7 +104,7 @@ impl Arch {
 
 /// Returns the package-local Cargo target directory.
 ///
-/// Example: <workspace>/packages/cz-synth-vst/target
+/// Example: <workspace>/packages/cosmo-pd101/target
 #[must_use]
 pub fn package_target_dir(workspace_root: &Path, package: &str) -> PathBuf {
     workspace_root.join("packages").join(package).join("target")
@@ -112,7 +112,7 @@ pub fn package_target_dir(workspace_root: &Path, package: &str) -> PathBuf {
 
 /// Returns the package-local Cargo profile output directory.
 ///
-/// Example: <workspace>/packages/cz-synth-vst/target/release
+/// Example: <workspace>/packages/cosmo-pd101/target/release
 #[must_use]
 pub fn package_profile_target_dir(workspace_root: &Path, package: &str, profile: &str) -> PathBuf {
     package_target_dir(workspace_root, package).join(profile)
@@ -134,21 +134,21 @@ pub fn to_pascal_case(name: &str) -> String {
 }
 
 /// Convert package name to VST3 bundle name.
-/// "cz-synth-vst" -> "CzSynthVst.vst3"
+/// "cosmo-pd101" -> "CzSynthVst.vst3"
 #[must_use]
 pub fn to_vst3_bundle_name(package: &str) -> String {
     format!("{}.vst3", to_pascal_case(package))
 }
 
 /// Convert package name to AUv3 app bundle name.
-/// "cz-synth-vst" -> "CzSynthVst.app"
+/// "cosmo-pd101" -> "CzSynthVst.app"
 #[must_use]
 pub fn to_au_bundle_name(package: &str) -> String {
     format!("{}.app", to_pascal_case(package))
 }
 
 /// Convert package name to AUv2 component bundle name.
-/// "cz-synth-vst" -> "CzSynthVst.component"
+/// "cosmo-pd101" -> "CzSynthVst.component"
 #[must_use]
 pub fn to_auv2_component_name(package: &str) -> String {
     format!("{}.component", to_pascal_case(package))

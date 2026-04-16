@@ -1,5 +1,5 @@
 [package]
-name = "cz-synth-vst"
+name = "cosmo-pd101"
 version = "0.1.0"
 edition = "2021"
 description = "CZ-101 synthesizer VST3/AU plugin"
@@ -15,11 +15,11 @@ auv2 = ["au"]
 auv3 = ["au"]
 # Enable Safari Web Inspector on the plugin WebView and load UI from the repo's
 # dist/ directory (instead of the AU bundle).  Build with:
-#   cargo build -p cz-synth-vst --features debug_gui
+#   cargo build -p cosmo-pd101 --features debug_gui
 debug_gui = []
 
 [dependencies]
-cz-synth = { path = "../cz-synth" }
+cosmo-synth-engine = { path = "../cosmo-synth-engine" }
 beamer = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
 serde_json = "1.0"
 libm = "0.2"

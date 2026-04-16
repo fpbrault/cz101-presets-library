@@ -25,4 +25,4 @@ serde_json = "1"
 tauri-plugin-fs = "2"
 tauri-plugin-midi = "0.1.1"
 tauri-plugin-dialog = "2"
-cz-synth = { path = "../cz-synth" }
+cosmo-synth-engine = { path = "../cosmo-synth-engine" }

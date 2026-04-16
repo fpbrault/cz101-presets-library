@@ -1374,8 +1374,8 @@ export default function PhaseDistortionVisualizer() {
 				// Fetch WASM binary and JS bindings in parallel before loading worklet.
 				// The worklet renders silence until it receives the "init" message.
 				const [wasmResponse, bindingsResponse] = await Promise.all([
-					fetch("/cz-synth-wasm/cz_synth_bg.wasm"),
-					fetch("/cz-synth-wasm/cz_synth.js"),
+					fetch("/cosmo-synth-engine-wasm/cz_synth_bg.wasm"),
+					fetch("/cosmo-synth-engine-wasm/cz_synth.js"),
 				]);
 				const [wasmBytes, bindingsJs] = await Promise.all([
 					wasmResponse.arrayBuffer(),

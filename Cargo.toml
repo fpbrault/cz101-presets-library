@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "packages/tauri-app",
-    "packages/cz-synth",
-    "packages/cz-synth-vst",
+    "packages/cz-explorer-desktop",
+    "packages/cosmo-synth-engine",
+    "packages/cosmo-pd101",
     "packages/xtask",
 ]
 

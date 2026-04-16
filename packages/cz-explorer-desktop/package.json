@@ -1,5 +1,5 @@
 {
-	"name": "@cz101/tauri-app",
+	"name": "@cz101/cz-explorer-desktop",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",

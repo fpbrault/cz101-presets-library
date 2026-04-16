@@ -1,11 +1,11 @@
 {
-	"name": "@cz101/cz-synth-vst",
+	"name": "@cz101/cosmo-pd101",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"bundle:debug": "cargo run -p xtask -- bundle cz-synth-vst --vst3 --auv2",
-		"bundle:release": "cargo run -p xtask -- bundle cz-synth-vst --vst3 --auv2 --release",
+		"bundle:debug": "cargo run -p xtask -- bundle cosmo-pd101 --vst3 --auv2",
+		"bundle:release": "cargo run -p xtask -- bundle cosmo-pd101 --vst3 --auv2 --release",
 		"bundle:debug:all": "BUILD_AUV3=1 bash ../../scripts/build-plugin.sh debug",
 		"bundle:release:all": "BUILD_AUV3=1 bash ../../scripts/build-plugin.sh --release",
 		"install": "bash ../../scripts/install-plugin.sh",

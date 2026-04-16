@@ -9,9 +9,10 @@
 	"scripts": {
 		"dev": "bun --filter @cz101/cz-explorer dev",
 		"build": "bun run build:web && bun run build:plugin && bun run build:standalone",
-		"build:web": "bun --filter @cz101/cz-synth build:wasm && bun --filter @cz101/cz-explorer build",
-		"build:plugin": "bun --filter @cz101/cz-synth-vst bundle:release",
-		"build:standalone": "bun --filter @cz101/tauri-app build",
+		"build:engine": "bun --filter @cz101/cosmo-synth-engine build:wasm",
+		"build:web": "bun --filter @cz101/cosmo-synth-engine build:wasm && bun --filter @cz101/cz-explorer build",
+		"build:plugin": "bun --filter @cz101/cosmo-pd101 bundle:release",
+		"build:standalone": "bun --filter @cz101/cz-explorer-desktop build",
 		"test": "bun --filter @cz101/cz-explorer test:all && cargo test --workspace",
 		"lint": "bun --filter @cz101/cz-explorer lint && cargo fmt --all --check && cargo clippy --workspace --all-targets",
 		"clean": "find . -type d \\( -name dist -o -name target \\) -not -path '*/node_modules/*' -not -path '*/.git/*' -exec rm -rf {} +",

@@ -745,6 +745,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "cosmo-pd101"
+version = "0.1.0"
+dependencies = [
+ "beamer",
+ "cocoa",
+ "cosmo-synth-engine",
+ "libc",
+ "libm",
+ "objc",
+ "serde_json",
+]
+
+[[package]]
+name = "cosmo-synth-engine"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.2.17",
+ "libm",
+ "serde",
+ "serde_json",
+ "uniffi",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -825,36 +851,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "cz-synth"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.2.17",
- "libm",
- "serde",
- "serde_json",
- "uniffi",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "cz-synth-vst"
-version = "0.1.0"
-dependencies = [
- "beamer",
- "cocoa",
- "cz-synth",
- "libc",
- "libm",
- "objc",
- "serde_json",
-]
-
-[[package]]
 name = "cz101-presets-library"
 version = "0.1.0"
 dependencies = [
- "cz-synth",
+ "cosmo-synth-engine",
  "serde",
  "serde_json",
  "tauri",

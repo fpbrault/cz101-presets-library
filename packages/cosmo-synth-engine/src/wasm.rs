@@ -40,7 +40,7 @@ impl CzSynthProcessor {
         match serde_json::from_str::<SynthParams>(json) {
             Ok(p) => self.inner.set_params(p),
             Err(e) => {
-                web_sys::console::error_1(&format!("[cz-synth] setParams parse error: {e}").into());
+                web_sys::console::error_1(&format!("[cosmo-synth-engine] setParams parse error: {e}").into());
             }
         }
     }

@@ -14,7 +14,7 @@
 //! Build with the `debug_gui` feature to enable the WebKit inspector:
 //!
 //! ```sh
-//! cargo build -p cz-synth-vst --features debug_gui
+//! cargo build -p cosmo-pd101 --features debug_gui
 //! bun run plugin:build:debug   # uses debug profile + debug_gui
 //! ```
 //!

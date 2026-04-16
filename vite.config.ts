@@ -6,21 +6,21 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const wasmOutDir = fileURLToPath(
-	new URL("./public/cz-synth-wasm", import.meta.url),
+	new URL("./public/cosmo-synth-engine-wasm", import.meta.url),
 );
 const wasmCargoTargetDir = fileURLToPath(
-	new URL("./packages/cz-synth/target", import.meta.url),
+	new URL("./packages/cosmo-synth-engine/target", import.meta.url),
 );
 
 function wasmDevPlugin() {
 	const wasmSrcDir = fileURLToPath(
-		new URL("./packages/cz-synth/src", import.meta.url),
+		new URL("./packages/cosmo-synth-engine/src", import.meta.url),
 	);
 	const buildWasm = () => {
 		console.log("[wasm-dev] Building WASM...");
 		try {
 			execSync(
-				`wasm-pack build packages/cz-synth --target no-modules --out-dir ${wasmOutDir} --features wasm`,
+				`wasm-pack build packages/cosmo-synth-engine --target no-modules --out-dir ${wasmOutDir} --features wasm`,
 				{
 					stdio: "inherit",
 					env: {
