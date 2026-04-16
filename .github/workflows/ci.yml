@@ -21,13 +21,13 @@ jobs:
         run: bun install
 
       - name: Run unit tests
-        run: bun run test:unit --run
+        run: bun --filter @cosmo/cz-explorer test:unit
 
       - name: Install Playwright Chromium
         run: bunx playwright install chromium chromium-headless-shell --with-deps
 
       - name: Run browser tests
-        run: bun run test:browser --run
+        run: bun --filter @cosmo/cz-explorer test:browser
 
   migrate:
     name: Database Migration

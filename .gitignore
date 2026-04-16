@@ -34,3 +34,9 @@ package-lock.json
 src/**/__screenshots__/
 
 venv/
+
+
+# Plans (local only)
+plans/
+
+target/

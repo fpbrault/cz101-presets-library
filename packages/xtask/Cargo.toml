@@ -1,0 +1,16 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+uuid = { version = "1.11", features = ["v4"] }
+toml = "0.8"
+serde = { workspace = true }

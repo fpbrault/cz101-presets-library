@@ -1,0 +1,12 @@
+name = "Cosmo PD-101"
+category = "instrument"
+manufacturer_code = "FpbC"
+plugin_code = "Copd"
+vendor = "Felix Perron-Brault"
+bundle_identifier_prefix = "ca.fpbrault"
+url = "https://github.com/fpbrault/cz101-presets-library"
+email = "felix@perron-brault.com"
+has_gui = true
+gui_size = [1280, 800]
+gui_background_color = "#0a0a0a"
+subcategories = ["synth", "piano"]

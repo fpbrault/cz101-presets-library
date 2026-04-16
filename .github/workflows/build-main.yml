@@ -1,0 +1,55 @@
+name: Build Validation (main)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-plugins:
+    name: Build plugins (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+            build_cmd: bun run build:plugin:universal
+          - os: windows-latest
+            platform: windows
+            build_cmd: bash ./scripts/build-plugin.sh --release
+          - os: ubuntu-latest
+            platform: linux
+            build_cmd: bash ./scripts/build-plugin.sh --release
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build plugins
+        run: ${{ matrix.build_cmd }}
+
+  build-desktop:
+    name: Build desktop app
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build desktop app
+        run: bun --filter @cosmo/cz-explorer-desktop run build

@@ -1,0 +1,10 @@
+{
+	"name": "@cosmo/cz-explorer-desktop",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"dev": "CARGO_TARGET_DIR=target tauri dev --config tauri.conf.json",
+		"build": "CARGO_TARGET_DIR=target tauri build --config tauri.conf.json"
+	}
+}

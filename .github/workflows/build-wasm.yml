@@ -1,0 +1,37 @@
+name: Build WASM
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - 'packages/cosmo-synth-engine/**'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - '.github/workflows/build-wasm.yml'
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: |
+          curl -L https://github.com/rustwasm/wasm-pack/releases/download/v0.13.1/wasm-pack-v0.13.1-x86_64-unknown-linux-musl.tar.gz | tar xz
+          mv wasm-pack-v0.13.1-x86_64-unknown-linux-musl/wasm-pack ~/.cargo/bin/
+
+      - name: Build WASM
+        run: |
+          CARGO_TARGET_DIR=packages/cosmo-synth-engine/target wasm-pack build packages/cosmo-synth-engine --target no-modules --out-dir ${{ github.workspace }}/packages/cz-explorer/public/cosmo-synth-engine-wasm --features wasm
+          rm -f ${{ github.workspace }}/packages/cz-explorer/public/cosmo-synth-engine-wasm/.gitignore
+
+      - name: Commit WASM
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "build: compile WASM"
+          file_pattern: packages/cz-explorer/public/cosmo-synth-engine-wasm/**

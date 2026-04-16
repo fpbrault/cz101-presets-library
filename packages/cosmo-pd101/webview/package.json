@@ -1,0 +1,19 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "bunx --bun vite",
+		"build": "bunx --bun vite build"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.2.2",
+		"@types/react": "^18.3.28",
+		"@types/react-dom": "^18.3.7",
+		"@vitejs/plugin-react": "^6.0.1",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"tailwindcss": "^4.2.2",
+		"typescript": "^6.0.2",
+		"vite": "^8.0.3"
+	}
+}
