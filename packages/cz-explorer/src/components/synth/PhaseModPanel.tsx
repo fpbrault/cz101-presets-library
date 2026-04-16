@@ -1,10 +1,10 @@
 import ControlKnob from "@/components/ControlKnob";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type PhaseModPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
+	phaseModEnabled: boolean;
+	setPhaseModEnabled: (v: boolean) => void;
 	intPmAmount: number;
 	setIntPmAmount: (v: number) => void;
 	intPmRatio: number;
@@ -14,8 +14,8 @@ type PhaseModPanelProps = {
 };
 
 export default function PhaseModPanel({
-	accordionName,
-	defaultOpen,
+	phaseModEnabled,
+	setPhaseModEnabled,
 	intPmAmount,
 	setIntPmAmount,
 	intPmRatio,
@@ -24,13 +24,10 @@ export default function PhaseModPanel({
 	setPmPre,
 }: PhaseModPanelProps) {
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Phase Mod"
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={phaseModEnabled}
+			onToggleEnabled={setPhaseModEnabled}
 		>
 			<div className="flex justify-center gap-4">
 				<ControlKnob
@@ -61,6 +58,6 @@ export default function PhaseModPanel({
 			>
 				Pre-warp PM
 			</CzButton>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

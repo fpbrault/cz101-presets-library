@@ -1,9 +1,9 @@
 import { DelaySection } from "@/components/DelaySection";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type DelayPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
+	enabled: boolean;
+	setEnabled: (v: boolean) => void;
 	time: number;
 	setTime: (v: number) => void;
 	feedback: number;
@@ -13,8 +13,8 @@ type DelayPanelProps = {
 };
 
 export default function DelayPanel({
-	accordionName,
-	defaultOpen,
+	enabled,
+	setEnabled,
 	time,
 	setTime,
 	feedback,
@@ -23,13 +23,10 @@ export default function DelayPanel({
 	setMix,
 }: DelayPanelProps) {
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Delay"
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={enabled}
+			onToggleEnabled={setEnabled}
 		>
 			<DelaySection
 				time={time}
@@ -39,6 +36,6 @@ export default function DelayPanel({
 				mix={mix}
 				setMix={setMix}
 			/>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

@@ -1,9 +1,9 @@
 import { ReverbSection } from "@/components/ReverbSection";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type ReverbPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
+	enabled: boolean;
+	setEnabled: (v: boolean) => void;
 	size: number;
 	setSize: (v: number) => void;
 	mix: number;
@@ -11,23 +11,20 @@ type ReverbPanelProps = {
 };
 
 export default function ReverbPanel({
-	accordionName,
-	defaultOpen,
+	enabled,
+	setEnabled,
 	size,
 	setSize,
 	mix,
 	setMix,
 }: ReverbPanelProps) {
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Reverb"
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={enabled}
+			onToggleEnabled={setEnabled}
 		>
 			<ReverbSection size={size} setSize={setSize} mix={mix} setMix={setMix} />
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

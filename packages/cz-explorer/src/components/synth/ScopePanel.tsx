@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import ControlKnob from "@/components/ControlKnob";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type ScopePanelProps = {
 	oscilloscopeCanvasRef: RefObject<HTMLCanvasElement | null>;
@@ -11,8 +11,6 @@ type ScopePanelProps = {
 	setScopeVerticalZoom: (v: number) => void;
 	scopeTriggerLevel: number;
 	setScopeTriggerLevel: (v: number) => void;
-	open?: boolean;
-	onToggle?: React.MouseEventHandler<HTMLDetailsElement>;
 };
 
 export default function ScopePanel({
@@ -24,17 +22,9 @@ export default function ScopePanel({
 	setScopeVerticalZoom,
 	scopeTriggerLevel,
 	setScopeTriggerLevel,
-	open = true,
-	onToggle,
 }: ScopePanelProps) {
 	return (
-		<CollapsibleCard
-			variant="panel-gold"
-			open={open}
-			onToggle={onToggle}
-			titleClassName="pr-3"
-			title="Scope"
-		>
+		<SynthPanelContainer>
 			<div className="space-y-2">
 				<div className="relative overflow-hidden rounded-lg border border-cz-border bg-cz-lcd-bg">
 					<div className="absolute left-2 top-1 text-5xs font-mono text-cz-lcd-fg/60">
@@ -84,6 +74,6 @@ export default function ScopePanel({
 					/>
 				</div>
 			</div>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

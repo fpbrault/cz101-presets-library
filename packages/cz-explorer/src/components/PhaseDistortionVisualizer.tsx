@@ -35,6 +35,7 @@ import {
 } from "./pdAlgorithms";
 import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
 import { SingleCycleDisplay } from "./SingleCycleDisplay";
+import AsidePanelSwitcher from "./synth/AsidePanelSwitcher";
 import ChorusPanel from "./synth/ChorusPanel";
 import DelayPanel from "./synth/DelayPanel";
 import GlobalVoicePanel from "./synth/GlobalVoicePanel";
@@ -52,8 +53,34 @@ import CzButton from "./ui/CzButton";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
+type AsidePanelTab =
+	| "scope"
+	| "global"
+	| "phaseMod"
+	| "vibrato"
+	| "portamento"
+	| "lfo"
+	| "filter"
+	| "chorus"
+	| "delay"
+	| "reverb";
 
-const ACCORDION_NAME = "synth-aside-accordion";
+const ASIDE_PANEL_TABS: Array<{
+	id: AsidePanelTab;
+	topLabel: string;
+	bottomLabel: string;
+}> = [
+	{ id: "global", topLabel: "Global", bottomLabel: "" },
+	{ id: "portamento", topLabel: "Porta", bottomLabel: "mento" },
+	{ id: "phaseMod", topLabel: "Phase", bottomLabel: "Mod" },
+	{ id: "vibrato", topLabel: "Vibrato", bottomLabel: "" },
+	{ id: "lfo", topLabel: "LFO", bottomLabel: "" },
+	{ id: "scope", topLabel: "Scope", bottomLabel: "View" },
+	{ id: "filter", topLabel: "Filter", bottomLabel: "" },
+	{ id: "chorus", topLabel: "Chorus", bottomLabel: "FX" },
+	{ id: "delay", topLabel: "Delay", bottomLabel: "FX" },
+	{ id: "reverb", topLabel: "Reverb", bottomLabel: "FX" },
+];
 
 const LCD_CONTROL_LABELS: Record<string, string> = {
 	warpAAmount: "Line 1 DCW",
@@ -64,6 +91,7 @@ const LCD_CONTROL_LABELS: Record<string, string> = {
 	algoBlendB: "Line 2 Blend",
 	intPmAmount: "PM Amount",
 	intPmRatio: "PM Ratio",
+	phaseModEnabled: "Phase Mod",
 	pmPre: "PM Mode",
 	windowType: "Window",
 	volume: "Volume",
@@ -111,11 +139,14 @@ const LCD_CONTROL_LABELS: Record<string, string> = {
 	filterEnvAmount: "Filter Env",
 	chorusRate: "Chorus Rate",
 	chorusDepth: "Chorus Depth",
+	chorusEnabled: "Chorus",
 	chorusMix: "Chorus Mix",
 	delayTime: "Delay Time",
 	delayFeedback: "Delay Feedback",
+	delayEnabled: "Delay",
 	delayMix: "Delay Mix",
 	reverbSize: "Reverb Size",
+	reverbEnabled: "Reverb",
 	reverbMix: "Reverb Mix",
 	scopeCycles: "Scope Cycles",
 	scopeVerticalZoom: "Scope Zoom",
@@ -183,6 +214,7 @@ export default function PhaseDistortionVisualizer() {
 	const [algoBlendB, setAlgoBlendB] = useState(0);
 	const [intPmAmount, setIntPmAmount] = useState(0);
 	const [intPmRatio, setIntPmRatio] = useState(1);
+	const [phaseModEnabled, setPhaseModEnabled] = useState(false);
 	const [extPmAmount] = useState(0);
 	const [pmPre, setPmPre] = useState(true);
 	const [windowType, setWindowType] = useState<"off" | "saw" | "triangle">(
@@ -219,11 +251,14 @@ export default function PhaseDistortionVisualizer() {
 
 	const [chorusRate, setChorusRate] = useState(0.8);
 	const [chorusDepth, setChorusDepth] = useState(3);
+	const [chorusEnabled, setChorusEnabled] = useState(false);
 	const [chorusMix, setChorusMix] = useState(0);
 	const [delayTime, setDelayTime] = useState(0.3);
 	const [delayFeedback, setDelayFeedback] = useState(0.35);
+	const [delayEnabled, setDelayEnabled] = useState(false);
 	const [delayMix, setDelayMix] = useState(0);
 	const [reverbSize, setReverbSize] = useState(0.5);
+	const [reverbEnabled, setReverbEnabled] = useState(false);
 	const [reverbMix, setReverbMix] = useState(0);
 
 	const [lineSelect, setLineSelect] = useState<
@@ -233,6 +268,8 @@ export default function PhaseDistortionVisualizer() {
 	const [activePhaseLineTab, setActivePhaseLineTab] = useState<
 		"line1" | "line2"
 	>("line1");
+	const [activeAsidePanel, setActiveAsidePanel] =
+		useState<AsidePanelTab>("scope");
 	const [line1DcwKeyFollow, setLine1DcwKeyFollow] = useState(0);
 	const [line1DcaKeyFollow, setLine1DcaKeyFollow] = useState(0);
 	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
@@ -285,6 +322,7 @@ export default function PhaseDistortionVisualizer() {
 			algoBlendB,
 			intPmAmount,
 			intPmRatio,
+			phaseModEnabled,
 			pmPre,
 			windowType,
 			volume,
@@ -309,11 +347,14 @@ export default function PhaseDistortionVisualizer() {
 			velocityTarget,
 			chorusRate,
 			chorusDepth,
+			chorusEnabled,
 			chorusMix,
 			delayTime,
 			delayFeedback,
+			delayEnabled,
 			delayMix,
 			reverbSize,
+			reverbEnabled,
 			reverbMix,
 			lineSelect,
 			modMode,
@@ -355,6 +396,7 @@ export default function PhaseDistortionVisualizer() {
 			algoBlendB,
 			intPmAmount,
 			intPmRatio,
+			phaseModEnabled,
 			pmPre,
 			windowType,
 			volume,
@@ -379,11 +421,14 @@ export default function PhaseDistortionVisualizer() {
 			velocityTarget,
 			chorusRate,
 			chorusDepth,
+			chorusEnabled,
 			chorusMix,
 			delayTime,
 			delayFeedback,
+			delayEnabled,
 			delayMix,
 			reverbSize,
+			reverbEnabled,
 			reverbMix,
 			lineSelect,
 			modMode,
@@ -430,6 +475,7 @@ export default function PhaseDistortionVisualizer() {
 		setAlgoBlendB(safe(data.algoBlendB, 0));
 		setIntPmAmount(safe(data.intPmAmount, 0));
 		setIntPmRatio(safe(data.intPmRatio, 1));
+		setPhaseModEnabled(data.phaseModEnabled ?? false);
 		setPmPre(data.pmPre ?? true);
 		setWindowType((data.windowType as "off" | "saw" | "triangle") ?? "off");
 		setVolume(safe(data.volume, 1));
@@ -454,11 +500,14 @@ export default function PhaseDistortionVisualizer() {
 		setVelocityTarget((data.velocityTarget as VelocityTarget) ?? "amp");
 		setChorusRate(safe(data.chorusRate, 0.8));
 		setChorusDepth(safe(data.chorusDepth, 3));
+		setChorusEnabled(data.chorusEnabled ?? false);
 		setChorusMix(safe(data.chorusMix, 0));
 		setDelayTime(safe(data.delayTime, 0.3));
 		setDelayFeedback(safe(data.delayFeedback, 0.35));
+		setDelayEnabled(data.delayEnabled ?? false);
 		setDelayMix(safe(data.delayMix, 0));
 		setReverbSize(safe(data.reverbSize, 0.5));
+		setReverbEnabled(data.reverbEnabled ?? false);
 		setReverbMix(safe(data.reverbMix, 0));
 		setLineSelect(data.lineSelect ?? "L1+L2");
 		setModMode((data.modMode as "normal" | "ring" | "noise") ?? "normal");
@@ -897,6 +946,7 @@ export default function PhaseDistortionVisualizer() {
 			algoBlendB,
 			intPmAmount,
 			intPmRatio,
+			phaseModEnabled,
 			pmPre,
 			windowType,
 			volume,
@@ -938,11 +988,14 @@ export default function PhaseDistortionVisualizer() {
 			filterEnvAmount,
 			chorusRate,
 			chorusDepth,
+			chorusEnabled,
 			chorusMix,
 			delayTime,
 			delayFeedback,
+			delayEnabled,
 			delayMix,
 			reverbSize,
+			reverbEnabled,
 			reverbMix,
 			scopeCycles,
 			scopeVerticalZoom,
@@ -971,6 +1024,7 @@ export default function PhaseDistortionVisualizer() {
 		algoBlendB,
 		intPmAmount,
 		intPmRatio,
+		phaseModEnabled,
 		pmPre,
 		windowType,
 		volume,
@@ -1012,11 +1066,14 @@ export default function PhaseDistortionVisualizer() {
 		filterEnvAmount,
 		chorusRate,
 		chorusDepth,
+		chorusEnabled,
 		chorusMix,
 		delayTime,
 		delayFeedback,
+		delayEnabled,
 		delayMix,
 		reverbSize,
+		reverbEnabled,
 		reverbMix,
 		scopeCycles,
 		scopeVerticalZoom,
@@ -1036,6 +1093,137 @@ export default function PhaseDistortionVisualizer() {
 		return `LINE ${lineSelect} | ${polyMode.toUpperCase()} | ${filterStatus}`;
 	}, [lineSelect, polyMode, filterEnabled]);
 
+	const asidePanels: Record<AsidePanelTab, React.ReactNode> = {
+		scope: (
+			<ScopePanel
+				oscilloscopeCanvasRef={oscilloscopeCanvasRef}
+				effectivePitchHz={effectivePitchHz}
+				scopeCycles={scopeCycles}
+				setScopeCycles={setScopeCycles}
+				scopeVerticalZoom={scopeVerticalZoom}
+				setScopeVerticalZoom={setScopeVerticalZoom}
+				scopeTriggerLevel={scopeTriggerLevel}
+				setScopeTriggerLevel={setScopeTriggerLevel}
+			/>
+		),
+		global: (
+			<GlobalVoicePanel
+				volume={volume}
+				setVolume={setVolume}
+				polyMode={polyMode}
+				setPolyMode={setPolyMode}
+				velocityTarget={velocityTarget}
+				setVelocityTarget={setVelocityTarget}
+				pitchBendRange={pitchBendRange}
+				setPitchBendRange={setPitchBendRange}
+				modWheelVibratoDepth={modWheelVibratoDepth}
+				setModWheelVibratoDepth={setModWheelVibratoDepth}
+			/>
+		),
+		phaseMod: (
+			<PhaseModPanel
+				phaseModEnabled={phaseModEnabled}
+				setPhaseModEnabled={setPhaseModEnabled}
+				intPmAmount={intPmAmount}
+				setIntPmAmount={setIntPmAmount}
+				intPmRatio={intPmRatio}
+				setIntPmRatio={setIntPmRatio}
+				pmPre={pmPre}
+				setPmPre={setPmPre}
+			/>
+		),
+		vibrato: (
+			<VibratoPanel
+				vibratoEnabled={vibratoEnabled}
+				setVibratoEnabled={setVibratoEnabled}
+				vibratoWave={vibratoWave}
+				setVibratoWave={setVibratoWave}
+				vibratoRate={vibratoRate}
+				setVibratoRate={setVibratoRate}
+				vibratoDepth={vibratoDepth}
+				setVibratoDepth={setVibratoDepth}
+				vibratoDelay={vibratoDelay}
+				setVibratoDelay={setVibratoDelay}
+			/>
+		),
+		portamento: (
+			<PortamentoPanel
+				portamentoEnabled={portamentoEnabled}
+				setPortamentoEnabled={setPortamentoEnabled}
+				portamentoMode={portamentoMode}
+				setPortamentoMode={setPortamentoMode}
+				portamentoRate={portamentoRate}
+				setPortamentoRate={setPortamentoRate}
+				portamentoTime={portamentoTime}
+				setPortamentoTime={setPortamentoTime}
+			/>
+		),
+		lfo: (
+			<LfoPanel
+				lfoEnabled={lfoEnabled}
+				setLfoEnabled={setLfoEnabled}
+				lfoWaveform={lfoWaveform}
+				setLfoWaveform={setLfoWaveform}
+				lfoRate={lfoRate}
+				setLfoRate={setLfoRate}
+				lfoDepth={lfoDepth}
+				setLfoDepth={setLfoDepth}
+				lfoOffset={lfoOffset}
+				setLfoOffset={setLfoOffset}
+				lfoTarget={lfoTarget}
+				setLfoTarget={setLfoTarget}
+			/>
+		),
+		filter: (
+			<SynthFilterPanel
+				filterEnabled={filterEnabled}
+				setFilterEnabled={setFilterEnabled}
+				filterType={filterType}
+				setFilterType={setFilterType}
+				filterCutoff={filterCutoff}
+				setFilterCutoff={setFilterCutoff}
+				filterResonance={filterResonance}
+				setFilterResonance={setFilterResonance}
+				filterEnvAmount={filterEnvAmount}
+				setFilterEnvAmount={setFilterEnvAmount}
+			/>
+		),
+		chorus: (
+			<ChorusPanel
+				enabled={chorusEnabled}
+				setEnabled={setChorusEnabled}
+				rate={chorusRate}
+				setRate={setChorusRate}
+				depth={chorusDepth}
+				setDepth={setChorusDepth}
+				mix={chorusMix}
+				setMix={setChorusMix}
+			/>
+		),
+		delay: (
+			<DelayPanel
+				enabled={delayEnabled}
+				setEnabled={setDelayEnabled}
+				time={delayTime}
+				setTime={setDelayTime}
+				feedback={delayFeedback}
+				setFeedback={setDelayFeedback}
+				mix={delayMix}
+				setMix={setDelayMix}
+			/>
+		),
+		reverb: (
+			<ReverbPanel
+				enabled={reverbEnabled}
+				setEnabled={setReverbEnabled}
+				size={reverbSize}
+				setSize={setReverbSize}
+				mix={reverbMix}
+				setMix={setReverbMix}
+			/>
+		),
+	};
+
 	const waveform = useMemo(
 		() =>
 			computeWaveform({
@@ -1047,7 +1235,7 @@ export default function PhaseDistortionVisualizer() {
 				algo2B,
 				algoBlendA,
 				algoBlendB,
-				intPmAmount,
+				intPmAmount: phaseModEnabled ? intPmAmount : 0,
 				intPmRatio,
 				extPmAmount,
 				pmPre,
@@ -1066,6 +1254,7 @@ export default function PhaseDistortionVisualizer() {
 			algo2B,
 			algoBlendA,
 			algoBlendB,
+			phaseModEnabled,
 			intPmAmount,
 			intPmRatio,
 			extPmAmount,
@@ -1140,9 +1329,23 @@ export default function PhaseDistortionVisualizer() {
 			polyMode,
 			legato,
 			velocityTarget,
-			chorus: { rate: chorusRate, depth: chorusDepth, mix: chorusMix },
-			delay: { time: delayTime, feedback: delayFeedback, mix: delayMix },
-			reverb: { size: reverbSize, mix: reverbMix },
+			chorus: {
+				enabled: chorusEnabled,
+				rate: chorusRate,
+				depth: chorusDepth,
+				mix: chorusEnabled ? chorusMix : 0,
+			},
+			delay: {
+				enabled: delayEnabled,
+				time: delayTime,
+				feedback: delayFeedback,
+				mix: delayEnabled ? delayMix : 0,
+			},
+			reverb: {
+				enabled: reverbEnabled,
+				size: reverbSize,
+				mix: reverbEnabled ? reverbMix : 0,
+			},
 			vibrato: {
 				enabled: vibratoEnabled,
 				waveform: vibratoWave,
@@ -1190,6 +1393,7 @@ export default function PhaseDistortionVisualizer() {
 		warpBAlgo,
 		intPmAmount,
 		intPmRatio,
+		phaseModEnabled,
 		extPmAmount,
 		pmPre,
 		windowType,
@@ -1209,11 +1413,14 @@ export default function PhaseDistortionVisualizer() {
 		velocityTarget,
 		chorusRate,
 		chorusDepth,
+		chorusEnabled,
 		chorusMix,
 		delayTime,
 		delayFeedback,
+		delayEnabled,
 		delayMix,
 		reverbSize,
+		reverbEnabled,
 		reverbMix,
 		effectivePitchHz,
 		algo2A,
@@ -1654,120 +1861,22 @@ export default function PhaseDistortionVisualizer() {
 							transientReadout={lcdControlReadout}
 						/>
 					</div>
-					{/* Scope — independently collapsible */}
-					<ScopePanel
-						oscilloscopeCanvasRef={oscilloscopeCanvasRef}
-						effectivePitchHz={effectivePitchHz}
-						scopeCycles={scopeCycles}
-						setScopeCycles={setScopeCycles}
-						scopeVerticalZoom={scopeVerticalZoom}
-						setScopeVerticalZoom={setScopeVerticalZoom}
-						scopeTriggerLevel={scopeTriggerLevel}
-						setScopeTriggerLevel={setScopeTriggerLevel}
-						open={true}
-					/>
 
-					<div className="divider"></div>
-					{/* Accordion — only one panel open at a time */}
-					<GlobalVoicePanel
-						accordionName={ACCORDION_NAME}
-						defaultOpen={true}
-						volume={volume}
-						setVolume={setVolume}
-						polyMode={polyMode}
-						setPolyMode={setPolyMode}
-						velocityTarget={velocityTarget}
-						setVelocityTarget={setVelocityTarget}
-						pitchBendRange={pitchBendRange}
-						setPitchBendRange={setPitchBendRange}
-						modWheelVibratoDepth={modWheelVibratoDepth}
-						setModWheelVibratoDepth={setModWheelVibratoDepth}
-					/>
-					<PhaseModPanel
-						accordionName={ACCORDION_NAME}
-						intPmAmount={intPmAmount}
-						setIntPmAmount={setIntPmAmount}
-						intPmRatio={intPmRatio}
-						setIntPmRatio={setIntPmRatio}
-						pmPre={pmPre}
-						setPmPre={setPmPre}
-					/>
-					<VibratoPanel
-						accordionName={ACCORDION_NAME}
-						vibratoEnabled={vibratoEnabled}
-						setVibratoEnabled={setVibratoEnabled}
-						vibratoWave={vibratoWave}
-						setVibratoWave={setVibratoWave}
-						vibratoRate={vibratoRate}
-						setVibratoRate={setVibratoRate}
-						vibratoDepth={vibratoDepth}
-						setVibratoDepth={setVibratoDepth}
-						vibratoDelay={vibratoDelay}
-						setVibratoDelay={setVibratoDelay}
-					/>
-					<PortamentoPanel
-						accordionName={ACCORDION_NAME}
-						portamentoEnabled={portamentoEnabled}
-						setPortamentoEnabled={setPortamentoEnabled}
-						portamentoMode={portamentoMode}
-						setPortamentoMode={setPortamentoMode}
-						portamentoRate={portamentoRate}
-						setPortamentoRate={setPortamentoRate}
-						portamentoTime={portamentoTime}
-						setPortamentoTime={setPortamentoTime}
-					/>
-					<LfoPanel
-						accordionName={ACCORDION_NAME}
-						lfoEnabled={lfoEnabled}
-						setLfoEnabled={setLfoEnabled}
-						lfoWaveform={lfoWaveform}
-						setLfoWaveform={setLfoWaveform}
-						lfoRate={lfoRate}
-						setLfoRate={setLfoRate}
-						lfoDepth={lfoDepth}
-						setLfoDepth={setLfoDepth}
-						lfoOffset={lfoOffset}
-						setLfoOffset={setLfoOffset}
-						lfoTarget={lfoTarget}
-						setLfoTarget={setLfoTarget}
-					/>
-					<SynthFilterPanel
-						accordionName={ACCORDION_NAME}
-						filterEnabled={filterEnabled}
-						setFilterEnabled={setFilterEnabled}
-						filterType={filterType}
-						setFilterType={setFilterType}
-						filterCutoff={filterCutoff}
-						setFilterCutoff={setFilterCutoff}
-						filterResonance={filterResonance}
-						setFilterResonance={setFilterResonance}
-						filterEnvAmount={filterEnvAmount}
-						setFilterEnvAmount={setFilterEnvAmount}
-					/>
-					<ChorusPanel
-						accordionName={ACCORDION_NAME}
-						rate={chorusRate}
-						setRate={setChorusRate}
-						depth={chorusDepth}
-						setDepth={setChorusDepth}
-						mix={chorusMix}
-						setMix={setChorusMix}
-					/>
-					<DelayPanel
-						accordionName={ACCORDION_NAME}
-						time={delayTime}
-						setTime={setDelayTime}
-						feedback={delayFeedback}
-						setFeedback={setDelayFeedback}
-						mix={delayMix}
-						setMix={setDelayMix}
-					/>
-					<ReverbPanel
-						accordionName={ACCORDION_NAME}
-						size={reverbSize}
-						setSize={setReverbSize}
-						mix={reverbMix}
-						setMix={setReverbMix}
+					<AsidePanelSwitcher
+						tabs={ASIDE_PANEL_TABS}
+						activeTab={activeAsidePanel}
+						onTabChange={setActiveAsidePanel}
+						tabEnabledState={{
+							phaseMod: phaseModEnabled,
+							vibrato: vibratoEnabled,
+							portamento: portamentoEnabled,
+							lfo: lfoEnabled,
+							filter: filterEnabled,
+							chorus: chorusEnabled,
+							delay: delayEnabled,
+							reverb: reverbEnabled,
+						}}
+						panels={asidePanels}
 					/>
 				</aside>
 

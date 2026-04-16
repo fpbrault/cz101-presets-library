@@ -1,9 +1,9 @@
 import { ChorusSection } from "@/components/ChorusSection";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type ChorusPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
+	enabled: boolean;
+	setEnabled: (v: boolean) => void;
 	rate: number;
 	setRate: (v: number) => void;
 	depth: number;
@@ -13,8 +13,8 @@ type ChorusPanelProps = {
 };
 
 export default function ChorusPanel({
-	accordionName,
-	defaultOpen,
+	enabled,
+	setEnabled,
 	rate,
 	setRate,
 	depth,
@@ -23,13 +23,10 @@ export default function ChorusPanel({
 	setMix,
 }: ChorusPanelProps) {
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Chorus"
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={enabled}
+			onToggleEnabled={setEnabled}
 		>
 			<ChorusSection
 				rate={rate}
@@ -39,6 +36,6 @@ export default function ChorusPanel({
 				mix={mix}
 				setMix={setMix}
 			/>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

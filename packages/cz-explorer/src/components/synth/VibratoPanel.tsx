@@ -1,10 +1,8 @@
 import ControlKnob from "@/components/ControlKnob";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type VibratoPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
 	vibratoEnabled: boolean;
 	setVibratoEnabled: (v: boolean) => void;
 	vibratoWave: number;
@@ -18,8 +16,6 @@ type VibratoPanelProps = {
 };
 
 export default function VibratoPanel({
-	accordionName,
-	defaultOpen,
 	vibratoEnabled,
 	setVibratoEnabled,
 	vibratoWave,
@@ -32,32 +28,11 @@ export default function VibratoPanel({
 	setVibratoDelay,
 }: VibratoPanelProps) {
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Vibrato"
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={vibratoEnabled}
+			onToggleEnabled={setVibratoEnabled}
 		>
-			<div className="mb-2 flex items-center justify-center gap-2">
-				<span className="text-3xs font-mono text-cz-cream-dim uppercase tracking-wider">
-					Enable
-				</span>
-				<button
-					type="button"
-					className={`cz-btn-arrow ${vibratoEnabled ? "bg-cz-gold" : ""}`}
-					onClick={() => setVibratoEnabled(!vibratoEnabled)}
-				>
-					<span
-						className={`text-5xs font-mono font-bold uppercase tracking-wider ${
-							vibratoEnabled ? "text-white" : "text-cz-cream-dim"
-						}`}
-					>
-						{vibratoEnabled ? "On" : "Off"}
-					</span>
-				</button>
-			</div>
 			<div className="flex justify-center gap-2">
 				{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
 					<CzButton
@@ -101,6 +76,6 @@ export default function VibratoPanel({
 					valueFormatter={(v) => `${Math.round(v)}ms`}
 				/>
 			</div>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

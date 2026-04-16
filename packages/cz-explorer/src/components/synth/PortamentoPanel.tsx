@@ -1,10 +1,8 @@
 import ControlKnob from "@/components/ControlKnob";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type PortamentoPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
 	portamentoEnabled: boolean;
 	setPortamentoEnabled: (v: boolean) => void;
 	portamentoMode: "rate" | "time";
@@ -16,8 +14,6 @@ type PortamentoPanelProps = {
 };
 
 export default function PortamentoPanel({
-	accordionName,
-	defaultOpen,
 	portamentoEnabled,
 	setPortamentoEnabled,
 	portamentoMode,
@@ -28,32 +24,11 @@ export default function PortamentoPanel({
 	setPortamentoTime,
 }: PortamentoPanelProps) {
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Portamento"
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={portamentoEnabled}
+			onToggleEnabled={setPortamentoEnabled}
 		>
-			<div className="mb-2 flex items-center justify-center gap-2">
-				<span className="text-3xs font-mono text-cz-cream-dim uppercase tracking-wider">
-					Enable
-				</span>
-				<button
-					type="button"
-					className={`cz-btn-arrow ${portamentoEnabled ? "bg-cz-gold" : ""}`}
-					onClick={() => setPortamentoEnabled(!portamentoEnabled)}
-				>
-					<span
-						className={`text-5xs font-mono font-bold uppercase tracking-wider ${
-							portamentoEnabled ? "text-white" : "text-cz-cream-dim"
-						}`}
-					>
-						{portamentoEnabled ? "On" : "Off"}
-					</span>
-				</button>
-			</div>
 			<div className="flex w-full gap-1 mb-2">
 				<CzButton
 					active={portamentoMode === "rate"}
@@ -95,6 +70,6 @@ export default function PortamentoPanel({
 					/>
 				)}
 			</div>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

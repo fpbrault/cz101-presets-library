@@ -1,13 +1,11 @@
 import { useMemo } from "react";
 import ControlKnob from "@/components/ControlKnob";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type FilterType = "lp" | "hp" | "bp";
 
 type SynthFilterPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
 	filterEnabled: boolean;
 	setFilterEnabled: (v: boolean) => void;
 	filterType: FilterType;
@@ -21,8 +19,6 @@ type SynthFilterPanelProps = {
 };
 
 export default function SynthFilterPanel({
-	accordionName,
-	defaultOpen,
 	filterEnabled,
 	setFilterEnabled,
 	filterType,
@@ -66,37 +62,13 @@ export default function SynthFilterPanel({
 	}, [filterCutoff, filterEnvAmount, filterResonance, filterType]);
 
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Filter"
-		>
-			<div className="mb-2 flex items-center justify-center gap-2">
-				<span className="text-3xs font-mono text-cz-cream-dim uppercase tracking-wider">
-					Enable
-				</span>
-				<button
-					type="button"
-					className={`cz-btn-arrow ${filterEnabled ? "bg-cz-gold" : ""}`}
-					onClick={() => setFilterEnabled(!filterEnabled)}
-				>
-					<span
-						className={`text-5xs font-mono font-bold uppercase tracking-wider ${
-							filterEnabled ? "text-white" : "text-cz-cream-dim"
-						}`}
-					>
-						{filterEnabled ? "On" : "Off"}
-					</span>
-				</button>
-			</div>
-			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-				<div className="mb-2 cz-light-blue justify-between">
-					<span>Response</span>
-					<span>{filterType.toUpperCase()}</span>
-				</div>
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={filterEnabled}
+			onToggleEnabled={setFilterEnabled}
+			visualTitle="Response"
+			visualMeta={filterType.toUpperCase()}
+			visual={
 				<svg
 					viewBox="0 0 220 92"
 					className="h-24 w-full rounded-lg border border-cz-border bg-cz-panel"
@@ -129,7 +101,8 @@ export default function SynthFilterPanel({
 						strokeLinecap="round"
 					/>
 				</svg>
-			</div>
+			}
+		>
 			<div className="flex w-full gap-1 mb-2">
 				{(["lp", "hp", "bp"] as const).map((t) => (
 					<CzButton
@@ -174,6 +147,6 @@ export default function SynthFilterPanel({
 					valueFormatter={(v) => `${Math.round(v * 100)}%`}
 				/>
 			</div>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

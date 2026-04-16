@@ -19,7 +19,7 @@ export function ControlKnob({
 	max = 1,
 	label,
 	color = "#f6f06d",
-	size = 48,
+	size = 32,
 	valueFormatter,
 	defaultValue,
 }: ControlKnobProps) {

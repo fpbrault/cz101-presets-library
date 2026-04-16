@@ -1,14 +1,12 @@
 import { useMemo } from "react";
 import ControlKnob from "@/components/ControlKnob";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type LfoWaveform = "sine" | "triangle" | "square" | "saw";
 type LfoTarget = "pitch" | "dcw" | "dca" | "filter";
 
 type LfoPanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
 	lfoEnabled: boolean;
 	setLfoEnabled: (v: boolean) => void;
 	lfoWaveform: LfoWaveform;
@@ -24,8 +22,6 @@ type LfoPanelProps = {
 };
 
 export default function LfoPanel({
-	accordionName,
-	defaultOpen,
 	lfoEnabled,
 	setLfoEnabled,
 	lfoWaveform,
@@ -66,37 +62,13 @@ export default function LfoPanel({
 	}, [lfoDepth, lfoRate, lfoWaveform]);
 
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-gold"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="LFO"
-		>
-			<div className="mb-2 flex items-center justify-center gap-2">
-				<span className="text-3xs font-mono text-cz-cream-dim uppercase tracking-wider">
-					Enable
-				</span>
-				<button
-					type="button"
-					className={`cz-btn-arrow ${lfoEnabled ? "bg-cz-gold" : ""}`}
-					onClick={() => setLfoEnabled(!lfoEnabled)}
-				>
-					<span
-						className={`text-5xs font-mono font-bold uppercase tracking-wider ${
-							lfoEnabled ? "text-white" : "text-cz-cream-dim"
-						}`}
-					>
-						{lfoEnabled ? "On" : "Off"}
-					</span>
-				</button>
-			</div>
-			<div className="mb-3 overflow-hidden rounded-xl border border-cz-border bg-cz-inset p-3">
-				<div className="mb-2 cz-light-blue justify-between">
-					<span>LFO Visual</span>
-					<span>{lfoTarget}</span>
-				</div>
+		<SynthPanelContainer
+			showEnableToggle
+			enabled={lfoEnabled}
+			onToggleEnabled={setLfoEnabled}
+			visualTitle="LFO Visual"
+			visualMeta={lfoTarget}
+			visual={
 				<svg
 					viewBox="0 0 220 92"
 					className="h-24 w-full rounded-lg border border-cz-border bg-cz-panel"
@@ -128,7 +100,8 @@ export default function LfoPanel({
 						points={lfoDisplayPath}
 					/>
 				</svg>
-			</div>
+			}
+		>
 			<div className="flex flex-wrap gap-1 mb-2">
 				{(["sine", "triangle", "square", "saw"] as const).map((w) => (
 					<CzButton
@@ -196,6 +169,6 @@ export default function LfoPanel({
 					))}
 				</div>
 			</div>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }

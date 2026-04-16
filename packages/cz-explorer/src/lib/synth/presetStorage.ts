@@ -19,6 +19,7 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	algoBlendB: 0,
 	intPmAmount: 0,
 	intPmRatio: 2,
+	phaseModEnabled: false,
 	pmPre: true,
 	windowType: "off",
 	volume: 1,
@@ -43,11 +44,14 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	velocityTarget: "amp",
 	chorusRate: 0.8,
 	chorusDepth: 1,
+	chorusEnabled: false,
 	chorusMix: 0,
 	delayTime: 0.3,
 	delayFeedback: 0.35,
+	delayEnabled: false,
 	delayMix: 0,
 	reverbSize: 0.5,
+	reverbEnabled: false,
 	reverbMix: 0,
 	lineSelect: "L1+L2",
 	modMode: "normal",
@@ -90,6 +94,7 @@ export interface SynthPresetData {
 	algoBlendB: number;
 	intPmAmount: number;
 	intPmRatio: number;
+	phaseModEnabled: boolean;
 	pmPre: boolean;
 	windowType: string;
 	volume: number;
@@ -114,11 +119,14 @@ export interface SynthPresetData {
 	velocityTarget: string;
 	chorusRate: number;
 	chorusDepth: number;
+	chorusEnabled: boolean;
 	chorusMix: number;
 	delayTime: number;
 	delayFeedback: number;
+	delayEnabled: boolean;
 	delayMix: number;
 	reverbSize: number;
+	reverbEnabled: boolean;
 	reverbMix: number;
 	lineSelect: "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
 	modMode: "normal" | "ring" | "noise";

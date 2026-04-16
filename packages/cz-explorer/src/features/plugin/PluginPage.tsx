@@ -247,8 +247,6 @@ function sendParam(parameterId: number, value: number) {
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
 
-const ACCORDION_NAME = "plugin-aside-accordion";
-
 export default function PluginPage() {
 	const [warpAAmount, setWarpAAmount] = useState(0);
 	const [warpBAmount, setWarpBAmount] = useState(0);
@@ -1459,14 +1457,11 @@ export default function PluginPage() {
 						setScopeVerticalZoom={setScopeVerticalZoom}
 						scopeTriggerLevel={scopeTriggerLevel}
 						setScopeTriggerLevel={setScopeTriggerLevel}
-						open={true}
 					/>
 
 					<div className="divider" />
 
 					<GlobalVoicePanel
-						accordionName={ACCORDION_NAME}
-						defaultOpen={true}
 						volume={volume}
 						setVolume={setVolume}
 						polyMode={polyMode}
@@ -1479,7 +1474,6 @@ export default function PluginPage() {
 						setModWheelVibratoDepth={setModWheelVibratoDepth}
 					/>
 					<PhaseModPanel
-						accordionName={ACCORDION_NAME}
 						intPmAmount={intPmAmount}
 						setIntPmAmount={setIntPmAmount}
 						intPmRatio={intPmRatio}
@@ -1488,7 +1482,6 @@ export default function PluginPage() {
 						setPmPre={setPmPre}
 					/>
 					<VibratoPanel
-						accordionName={ACCORDION_NAME}
 						vibratoEnabled={vibratoEnabled}
 						setVibratoEnabled={setVibratoEnabled}
 						vibratoWave={vibratoWave}
@@ -1501,7 +1494,6 @@ export default function PluginPage() {
 						setVibratoDelay={setVibratoDelay}
 					/>
 					<PortamentoPanel
-						accordionName={ACCORDION_NAME}
 						portamentoEnabled={portamentoEnabled}
 						setPortamentoEnabled={setPortamentoEnabled}
 						portamentoMode={portamentoMode}
@@ -1512,7 +1504,6 @@ export default function PluginPage() {
 						setPortamentoTime={setPortamentoTime}
 					/>
 					<LfoPanel
-						accordionName={ACCORDION_NAME}
 						lfoEnabled={lfoEnabled}
 						setLfoEnabled={setLfoEnabled}
 						lfoWaveform={lfoWaveform}
@@ -1527,7 +1518,6 @@ export default function PluginPage() {
 						setLfoTarget={setLfoTarget}
 					/>
 					<SynthFilterPanel
-						accordionName={ACCORDION_NAME}
 						filterEnabled={filterEnabled}
 						setFilterEnabled={setFilterEnabled}
 						filterType={filterType}
@@ -1540,7 +1530,6 @@ export default function PluginPage() {
 						setFilterEnvAmount={setFilterEnvAmount}
 					/>
 					<ChorusPanel
-						accordionName={ACCORDION_NAME}
 						rate={chorusRate}
 						setRate={setChorusRate}
 						depth={chorusDepth}
@@ -1549,7 +1538,6 @@ export default function PluginPage() {
 						setMix={setChorusMix}
 					/>
 					<DelayPanel
-						accordionName={ACCORDION_NAME}
 						time={delayTime}
 						setTime={setDelayTime}
 						feedback={delayFeedback}
@@ -1558,7 +1546,6 @@ export default function PluginPage() {
 						setMix={setDelayMix}
 					/>
 					<ReverbPanel
-						accordionName={ACCORDION_NAME}
 						size={reverbSize}
 						setSize={setReverbSize}
 						mix={reverbMix}

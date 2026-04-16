@@ -1,13 +1,11 @@
 import ControlKnob from "@/components/ControlKnob";
-import CollapsibleCard from "@/components/ui/CollapsibleCard";
 import CzButton from "@/components/ui/CzButton";
+import SynthPanelContainer from "./SynthPanelContainer";
 
 type PolyMode = "poly8" | "mono";
 type VelocityTarget = "amp" | "dcw" | "both" | "off";
 
 type GlobalVoicePanelProps = {
-	accordionName: string;
-	defaultOpen?: boolean;
 	volume: number;
 	setVolume: (v: number) => void;
 	polyMode: PolyMode;
@@ -21,8 +19,6 @@ type GlobalVoicePanelProps = {
 };
 
 export default function GlobalVoicePanel({
-	accordionName,
-	defaultOpen,
 	volume,
 	setVolume,
 	polyMode,
@@ -35,14 +31,7 @@ export default function GlobalVoicePanel({
 	setModWheelVibratoDepth,
 }: GlobalVoicePanelProps) {
 	return (
-		<CollapsibleCard
-			mode="radio"
-			name={accordionName}
-			variant="panel-slanted"
-			defaultopen={defaultOpen}
-			titleClassName="pr-3"
-			title="Global"
-		>
+		<SynthPanelContainer>
 			<div className="mb-3 flex justify-center">
 				<ControlKnob
 					value={volume}
@@ -117,6 +106,6 @@ export default function GlobalVoicePanel({
 					/>
 				</div>
 			</div>
-		</CollapsibleCard>
+		</SynthPanelContainer>
 	);
 }
