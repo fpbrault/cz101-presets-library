@@ -1854,7 +1854,7 @@ export default function PhaseDistortionVisualizer() {
 
 			<div className="px-1 grid flex-1 min-h-0 min-w-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)] overflow-hidden">
 				<aside className="overflow-y-auto min-h-0 space-y-0 [scrollbar-gutter:stable]">
-					<div className="px-4 md:px-6 -mt-1 mx-auto">
+					<div className="px-4 -mt-1 mx-auto">
 						<SynthLcdDisplay
 							primaryText={lcdPrimaryText}
 							secondaryText={lcdSecondaryText}
@@ -1932,7 +1932,7 @@ export default function PhaseDistortionVisualizer() {
 					</div>
 
 					<PhaseLinesSection
-						className="flex-1 min-h-0"
+						className="flex-1 min-h-0 max-w-5xl max-h-164"
 						lineSelect={lineSelect}
 						onActiveTabChange={setActivePhaseLineTab}
 						line1={{

@@ -1415,7 +1415,7 @@ export default function PluginPage() {
 	// ── Render ────────────────────────────────────────────────────────────────
 	return (
 		<div
-			className="h-full bg-cz-body flex flex-col overflow-hidden gap-4 w-full"
+			className="h-full bg-cz-panel flex flex-col overflow-hidden gap-4 w-full"
 			style={{ zoom: `${uiScale}%` }}
 		>
 			<SynthHeader
@@ -1453,7 +1453,7 @@ export default function PluginPage() {
 				</div>
 			</div>
 
-			<div className="px-4 md:px-6 grid flex-1 min-h-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)]">
+			<div className="px-4 grid flex-1 min-h-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="overflow-y-auto min-h-0 pb-4 space-y-0 [scrollbar-gutter:stable]">
 					{/* ScopePanel — live PCM feed from Rust via window.__czOnScope */}
 					<ScopePanel
