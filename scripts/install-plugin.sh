@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install built plugin bundles from target/ to system plugin directories
+# Install built plugin bundles from package-local target/ to system plugin directories
 # Usage: ./scripts/install-plugin.sh
 set -euo pipefail
 
@@ -14,7 +14,22 @@ INSTALL_AUV3="${INSTALL_AUV3:-0}"
 REMOVE_INSTALLED_AUV2="${REMOVE_INSTALLED_AUV2:-0}"
 REMOVE_INSTALLED_AUV3="${REMOVE_INSTALLED_AUV3:-1}"
 PLUGIN_NAME="CZ-101 Phase Distortion"
-TARGET_DIR="$RUST_WORKSPACE/target/$PROFILE"
+
+# Mirror cargo's target-dir resolution used by build scripts.
+# - Absolute CARGO_TARGET_DIR is used as-is
+# - Relative CARGO_TARGET_DIR is resolved from workspace root
+# - Default falls back to the plugin package-local target directory
+if [[ -n "${CARGO_TARGET_DIR:-}" ]]; then
+  if [[ "$CARGO_TARGET_DIR" = /* ]]; then
+    TARGET_ROOT="$CARGO_TARGET_DIR"
+  else
+    TARGET_ROOT="$RUST_WORKSPACE/$CARGO_TARGET_DIR"
+  fi
+else
+  TARGET_ROOT="$RUST_WORKSPACE/packages/cosmo-pd101/target"
+fi
+
+TARGET_DIR="$TARGET_ROOT/$PROFILE"
 
 VST3_SYSTEM="$HOME/Library/Audio/Plug-Ins/VST3"
 AU_SYSTEM="$HOME/Library/Audio/Plug-Ins/Components"

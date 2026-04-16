@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"dev": "tauri dev --config tauri.conf.json",
-		"build": "tauri build --config tauri.conf.json"
+		"dev": "CARGO_TARGET_DIR=target tauri dev --config tauri.conf.json",
+		"build": "CARGO_TARGET_DIR=target tauri build --config tauri.conf.json"
 	}
 }

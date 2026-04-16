@@ -11,7 +11,7 @@ mod vst3;
 use std::path::PathBuf;
 use std::process::Command;
 
-use util::{print_error, Arch};
+use util::{cargo_target_dir_for_package, print_error, Arch};
 
 // =============================================================================
 // Configuration Structs
@@ -258,7 +258,8 @@ fn bundle(config: &BundleConfig) -> Result<(), String> {
     build::build_webview(&package_dir, config.verbose)?;
 
     // Determine paths
-    let target_dir = workspace_root.join("target").join(profile_str);
+    let target_dir =
+        cargo_target_dir_for_package(&workspace_root, &config.package).join(profile_str);
 
     // Build and bundle AU (macOS only) - build once, bundle for each requested format
     if (config.build_auv2 || config.build_auv3) && cfg!(target_os = "macos") {

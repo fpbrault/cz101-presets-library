@@ -102,6 +102,37 @@ impl Arch {
     }
 }
 
+/// Returns Cargo's effective target directory, honoring CARGO_TARGET_DIR.
+///
+/// Relative CARGO_TARGET_DIR values are resolved from the workspace root,
+/// matching how xtask invokes cargo commands.
+#[must_use]
+pub fn cargo_target_dir(workspace_root: &Path) -> PathBuf {
+    if let Some(target_dir) = std::env::var_os("CARGO_TARGET_DIR") {
+        let path = PathBuf::from(target_dir);
+        if path.is_absolute() {
+            path
+        } else {
+            workspace_root.join(path)
+        }
+    } else {
+        workspace_root.join("target")
+    }
+}
+
+/// Returns Cargo's effective target directory for a specific package.
+///
+/// If CARGO_TARGET_DIR is set, that value is honored.
+/// Otherwise this defaults to the package-local target directory.
+#[must_use]
+pub fn cargo_target_dir_for_package(workspace_root: &Path, package: &str) -> PathBuf {
+    if std::env::var_os("CARGO_TARGET_DIR").is_some() {
+        cargo_target_dir(workspace_root)
+    } else {
+        package_target_dir(workspace_root, package)
+    }
+}
+
 /// Returns the package-local Cargo target directory.
 ///
 /// Example: <workspace>/packages/cosmo-pd101/target

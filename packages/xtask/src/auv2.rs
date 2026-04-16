@@ -6,6 +6,7 @@ use std::process::Command;
 
 use crate::build::get_version_info;
 use crate::util::{
+    cargo_target_dir_for_package,
     codesign_bundle, combine_or_rename_binaries, detect_au_component_info,
     detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags, install_bundle,
     shorten_path, to_auv2_component_name, to_pascal_case, Arch, PathExt,
@@ -81,7 +82,9 @@ pub fn bundle_auv2(
 
     // Generate ObjC wrapper with factory function
     let wrapper_source = generate_auv2_wrapper_source(package, &component_type);
-    let gen_dir = workspace_root.join("target/au-gen").join(package);
+    let gen_dir = cargo_target_dir_for_package(workspace_root, package)
+        .join("au-gen")
+        .join(package);
     fs::create_dir_all(&gen_dir).map_err(|e| format!("Failed to create gen dir: {}", e))?;
     let wrapper_path = gen_dir.join("auv2_wrapper.m");
     fs::write(&wrapper_path, wrapper_source)

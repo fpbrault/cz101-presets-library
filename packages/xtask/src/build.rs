@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::util::{
-    combine_or_rename_binaries, to_au_bundle_name, to_auv2_component_name, to_pascal_case,
-    to_vst3_bundle_name, Arch, PathExt,
+    cargo_target_dir_for_package, combine_or_rename_binaries, to_au_bundle_name,
+    to_auv2_component_name, to_pascal_case, to_vst3_bundle_name, Arch, PathExt,
 };
 
 /// Read version from workspace Cargo.toml and convert to Apple's version integer format
@@ -149,6 +149,7 @@ pub fn build_native(
     let profile = if release { "release" } else { "debug" };
     let lib_name = package.replace('-', "_");
     let dylib_name = format!("lib{}.dylib", lib_name);
+    let target_root = cargo_target_dir_for_package(workspace_root, package);
 
     // AU requires additional setup (beamer-au and ObjC code)
     let rustflags = if is_au_build(format) {
@@ -174,6 +175,7 @@ pub fn build_native(
             .arg(target)
             .arg("--features")
             .arg(format)
+            .env("CARGO_TARGET_DIR", &target_root)
             .current_dir(workspace_root);
         if release {
             cmd.arg("--release");
@@ -190,6 +192,7 @@ pub fn build_native(
             .arg(target)
             .arg("--features")
             .arg(format)
+            .env("CARGO_TARGET_DIR", &target_root)
             .current_dir(workspace_root);
         if release {
             cmd.arg("--release");
@@ -204,8 +207,7 @@ pub fn build_native(
     }
 
     // Output is always in target/<target>/<profile>/
-    let dylib_path = workspace_root
-        .join("target")
+    let dylib_path = target_root
         .join(target)
         .join(profile)
         .join(&dylib_name);
@@ -231,6 +233,7 @@ pub fn build_universal(
     let profile = if release { "release" } else { "debug" };
     let lib_name = package.replace('-', "_");
     let dylib_name = format!("lib{}.dylib", lib_name);
+    let target_root = cargo_target_dir_for_package(workspace_root, package);
 
     // AU requires additional setup (beamer-au and ObjC code)
     let (rustflags_x86, rustflags_arm) = if is_au_build(format) {
@@ -265,6 +268,7 @@ pub fn build_universal(
             .arg("x86_64-apple-darwin")
             .arg("--features")
             .arg(format)
+            .env("CARGO_TARGET_DIR", &target_root)
             .current_dir(workspace_root);
         if release {
             cmd.arg("--release");
@@ -281,6 +285,7 @@ pub fn build_universal(
             .arg("x86_64-apple-darwin")
             .arg("--features")
             .arg(format)
+            .env("CARGO_TARGET_DIR", &target_root)
             .current_dir(workspace_root);
         if release {
             cmd.arg("--release");
@@ -305,6 +310,7 @@ pub fn build_universal(
             .arg("aarch64-apple-darwin")
             .arg("--features")
             .arg(format)
+            .env("CARGO_TARGET_DIR", &target_root)
             .current_dir(workspace_root);
         if release {
             cmd.arg("--release");
@@ -321,6 +327,7 @@ pub fn build_universal(
             .arg("aarch64-apple-darwin")
             .arg("--features")
             .arg(format)
+            .env("CARGO_TARGET_DIR", &target_root)
             .current_dir(workspace_root);
         if release {
             cmd.arg("--release");
@@ -335,23 +342,18 @@ pub fn build_universal(
     }
 
     // Paths to the built binaries
-    let x86_64_path = workspace_root
-        .join("target")
+    let x86_64_path = target_root
         .join("x86_64-apple-darwin")
         .join(profile)
         .join(&dylib_name);
 
-    let arm64_path = workspace_root
-        .join("target")
+    let arm64_path = target_root
         .join("aarch64-apple-darwin")
         .join(profile)
         .join(&dylib_name);
 
     // Output path for universal binary
-    let universal_path = workspace_root
-        .join("target")
-        .join(profile)
-        .join(&dylib_name);
+    let universal_path = target_root.join(profile).join(&dylib_name);
 
     // Create target directory if it doesn't exist
     if let Some(parent) = universal_path.parent() {
@@ -385,7 +387,8 @@ pub fn clean_build_caches(
     build_vst3: bool,
 ) -> Result<(), String> {
     let profile = if release { "release" } else { "debug" };
-    let target_dir = workspace_root.join("target").join(profile);
+    let target_root = cargo_target_dir_for_package(workspace_root, package);
+    let target_dir = target_root.join(profile);
     let clean_au = build_auv2 || build_auv3;
 
     // Build description of what we're cleaning
@@ -406,7 +409,7 @@ pub fn clean_build_caches(
 
     // Clean beamer-au cc cache (compiled ObjC objects) - only for AU builds
     if clean_au {
-        let build_dir = workspace_root.join("target").join(profile).join("build");
+        let build_dir = target_root.join(profile).join("build");
         if build_dir.exists() {
             for entry in fs::read_dir(&build_dir).map_err(|e| e.to_string())? {
                 let entry = entry.map_err(|e| e.to_string())?;
@@ -478,10 +481,10 @@ pub fn compile_plugin_objc(
     target: &str,
 ) -> Result<PathBuf, String> {
     let lib_name = plugin_name.replace('-', "_");
+    let target_root = cargo_target_dir_for_package(workspace_root, plugin_name);
 
     // Create output directory for generated sources and compiled libraries
-    let gen_dir = workspace_root
-        .join("target")
+    let gen_dir = target_root
         .join("au-gen")
         .join(plugin_name)
         .join(target);

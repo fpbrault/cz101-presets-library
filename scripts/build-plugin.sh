@@ -26,7 +26,7 @@ echo "==> Building CZ-101 Phase Distortion plugin ($PROFILE)..."
 echo "    Using beamer xtask: cargo xtask bundle cosmo-pd101 ${FORMAT_FLAGS[*]}"
 
 cd "$RUST_WORKSPACE"
-cargo run -p xtask -- bundle cosmo-pd101 "${FORMAT_FLAGS[@]}" $PROFILE_ARG
+cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 "${FORMAT_FLAGS[@]}" $PROFILE_ARG
 
-echo "==> Done. Bundles are in $RUST_WORKSPACE/target/$PROFILE/"
+echo "==> Done. Bundles are in $RUST_WORKSPACE/packages/cosmo-pd101/target/$PROFILE/"
 echo "    Run 'bun run plugin:install' to copy to system plugin dirs."

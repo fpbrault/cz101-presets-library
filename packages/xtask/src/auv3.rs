@@ -9,6 +9,7 @@ use std::process::Command;
 
 use crate::build::get_version_info;
 use crate::util::{
+    cargo_target_dir_for_package,
     codesign_bundle, combine_or_rename_binaries, detect_au_component_info,
     detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags, install_bundle,
     shorten_path, to_au_bundle_name, to_pascal_case, Arch, PathExt,
@@ -193,7 +194,9 @@ pub fn bundle_auv3(
 
     // Generate plugin-specific appex_stub.m (no main function - uses NSExtensionMain)
     let appex_stub_source = generate_appex_stub_source(package);
-    let appex_gen_dir = workspace_root.join("target/au-gen").join(package);
+    let appex_gen_dir = cargo_target_dir_for_package(workspace_root, package)
+        .join("au-gen")
+        .join(package);
     fs::create_dir_all(&appex_gen_dir)
         .map_err(|e| format!("Failed to create appex gen dir: {}", e))?;
     let appex_stub_path = appex_gen_dir.join("appex_stub.m");
