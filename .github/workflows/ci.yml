@@ -31,9 +31,6 @@ jobs:
             build_cmd: bun run build:plugin:universal
           - os: windows-latest
             platform: windows
-            build_cmd: cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 --vst3 --release
-          - os: ubuntu-latest
-            platform: linux
             build_cmd: bash ./scripts/build-plugin.sh --release
     runs-on: ${{ matrix.os }}
     steps:

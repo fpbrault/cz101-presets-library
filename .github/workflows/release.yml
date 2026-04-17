@@ -56,14 +56,6 @@ jobs:
             artifact_paths: |
               dist/plugin-installers/windows/cosmo-plugins-windows-${{ github.ref_name }}.zip
               packages/cosmo-pd101/target/release/CosmoPd101.vst3
-          - os: ubuntu-latest
-            platform: linux
-            build_cmd: bash ./scripts/build-plugin.sh --release
-            plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
-            installer_primary: dist/plugin-installers/linux/cosmo-plugins-linux-${{ github.ref_name }}.tar.gz
-            artifact_paths: |
-              dist/plugin-installers/linux/cosmo-plugins-linux-${{ github.ref_name }}.tar.gz
-              packages/cosmo-pd101/target/release/CosmoPd101.vst3
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -151,7 +143,6 @@ jobs:
           test -e "release-assets/cosmo-plugins-macos-universal-${tag}.pkg"
           test -e "release-assets/cosmo-plugins-macos-universal-${tag}.zip"
           test -e "release-assets/cosmo-plugins-windows-${tag}.zip"
-          test -e "release-assets/cosmo-plugins-linux-${tag}.tar.gz"
 
       - name: Create release
         uses: softprops/action-gh-release@v2
