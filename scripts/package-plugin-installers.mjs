@@ -82,6 +82,12 @@ function run(cmd, args, opts = {}) {
 		env: opts.env ?? process.env,
 	});
 
+	if (result.error) {
+		throw new Error(
+			`${cmd} ${args.join(" ")} failed to start: ${result.error.message}`,
+		);
+	}
+
 	if (result.status !== 0) {
 		throw new Error(
 			`${cmd} ${args.join(" ")} failed with exit code ${result.status}`,
@@ -116,6 +122,36 @@ function toWindowsPath(filePath) {
 
 function escapeNsisString(value) {
 	return value.replaceAll("$", "$$").replaceAll('"', '$\\"');
+}
+
+function resolveMakensisCommand() {
+	if (process.platform !== "win32") {
+		return "makensis";
+	}
+
+	const candidates = [
+		path.join("C:", "ProgramData", "chocolatey", "bin", "makensis.exe"),
+		path.join("C:", "Program Files (x86)", "NSIS", "makensis.exe"),
+		path.join("C:", "Program Files", "NSIS", "makensis.exe"),
+	];
+
+	const programFilesX86 = process.env["ProgramFiles(x86)"];
+	if (programFilesX86) {
+		candidates.unshift(path.join(programFilesX86, "NSIS", "makensis.exe"));
+	}
+
+	const programFiles = process.env.ProgramFiles;
+	if (programFiles) {
+		candidates.unshift(path.join(programFiles, "NSIS", "makensis.exe"));
+	}
+
+	for (const candidate of candidates) {
+		if (existsSync(candidate)) {
+			return candidate;
+		}
+	}
+
+	return "makensis.exe";
 }
 
 function stagePluginBundle(sourceDir, destDir) {
@@ -352,7 +388,7 @@ function packageWindows({ sourceDir, outputDir, version }) {
 	].join("\r\n");
 
 	writeText(installerScriptPath, nsisScript);
-	run("makensis", ["/V2", installerScriptPath]);
+	run(resolveMakensisCommand(), ["/V2", installerScriptPath]);
 
 	return [exeOut];
 }
