@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -68,26 +70,6 @@ jobs:
             installer_glob: dist/plugin-installers/windows/*.exe
             artifact_paths: |
               dist/plugin-installers/windows/*
-              packages/cosmo-pd101/target/release/CosmoPd101.vst3
-          - os: ubuntu-latest
-            platform: linux
-            arch: x86_64
-            build_cmd: bun run build:plugin:linux
-            plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
-            secondary_bundle_path: ""
-            installer_glob: dist/plugin-installers/linux/*.tar.gz
-            artifact_paths: |
-              dist/plugin-installers/linux/*
-              packages/cosmo-pd101/target/release/CosmoPd101.vst3
-          - os: ubuntu-24.04-arm
-            platform: linux
-            arch: arm64
-            build_cmd: bun run build:plugin:linux
-            plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
-            secondary_bundle_path: ""
-            installer_glob: dist/plugin-installers/linux/*.tar.gz
-            artifact_paths: |
-              dist/plugin-installers/linux/*
               packages/cosmo-pd101/target/release/CosmoPd101.vst3
     runs-on: ${{ matrix.os }}
     steps:
@@ -151,6 +133,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -188,7 +172,6 @@ jobs:
           compgen -G "release-assets/**/cosmo-plugins-macos-universal-v*.pkg" > /dev/null
           compgen -G "release-assets/**/cosmo-plugins-macos-universal-v*.zip" > /dev/null
           compgen -G "release-assets/**/cz101-plugins-windows-*.exe" > /dev/null
-          compgen -G "release-assets/**/cz101-plugins-linux-*.tar.gz" > /dev/null
 
           compgen -G "release-assets/**/CosmoPd101.vst3/**" > /dev/null
           compgen -G "release-assets/**/CosmoPd101.component/**" > /dev/null || true
