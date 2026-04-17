@@ -27,13 +27,6 @@ jobs:
       - name: Build web app
         run: bun run build:web
 
-      - name: Upload web artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-dist
-          path: packages/cz-explorer/dist/**
-          if-no-files-found: warn
-
   build-plugins:
     name: Build and package plugins (${{ matrix.platform }}-${{ matrix.arch }})
     strategy:
@@ -46,11 +39,15 @@ jobs:
             build_cmd: bun run build:plugin:universal
             plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
             secondary_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.component
-            installer_glob: dist/plugin-installers/macos/*
+            installer_glob: dist/plugin-installers/macos/cosmo-plugins-macos-universal-v*.pkg
+            bare_glob: |
+              dist/plugin-installers/macos/cosmo-pd101-plugin-macos-universal-v*-vst3.zip
+              dist/plugin-installers/macos/cosmo-pd101-plugin-macos-universal-v*-auv2.zip
             artifact_paths: |
-              dist/plugin-installers/macos/*
-              packages/cosmo-pd101/target/release/CosmoPd101.vst3
-              packages/cosmo-pd101/target/release/CosmoPd101.component
+              dist/plugin-installers/macos/cosmo-plugins-macos-universal-v*.pkg
+              dist/plugin-installers/macos/cosmo-plugins-macos-universal-v*.zip
+              dist/plugin-installers/macos/cosmo-pd101-plugin-macos-universal-v*-vst3.zip
+              dist/plugin-installers/macos/cosmo-pd101-plugin-macos-universal-v*-auv2.zip
           - os: windows-latest
             platform: windows
             arch: x86_64
@@ -58,9 +55,10 @@ jobs:
             plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
             secondary_bundle_path: ""
             installer_glob: dist/plugin-installers/windows/*x86_64-win-v*.exe
+            bare_glob: dist/plugin-installers/windows/*x86_64-win-v*-vst3.zip
             artifact_paths: |
-              dist/plugin-installers/windows/*
-              packages/cosmo-pd101/target/release/CosmoPd101.vst3
+              dist/plugin-installers/windows/*x86_64-win-v*.exe
+              dist/plugin-installers/windows/*x86_64-win-v*-vst3.zip
           - os: windows-11-arm
             platform: windows
             arch: arm64
@@ -68,9 +66,10 @@ jobs:
             plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
             secondary_bundle_path: ""
             installer_glob: dist/plugin-installers/windows/*aarch64-win-v*.exe
+            bare_glob: dist/plugin-installers/windows/*aarch64-win-v*-vst3.zip
             artifact_paths: |
-              dist/plugin-installers/windows/*
-              packages/cosmo-pd101/target/release/CosmoPd101.vst3
+              dist/plugin-installers/windows/*aarch64-win-v*.exe
+              dist/plugin-installers/windows/*aarch64-win-v*-vst3.zip
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -106,6 +105,12 @@ jobs:
             test -e "${{ matrix.secondary_bundle_path }}"
           fi
           compgen -G "${{ matrix.installer_glob }}" > /dev/null
+          while IFS= read -r pattern; do
+            [[ -z "$pattern" ]] && continue
+            compgen -G "$pattern" > /dev/null
+          done <<'EOF'
+          ${{ matrix.bare_glob }}
+          EOF
 
       - name: Upload plugin artifacts
         uses: actions/upload-artifact@v4
@@ -152,7 +157,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.platform }}-${{ matrix.arch }}
-          path: packages/cz-explorer-desktop/target/release/bundle/**
+          path: |
+            packages/cz-explorer-desktop/target/release/bundle/**/*.dmg
+            packages/cz-explorer-desktop/target/release/bundle/**/*.app.tar.gz
+            packages/cz-explorer-desktop/target/release/bundle/**/*setup.exe
+            packages/cz-explorer-desktop/target/release/bundle/**/*.msi
           if-no-files-found: error
 
   create-release:
@@ -172,17 +181,25 @@ jobs:
           shopt -s globstar
 
           compgen -G "release-assets/**/cosmo-plugins-macos-universal-v*.pkg" > /dev/null
-          compgen -G "release-assets/**/cosmo-plugins-macos-universal-v*.zip" > /dev/null
-          compgen -G "release-assets/**/cz101-plugins-windows-*.exe" > /dev/null
+          compgen -G "release-assets/**/cosmo-pd101-plugin-macos-universal-v*-vst3.zip" > /dev/null
+          compgen -G "release-assets/**/cosmo-pd101-plugin-macos-universal-v*-auv2.zip" > /dev/null
+          compgen -G "release-assets/**/cosmo-pd101-plugin-windows-*.exe" > /dev/null
+          compgen -G "release-assets/**/cosmo-pd101-plugin-windows-*-v*-vst3.zip" > /dev/null
 
-          compgen -G "release-assets/**/CosmoPd101.vst3/**" > /dev/null
-          compgen -G "release-assets/**/CosmoPd101.component/**" > /dev/null || true
-
-          compgen -G "release-assets/**/*.dmg" > /dev/null || compgen -G "release-assets/**/*.app.tar.gz" > /dev/null
-          compgen -G "release-assets/**/*.msi" > /dev/null || compgen -G "release-assets/**/*.exe" > /dev/null
+          compgen -G "release-assets/**/cz101-presets-library_*.dmg" > /dev/null || compgen -G "release-assets/**/cz101-presets-library_*.app.tar.gz" > /dev/null
+          compgen -G "release-assets/**/cz101-presets-library_*setup.exe" > /dev/null || compgen -G "release-assets/**/cz101-presets-library_*.msi" > /dev/null
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: release-assets/**
+          files: |
+            release-assets/**/cosmo-plugins-macos-universal-v*.pkg
+            release-assets/**/cosmo-pd101-plugin-macos-universal-v*-vst3.zip
+            release-assets/**/cosmo-pd101-plugin-macos-universal-v*-auv2.zip
+            release-assets/**/cosmo-pd101-plugin-windows-*.exe
+            release-assets/**/cosmo-pd101-plugin-windows-*-v*-vst3.zip
+            release-assets/**/cz101-presets-library_*.dmg
+            release-assets/**/cz101-presets-library_*.app.tar.gz
+            release-assets/**/cz101-presets-library_*setup.exe
+            release-assets/**/cz101-presets-library_*.msi

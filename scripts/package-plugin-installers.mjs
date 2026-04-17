@@ -188,6 +188,32 @@ function stagePluginBundle(sourceDir, destDir) {
 	cpSync(sourceDir, destDir, { recursive: true });
 }
 
+function packageBareMacosBundle(outputDir, version, bundleName, formatLabel) {
+	const archiveBaseName = `cosmo-pd101-plugin-macos-universal-v${version}-${formatLabel}.zip`;
+	const archiveOut = path.join(outputDir, archiveBaseName);
+	rmSync(archiveOut, { force: true });
+	run("ditto", [
+		"-c",
+		"-k",
+		"--keepParent",
+		path.join(outputDir, bundleName),
+		archiveOut,
+	]);
+	return archiveOut;
+}
+
+function packageBareWindowsBundle(outputDir, version, bundleName, archLabel) {
+	const archiveBaseName = `cosmo-pd101-plugin-windows-${archLabel}-v${version}-vst3.zip`;
+	const archiveOut = path.join(outputDir, archiveBaseName);
+	rmSync(archiveOut, { force: true });
+	run("powershell", [
+		"-NoProfile",
+		"-Command",
+		`Compress-Archive -Path '${path.join(outputDir, bundleName)}' -DestinationPath '${archiveOut}' -Force`,
+	]);
+	return archiveOut;
+}
+
 function assertBundleContainsFile(bundleDir, relativeFilePath, platformLabel) {
 	const expectedPath = path.join(bundleDir, ...relativeFilePath.split("/"));
 	if (!existsSync(expectedPath)) {
@@ -278,7 +304,7 @@ function packageMacos({ sourceDir, outputDir, version }) {
 		"--root",
 		payloadVst3Root,
 		"--identifier",
-		"com.cz101.presets.plugins.vst3",
+		"com.cosmo.pd101.plugins.vst3",
 		"--version",
 		version,
 		"--install-location",
@@ -290,7 +316,7 @@ function packageMacos({ sourceDir, outputDir, version }) {
 		"--root",
 		payloadAuv2Root,
 		"--identifier",
-		"com.cz101.presets.plugins.auv2",
+		"com.cosmo.pd101.plugins.auv2",
 		"--version",
 		version,
 		"--install-location",
@@ -307,13 +333,13 @@ function packageMacos({ sourceDir, outputDir, version }) {
     <line choice="choice_auv2"/>
   </choices-outline>
   <choice id="choice_vst3" title="VST3 Plugin" description="Install ${bundleVst3Name}" start_selected="true">
-    <pkg-ref id="com.cz101.presets.plugins.vst3"/>
+    <pkg-ref id="com.cosmo.pd101.plugins.vst3"/>
   </choice>
   <choice id="choice_auv2" title="Audio Unit (AUv2) Plugin" description="Install ${bundleAuv2Name}" start_selected="true">
-    <pkg-ref id="com.cz101.presets.plugins.auv2"/>
+    <pkg-ref id="com.cosmo.pd101.plugins.auv2"/>
   </choice>
-  <pkg-ref id="com.cz101.presets.plugins.vst3" version="${version}">${path.basename(vst3ComponentPkg)}</pkg-ref>
-  <pkg-ref id="com.cz101.presets.plugins.auv2" version="${version}">${path.basename(auv2ComponentPkg)}</pkg-ref>
+  <pkg-ref id="com.cosmo.pd101.plugins.vst3" version="${version}">${path.basename(vst3ComponentPkg)}</pkg-ref>
+  <pkg-ref id="com.cosmo.pd101.plugins.auv2" version="${version}">${path.basename(auv2ComponentPkg)}</pkg-ref>
 </installer-gui-script>
 `;
 	writeText(distributionXml, distribution);
@@ -330,7 +356,20 @@ function packageMacos({ sourceDir, outputDir, version }) {
 	rmSync(vst3ComponentPkg, { force: true });
 	rmSync(auv2ComponentPkg, { force: true });
 
-	return [pkgOut, zipOut];
+	const bareVst3Zip = packageBareMacosBundle(
+		outputDir,
+		version,
+		bundleVst3Name,
+		"vst3",
+	);
+	const bareAuv2Zip = packageBareMacosBundle(
+		outputDir,
+		version,
+		bundleAuv2Name,
+		"auv2",
+	);
+
+	return [pkgOut, zipOut, bareVst3Zip, bareAuv2Zip];
 }
 
 function packageWindows({ sourceDir, outputDir, version }) {
@@ -354,7 +393,7 @@ function packageWindows({ sourceDir, outputDir, version }) {
 	}
 
 	const archLabel = archDirs.join("+");
-	const packageBaseName = `cz101-plugins-windows-${archLabel}-v${version}`;
+	const packageBaseName = `cosmo-pd101-plugin-windows-${archLabel}-v${version}`;
 	const stagingRoot = path.join(outputDir, packageBaseName);
 	const payloadRoot = path.join(stagingRoot, "payload");
 	const installerScriptPath = path.join(stagingRoot, `${packageBaseName}.nsi`);
@@ -415,7 +454,14 @@ function packageWindows({ sourceDir, outputDir, version }) {
 	writeText(installerScriptPath, nsisScript);
 	run(resolveMakensisCommand(), ["/V2", installerScriptPath]);
 
-	return [exeOut];
+	const barePluginZip = packageBareWindowsBundle(
+		outputDir,
+		version,
+		bundleVst3Name,
+		archLabel,
+	);
+
+	return [exeOut, barePluginZip];
 }
 
 function packageLinux({ sourceDir, outputDir, version }) {
@@ -439,7 +485,7 @@ function packageLinux({ sourceDir, outputDir, version }) {
 	}
 
 	const archLabel = archDirs.join("+");
-	const packageBaseName = `cz101-plugins-linux-${archLabel}-v${version}`;
+	const packageBaseName = `cosmo-pd101-plugin-linux-${archLabel}-v${version}`;
 	const stagingRoot = path.join(outputDir, packageBaseName);
 	const archiveOut = path.join(outputDir, `${packageBaseName}.tar.gz`);
 
