@@ -54,7 +54,7 @@ jobs:
           - os: windows-latest
             platform: windows
             arch: x86_64
-            build_cmd: cross-env ARCH=x86_64 bun run build:plugin
+            build_cmd: bun run build:plugin
             plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
             secondary_bundle_path: ""
             installer_glob: dist/plugin-installers/windows/*x86_64-win-v*.exe
@@ -64,7 +64,7 @@ jobs:
           - os: windows-11-arm
             platform: windows
             arch: arm64
-            build_cmd: cross-env ARCH=arm64 bun run build:plugin
+            build_cmd: bun run build:plugin
             plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
             secondary_bundle_path: ""
             installer_glob: dist/plugin-installers/windows/*aarch64-win-v*.exe
@@ -85,6 +85,8 @@ jobs:
         run: bun install
 
       - name: Build plugins
+        env:
+          ARCH: ${{ matrix.arch }}
         run: ${{ matrix.build_cmd }}
 
       - name: Install NSIS
