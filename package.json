@@ -7,6 +7,7 @@
 		"packages/*"
 	],
 	"scripts": {
+		"postinstall": "wasm-pack --version || cargo install wasm-pack",
 		"dev": "bun --filter @cosmo/cz-explorer dev",
 		"build": "bun run build:web && bun run build:plugin && bun run build:standalone",
 		"build:engine": "bun --filter @cosmo/cosmo-synth-engine build:wasm",
