@@ -22,6 +22,8 @@ This plan organizes the implementation of CZ-101 synth improvements into phases.
 
 ## Phase 0: Stabilize First
 
+
+
 **Goal**: Fix current syntax/type errors to create a clean baseline.
 
 | Task | Files | Description |
