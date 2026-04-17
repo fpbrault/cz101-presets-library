@@ -4,6 +4,6 @@
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"build:wasm": "CARGO_TARGET_DIR=target wasm-pack build . --target no-modules --out-dir ../cz-explorer/public/cosmo-synth-engine-wasm --features wasm; rm -f ../cz-explorer/public/cosmo-synth-engine-wasm/.gitignore"
+		"build:wasm": "cross-env CARGO_TARGET_DIR=target wasm-pack build . --target no-modules --out-dir ../cz-explorer/public/cosmo-synth-engine-wasm --features wasm && rimraf ../cz-explorer/public/cosmo-synth-engine-wasm/.gitignore"
 	}
 }

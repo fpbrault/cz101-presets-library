@@ -28,5 +28,9 @@
 	},
 	"dependencies": {
 		"tailwindcss": "^4.2.2"
+	},
+	"devDependencies": {
+		"cross-env": "^10.1.0",
+		"rimraf": "^6.1.3"
 	}
 }
