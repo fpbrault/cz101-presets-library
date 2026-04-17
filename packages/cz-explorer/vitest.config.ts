@@ -34,6 +34,8 @@ export default defineConfig({
 					name: "browser",
 					browser: {
 						enabled: true,
+						screenshotDirectory: "../.vitest-attachments/screenshots/cz-explorer",
+						screenshotFailures: false,
 						locators: {
 							testIdAttribute: "data-testid",
 						},

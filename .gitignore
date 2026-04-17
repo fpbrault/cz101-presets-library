@@ -31,7 +31,7 @@ package-lock.json
 
 # Vitest browser test artifacts
 .vitest-attachments/
-src/**/__screenshots__/
+**/__screenshots__/
 
 venv/
 
