@@ -110,6 +110,14 @@ function writeText(filePath, content) {
 	writeFileSync(filePath, content, "utf8");
 }
 
+function toWindowsPath(filePath) {
+	return filePath.replaceAll("/", "\\");
+}
+
+function escapeNsisString(value) {
+	return value.replaceAll("$", "$$").replaceAll('"', '$\\"');
+}
+
 function stagePluginBundle(sourceDir, destDir) {
 	if (!existsSync(sourceDir)) {
 		throw new Error(`Expected plugin bundle at ${sourceDir}`);
@@ -287,59 +295,66 @@ function packageWindows({ sourceDir, outputDir, version }) {
 	const archLabel = archDirs.join("+");
 	const packageBaseName = `cz101-plugins-windows-${archLabel}-v${version}`;
 	const stagingRoot = path.join(outputDir, packageBaseName);
-	const zipOut = path.join(outputDir, `${packageBaseName}.zip`);
+	const payloadRoot = path.join(stagingRoot, "payload");
+	const installerScriptPath = path.join(stagingRoot, `${packageBaseName}.nsi`);
+	const exeOut = path.join(outputDir, `${packageBaseName}.exe`);
+	const productName = `${pluginBaseName} Plugin`;
+	const uninstallExeName = `${productName} Uninstall.exe`;
+	const uninstallRegistryKey =
+		`Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${productName}`;
 
 	rmSync(stagingRoot, { recursive: true, force: true });
-	rmSync(zipOut, { force: true });
+	rmSync(exeOut, { force: true });
 
-	stagePluginBundle(
-		bundleVst3,
-		path.join(stagingRoot, "plugins", "VST3", bundleVst3Name),
-	);
+	stagePluginBundle(bundleVst3, path.join(payloadRoot, bundleVst3Name));
 
-	writeText(
-		path.join(stagingRoot, "install.ps1"),
-		[
-			"$ErrorActionPreference = 'Stop'",
-			"$installVst = Read-Host 'Install VST3 plugin? (Y/n)'",
-			"if ($installVst -match '^[Nn]') { Write-Host 'No plugin selected. Exiting.'; exit 0 }",
-			`$src = Join-Path $PSScriptRoot 'plugins\\VST3\\${bundleVst3Name}'`,
-			`$dst = Join-Path \${env:COMMONPROGRAMFILES} 'VST3\\${bundleVst3Name}'`,
-			"if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }",
-			"Copy-Item $src $dst -Recurse -Force",
-			'Write-Host "Installed $dst"',
-		].join("\r\n"),
-	);
+	const nsisScript = [
+		"Unicode True",
+		"RequestExecutionLevel admin",
+		`Name "${escapeNsisString(productName)}"`,
+		`OutFile "${escapeNsisString(toWindowsPath(exeOut))}"`,
+		'InstallDir "$COMMONFILES64\\VST3"',
+		"ShowInstDetails show",
+		"ShowUnInstDetails show",
+		"",
+		'VIProductVersion "1.0.0.0"',
+		`VIAddVersionKey "ProductName" "${escapeNsisString(productName)}"`,
+		`VIAddVersionKey "ProductVersion" "${escapeNsisString(version)}"`,
+		`VIAddVersionKey "CompanyName" "${escapeNsisString(pluginBaseName)}"`,
+		'VIAddVersionKey "FileDescription" "VST3 plugin installer"',
+		"",
+		"Page directory",
+		"Page instfiles",
+		"UninstPage uninstConfirm",
+		"UninstPage instfiles",
+		"",
+		'Section "Install VST3 Plugin" SEC_MAIN',
+		"  SetShellVarContext all",
+		'  SetOutPath "$INSTDIR"',
+		`  File /r "${escapeNsisString(toWindowsPath(path.join(payloadRoot, bundleVst3Name)))}"`,
+		`  WriteUninstaller "$INSTDIR\\${escapeNsisString(uninstallExeName)}"`,
+		`  WriteRegStr HKLM "${escapeNsisString(uninstallRegistryKey)}" "DisplayName" "${escapeNsisString(productName)}"`,
+		`  WriteRegStr HKLM "${escapeNsisString(uninstallRegistryKey)}" "DisplayVersion" "${escapeNsisString(version)}"`,
+		`  WriteRegStr HKLM "${escapeNsisString(uninstallRegistryKey)}" "Publisher" "${escapeNsisString(pluginBaseName)}"`,
+		`  WriteRegStr HKLM "${escapeNsisString(uninstallRegistryKey)}" "UninstallString" "$INSTDIR\\${escapeNsisString(uninstallExeName)}"`,
+		`  WriteRegStr HKLM "${escapeNsisString(uninstallRegistryKey)}" "QuietUninstallString" "$INSTDIR\\${escapeNsisString(uninstallExeName)} /S"`,
+		`  WriteRegDWORD HKLM "${escapeNsisString(uninstallRegistryKey)}" "NoModify" 1`,
+		`  WriteRegDWORD HKLM "${escapeNsisString(uninstallRegistryKey)}" "NoRepair" 1`,
+		`  DetailPrint "Installed architectures: ${escapeNsisString(archDirs.join(", "))}"`,
+		"SectionEnd",
+		"",
+		'Section "Uninstall"',
+		"  SetShellVarContext all",
+		`  Delete "$INSTDIR\\${escapeNsisString(uninstallExeName)}"`,
+		`  RMDir /r "$INSTDIR\\${escapeNsisString(bundleVst3Name)}"`,
+		`  DeleteRegKey HKLM "${escapeNsisString(uninstallRegistryKey)}"`,
+		"SectionEnd",
+	].join("\r\n");
 
-	writeText(
-		path.join(stagingRoot, "uninstall.ps1"),
-		[
-			"$ErrorActionPreference = 'Stop'",
-			`$dst = Join-Path \${env:COMMONPROGRAMFILES} 'VST3\\${bundleVst3Name}'`,
-			'if (Test-Path $dst) { Remove-Item $dst -Recurse -Force; Write-Host "Removed $dst" } else { Write-Host "Not installed" }',
-		].join("\r\n"),
-	);
+	writeText(installerScriptPath, nsisScript);
+	run("makensis", ["/V2", installerScriptPath]);
 
-	writeText(
-		path.join(stagingRoot, "README.txt"),
-		[
-			"CosmoPd101 Plugin Installer Bundle (Windows)",
-			"",
-			`Included plugin architectures: ${archDirs.join(", ")}`,
-			"",
-			"1. Open PowerShell as Administrator.",
-			"2. Run ./install.ps1 from this folder.",
-			"3. The installer prompts what to install.",
-		].join("\r\n"),
-	);
-
-	run("powershell", [
-		"-NoProfile",
-		"-Command",
-		`Compress-Archive -Path '${stagingRoot}\\*' -DestinationPath '${zipOut}' -Force`,
-	]);
-
-	return [zipOut];
+	return [exeOut];
 }
 
 function packageLinux({ sourceDir, outputDir, version }) {
