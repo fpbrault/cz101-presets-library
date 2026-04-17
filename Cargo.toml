@@ -10,16 +10,24 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/fpbrault/cz101-presets-library"
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
-beamer = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
-beamer-au = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
-beamer-core = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
-beamer-macros = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
-beamer-utils = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
-beamer-vst3 = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
-beamer-webview = { git = "https://github.com/helpermedia/beamer", rev = "9ad6c5c60346dac33c2800399f66a56d080e5843" }
+serde_json = "1"
+log = "0.4"
+vst3 = "0.3"
+syn = { version = "2", features = ["full", "parsing", "printing", "extra-traits"] }
+quote = "1"
+proc-macro2 = "1"
+beamer = { path = "vendor/beamer/crates/beamer" }
+beamer-au = { path = "vendor/beamer/crates/beamer-au" }
+beamer-core = { path = "vendor/beamer/crates/beamer-core" }
+beamer-macros = { path = "vendor/beamer/crates/beamer-macros" }
+beamer-utils = { path = "vendor/beamer/crates/beamer-utils" }
+beamer-vst3 = { path = "vendor/beamer/crates/beamer-vst3" }
+beamer-webview = { path = "vendor/beamer/crates/beamer-webview" }
 
 [workspace.lints]
 clippy.unused_async = "warn"
