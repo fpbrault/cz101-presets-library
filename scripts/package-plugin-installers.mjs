@@ -151,7 +151,32 @@ function resolveMakensisCommand() {
 		}
 	}
 
-	return "makensis.exe";
+	const whereResult = spawnSync("where.exe", ["makensis.exe"], {
+		stdio: ["ignore", "pipe", "ignore"],
+		encoding: "utf8",
+		env: process.env,
+	});
+
+	if (whereResult.status === 0) {
+		const resolvedPath = whereResult.stdout
+			.split(/\r?\n/)
+			.map((line) => line.trim())
+			.find(Boolean);
+
+		if (resolvedPath) {
+			return resolvedPath;
+		}
+	}
+
+	throw new Error(
+		[
+			"Windows plugin packaging requires NSIS, but makensis.exe was not found.",
+			"Install NSIS, then rerun the packaging command.",
+			"Recommended install commands:",
+			"- winget install NSIS.NSIS",
+			"- choco install nsis -y",
+		].join("\n"),
+	);
 }
 
 function stagePluginBundle(sourceDir, destDir) {
