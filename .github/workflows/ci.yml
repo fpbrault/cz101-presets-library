@@ -35,6 +35,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Run plugin build action
         uses: ./.github/actions/build-plugins
@@ -51,6 +53,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Run desktop build action
         uses: ./.github/actions/build-desktop
