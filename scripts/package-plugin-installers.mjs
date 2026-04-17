@@ -1,7 +1,15 @@
 #!/usr/bin/env bun
 
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	cpSync,
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -75,7 +83,9 @@ function run(cmd, args, opts = {}) {
 	});
 
 	if (result.status !== 0) {
-		throw new Error(`${cmd} ${args.join(" ")} failed with exit code ${result.status}`);
+		throw new Error(
+			`${cmd} ${args.join(" ")} failed with exit code ${result.status}`,
+		);
 	}
 }
 
@@ -118,8 +128,32 @@ function assertBundleContainsFile(bundleDir, relativeFilePath, platformLabel) {
 	}
 }
 
+function detectArchBundleDirs(bundleDir, platformKind) {
+	const contentsDir = path.join(bundleDir, "Contents");
+	if (!existsSync(contentsDir)) {
+		throw new Error(
+			`Expected Contents directory in ${path.basename(bundleDir)}.`,
+		);
+	}
+
+	const suffix = platformKind === "windows" ? "-win" : "-linux";
+	const dirs = readdirSync(contentsDir, { withFileTypes: true })
+		.filter((entry) => entry.isDirectory() && entry.name.endsWith(suffix))
+		.map((entry) => entry.name)
+		.sort();
+
+	if (dirs.length === 0) {
+		throw new Error(
+			`${platformKind} packaging expected at least one Contents/*${suffix} architecture folder in ${path.basename(bundleDir)}. Build that platform's plugin artifact first.`,
+		);
+	}
+
+	return dirs;
+}
+
 function packageMacos({ sourceDir, outputDir, version }) {
-	const pluginBaseName = process.env.PLUGIN_BASENAME ?? toPascalCase(PLUGIN_PACKAGE);
+	const pluginBaseName =
+		process.env.PLUGIN_BASENAME ?? toPascalCase(PLUGIN_PACKAGE);
 	const bundleVst3Name = `${pluginBaseName}.vst3`;
 	const bundleAuv2Name = `${pluginBaseName}.component`;
 	const bundleVst3 = path.join(sourceDir, bundleVst3Name);
@@ -131,7 +165,11 @@ function packageMacos({ sourceDir, outputDir, version }) {
 		);
 	}
 
-	assertBundleContainsFile(bundleVst3, `Contents/MacOS/${pluginBaseName}`, "macOS");
+	assertBundleContainsFile(
+		bundleVst3,
+		`Contents/MacOS/${pluginBaseName}`,
+		"macOS",
+	);
 
 	const packageBaseName = `cosmo-plugins-macos-universal-v${version}`;
 	const stagingRoot = path.join(outputDir, "staging");
@@ -211,7 +249,13 @@ function packageMacos({ sourceDir, outputDir, version }) {
 `;
 	writeText(distributionXml, distribution);
 
-	run("productbuild", ["--distribution", distributionXml, "--package-path", outputDir, pkgOut]);
+	run("productbuild", [
+		"--distribution",
+		distributionXml,
+		"--package-path",
+		outputDir,
+		pkgOut,
+	]);
 	run("ditto", ["-c", "-k", "--keepParent", stagingRoot, zipOut]);
 
 	rmSync(vst3ComponentPkg, { force: true });
@@ -221,23 +265,37 @@ function packageMacos({ sourceDir, outputDir, version }) {
 }
 
 function packageWindows({ sourceDir, outputDir, version }) {
-	const pluginBaseName = process.env.PLUGIN_BASENAME ?? toPascalCase(PLUGIN_PACKAGE);
+	const pluginBaseName =
+		process.env.PLUGIN_BASENAME ?? toPascalCase(PLUGIN_PACKAGE);
 	const bundleVst3Name = `${pluginBaseName}.vst3`;
 	const bundleVst3 = path.join(sourceDir, bundleVst3Name);
 	if (!existsSync(bundleVst3)) {
-		throw new Error(`Windows packaging requires ${bundleVst3Name}. Run plugin build first.`);
+		throw new Error(
+			`Windows packaging requires ${bundleVst3Name}. Run plugin build first.`,
+		);
 	}
 
-	assertBundleContainsFile(bundleVst3, `Contents/x86_64-win/${bundleVst3Name}`, "Windows");
+	const archDirs = detectArchBundleDirs(bundleVst3, "windows");
+	for (const archDir of archDirs) {
+		assertBundleContainsFile(
+			bundleVst3,
+			`Contents/${archDir}/${bundleVst3Name}`,
+			"Windows",
+		);
+	}
 
-	const packageBaseName = `cz101-plugins-windows-v${version}`;
+	const archLabel = archDirs.join("+");
+	const packageBaseName = `cz101-plugins-windows-${archLabel}-v${version}`;
 	const stagingRoot = path.join(outputDir, packageBaseName);
 	const zipOut = path.join(outputDir, `${packageBaseName}.zip`);
 
 	rmSync(stagingRoot, { recursive: true, force: true });
 	rmSync(zipOut, { force: true });
 
-	stagePluginBundle(bundleVst3, path.join(stagingRoot, "plugins", "VST3", bundleVst3Name));
+	stagePluginBundle(
+		bundleVst3,
+		path.join(stagingRoot, "plugins", "VST3", bundleVst3Name),
+	);
 
 	writeText(
 		path.join(stagingRoot, "install.ps1"),
@@ -249,7 +307,7 @@ function packageWindows({ sourceDir, outputDir, version }) {
 			`$dst = Join-Path \${env:COMMONPROGRAMFILES} 'VST3\\${bundleVst3Name}'`,
 			"if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }",
 			"Copy-Item $src $dst -Recurse -Force",
-			"Write-Host \"Installed $dst\"",
+			'Write-Host "Installed $dst"',
 		].join("\r\n"),
 	);
 
@@ -258,7 +316,7 @@ function packageWindows({ sourceDir, outputDir, version }) {
 		[
 			"$ErrorActionPreference = 'Stop'",
 			`$dst = Join-Path \${env:COMMONPROGRAMFILES} 'VST3\\${bundleVst3Name}'`,
-			"if (Test-Path $dst) { Remove-Item $dst -Recurse -Force; Write-Host \"Removed $dst\" } else { Write-Host \"Not installed\" }",
+			'if (Test-Path $dst) { Remove-Item $dst -Recurse -Force; Write-Host "Removed $dst" } else { Write-Host "Not installed" }',
 		].join("\r\n"),
 	);
 
@@ -266,6 +324,8 @@ function packageWindows({ sourceDir, outputDir, version }) {
 		path.join(stagingRoot, "README.txt"),
 		[
 			"CosmoPd101 Plugin Installer Bundle (Windows)",
+			"",
+			`Included plugin architectures: ${archDirs.join(", ")}`,
 			"",
 			"1. Open PowerShell as Administrator.",
 			"2. Run ./install.ps1 from this folder.",
@@ -283,42 +343,56 @@ function packageWindows({ sourceDir, outputDir, version }) {
 }
 
 function packageLinux({ sourceDir, outputDir, version }) {
-	const pluginBaseName = process.env.PLUGIN_BASENAME ?? toPascalCase(PLUGIN_PACKAGE);
+	const pluginBaseName =
+		process.env.PLUGIN_BASENAME ?? toPascalCase(PLUGIN_PACKAGE);
 	const bundleVst3Name = `${pluginBaseName}.vst3`;
 	const bundleVst3 = path.join(sourceDir, bundleVst3Name);
 	if (!existsSync(bundleVst3)) {
-		throw new Error(`Linux packaging requires ${bundleVst3Name}. Run plugin build first.`);
+		throw new Error(
+			`Linux packaging requires ${bundleVst3Name}. Run plugin build first.`,
+		);
 	}
 
-	assertBundleContainsFile(bundleVst3, `Contents/x86_64-linux/${pluginBaseName}.so`, "Linux");
+	const archDirs = detectArchBundleDirs(bundleVst3, "linux");
+	for (const archDir of archDirs) {
+		assertBundleContainsFile(
+			bundleVst3,
+			`Contents/${archDir}/${pluginBaseName}.so`,
+			"Linux",
+		);
+	}
 
-	const packageBaseName = `cz101-plugins-linux-v${version}`;
+	const archLabel = archDirs.join("+");
+	const packageBaseName = `cz101-plugins-linux-${archLabel}-v${version}`;
 	const stagingRoot = path.join(outputDir, packageBaseName);
 	const archiveOut = path.join(outputDir, `${packageBaseName}.tar.gz`);
 
 	rmSync(stagingRoot, { recursive: true, force: true });
 	rmSync(archiveOut, { force: true });
 
-	stagePluginBundle(bundleVst3, path.join(stagingRoot, "plugins", "vst3", bundleVst3Name));
+	stagePluginBundle(
+		bundleVst3,
+		path.join(stagingRoot, "plugins", "vst3", bundleVst3Name),
+	);
 
 	writeText(
 		path.join(stagingRoot, "install.sh"),
 		[
 			"#!/usr/bin/env bash",
 			"set -euo pipefail",
-			"answer=\"\"",
-			"read -r -p \"Install VST3 plugin? [Y/n] \" answer",
-			"if [[ -z \"$answer\" ]]; then answer=Y; fi",
-			"if [[ \"$answer\" =~ ^[Nn]$ ]]; then",
-			"  echo \"No plugin selected. Exiting.\"",
+			'answer=""',
+			'read -r -p "Install VST3 plugin? [Y/n] " answer',
+			'if [[ -z "$answer" ]]; then answer=Y; fi',
+			'if [[ "$answer" =~ ^[Nn]$ ]]; then',
+			'  echo "No plugin selected. Exiting."',
 			"  exit 0",
 			"fi",
 			`SRC="$(cd "$(dirname "$BASH_SOURCE")" && pwd)/plugins/vst3/${bundleVst3Name}"`,
 			`DST="$HOME/.vst3/${bundleVst3Name}"`,
-			"mkdir -p \"$(dirname \"$DST\")\"",
-			"rm -rf \"$DST\"",
-			"cp -R \"$SRC\" \"$DST\"",
-			"echo \"Installed $DST\"",
+			'mkdir -p "$(dirname "$DST")"',
+			'rm -rf "$DST"',
+			'cp -R "$SRC" "$DST"',
+			'echo "Installed $DST"',
 		].join("\n"),
 	);
 
@@ -328,12 +402,16 @@ function packageLinux({ sourceDir, outputDir, version }) {
 			"#!/usr/bin/env bash",
 			"set -euo pipefail",
 			`DST="$HOME/.vst3/${bundleVst3Name}"`,
-			"rm -rf \"$DST\"",
-			"echo \"Removed $DST\"",
+			'rm -rf "$DST"',
+			'echo "Removed $DST"',
 		].join("\n"),
 	);
 
-	run("chmod", ["+x", path.join(stagingRoot, "install.sh"), path.join(stagingRoot, "uninstall.sh")]);
+	run("chmod", [
+		"+x",
+		path.join(stagingRoot, "install.sh"),
+		path.join(stagingRoot, "uninstall.sh"),
+	]);
 
 	run("tar", ["-czf", archiveOut, "-C", outputDir, packageBaseName]);
 
