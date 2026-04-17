@@ -188,28 +188,30 @@ function stagePluginBundle(sourceDir, destDir) {
 	cpSync(sourceDir, destDir, { recursive: true });
 }
 
-function packageBareMacosBundle(outputDir, version, bundleName, formatLabel) {
+function packageBareMacosBundle(sourceDir, outputDir, version, bundleName, formatLabel) {
 	const archiveBaseName = `cosmo-pd101-plugin-macos-universal-v${version}-${formatLabel}.zip`;
 	const archiveOut = path.join(outputDir, archiveBaseName);
+	const bundlePath = path.join(sourceDir, bundleName);
 	rmSync(archiveOut, { force: true });
 	run("ditto", [
 		"-c",
 		"-k",
 		"--keepParent",
-		path.join(outputDir, bundleName),
+		bundlePath,
 		archiveOut,
 	]);
 	return archiveOut;
 }
 
-function packageBareWindowsBundle(outputDir, version, bundleName, archLabel) {
+function packageBareWindowsBundle(sourceDir, outputDir, version, bundleName, archLabel) {
 	const archiveBaseName = `cosmo-pd101-plugin-windows-${archLabel}-v${version}-vst3.zip`;
 	const archiveOut = path.join(outputDir, archiveBaseName);
+	const bundlePath = path.join(sourceDir, bundleName);
 	rmSync(archiveOut, { force: true });
 	run("powershell", [
 		"-NoProfile",
 		"-Command",
-		`Compress-Archive -Path '${path.join(outputDir, bundleName)}' -DestinationPath '${archiveOut}' -Force`,
+		`Compress-Archive -Path '${bundlePath}' -DestinationPath '${archiveOut}' -Force`,
 	]);
 	return archiveOut;
 }
@@ -357,12 +359,14 @@ function packageMacos({ sourceDir, outputDir, version }) {
 	rmSync(auv2ComponentPkg, { force: true });
 
 	const bareVst3Zip = packageBareMacosBundle(
+		sourceDir,
 		outputDir,
 		version,
 		bundleVst3Name,
 		"vst3",
 	);
 	const bareAuv2Zip = packageBareMacosBundle(
+		sourceDir,
 		outputDir,
 		version,
 		bundleAuv2Name,
@@ -455,6 +459,7 @@ function packageWindows({ sourceDir, outputDir, version }) {
 	run(resolveMakensisCommand(), ["/V2", installerScriptPath]);
 
 	const barePluginZip = packageBareWindowsBundle(
+		sourceDir,
 		outputDir,
 		version,
 		bundleVst3Name,
