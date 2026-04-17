@@ -131,6 +131,18 @@ pub fn current_target() -> &'static str {
     return "aarch64-unknown-linux-gnu";
 }
 
+fn shared_lib_filename(lib_name: &str, target: &str) -> String {
+    if target.contains("windows") {
+        format!("{}.dll", lib_name)
+    } else if target.contains("apple") {
+        format!("lib{}.dylib", lib_name)
+    } else if target.contains("linux") {
+        format!("lib{}.so", lib_name)
+    } else {
+        format!("lib{}.dylib", lib_name)
+    }
+}
+
 /// Build for a single architecture (native, arm64, or x86_64).
 pub fn build_native(
     package: &str,
@@ -157,7 +169,7 @@ pub fn build_native(
 
     let profile = if release { "release" } else { "debug" };
     let lib_name = package.replace('-', "_");
-    let dylib_name = format!("lib{}.dylib", lib_name);
+    let shared_lib_name = shared_lib_filename(&lib_name, target);
     let target_root = cargo_target_dir_for_package(workspace_root, package);
 
     // AU requires additional setup (beamer-au and ObjC code)
@@ -219,7 +231,7 @@ pub fn build_native(
     let dylib_path = target_root
         .join(target)
         .join(profile)
-        .join(&dylib_name);
+        .join(&shared_lib_name);
 
     if !dylib_path.exists() {
         return Err(format!("Built library not found: {}", dylib_path.display()));
@@ -241,7 +253,7 @@ pub fn build_universal(
 
     let profile = if release { "release" } else { "debug" };
     let lib_name = package.replace('-', "_");
-    let dylib_name = format!("lib{}.dylib", lib_name);
+    let dylib_name = shared_lib_filename(&lib_name, "aarch64-apple-darwin");
     let target_root = cargo_target_dir_for_package(workspace_root, package);
 
     // AU requires additional setup (beamer-au and ObjC code)
