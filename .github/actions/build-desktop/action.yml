@@ -15,8 +15,8 @@ runs:
 
     - name: Install dependencies
       run: bun install
-      shell: bash
+      shell: pwsh
 
     - name: Build desktop app
       run: bun --filter @cosmo/cz-explorer-desktop build
-      shell: bash
+      shell: pwsh

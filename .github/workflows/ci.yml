@@ -31,7 +31,7 @@ jobs:
             build_cmd: bun run build:plugin:universal
           - os: windows-latest
             platform: windows
-            build_cmd: bash ./scripts/build-plugin.sh --release
+            build_cmd: bun run build:plugin
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6

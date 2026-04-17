@@ -24,7 +24,7 @@
 		"test": "bun --filter @cosmo/cz-explorer test:all && cargo test --workspace",
 		"lint": "bun --filter @cosmo/cz-explorer lint && cargo fmt --all --check && cargo clippy --workspace --all-targets",
 		"lint:fix": "bun --filter @cosmo/cz-explorer lint:fix && cargo fmt --all",
-		"clean": "find . -type d \\( -name dist -o -name target \\) -not -path '*/node_modules/*' -not -path '*/.git/*' -exec rm -rf {} +",
+		"clean": "rimraf --glob packages/*/dist packages/*/target src-tauri/target",
 		"ci": "bun run lint && bun run build && bun run test"
 	},
 	"dependencies": {

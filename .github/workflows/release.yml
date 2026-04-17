@@ -50,7 +50,7 @@ jobs:
               packages/cosmo-pd101/target/release/CosmoPd101.component
           - os: windows-latest
             platform: windows
-            build_cmd: bash ./scripts/build-plugin.sh --release
+            build_cmd: bun run build:plugin
             plugin_bundle_path: packages/cosmo-pd101/target/release/CosmoPd101.vst3
             installer_primary: dist/plugin-installers/windows/cosmo-plugins-windows-${{ github.ref_name }}.zip
             artifact_paths: |
