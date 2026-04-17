@@ -123,7 +123,7 @@ jobs:
         run: bun install
 
       - name: Build desktop app
-        run: bun --filter @cosmo/cz-explorer-desktop run build
+        run: bun --filter @cosmo/cz-explorer-desktop build
 
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4

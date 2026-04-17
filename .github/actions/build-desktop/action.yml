@@ -18,5 +18,5 @@ runs:
       shell: bash
 
     - name: Build desktop app
-      run: bun --filter @cosmo/cz-explorer-desktop run build
+      run: bun --filter @cosmo/cz-explorer-desktop build
       shell: bash
