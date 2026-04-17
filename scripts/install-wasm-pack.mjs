@@ -33,10 +33,11 @@ const target = targets[os]?.[cpu];
 
 if (!target) {
 	console.warn(
-		`No pre-built wasm-pack binary for ${os}/${cpu}. Falling back to \`cargo install wasm-pack\`.\n` +
-			"If this fails on Windows, install LLVM first: winget install LLVM.LLVM",
+		`No pre-built wasm-pack binary available for ${os}/${cpu} (e.g. Windows ARM64).\n` +
+		"Please install wasm-pack manually: https://rustwasm.github.io/wasm-pack/installer/\n" +
+		"Or via cargo (requires LLVM/clang): cargo install wasm-pack",
 	);
-	execSync("cargo install wasm-pack", { stdio: "inherit" });
+	// Do not fail bun install — the error will surface when running build:wasm
 	process.exit(0);
 }
 

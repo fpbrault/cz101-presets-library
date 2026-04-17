@@ -118,8 +118,17 @@ pub fn current_target() -> &'static str {
     #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
     return "x86_64-apple-darwin";
 
-    #[cfg(not(target_os = "macos"))]
-    compile_error!("Unsupported platform");
+    #[cfg(all(target_os = "windows", target_arch = "aarch64"))]
+    return "aarch64-pc-windows-msvc";
+
+    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    return "x86_64-pc-windows-msvc";
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    return "x86_64-unknown-linux-gnu";
+
+    #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+    return "aarch64-unknown-linux-gnu";
 }
 
 /// Build for a single architecture (native, arm64, or x86_64).
