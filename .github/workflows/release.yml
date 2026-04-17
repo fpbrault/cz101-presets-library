@@ -178,7 +178,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: release-assets
-          merge-multiple: true
 
       - name: Validate release assets are present
         shell: bash
@@ -186,10 +185,13 @@ jobs:
           set -euo pipefail
           shopt -s globstar
 
-          compgen -G "release-assets/cosmo-plugins-macos-universal-v*.pkg" > /dev/null
-          compgen -G "release-assets/cosmo-plugins-macos-universal-v*.zip" > /dev/null
-          compgen -G "release-assets/cz101-plugins-windows-*.exe" > /dev/null
-          compgen -G "release-assets/cz101-plugins-linux-*.tar.gz" > /dev/null
+          compgen -G "release-assets/**/cosmo-plugins-macos-universal-v*.pkg" > /dev/null
+          compgen -G "release-assets/**/cosmo-plugins-macos-universal-v*.zip" > /dev/null
+          compgen -G "release-assets/**/cz101-plugins-windows-*.exe" > /dev/null
+          compgen -G "release-assets/**/cz101-plugins-linux-*.tar.gz" > /dev/null
+
+          compgen -G "release-assets/**/CosmoPd101.vst3/**" > /dev/null
+          compgen -G "release-assets/**/CosmoPd101.component/**" > /dev/null || true
 
           compgen -G "release-assets/**/*.dmg" > /dev/null || compgen -G "release-assets/**/*.app.tar.gz" > /dev/null
           compgen -G "release-assets/**/*.msi" > /dev/null || compgen -G "release-assets/**/*.exe" > /dev/null
