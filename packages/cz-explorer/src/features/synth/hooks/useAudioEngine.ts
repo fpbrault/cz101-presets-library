@@ -16,8 +16,9 @@ export type AudioEngineRefs = {
 	paramsRef: React.MutableRefObject<EngineParams>;
 };
 
-type EngineParams = {
+export type EngineParams = {
 	lineSelect: string;
+	modMode: string;
 	octave: number;
 	line1: LineParams;
 	line2: LineParams;
@@ -30,12 +31,37 @@ type EngineParams = {
 	polyMode: PolyMode;
 	legato: boolean;
 	velocityTarget: VelocityTarget;
-	chorus: { rate: number; depth: number; mix: number };
-	delay: { time: number; feedback: number; mix: number };
-	reverb: { size: number; mix: number };
+	chorus: { enabled: boolean; rate: number; depth: number; mix: number };
+	delay: { enabled: boolean; time: number; feedback: number; mix: number };
+	reverb: { enabled: boolean; size: number; mix: number };
+	vibrato: {
+		enabled: boolean;
+		waveform: number;
+		rate: number;
+		depth: number;
+		delay: number;
+	};
+	portamento: { enabled: boolean; mode: string; rate: number; time: number };
+	lfo: {
+		enabled: boolean;
+		waveform: string;
+		rate: number;
+		depth: number;
+		offset: number;
+		target: string;
+	};
+	filter: {
+		enabled: boolean;
+		type: string;
+		cutoff: number;
+		resonance: number;
+		envAmount: number;
+	};
+	pitchBendRange: number;
+	modWheelVibratoDepth: number;
 };
 
-type LineParams = {
+export type LineParams = {
 	waveform: number;
 	waveform2: number;
 	algo2: string | null;
@@ -45,12 +71,14 @@ type LineParams = {
 	dcwBase: number;
 	dcoDepth: number;
 	modulation: number;
+	dcwComp: number;
 	warpAlgo: string;
 	detuneCents: number;
 	octave: number;
 	dcoEnv: StepEnvData;
 	dcwEnv: StepEnvData;
 	dcaEnv: StepEnvData;
+	keyFollow: number;
 };
 
 const DEFAULT_LINE_PARAMS: LineParams = {
@@ -63,6 +91,7 @@ const DEFAULT_LINE_PARAMS: LineParams = {
 	dcwBase: 0,
 	dcoDepth: 12,
 	modulation: 0,
+	dcwComp: 0,
 	warpAlgo: "cz101",
 	detuneCents: 0,
 	octave: 0,
@@ -84,6 +113,7 @@ const DEFAULT_LINE_PARAMS: LineParams = {
 		stepCount: 4,
 		loop: false,
 	},
+	keyFollow: 0,
 };
 
 export function useAudioEngine({
@@ -99,6 +129,7 @@ export function useAudioEngine({
 
 	const paramsRef = useRef<EngineParams>({
 		lineSelect: "L1+L2",
+		modMode: "single",
 		octave: 0,
 		line1: { ...DEFAULT_LINE_PARAMS },
 		line2: { ...DEFAULT_LINE_PARAMS },
@@ -111,9 +142,28 @@ export function useAudioEngine({
 		polyMode: "poly8",
 		legato: false,
 		velocityTarget: "amp",
-		chorus: { rate: 0.8, depth: 0.003, mix: 0 },
-		delay: { time: 0.3, feedback: 0.35, mix: 0 },
-		reverb: { size: 0.5, mix: 0 },
+		chorus: { enabled: false, rate: 0.8, depth: 0.003, mix: 0 },
+		delay: { enabled: false, time: 0.3, feedback: 0.35, mix: 0 },
+		reverb: { enabled: false, size: 0.5, mix: 0 },
+		vibrato: { enabled: false, waveform: 0, rate: 0, depth: 0, delay: 0 },
+		portamento: { enabled: false, mode: "rate", rate: 0, time: 0 },
+		lfo: {
+			enabled: false,
+			waveform: "sine",
+			rate: 0,
+			depth: 0,
+			offset: 0,
+			target: "pitch",
+		},
+		filter: {
+			enabled: false,
+			type: "lp",
+			cutoff: 20000,
+			resonance: 0,
+			envAmount: 0,
+		},
+		pitchBendRange: 2,
+		modWheelVibratoDepth: 0,
 	});
 
 	useEffect(() => {

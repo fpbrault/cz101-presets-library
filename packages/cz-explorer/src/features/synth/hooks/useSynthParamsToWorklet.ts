@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { PD_ALGOS, type StepEnvData } from "@/components/pdAlgorithms";
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
+import type { EngineParams } from "./useAudioEngine";
 
 type UseSynthParamsToWorkletParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
-	paramsRef: React.MutableRefObject<EngineParams | null>;
+	paramsRef: React.MutableRefObject<EngineParams>;
 	effectivePitchHz: number;
 	lineSelect: string;
 	modMode: string;
@@ -65,7 +66,7 @@ type UseSynthParamsToWorkletParams = {
 	portamentoRate: number;
 	portamentoTime: number;
 	lfoEnabled: boolean;
-	lfoWaveform: number;
+	lfoWaveform: string;
 	lfoRate: number;
 	lfoDepth: number;
 	lfoOffset: number;
@@ -77,71 +78,6 @@ type UseSynthParamsToWorkletParams = {
 	filterEnvAmount: number;
 	pitchBendRange: number;
 	modWheelVibratoDepth: number;
-};
-
-type EngineParams = {
-	lineSelect: string;
-	modMode: string;
-	octave: number;
-	line1: LineParams;
-	line2: LineParams;
-	intPmAmount: number;
-	intPmRatio: number;
-	extPmAmount: number;
-	pmPre: boolean;
-	frequency: number;
-	volume: number;
-	polyMode: PolyMode;
-	legato: boolean;
-	velocityTarget: VelocityTarget;
-	chorus: { enabled: boolean; rate: number; depth: number; mix: number };
-	delay: { enabled: boolean; time: number; feedback: number; mix: number };
-	reverb: { enabled: boolean; size: number; mix: number };
-	vibrato: {
-		enabled: boolean;
-		waveform: number;
-		rate: number;
-		depth: number;
-		delay: number;
-	};
-	portamento: { enabled: boolean; mode: string; rate: number; time: number };
-	lfo: {
-		enabled: boolean;
-		waveform: number;
-		rate: number;
-		depth: number;
-		offset: number;
-		target: string;
-	};
-	filter: {
-		enabled: boolean;
-		type: string;
-		cutoff: number;
-		resonance: number;
-		envAmount: number;
-	};
-	pitchBendRange: number;
-	modWheelVibratoDepth: number;
-};
-
-type LineParams = {
-	waveform: number;
-	waveform2: number;
-	algo2: string | null;
-	algoBlend: number;
-	window: string;
-	dcaBase: number;
-	dcwBase: number;
-	dcoDepth: number;
-	modulation: number;
-	dcwComp: number;
-	warpAlgo: string;
-	detuneCents: number;
-	octave: number;
-	dcoEnv: StepEnvData;
-	dcwEnv: StepEnvData;
-	dcaEnv: StepEnvData;
-	keyFollow: number;
 };
 
 export function useSynthParamsToWorklet({
