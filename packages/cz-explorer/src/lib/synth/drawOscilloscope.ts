@@ -1,7 +1,7 @@
 export type OscilloscopeConfig = {
 	cycles: number;
 	verticalZoom: number;
-	triggerLevel: number;
+	triggerLevel: number; // 0-255 for Uint8Array, -1 to 1 for Float32Array
 	triggerMode?: "off" | "rise" | "fall";
 	color?: string;
 	gridColor?: string;
@@ -36,7 +36,11 @@ export function drawOscilloscope(
 	const color = config.color ?? "#3dff3d";
 	const gridColor = config.gridColor ?? "rgba(0, 120, 0, 0.35)";
 	const triggerMode = config.triggerMode ?? "rise";
-	const triggerLevel = config.triggerLevel;
+	const isUint8 = samples instanceof Uint8Array;
+	// For Uint8Array (0-255), triggerLevel is 0-255. For Float32Array (-1 to 1), convert from 0-255 to -1 to 1.
+	const triggerFloat = isUint8
+		? config.triggerLevel
+		: (config.triggerLevel - 128) / 128;
 
 	// Handle empty samples
 	if (samples.length === 0) {
@@ -61,7 +65,6 @@ export function drawOscilloscope(
 		for (let i = 1; i < endLimit; i++) {
 			const prev = samples[i - 1];
 			const curr = samples[i];
-			const triggerFloat = (triggerLevel - 128) / 128;
 			const riseHit = prev < triggerFloat && curr >= triggerFloat;
 			const fallHit = prev > triggerFloat && curr <= triggerFloat;
 			if (
@@ -95,11 +98,10 @@ export function drawOscilloscope(
 	for (let i = 0; i < viewSamples; i++) {
 		const x = (i / (viewSamples - 1)) * drawWidth;
 		const sampleValue = samples[start + i];
-		// Normalize: Uint8Array is 0-255, Float32Array is -1 to 1
-		const normalized =
-			sampleValue instanceof Uint8Array
-				? (sampleValue - mean) / 128
-				: sampleValue - mean;
+		// Normalize: Uint8Array is 0-255 (center 128), Float32Array is -1 to 1
+		const normalized = isUint8
+			? (sampleValue - mean) / 128
+			: sampleValue - mean;
 		const y =
 			drawHeight / 2 - normalized * (drawHeight / 2 - 8) * config.verticalZoom;
 		if (i === 0) {
