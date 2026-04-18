@@ -1,5 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type CSSProperties,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import SharedSynthUiRenderer, {
+	useSharedSynthUiState,
+} from "@/components/synth/SharedSynthUiRenderer";
 import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
 import {
 	type PolyMode,
@@ -16,7 +27,6 @@ import {
 	synthWasmUrl,
 } from "@/lib/synth/pdVisualizerWorkletUrl";
 import {
-	computeWaveform,
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
@@ -25,52 +35,6 @@ import {
 	PD_ALGOS,
 	type StepEnvData,
 } from "./pdAlgorithms";
-import { drawPhaseMap, drawScope, drawSingleScope } from "./pdCanvas";
-import { SingleCycleDisplay } from "./SingleCycleDisplay";
-import AsidePanelSwitcher from "./synth/AsidePanelSwitcher";
-import ChorusPanel from "./synth/ChorusPanel";
-import DelayPanel from "./synth/DelayPanel";
-import GlobalVoicePanel from "./synth/GlobalVoicePanel";
-import LfoPanel from "./synth/LfoPanel";
-import PhaseLinesSection from "./synth/PhaseLinesSection";
-import PhaseModPanel from "./synth/PhaseModPanel";
-import PortamentoPanel from "./synth/PortamentoPanel";
-import ReverbPanel from "./synth/ReverbPanel";
-import ScopePanel from "./synth/ScopePanel";
-import SynthFilterPanel from "./synth/SynthFilterPanel";
-import SynthLcdDisplay from "./synth/SynthLcdDisplay";
-import SynthPageFrame from "./synth/SynthPageFrame";
-import VibratoPanel from "./synth/VibratoPanel";
-import CzButton from "./ui/CzButton";
-
-type AsidePanelTab =
-	| "scope"
-	| "global"
-	| "phaseMod"
-	| "vibrato"
-	| "portamento"
-	| "lfo"
-	| "filter"
-	| "chorus"
-	| "delay"
-	| "reverb";
-
-const ASIDE_PANEL_TABS: Array<{
-	id: AsidePanelTab;
-	topLabel: string;
-	bottomLabel: string;
-}> = [
-	{ id: "global", topLabel: "Global", bottomLabel: "" },
-	{ id: "portamento", topLabel: "Porta", bottomLabel: "mento" },
-	{ id: "phaseMod", topLabel: "Phase", bottomLabel: "Mod" },
-	{ id: "vibrato", topLabel: "Vibrato", bottomLabel: "" },
-	{ id: "lfo", topLabel: "LFO", bottomLabel: "" },
-	{ id: "scope", topLabel: "Scope", bottomLabel: "View" },
-	{ id: "filter", topLabel: "Filter", bottomLabel: "" },
-	{ id: "chorus", topLabel: "Chorus", bottomLabel: "FX" },
-	{ id: "delay", topLabel: "Delay", bottomLabel: "FX" },
-	{ id: "reverb", topLabel: "Reverb", bottomLabel: "FX" },
-];
 
 const LCD_CONTROL_LABELS: Record<string, string> = {
 	warpAAmount: "Line 1 DCW",
@@ -193,62 +157,46 @@ function formatLcdControlValue(
 	return Number.isInteger(value) ? `${value}` : value.toFixed(2);
 }
 
-export default function PhaseDistortionVisualizer() {
-	const { data: libraryPresets = [] } = useQuery({
-		queryKey: ["presets"],
-		queryFn: fetchPresetData as any,
-		staleTime: 1000 * 60 * 5,
-	}) as { data?: Preset[] };
+type PhaseDistortionVisualizerProps = {
+	frameStyle?: CSSProperties;
+	headerExtra?: ReactNode;
+};
 
+type PhaseDistortionVisualizerBaseProps = PhaseDistortionVisualizerProps & {
+	libraryPresets?: Preset[];
+};
+
+export function SharedPhaseDistortionVisualizer({
+	frameStyle,
+	headerExtra,
+	libraryPresets = [],
+}: PhaseDistortionVisualizerBaseProps = {}) {
 	const synthState = useSynthState();
 	const {
 		warpAAmount,
-		setWarpAAmount,
 		warpBAmount,
-		setWarpBAmount,
 		warpAAlgo,
-		setWarpAAlgo,
 		warpBAlgo,
-		setWarpBAlgo,
 		algo2A,
-		setAlgo2A,
 		algo2B,
-		setAlgo2B,
 		algoBlendA,
-		setAlgoBlendA,
 		algoBlendB,
-		setAlgoBlendB,
 		intPmAmount,
-		setIntPmAmount,
 		intPmRatio,
-		setIntPmRatio,
 		pmPre,
-		setPmPre,
 		phaseModEnabled,
-		setPhaseModEnabled,
 		windowType,
 		volume,
-		setVolume,
 		line1Level,
-		setLine1Level,
 		line2Level,
-		setLine2Level,
 		line1Octave,
-		setLine1Octave,
 		line2Octave,
-		setLine2Octave,
 		line1Detune,
-		setLine1Detune,
 		line2Detune,
-		setLine2Detune,
 		line1DcoDepth,
-		setLine1DcoDepth,
 		line2DcoDepth,
-		setLine2DcoDepth,
 		line1DcwComp,
-		setLine1DcwComp,
 		line2DcwComp,
-		setLine2DcwComp,
 		line1DcoEnv,
 		setLine1DcoEnv,
 		line1DcwEnv,
@@ -262,98 +210,52 @@ export default function PhaseDistortionVisualizer() {
 		line2DcaEnv,
 		setLine2DcaEnv,
 		polyMode,
-		setPolyMode,
 		legato,
 		velocityTarget,
-		setVelocityTarget,
 		chorusRate,
-		setChorusRate,
 		chorusDepth,
-		setChorusDepth,
 		chorusEnabled,
-		setChorusEnabled,
 		chorusMix,
-		setChorusMix,
 		delayTime,
-		setDelayTime,
 		delayFeedback,
-		setDelayFeedback,
 		delayEnabled,
-		setDelayEnabled,
 		delayMix,
-		setDelayMix,
 		reverbSize,
-		setReverbSize,
 		reverbEnabled,
-		setReverbEnabled,
 		reverbMix,
-		setReverbMix,
 		lineSelect,
-		setLineSelect,
 		modMode,
-		setModMode,
 		line1DcwKeyFollow,
-		setLine1DcwKeyFollow,
 		line2DcwKeyFollow,
-		setLine2DcwKeyFollow,
 		vibratoEnabled,
-		setVibratoEnabled,
 		vibratoWave,
-		setVibratoWave,
 		vibratoRate,
-		setVibratoRate,
 		vibratoDepth,
-		setVibratoDepth,
 		vibratoDelay,
-		setVibratoDelay,
 		portamentoEnabled,
-		setPortamentoEnabled,
 		portamentoMode,
-		setPortamentoMode,
 		portamentoRate,
-		setPortamentoRate,
 		portamentoTime,
-		setPortamentoTime,
 		lfoEnabled,
-		setLfoEnabled,
 		lfoWaveform,
-		setLfoWaveform,
 		lfoRate,
-		setLfoRate,
 		lfoDepth,
-		setLfoDepth,
 		lfoOffset,
-		setLfoOffset,
 		lfoTarget,
-		setLfoTarget,
 		filterEnabled,
-		setFilterEnabled,
 		filterType,
-		setFilterType,
 		filterCutoff,
-		setFilterCutoff,
 		filterResonance,
-		setFilterResonance,
 		filterEnvAmount,
-		setFilterEnvAmount,
 		pitchBendRange,
-		setPitchBendRange,
 		modWheelVibratoDepth,
-		setModWheelVibratoDepth,
 		gatherState,
 		applyPreset,
 	} = synthState;
 
 	const [extPmAmount] = useState(0);
-	const [scopeCycles, setScopeCycles] = useState(2);
-	const [scopeVerticalZoom, setScopeVerticalZoom] = useState(1.0);
 	const [scopeTriggerMode] = useState<"off" | "rise" | "fall">("rise");
-	const [scopeTriggerLevel, setScopeTriggerLevel] = useState(128);
-	const [activePhaseLineTab, setActivePhaseLineTab] = useState<
-		"line1" | "line2"
-	>("line1");
-	const [activeAsidePanel, setActiveAsidePanel] =
-		useState<AsidePanelTab>("scope");
+	const uiState = useSharedSynthUiState({ defaultAsidePanel: "scope" });
 	const [_sustainOn, setSustainOn] = useState(false);
 	const [activeNotes, setActiveNotes] = useState<number[]>([]);
 
@@ -456,10 +358,6 @@ export default function PhaseDistortionVisualizer() {
 	const sustainRef = useRef(false);
 
 	// ── Canvas refs ───────────────────────────────────────────────────────────
-	const line1CanvasRef = useRef<HTMLCanvasElement>(null);
-	const line2CanvasRef = useRef<HTMLCanvasElement>(null);
-	const combinedCanvasRef = useRef<HTMLCanvasElement>(null);
-	const phaseCanvasRef = useRef<HTMLCanvasElement>(null);
 	const oscilloscopeCanvasRef = useRef<HTMLCanvasElement>(null);
 	const pressedPcKeysRef = useRef<Set<string>>(new Set());
 	const lastHeldFreqRef = useRef(220);
@@ -474,16 +372,6 @@ export default function PhaseDistortionVisualizer() {
 		lastHeldFreqRef.current = noteToFreq(heldNote);
 		effectivePitchHz = lastHeldFreqRef.current;
 	}
-
-	const sustainLevel1 = line1DcwEnv.steps[line1DcwEnv.sustainStep]?.level ?? 1;
-	const sustainLevelA = line1DcaEnv.steps[line1DcaEnv.sustainStep]?.level ?? 1;
-	const sustainLevel2 = line2DcwEnv.steps[line2DcwEnv.sustainStep]?.level ?? 1;
-	const sustainLevelB = line2DcaEnv.steps[line2DcaEnv.sustainStep]?.level ?? 1;
-
-	const effectiveWarpA = warpAAmount * sustainLevel1;
-	const effectiveWarpB = warpBAmount * sustainLevel2;
-	const effectiveLevelA = line1Level * sustainLevelA;
-	const effectiveLevelB = line2Level * sustainLevelB;
 
 	const pushLcdControlReadout = useCallback((key: string, value: unknown) => {
 		if (!(key in LCD_CONTROL_LABELS)) return;
@@ -664,9 +552,9 @@ export default function PhaseDistortionVisualizer() {
 			reverbSize,
 			reverbEnabled,
 			reverbMix,
-			scopeCycles,
-			scopeVerticalZoom,
-			scopeTriggerLevel,
+			scopeCycles: uiState.scopeCycles,
+			scopeVerticalZoom: uiState.scopeVerticalZoom,
+			scopeTriggerLevel: uiState.scopeTriggerLevel,
 		};
 
 		const previous = previousControlSnapshotRef.current;
@@ -742,9 +630,9 @@ export default function PhaseDistortionVisualizer() {
 		reverbSize,
 		reverbEnabled,
 		reverbMix,
-		scopeCycles,
-		scopeVerticalZoom,
-		scopeTriggerLevel,
+		uiState.scopeCycles,
+		uiState.scopeVerticalZoom,
+		uiState.scopeTriggerLevel,
 		pushLcdControlReadout,
 	]);
 
@@ -759,176 +647,6 @@ export default function PhaseDistortionVisualizer() {
 		const filterStatus = filterEnabled ? "FILT ON" : "FILT OFF";
 		return `LINE ${lineSelect} | ${polyMode.toUpperCase()} | ${filterStatus}`;
 	}, [lineSelect, polyMode, filterEnabled]);
-
-	const asidePanels: Record<AsidePanelTab, React.ReactNode> = {
-		scope: (
-			<ScopePanel
-				oscilloscopeCanvasRef={oscilloscopeCanvasRef}
-				effectivePitchHz={effectivePitchHz}
-				scopeCycles={scopeCycles}
-				setScopeCycles={setScopeCycles}
-				scopeVerticalZoom={scopeVerticalZoom}
-				setScopeVerticalZoom={setScopeVerticalZoom}
-				scopeTriggerLevel={scopeTriggerLevel}
-				setScopeTriggerLevel={setScopeTriggerLevel}
-			/>
-		),
-		global: (
-			<GlobalVoicePanel
-				volume={volume}
-				setVolume={setVolume}
-				polyMode={polyMode}
-				setPolyMode={setPolyMode}
-				velocityTarget={velocityTarget}
-				setVelocityTarget={setVelocityTarget}
-				pitchBendRange={pitchBendRange}
-				setPitchBendRange={setPitchBendRange}
-				modWheelVibratoDepth={modWheelVibratoDepth}
-				setModWheelVibratoDepth={setModWheelVibratoDepth}
-			/>
-		),
-		phaseMod: (
-			<PhaseModPanel
-				phaseModEnabled={phaseModEnabled}
-				setPhaseModEnabled={setPhaseModEnabled}
-				intPmAmount={intPmAmount}
-				setIntPmAmount={setIntPmAmount}
-				intPmRatio={intPmRatio}
-				setIntPmRatio={setIntPmRatio}
-				pmPre={pmPre}
-				setPmPre={setPmPre}
-			/>
-		),
-		vibrato: (
-			<VibratoPanel
-				vibratoEnabled={vibratoEnabled}
-				setVibratoEnabled={setVibratoEnabled}
-				vibratoWave={vibratoWave}
-				setVibratoWave={setVibratoWave}
-				vibratoRate={vibratoRate}
-				setVibratoRate={setVibratoRate}
-				vibratoDepth={vibratoDepth}
-				setVibratoDepth={setVibratoDepth}
-				vibratoDelay={vibratoDelay}
-				setVibratoDelay={setVibratoDelay}
-			/>
-		),
-		portamento: (
-			<PortamentoPanel
-				portamentoEnabled={portamentoEnabled}
-				setPortamentoEnabled={setPortamentoEnabled}
-				portamentoMode={portamentoMode}
-				setPortamentoMode={setPortamentoMode}
-				portamentoRate={portamentoRate}
-				setPortamentoRate={setPortamentoRate}
-				portamentoTime={portamentoTime}
-				setPortamentoTime={setPortamentoTime}
-			/>
-		),
-		lfo: (
-			<LfoPanel
-				lfoEnabled={lfoEnabled}
-				setLfoEnabled={setLfoEnabled}
-				lfoWaveform={lfoWaveform}
-				setLfoWaveform={setLfoWaveform}
-				lfoRate={lfoRate}
-				setLfoRate={setLfoRate}
-				lfoDepth={lfoDepth}
-				setLfoDepth={setLfoDepth}
-				lfoOffset={lfoOffset}
-				setLfoOffset={setLfoOffset}
-				lfoTarget={lfoTarget}
-				setLfoTarget={setLfoTarget}
-			/>
-		),
-		filter: (
-			<SynthFilterPanel
-				filterEnabled={filterEnabled}
-				setFilterEnabled={setFilterEnabled}
-				filterType={filterType}
-				setFilterType={setFilterType}
-				filterCutoff={filterCutoff}
-				setFilterCutoff={setFilterCutoff}
-				filterResonance={filterResonance}
-				setFilterResonance={setFilterResonance}
-				filterEnvAmount={filterEnvAmount}
-				setFilterEnvAmount={setFilterEnvAmount}
-			/>
-		),
-		chorus: (
-			<ChorusPanel
-				enabled={chorusEnabled}
-				setEnabled={setChorusEnabled}
-				rate={chorusRate}
-				setRate={setChorusRate}
-				depth={chorusDepth}
-				setDepth={setChorusDepth}
-				mix={chorusMix}
-				setMix={setChorusMix}
-			/>
-		),
-		delay: (
-			<DelayPanel
-				enabled={delayEnabled}
-				setEnabled={setDelayEnabled}
-				time={delayTime}
-				setTime={setDelayTime}
-				feedback={delayFeedback}
-				setFeedback={setDelayFeedback}
-				mix={delayMix}
-				setMix={setDelayMix}
-			/>
-		),
-		reverb: (
-			<ReverbPanel
-				enabled={reverbEnabled}
-				setEnabled={setReverbEnabled}
-				size={reverbSize}
-				setSize={setReverbSize}
-				mix={reverbMix}
-				setMix={setReverbMix}
-			/>
-		),
-	};
-
-	const waveform = useMemo(
-		() =>
-			computeWaveform({
-				warpAAmount: effectiveWarpA,
-				warpBAmount: effectiveWarpB,
-				warpAAlgo,
-				warpBAlgo,
-				algo2A,
-				algo2B,
-				algoBlendA,
-				algoBlendB,
-				intPmAmount: phaseModEnabled ? intPmAmount : 0,
-				intPmRatio,
-				extPmAmount,
-				pmPre,
-				windowType,
-				line1Level: effectiveLevelA,
-				line2Level: effectiveLevelB,
-			}),
-		[
-			effectiveWarpA,
-			effectiveWarpB,
-			effectiveLevelA,
-			effectiveLevelB,
-			warpAAlgo,
-			warpBAlgo,
-			algo2A,
-			algo2B,
-			algoBlendA,
-			algoBlendB,
-			phaseModEnabled,
-			intPmAmount,
-			intPmRatio,
-			extPmAmount,
-			pmPre,
-			windowType,
-		],
-	);
 
 	// ── Sync params to worklet ────────────────────────────────────────────────
 	useEffect(() => {
@@ -1243,7 +961,7 @@ export default function PhaseDistortionVisualizer() {
 			const samplesPerCycle = Math.max(8, Math.round(sampleRate / hz));
 			const viewSamples = Math.max(
 				32,
-				Math.min(data.length - 2, Math.round(samplesPerCycle * scopeCycles)),
+				Math.min(data.length - 2, Math.round(samplesPerCycle * uiState.scopeCycles)),
 			);
 			let start = Math.max(1, Math.floor((data.length - viewSamples) / 2));
 			if (scopeTriggerMode !== "off") {
@@ -1251,8 +969,10 @@ export default function PhaseDistortionVisualizer() {
 				for (let i = 1; i < endLimit; i++) {
 					const prev = data[i - 1];
 					const curr = data[i];
-					const riseHit = prev < scopeTriggerLevel && curr >= scopeTriggerLevel;
-					const fallHit = prev > scopeTriggerLevel && curr <= scopeTriggerLevel;
+					const riseHit =
+						prev < uiState.scopeTriggerLevel && curr >= uiState.scopeTriggerLevel;
+					const fallHit =
+						prev > uiState.scopeTriggerLevel && curr <= uiState.scopeTriggerLevel;
 					if (
 						(scopeTriggerMode === "rise" && riseHit) ||
 						(scopeTriggerMode === "fall" && fallHit)
@@ -1295,7 +1015,8 @@ export default function PhaseDistortionVisualizer() {
 				const x = (i / (viewSamples - 1)) * drawWidth;
 				const centered = (data[start + i] - mean) / 128;
 				const y =
-					drawHeight / 2 - centered * (drawHeight / 2 - 8) * scopeVerticalZoom;
+					drawHeight / 2 -
+					centered * (drawHeight / 2 - 8) * uiState.scopeVerticalZoom;
 				if (i === 0) ctx.moveTo(x, y);
 				else ctx.lineTo(x, y);
 			}
@@ -1306,23 +1027,11 @@ export default function PhaseDistortionVisualizer() {
 		return () => window.cancelAnimationFrame(raf);
 	}, [
 		effectivePitchHz,
-		scopeCycles,
-		scopeVerticalZoom,
+		uiState.scopeCycles,
+		uiState.scopeVerticalZoom,
 		scopeTriggerMode,
-		scopeTriggerLevel,
+		uiState.scopeTriggerLevel,
 	]);
-
-	// ── Waveform canvas draws ─────────────────────────────────────────────────
-	useEffect(() => {
-		if (combinedCanvasRef.current)
-			drawScope(combinedCanvasRef.current, waveform.out1, waveform.out2);
-		if (line1CanvasRef.current)
-			drawSingleScope(line1CanvasRef.current, waveform.out1, "#2563eb");
-		if (line2CanvasRef.current)
-			drawSingleScope(line2CanvasRef.current, waveform.out2, "#ec4899");
-		if (phaseCanvasRef.current)
-			drawPhaseMap(phaseCanvasRef.current, waveform.phase);
-	}, [waveform]);
 
 	// ── Note handling ─────────────────────────────────────────────────────────
 	const activeNotesRef = useRef<Set<number>>(new Set());
@@ -1487,8 +1196,8 @@ export default function PhaseDistortionVisualizer() {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 	return (
-		<SynthPageFrame
-			className="h-full min-h-0 min-w-0 bg-cz-panel flex flex-col overflow-hidden w-full"
+		<SharedSynthUiRenderer
+			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
 				activePresetName,
@@ -1504,151 +1213,43 @@ export default function PhaseDistortionVisualizer() {
 				onExportCurrentState: handleExportCurrentState,
 				onImportPreset: handleImportPreset,
 			}}
-		>
-			<div className="px-1 grid flex-1 min-h-0 min-w-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)] overflow-hidden">
-				<aside className="overflow-y-auto min-h-0 space-y-0 [scrollbar-gutter:stable]">
-					<div className="px-4 -mt-1 mx-auto">
-						<SynthLcdDisplay
-							primaryText={lcdPrimaryText}
-							secondaryText={lcdSecondaryText}
-							transientReadout={lcdControlReadout}
-						/>
-					</div>
+			frameClassName="h-full min-h-0 min-w-0 bg-cz-panel flex flex-col overflow-hidden w-full"
+			frameStyle={frameStyle}
+			headerExtra={headerExtra}
+			lcdPrimaryText={lcdPrimaryText}
+			lcdSecondaryText={lcdSecondaryText}
+			lcdTransientReadout={lcdControlReadout}
+			effectiveIntPmAmount={phaseModEnabled ? intPmAmount : 0}
+			effectivePitchHz={effectivePitchHz}
+			oscilloscopeCanvasRef={oscilloscopeCanvasRef}
+			uiState={uiState}
+			envOverrideHandlers={{
+				onLine1DcoEnvChange: handleLine1DcoEnvChange,
+				onLine1DcwEnvChange: handleLine1DcwEnvChange,
+				onLine1DcaEnvChange: handleLine1DcaEnvChange,
+				onLine2DcoEnvChange: handleLine2DcoEnvChange,
+				onLine2DcwEnvChange: handleLine2DcwEnvChange,
+				onLine2DcaEnvChange: handleLine2DcaEnvChange,
+			}}
+		/>
+	);
+}
 
-					<AsidePanelSwitcher
-						tabs={ASIDE_PANEL_TABS}
-						activeTab={activeAsidePanel}
-						onTabChange={setActiveAsidePanel}
-						tabEnabledState={{
-							phaseMod: phaseModEnabled,
-							vibrato: vibratoEnabled,
-							portamento: portamentoEnabled,
-							lfo: lfoEnabled,
-							filter: filterEnabled,
-							chorus: chorusEnabled,
-							delay: delayEnabled,
-							reverb: reverbEnabled,
-						}}
-						panels={asidePanels}
-					/>
-				</aside>
+export default function PhaseDistortionVisualizer(
+	props: PhaseDistortionVisualizerProps = {},
+) {
+	const { data } = useQuery({
+		queryKey: ["presets"],
+		queryFn: () =>
+			fetchPresetData(0, -1, [], "", [], "inclusive", false, false, 0),
+		staleTime: 1000 * 60 * 5,
+	});
+	const libraryPresets = data?.presets ?? [];
 
-				<main className="flex flex-col gap-4 p-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-					<div className="mb-3 shrink-0 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-cream pb-3">
-						<div className="shrink-0">
-							<div className="mb-1 cz-light-blue">Line Select</div>
-							<div className="grid grid-cols-5 gap-1">
-								{(["L1", "L1+L2", "L2", "L1+L1'", "L1+L2'"] as const).map(
-									(ls) => (
-										<CzButton
-											key={ls}
-											active={lineSelect === ls}
-											onClick={() => setLineSelect(ls)}
-										>
-											{ls}
-										</CzButton>
-									),
-								)}
-							</div>
-						</div>
-						<div className="shrink-0">
-							<div className="mb-1 cz-light-blue">Modulation</div>
-							<div className="flex gap-1">
-								{(
-									[
-										["normal", "Normal"],
-										["ring", "Ring"],
-										["noise", "Noise"],
-									] as const
-								).map(([mode, label]) => (
-									<CzButton
-										key={mode}
-										active={modMode === mode}
-										onClick={() => setModMode(mode)}
-										className="flex-1"
-									>
-										{label}
-									</CzButton>
-								))}
-							</div>
-						</div>
-
-						<SingleCycleDisplay
-							data={
-								activePhaseLineTab === "line1" ? waveform.out1 : waveform.out2
-							}
-							color="#9cb937"
-							label="Single Cycle"
-							width={176}
-							height={64}
-						/>
-					</div>
-
-					<PhaseLinesSection
-						className="flex-1 min-h-0 max-w-5xl max-h-164"
-						lineSelect={lineSelect}
-						onActiveTabChange={setActivePhaseLineTab}
-						line1={{
-							warpAmount: warpAAmount,
-							setWarpAmount: setWarpAAmount,
-							algo: warpAAlgo,
-							setAlgo: setWarpAAlgo,
-							algo2: algo2A,
-							setAlgo2: setAlgo2A,
-							algoBlend: algoBlendA,
-							setAlgoBlend: setAlgoBlendA,
-							dcwComp: line1DcwComp,
-							setDcwComp: setLine1DcwComp,
-							level: line1Level,
-							setLevel: setLine1Level,
-							octave: line1Octave,
-							setOctave: setLine1Octave,
-							fineDetune: line1Detune,
-							setFineDetune: setLine1Detune,
-							dcoDepth: line1DcoDepth,
-							setDcoDepth: setLine1DcoDepth,
-							dcoEnv: line1DcoEnv,
-							setDcoEnv: handleLine1DcoEnvChange,
-							dcwEnv: line1DcwEnv,
-							setDcwEnv: handleLine1DcwEnvChange,
-							dcaEnv: line1DcaEnv,
-							setDcaEnv: handleLine1DcaEnvChange,
-							keyFollow: line1DcwKeyFollow,
-							setKeyFollow: setLine1DcwKeyFollow,
-							waveform: waveform.out1,
-						}}
-						line2={{
-							warpAmount: warpBAmount,
-							setWarpAmount: setWarpBAmount,
-							algo: warpBAlgo,
-							setAlgo: setWarpBAlgo,
-							algo2: algo2B,
-							setAlgo2: setAlgo2B,
-							algoBlend: algoBlendB,
-							setAlgoBlend: setAlgoBlendB,
-							dcwComp: line2DcwComp,
-							setDcwComp: setLine2DcwComp,
-							level: line2Level,
-							setLevel: setLine2Level,
-							octave: line2Octave,
-							setOctave: setLine2Octave,
-							fineDetune: line2Detune,
-							setFineDetune: setLine2Detune,
-							dcoDepth: line2DcoDepth,
-							setDcoDepth: setLine2DcoDepth,
-							dcoEnv: line2DcoEnv,
-							setDcoEnv: handleLine2DcoEnvChange,
-							dcwEnv: line2DcwEnv,
-							setDcwEnv: handleLine2DcwEnvChange,
-							dcaEnv: line2DcaEnv,
-							setDcaEnv: handleLine2DcaEnvChange,
-							keyFollow: line2DcwKeyFollow,
-							setKeyFollow: setLine2DcwKeyFollow,
-							waveform: waveform.out2,
-						}}
-					/>
-				</main>
-			</div>
-		</SynthPageFrame>
+	return (
+		<SharedPhaseDistortionVisualizer
+			{...props}
+			libraryPresets={libraryPresets}
+		/>
 	);
 }

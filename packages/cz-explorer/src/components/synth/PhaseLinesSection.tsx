@@ -4,9 +4,9 @@ import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
 import Card, { joinClasses } from "@/components/ui/Card";
 import CzTabButton from "@/components/ui/CzTabButton";
 
-type LineSelect = "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
+export type LineSelect = "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
 
-type LineConfig = {
+export type LineConfig = {
 	warpAmount: number;
 	setWarpAmount: (v: number) => void;
 	algo: PdAlgo;
@@ -36,7 +36,7 @@ type LineConfig = {
 	waveform: Float32Array | number[];
 };
 
-type PhaseLinesSectionProps = {
+export type PhaseLinesSectionProps = {
 	lineSelect: LineSelect;
 	onActiveTabChange?: (v: "line1" | "line2") => void;
 	className?: string;
