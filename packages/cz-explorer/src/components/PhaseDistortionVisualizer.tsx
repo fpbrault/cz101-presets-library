@@ -21,6 +21,7 @@ import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
+import { drawOscilloscope } from "@/lib/synth/drawOscilloscope";
 import {
 	pdVisualizerWorkletUrl,
 	synthBindingsUrl,
@@ -928,101 +929,68 @@ export function SharedPhaseDistortionVisualizer({
 	useEffect(() => {
 		const canvas = oscilloscopeCanvasRef.current;
 		if (!canvas) return;
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
 		let raf = 0;
+
 		const draw = () => {
 			raf = window.requestAnimationFrame(draw);
-			const drawWidth = Math.max(1, Math.floor(canvas.clientWidth));
-			const drawHeight = Math.max(1, Math.floor(canvas.clientHeight));
-			const dpr = window.devicePixelRatio || 1;
-			const pixelWidth = Math.floor(drawWidth * dpr);
-			const pixelHeight = Math.floor(drawHeight * dpr);
-			if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-				canvas.width = pixelWidth;
-				canvas.height = pixelHeight;
-			}
-			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			const analyser = analyserNodeRef.current;
 			if (!analyser) {
+				const ctx = canvas.getContext("2d");
+				if (!ctx) return;
+				const dpr = window.devicePixelRatio || 1;
+				const drawWidth = Math.max(1, Math.floor(canvas.clientWidth));
+				const drawHeight = Math.max(1, Math.floor(canvas.clientHeight));
+				const pixelWidth = Math.floor(drawWidth * dpr);
+				const pixelHeight = Math.floor(drawHeight * dpr);
+				if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+					canvas.width = pixelWidth;
+					canvas.height = pixelHeight;
+				}
+				ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 				ctx.fillStyle = "#051005";
 				ctx.fillRect(0, 0, drawWidth, drawHeight);
 				ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
+				ctx.lineWidth = 1;
+				for (let y = 0.25; y < 1; y += 0.25) {
+					ctx.beginPath();
+					ctx.moveTo(0, drawHeight * y);
+					ctx.lineTo(drawWidth, drawHeight * y);
+					ctx.stroke();
+				}
+				for (let x = 0.1; x < 1; x += 0.1) {
+					ctx.beginPath();
+					ctx.moveTo(drawWidth * x, 0);
+					ctx.lineTo(drawWidth * x, drawHeight);
+					ctx.stroke();
+				}
+				ctx.strokeStyle = "rgba(0, 120, 0, 0.6)";
+				ctx.lineWidth = 1.5;
 				ctx.beginPath();
 				ctx.moveTo(0, drawHeight / 2);
 				ctx.lineTo(drawWidth, drawHeight / 2);
 				ctx.stroke();
 				return;
 			}
+
 			const data = new Uint8Array(analyser.fftSize);
 			analyser.getByteTimeDomainData(data);
 			const sampleRate = audioCtxRef.current?.sampleRate ?? 44100;
 			const hz = Math.max(1, effectivePitchHz);
-			const samplesPerCycle = Math.max(8, Math.round(sampleRate / hz));
-			const viewSamples = Math.max(
-				32,
-				Math.min(data.length - 2, Math.round(samplesPerCycle * uiState.scopeCycles)),
+
+			drawOscilloscope(
+				canvas,
+				data,
+				{
+					cycles: uiState.scopeCycles,
+					verticalZoom: uiState.scopeVerticalZoom,
+					triggerLevel: uiState.scopeTriggerLevel,
+					triggerMode: scopeTriggerMode,
+				},
+				hz,
+				sampleRate,
 			);
-			let start = Math.max(1, Math.floor((data.length - viewSamples) / 2));
-			if (scopeTriggerMode !== "off") {
-				const endLimit = data.length - viewSamples - 1;
-				for (let i = 1; i < endLimit; i++) {
-					const prev = data[i - 1];
-					const curr = data[i];
-					const riseHit =
-						prev < uiState.scopeTriggerLevel && curr >= uiState.scopeTriggerLevel;
-					const fallHit =
-						prev > uiState.scopeTriggerLevel && curr <= uiState.scopeTriggerLevel;
-					if (
-						(scopeTriggerMode === "rise" && riseHit) ||
-						(scopeTriggerMode === "fall" && fallHit)
-					) {
-						start = i;
-						break;
-					}
-				}
-			}
-			let mean = 0;
-			for (let i = 0; i < viewSamples; i++) mean += data[start + i];
-			mean /= viewSamples;
-			ctx.clearRect(0, 0, drawWidth, drawHeight);
-			ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
-			ctx.lineWidth = 1;
-			for (let y = 0.25; y < 1; y += 0.25) {
-				ctx.beginPath();
-				ctx.moveTo(0, drawHeight * y);
-				ctx.lineTo(drawWidth, drawHeight * y);
-				ctx.stroke();
-			}
-			for (let x = 0.1; x < 1; x += 0.1) {
-				ctx.beginPath();
-				ctx.moveTo(drawWidth * x, 0);
-				ctx.lineTo(drawWidth * x, drawHeight);
-				ctx.stroke();
-			}
-			ctx.strokeStyle = "rgba(0, 120, 0, 0.6)";
-			ctx.lineWidth = 1.5;
-			ctx.beginPath();
-			ctx.moveTo(0, drawHeight / 2);
-			ctx.lineTo(drawWidth, drawHeight / 2);
-			ctx.stroke();
-			ctx.shadowColor = "#3dff3d";
-			ctx.shadowBlur = 8;
-			ctx.strokeStyle = "#3dff3d";
-			ctx.lineWidth = 2;
-			ctx.beginPath();
-			for (let i = 0; i < viewSamples; i++) {
-				const x = (i / (viewSamples - 1)) * drawWidth;
-				const centered = (data[start + i] - mean) / 128;
-				const y =
-					drawHeight / 2 -
-					centered * (drawHeight / 2 - 8) * uiState.scopeVerticalZoom;
-				if (i === 0) ctx.moveTo(x, y);
-				else ctx.lineTo(x, y);
-			}
-			ctx.stroke();
-			ctx.shadowBlur = 0;
 		};
+
 		draw();
 		return () => window.cancelAnimationFrame(raf);
 	}, [
