@@ -1,7 +1,8 @@
+import type { ReactNode } from "react";
 import type { Preset } from "@/lib/presets/presetManager";
 import PresetNavigator, { type PresetEntry } from "./PresetNavigator";
 
-type SynthHeaderProps = {
+export type SynthHeaderProps = {
 	allEntries: PresetEntry[];
 	activePresetName: string;
 	onLoadLocal: (name: string) => void;
@@ -15,6 +16,7 @@ type SynthHeaderProps = {
 	onExportCurrentState: (name: string) => void;
 	onImportPreset: (json: string, filename: string) => void;
 	onInitPreset: () => void;
+	trailingContent?: ReactNode;
 };
 
 export default function SynthHeader({
@@ -31,6 +33,7 @@ export default function SynthHeader({
 	onExportCurrentState,
 	onImportPreset,
 	onInitPreset,
+	trailingContent,
 }: SynthHeaderProps) {
 	return (
 		<header className="shrink-0 flex flex-col gap-3 border-b-4 border-cz-border bg-cz-body px-8 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
@@ -76,6 +79,8 @@ export default function SynthHeader({
 					Synthesizer Lab
 				</span>
 			</div>
+
+			{trailingContent}
 		</header>
 	);
 }

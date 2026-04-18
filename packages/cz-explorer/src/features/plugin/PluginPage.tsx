@@ -14,9 +14,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	computeWaveform,
-	DEFAULT_DCA_ENV,
-	DEFAULT_DCO_ENV,
-	DEFAULT_DCW_ENV,
 	PD_ALGOS,
 	type PdAlgo,
 	type StepEnvData,
@@ -33,26 +30,15 @@ import LfoPanel from "@/components/synth/LfoPanel";
 import PhaseLinesSection from "@/components/synth/PhaseLinesSection";
 import PhaseModPanel from "@/components/synth/PhaseModPanel";
 import PortamentoPanel from "@/components/synth/PortamentoPanel";
-import type { PresetEntry } from "@/components/synth/PresetNavigator";
 import ReverbPanel from "@/components/synth/ReverbPanel";
 import ScopePanel from "@/components/synth/ScopePanel";
 import SynthFilterPanel from "@/components/synth/SynthFilterPanel";
-import SynthHeader from "@/components/synth/SynthHeader";
+import SynthPageFrame from "@/components/synth/SynthPageFrame";
 import VibratoPanel from "@/components/synth/VibratoPanel";
+import { getSynthRuntimeCapabilities } from "@/features/synth/runtimeCapabilities";
+import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
+import { useSynthState } from "@/features/synth/useSynthState";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
-import {
-	DEFAULT_PRESET,
-	deletePreset,
-	exportPreset,
-	importPreset,
-	listPresets,
-	loadCurrentState,
-	loadPreset,
-	renamePreset,
-	type SynthPresetData,
-	saveCurrentState,
-	savePreset,
-} from "@/lib/synth/presetStorage";
 
 // ── Param IDs (must match Rust PARAM_TABLE in lib.rs) ────────────────────────
 const P_VOLUME = 0;
@@ -133,8 +119,8 @@ const P_PORT_TIME = 902;
 
 // ── Scale selector ─────────────────────────────────────────────────────────────
 const UI_SCALE_KEY = "cz-plugin-ui-scale";
-const UI_SCALE_OPTIONS = [50, 60, 70, 80, 90, 100] as const;
-type UiScale = (typeof UI_SCALE_OPTIONS)[number];
+const PLUGIN_RUNTIME_CAPABILITIES = getSynthRuntimeCapabilities("plugin");
+type UiScale = (typeof PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions)[number];
 
 // ── Enum ↔ f64 tables ─────────────────────────────────────────────────────────
 const LINE_SELECT_IDS: Record<string, number> = {
@@ -244,105 +230,164 @@ function sendParam(parameterId: number, value: number) {
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type PolyMode = "poly8" | "mono";
-type VelocityTarget = "amp" | "dcw" | "both" | "off";
 
 export default function PluginPage() {
-	const [warpAAmount, setWarpAAmount] = useState(0);
-	const [warpBAmount, setWarpBAmount] = useState(0);
-	const [warpAAlgo, setWarpAAlgo] = useState<PdAlgo>("bend");
-	const [warpBAlgo, setWarpBAlgo] = useState<PdAlgo>("bend");
-	const [algo2A, setAlgo2A] = useState<PdAlgo | null>(null);
-	const [algo2B, setAlgo2B] = useState<PdAlgo | null>(null);
-	const [algoBlendA, setAlgoBlendA] = useState(0);
-	const [algoBlendB, setAlgoBlendB] = useState(0);
-	const [intPmAmount, setIntPmAmount] = useState(0);
-	const [intPmRatio, setIntPmRatio] = useState(1);
+	const synthState = useSynthState();
+	const {
+		warpAAmount,
+		setWarpAAmount,
+		warpBAmount,
+		setWarpBAmount,
+		warpAAlgo,
+		setWarpAAlgo,
+		warpBAlgo,
+		setWarpBAlgo,
+		algo2A,
+		setAlgo2A,
+		algo2B,
+		setAlgo2B,
+		algoBlendA,
+		setAlgoBlendA,
+		algoBlendB,
+		setAlgoBlendB,
+		intPmAmount,
+		setIntPmAmount,
+		intPmRatio,
+		setIntPmRatio,
+		pmPre,
+		setPmPre,
+		phaseModEnabled,
+		setPhaseModEnabled,
+		windowType,
+		volume,
+		setVolume,
+		line1Level,
+		setLine1Level,
+		line2Level,
+		setLine2Level,
+		line1Octave,
+		setLine1Octave,
+		line2Octave,
+		setLine2Octave,
+		line1Detune,
+		setLine1Detune,
+		line2Detune,
+		setLine2Detune,
+		line1DcoDepth,
+		setLine1DcoDepth,
+		line2DcoDepth,
+		setLine2DcoDepth,
+		line1DcwComp,
+		setLine1DcwComp,
+		line2DcwComp,
+		setLine2DcwComp,
+		line1DcoEnv,
+		setLine1DcoEnv,
+		line1DcwEnv,
+		setLine1DcwEnv,
+		line1DcaEnv,
+		setLine1DcaEnv,
+		line2DcoEnv,
+		setLine2DcoEnv,
+		line2DcwEnv,
+		setLine2DcwEnv,
+		line2DcaEnv,
+		setLine2DcaEnv,
+		polyMode,
+		setPolyMode,
+		legato,
+		setLegato,
+		velocityTarget,
+		setVelocityTarget,
+		chorusRate,
+		setChorusRate,
+		chorusDepth,
+		setChorusDepth,
+		chorusEnabled,
+		setChorusEnabled,
+		chorusMix,
+		setChorusMix,
+		delayTime,
+		setDelayTime,
+		delayFeedback,
+		setDelayFeedback,
+		delayEnabled,
+		setDelayEnabled,
+		delayMix,
+		setDelayMix,
+		reverbSize,
+		setReverbSize,
+		reverbEnabled,
+		setReverbEnabled,
+		reverbMix,
+		setReverbMix,
+		lineSelect,
+		setLineSelect,
+		modMode,
+		setModMode,
+		line1DcwKeyFollow,
+		setLine1DcwKeyFollow,
+		line2DcwKeyFollow,
+		setLine2DcwKeyFollow,
+		vibratoEnabled,
+		setVibratoEnabled,
+		vibratoWave,
+		setVibratoWave,
+		vibratoRate,
+		setVibratoRate,
+		vibratoDepth,
+		setVibratoDepth,
+		vibratoDelay,
+		setVibratoDelay,
+		portamentoEnabled,
+		setPortamentoEnabled,
+		portamentoMode,
+		setPortamentoMode,
+		portamentoRate,
+		setPortamentoRate,
+		portamentoTime,
+		setPortamentoTime,
+		lfoEnabled,
+		setLfoEnabled,
+		lfoWaveform,
+		setLfoWaveform,
+		lfoRate,
+		setLfoRate,
+		lfoDepth,
+		setLfoDepth,
+		lfoOffset,
+		setLfoOffset,
+		lfoTarget,
+		setLfoTarget,
+		filterEnabled,
+		setFilterEnabled,
+		filterType,
+		setFilterType,
+		filterCutoff,
+		setFilterCutoff,
+		filterResonance,
+		setFilterResonance,
+		filterEnvAmount,
+		setFilterEnvAmount,
+		pitchBendRange,
+		setPitchBendRange,
+		modWheelVibratoDepth,
+		setModWheelVibratoDepth,
+		gatherState,
+		applyPreset,
+	} = synthState;
+
 	const extPmAmount = 0;
-	const [pmPre, setPmPre] = useState(true);
-	const [windowType, setWindowType] = useState<"off" | "saw" | "triangle">(
-		"off",
-	);
-	const [volume, setVolume] = useState(1);
-	const [line1Level, setLine1Level] = useState(1);
-	const [line2Level, setLine2Level] = useState(1);
-	const [line1Octave, setLine1Octave] = useState(0);
-	const [line2Octave, setLine2Octave] = useState(0);
-	const [line1Detune, setLine1Detune] = useState(0);
-	const [line2Detune, setLine2Detune] = useState(0);
-	const [polyMode, setPolyMode] = useState<PolyMode>("poly8");
-	const [legato, setLegato] = useState(false);
-	const [velocityTarget, setVelocityTarget] = useState<VelocityTarget>("amp");
-	const [line1DcoEnv, setLine1DcoEnv] = useState<StepEnvData>(DEFAULT_DCO_ENV);
-	const [line1DcwEnv, setLine1DcwEnv] = useState<StepEnvData>(DEFAULT_DCW_ENV);
-	const [line1DcaEnv, setLine1DcaEnv] = useState<StepEnvData>(DEFAULT_DCA_ENV);
-	const [line2DcoEnv, setLine2DcoEnv] = useState<StepEnvData>(DEFAULT_DCO_ENV);
-	const [line2DcwEnv, setLine2DcwEnv] = useState<StepEnvData>(DEFAULT_DCW_ENV);
-	const [line2DcaEnv, setLine2DcaEnv] = useState<StepEnvData>(DEFAULT_DCA_ENV);
-	const [line1DcoDepth, setLine1DcoDepth] = useState(0);
-	const [line2DcoDepth, setLine2DcoDepth] = useState(0);
-	const [line1DcwComp, setLine1DcwComp] = useState(0);
-	const [line2DcwComp, setLine2DcwComp] = useState(0);
-
-	const [chorusRate, setChorusRate] = useState(0.8);
-	const [chorusDepth, setChorusDepth] = useState(3);
-	const [chorusMix, setChorusMix] = useState(0);
-	const [delayTime, setDelayTime] = useState(0.3);
-	const [delayFeedback, setDelayFeedback] = useState(0.35);
-	const [delayMix, setDelayMix] = useState(0);
-	const [reverbSize, setReverbSize] = useState(0.5);
-	const [reverbMix, setReverbMix] = useState(0);
-
-	const [lineSelect, setLineSelect] = useState<
-		"L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'"
-	>("L1+L2");
-	const [modMode, setModMode] = useState<"normal" | "ring" | "noise">("normal");
-	const [line1DcwKeyFollow, setLine1DcwKeyFollow] = useState(0);
-	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
-	const [phaseModEnabled, setPhaseModEnabled] = useState(false);
-	const [chorusEnabled, setChorusEnabled] = useState(false);
-	const [delayEnabled, setDelayEnabled] = useState(false);
-	const [reverbEnabled, setReverbEnabled] = useState(false);
-
-	const [vibratoEnabled, setVibratoEnabled] = useState(false);
-	const [vibratoWave, setVibratoWave] = useState(1);
-	const [vibratoRate, setVibratoRate] = useState(30);
-	const [vibratoDepth, setVibratoDepth] = useState(30);
-	const [vibratoDelay, setVibratoDelay] = useState(0);
-
-	const [portamentoEnabled, setPortamentoEnabled] = useState(false);
-	const [portamentoMode, setPortamentoMode] = useState<"rate" | "time">("rate");
-	const [portamentoRate, setPortamentoRate] = useState(50);
-	const [portamentoTime, setPortamentoTime] = useState(0.5);
-
-	const [lfoEnabled, setLfoEnabled] = useState(false);
-	const [lfoWaveform, setLfoWaveform] = useState<
-		"sine" | "triangle" | "square" | "saw"
-	>("sine");
-	const [lfoRate, setLfoRate] = useState(5);
-	const [lfoDepth, setLfoDepth] = useState(0);
-	const [lfoOffset, setLfoOffset] = useState(0);
-	const [lfoTarget, setLfoTarget] = useState<
-		"pitch" | "dcw" | "dca" | "filter"
-	>("pitch");
-
-	const [filterEnabled, setFilterEnabled] = useState(false);
-	const [filterType, setFilterType] = useState<"lp" | "hp" | "bp">("lp");
-	const [filterCutoff, setFilterCutoff] = useState(5000);
-	const [filterResonance, setFilterResonance] = useState(0);
-	const [filterEnvAmount, setFilterEnvAmount] = useState(0);
-	const [pitchBendRange, setPitchBendRange] = useState(2);
-	const [modWheelVibratoDepth, setModWheelVibratoDepth] = useState(0);
-
-	// ── Preset management ────────────────────────────────────────────────────
-	const [presetList, setPresetList] = useState<string[]>([]);
-	const [activePresetName, setActivePresetName] = useState("Current State");
 
 	// ── UI scale ─────────────────────────────────────────────────────────────
 	const [uiScale, setUiScale] = useState<UiScale>(() => {
 		const saved = localStorage.getItem(UI_SCALE_KEY);
 		const n = saved ? Number(saved) : 100;
-		return (UI_SCALE_OPTIONS.includes(n as UiScale) ? n : 100) as UiScale;
+		return (
+			PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.includes(n)
+				? n
+				: 100
+		) as UiScale;
 	});
 
 	// ── Canvas refs ─────────────────────────────────────────────────────────
@@ -844,373 +889,84 @@ export default function PluginPage() {
 		return () => {
 			window.__czOnParams = undefined;
 		};
-	}, []);
+	}, [
+		setVolume,
+		setLineSelect,
+		setModMode,
+		setPolyMode,
+		setLegato,
+		setVelocityTarget,
+		setIntPmAmount,
+		setIntPmRatio,
+		setPmPre,
+		setLine1Level,
+		setLine1Octave,
+		setLine1Detune,
+		setLine1DcoDepth,
+		setLine1DcwComp,
+		setLine1DcwKeyFollow,
+		setWarpAAlgo,
+		setWarpAAmount,
+		setAlgoBlendA,
+		setAlgo2A,
+		setLine2Level,
+		setLine2Octave,
+		setLine2Detune,
+		setLine2DcoDepth,
+		setLine2DcwComp,
+		setLine2DcwKeyFollow,
+		setWarpBAlgo,
+		setWarpBAmount,
+		setAlgoBlendB,
+		setAlgo2B,
+		setVibratoEnabled,
+		setVibratoWave,
+		setVibratoRate,
+		setVibratoDepth,
+		setVibratoDelay,
+		setChorusMix,
+		setChorusRate,
+		setChorusDepth,
+		setDelayMix,
+		setDelayTime,
+		setDelayFeedback,
+		setReverbMix,
+		setReverbSize,
+		setLfoEnabled,
+		setLfoWaveform,
+		setLfoRate,
+		setLfoDepth,
+		setLfoTarget,
+		setFilterEnabled,
+		setFilterCutoff,
+		setFilterResonance,
+		setFilterEnvAmount,
+		setFilterType,
+		setPortamentoEnabled,
+		setPortamentoMode,
+		setPortamentoTime,
+	]);
 
-	// ── Gather / apply preset ─────────────────────────────────────────────────
-	const gatherState = useCallback(
-		(): SynthPresetData => ({
-			warpAAmount,
-			warpBAmount,
-			warpAAlgo,
-			warpBAlgo,
-			algo2A: algo2A ?? null,
-			algo2B: algo2B ?? null,
-			algoBlendA,
-			algoBlendB,
-			intPmAmount,
-			intPmRatio,
-			pmPre,
-			windowType,
-			volume,
-			line1Level,
-			line2Level,
-			line1Octave,
-			line2Octave,
-			line1Detune,
-			line2Detune,
-			line1DcoDepth,
-			line2DcoDepth,
-			line1DcwComp,
-			line2DcwComp,
-			line1DcoEnv,
-			line1DcwEnv,
-			line1DcaEnv,
-			line2DcoEnv,
-			line2DcwEnv,
-			line2DcaEnv,
-			polyMode,
-			legato,
-			velocityTarget,
-			chorusRate,
-			chorusDepth,
-			chorusMix,
-			delayTime,
-			delayFeedback,
-			delayMix,
-			reverbSize,
-			reverbMix,
-			lineSelect,
-			modMode,
-			line1DcwKeyFollow,
-			line1DcaKeyFollow: 0,
-			line2DcwKeyFollow,
-			line2DcaKeyFollow: 0,
-			vibratoEnabled,
-			vibratoWave,
-			vibratoRate,
-			vibratoDepth,
-			vibratoDelay,
-			portamentoEnabled,
-			portamentoMode,
-			portamentoRate,
-			portamentoTime,
-			lfoEnabled,
-			lfoWaveform,
-			lfoRate,
-			lfoDepth,
-			lfoOffset,
-			lfoTarget,
-			filterEnabled,
-			filterType,
-			filterCutoff,
-			filterResonance,
-			filterEnvAmount,
-			pitchBendRange,
-			modWheelVibratoDepth,
-			phaseModEnabled: false,
-			chorusEnabled: false,
-			delayEnabled: false,
-			reverbEnabled: false
-		}),
-		[
-			warpAAmount,
-			warpBAmount,
-			warpAAlgo,
-			warpBAlgo,
-			algo2A,
-			algo2B,
-			algoBlendA,
-			algoBlendB,
-			intPmAmount,
-			intPmRatio,
-			pmPre,
-			windowType,
-			volume,
-			line1Level,
-			line2Level,
-			line1Octave,
-			line2Octave,
-			line1Detune,
-			line2Detune,
-			line1DcoDepth,
-			line2DcoDepth,
-			line1DcwComp,
-			line2DcwComp,
-			line1DcoEnv,
-			line1DcwEnv,
-			line1DcaEnv,
-			line2DcoEnv,
-			line2DcwEnv,
-			line2DcaEnv,
-			polyMode,
-			legato,
-			velocityTarget,
-			chorusRate,
-			chorusDepth,
-			chorusMix,
-			delayTime,
-			delayFeedback,
-			delayMix,
-			reverbSize,
-			reverbMix,
-			lineSelect,
-			modMode,
-			line1DcwKeyFollow,
-			line2DcwKeyFollow,
-			vibratoEnabled,
-			vibratoWave,
-			vibratoRate,
-			vibratoDepth,
-			vibratoDelay,
-			portamentoEnabled,
-			portamentoMode,
-			portamentoRate,
-			portamentoTime,
-			lfoEnabled,
-			lfoWaveform,
-			lfoRate,
-			lfoDepth,
-			lfoOffset,
-			lfoTarget,
-			filterEnabled,
-			filterType,
-			filterCutoff,
-			filterResonance,
-			filterEnvAmount,
-			pitchBendRange,
-			modWheelVibratoDepth,
-		],
-	);
-
-	const applyPreset = useCallback((data: SynthPresetData) => {
-		const safe = (v: unknown, fallback: number) =>
-			typeof v === "number" && !Number.isNaN(v) ? v : fallback;
-		setWarpAAmount(safe(data.warpAAmount, 0));
-		setWarpBAmount(safe(data.warpBAmount, 0));
-		setWarpAAlgo(data.warpAAlgo as PdAlgo);
-		setWarpBAlgo(data.warpBAlgo as PdAlgo);
-		setAlgo2A(data.algo2A as PdAlgo | null);
-		setAlgo2B(data.algo2B as PdAlgo | null);
-		setAlgoBlendA(safe(data.algoBlendA, 0));
-		setAlgoBlendB(safe(data.algoBlendB, 0));
-		setIntPmAmount(safe(data.intPmAmount, 0));
-		setIntPmRatio(safe(data.intPmRatio, 1));
-		setPmPre(data.pmPre ?? true);
-		setWindowType((data.windowType as "off" | "saw" | "triangle") ?? "off");
-		setVolume(safe(data.volume, 1));
-		setLine1Level(safe(data.line1Level, 1));
-		setLine2Level(safe(data.line2Level, 1));
-		setLine1Octave(safe(data.line1Octave, 0));
-		setLine2Octave(safe(data.line2Octave, 0));
-		setLine1Detune(safe(data.line1Detune, 0));
-		setLine2Detune(safe(data.line2Detune, 0));
-		setLine1DcoDepth(safe(data.line1DcoDepth, 0));
-		setLine2DcoDepth(safe(data.line2DcoDepth, 0));
-		setLine1DcwComp(safe(data.line1DcwComp, 0));
-		setLine2DcwComp(safe(data.line2DcwComp, 0));
-		setLine1DcoEnv(data.line1DcoEnv);
-		setLine1DcwEnv(data.line1DcwEnv);
-		setLine1DcaEnv(data.line1DcaEnv);
-		setLine2DcoEnv(data.line2DcoEnv);
-		setLine2DcwEnv(data.line2DcwEnv);
-		setLine2DcaEnv(data.line2DcaEnv);
-		setPolyMode((data.polyMode as PolyMode) ?? "poly8");
-		setLegato(data.legato ?? false);
-		setVelocityTarget((data.velocityTarget as VelocityTarget) ?? "amp");
-		setChorusRate(safe(data.chorusRate, 0.8));
-		setChorusDepth(safe(data.chorusDepth, 3));
-		setChorusMix(safe(data.chorusMix, 0));
-		setDelayTime(safe(data.delayTime, 0.3));
-		setDelayFeedback(safe(data.delayFeedback, 0.35));
-		setDelayMix(safe(data.delayMix, 0));
-		setReverbSize(safe(data.reverbSize, 0.5));
-		setReverbMix(safe(data.reverbMix, 0));
-		setLineSelect(data.lineSelect ?? "L1+L2");
-		setModMode((data.modMode as "normal" | "ring" | "noise") ?? "normal");
-		setLine1DcwKeyFollow(safe(data.line1DcwKeyFollow, 0));
-		setLine2DcwKeyFollow(safe(data.line2DcwKeyFollow, 0));
-		setVibratoEnabled(data.vibratoEnabled ?? false);
-		setVibratoWave(safe(data.vibratoWave, 1) as 1 | 2 | 3 | 4);
-		setVibratoRate(safe(data.vibratoRate, 30));
-		setVibratoDepth(safe(data.vibratoDepth, 30));
-		setVibratoDelay(safe(data.vibratoDelay, 0));
-		setPortamentoEnabled(data.portamentoEnabled ?? false);
-		setPortamentoMode((data.portamentoMode as "rate" | "time") ?? "rate");
-		setPortamentoRate(safe(data.portamentoRate, 50));
-		setPortamentoTime(safe(data.portamentoTime, 0.5));
-		setLfoEnabled(data.lfoEnabled ?? false);
-		setLfoWaveform(
-			(data.lfoWaveform as "sine" | "triangle" | "square" | "saw") ?? "sine",
-		);
-		setLfoRate(safe(data.lfoRate, 5));
-		setLfoDepth(safe(data.lfoDepth, 0));
-		setLfoTarget(
-			(data.lfoTarget as "pitch" | "dcw" | "dca" | "filter") ?? "pitch",
-		);
-		setFilterEnabled(data.filterEnabled ?? false);
-		setFilterType((data.filterType as "lp" | "hp" | "bp") ?? "lp");
-		setFilterCutoff(safe(data.filterCutoff, 5000));
-		setFilterResonance(safe(data.filterResonance, 0));
-		setFilterEnvAmount(safe(data.filterEnvAmount, 0));
-		setPitchBendRange(safe(data.pitchBendRange, 2));
-		setModWheelVibratoDepth(safe(data.modWheelVibratoDepth, 0));
-		// Reset sentParamsRef so all params are re-sent after preset load
-		sentParamsRef.current.clear();
-		sentEnvelopesRef.current.clear();
-	}, []);
-
-	// ── Preset handlers ───────────────────────────────────────────────────────
-	const allPresetEntries = useMemo(
-		(): PresetEntry[] => [
-			...Object.keys(DEFAULT_SYNTH_PRESETS).map((name) => ({
-				id: `builtin:${name}`,
-				label: name,
-				type: "builtin" as const,
-			})),
-			...presetList.map((name) => ({
-				id: `local:${name}`,
-				label: name,
-				type: "local" as const,
-			})),
-		],
-		[presetList],
-	);
-
-	const activePresetIndex = useMemo(
-		() => allPresetEntries.findIndex((e) => e.label === activePresetName),
-		[activePresetName, allPresetEntries],
-	);
-
-	const handleLoadLocal = useCallback(
-		(name: string) => {
-			const data = loadPreset(name);
-			if (!data) return;
-			applyPreset(data);
-			setActivePresetName(name);
-		},
-		[applyPreset],
-	);
-
-	const handleLoadBuiltin = useCallback(
-		(name: string) => {
-			const data = DEFAULT_SYNTH_PRESETS[name];
-			if (!data) return;
-			applyPreset(data);
-			setActivePresetName(name);
-		},
-		[applyPreset],
-	);
-
-	// No library presets in plugin context — stub
-	const handleLoadLibrary = useCallback(() => {}, []);
-
-	const handleStepPreset = useCallback(
-		(direction: -1 | 1) => {
-			if (allPresetEntries.length === 0) return;
-			const base = activePresetIndex >= 0 ? activePresetIndex : 0;
-			const next =
-				(base + direction + allPresetEntries.length) % allPresetEntries.length;
-			const entry = allPresetEntries[next];
-			if (!entry) return;
-			if (entry.type === "local") handleLoadLocal(entry.label);
-			else if (entry.type === "builtin") handleLoadBuiltin(entry.label);
-		},
-		[activePresetIndex, allPresetEntries, handleLoadLocal, handleLoadBuiltin],
-	);
-
-	const handleSavePreset = useCallback(
-		(name: string) => {
-			savePreset(name, gatherState());
-			setPresetList(listPresets());
-			setActivePresetName(name);
-		},
-		[gatherState],
-	);
-
-	const handleDeletePreset = useCallback((name: string) => {
-		deletePreset(name);
-		setPresetList(listPresets());
-		setActivePresetName((prev) => (prev === name ? "Current State" : prev));
-	}, []);
-
-	const handleRenamePreset = useCallback((oldName: string, newName: string) => {
-		const trimmed = newName.trim();
-		if (!trimmed || trimmed === oldName) return;
-		renamePreset(oldName, trimmed);
-		setPresetList(listPresets());
-		setActivePresetName((prev) => (prev === oldName ? trimmed : prev));
-	}, []);
-
-	const handleInitPreset = useCallback(() => {
-		applyPreset(DEFAULT_PRESET);
-		setActivePresetName("Current State");
-	}, [applyPreset]);
-
-	const handleExportPreset = useCallback((name: string) => {
-		const json = exportPreset(name);
-		if (!json) return;
-		const blob = new Blob([json], { type: "application/json" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `${name}.json`;
-		a.click();
-		URL.revokeObjectURL(url);
-	}, []);
-
-	const handleImportPreset = useCallback(
-		(json: string, filename: string) => {
-			const data = importPreset(json);
-			if (!data) return;
-			const name = filename.trim() || "imported";
-			const existing = listPresets();
-			let candidate = name;
-			let n = 2;
-			while (existing.includes(candidate)) {
-				candidate = `${name} ${n++}`;
-			}
-			savePreset(candidate, data);
-			setPresetList(listPresets());
-			applyPreset(data);
-			setActivePresetName(candidate);
-		},
-		[applyPreset],
-	);
-
-	const handleExportCurrentState = useCallback(
-		(name: string) => {
-			const state = gatherState();
-			const json = JSON.stringify({ _name: name, ...state }, null, 2);
-			const blob = new Blob([json], { type: "application/json" });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = url;
-			a.download = `${name}.json`;
-			a.click();
-			URL.revokeObjectURL(url);
-		},
-		[gatherState],
-	);
-
-	// ── Load saved state on mount ─────────────────────────────────────────────
-	useEffect(() => {
-		setPresetList(listPresets());
-		if (window.ipc) {
-			return;
-		}
-		const saved = loadCurrentState();
-		if (saved) applyPreset(saved);
-	}, [applyPreset]);
+	const {
+		allPresetEntries,
+		activePresetName,
+		handleLoadLocal,
+		handleLoadBuiltin,
+		handleLoadLibrary,
+		handleStepPreset,
+		handleSavePreset,
+		handleDeletePreset,
+		handleRenamePreset,
+		handleInitPreset,
+		handleExportPreset,
+		handleImportPreset,
+		handleExportCurrentState,
+	} = useSynthPresetManager({
+		builtinPresets: DEFAULT_SYNTH_PRESETS,
+		gatherState,
+		applyPreset,
+		shouldLoadCurrentState: () => !window.ipc,
+	});
 
 	useEffect(() => {
 		if (!window.__czGetEnvelopes) {
@@ -1240,15 +996,14 @@ export default function PluginPage() {
 		return () => {
 			cancelled = true;
 		};
-	}, []);
-
-	// ── Auto-save current state ───────────────────────────────────────────────
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			saveCurrentState(gatherState());
-		}, 500);
-		return () => clearTimeout(timer);
-	}, [gatherState]);
+	}, [
+		setLine1DcoEnv,
+		setLine1DcwEnv,
+		setLine1DcaEnv,
+		setLine2DcoEnv,
+		setLine2DcwEnv,
+		setLine2DcaEnv,
+	]);
 
 	// ── Persist UI scale ──────────────────────────────────────────────────────
 	useEffect(() => {
@@ -1414,45 +1169,46 @@ export default function PluginPage() {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 	return (
-		<div
+		<SynthPageFrame
 			className="h-full bg-cz-panel flex flex-col overflow-hidden gap-4 w-full"
 			style={{ zoom: `${uiScale}%` }}
+			headerProps={{
+				allEntries: allPresetEntries,
+				activePresetName,
+				onLoadLocal: handleLoadLocal,
+				onLoadLibrary: handleLoadLibrary,
+				onLoadBuiltin: handleLoadBuiltin,
+				onStepPreset: handleStepPreset,
+				onSavePreset: handleSavePreset,
+				onDeletePreset: handleDeletePreset,
+				onRenamePreset: handleRenamePreset,
+				onInitPreset: handleInitPreset,
+				onExportPreset: handleExportPreset,
+				onExportCurrentState: handleExportCurrentState,
+				onImportPreset: handleImportPreset,
+			}}
+			headerExtra={
+				PLUGIN_RUNTIME_CAPABILITIES.showUiScaleControl ? (
+					<div className="flex items-center gap-2 px-8 -mt-2">
+						<span className="text-3xs font-mono uppercase tracking-[0.2em] text-base-content/50">
+							UI Scale
+						</span>
+						<div className="flex gap-1">
+							{PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.map((s) => (
+								<button
+									key={s}
+									type="button"
+									className={`btn btn-xs font-mono ${uiScale === s ? "btn-primary" : "btn-ghost opacity-50"}`}
+									onClick={() => setUiScale(s as UiScale)}
+								>
+									{s}%
+								</button>
+							))}
+						</div>
+					</div>
+				) : null
+			}
 		>
-			<SynthHeader
-				allEntries={allPresetEntries}
-				activePresetName={activePresetName}
-				onLoadLocal={handleLoadLocal}
-				onLoadLibrary={handleLoadLibrary}
-				onLoadBuiltin={handleLoadBuiltin}
-				onStepPreset={handleStepPreset}
-				onSavePreset={handleSavePreset}
-				onDeletePreset={handleDeletePreset}
-				onRenamePreset={handleRenamePreset}
-				onInitPreset={handleInitPreset}
-				onExportPreset={handleExportPreset}
-				onExportCurrentState={handleExportCurrentState}
-				onImportPreset={handleImportPreset}
-			/>
-
-			{/* UI Scale selector */}
-			<div className="flex items-center gap-2 px-8 -mt-2">
-				<span className="text-3xs font-mono uppercase tracking-[0.2em] text-base-content/50">
-					UI Scale
-				</span>
-				<div className="flex gap-1">
-					{UI_SCALE_OPTIONS.map((s) => (
-						<button
-							key={s}
-							type="button"
-							className={`btn btn-xs font-mono ${uiScale === s ? "btn-primary" : "btn-ghost opacity-50"}`}
-							onClick={() => setUiScale(s)}
-						>
-							{s}%
-						</button>
-					))}
-				</div>
-			</div>
-
 			<div className="px-4 grid flex-1 min-h-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)]">
 				<aside className="overflow-y-auto min-h-0 pb-4 space-y-0 [scrollbar-gutter:stable]">
 					{/* ScopePanel — live PCM feed from Rust via window.__czOnScope */}
@@ -1633,6 +1389,6 @@ export default function PluginPage() {
 					/>
 				</main>
 			</div>
-		</div>
+		</SynthPageFrame>
 	);
 }
