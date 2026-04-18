@@ -5,10 +5,20 @@ import {
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
 } from "@/components/pdAlgorithms";
+import type {
+	FilterType,
+	LfoTarget,
+	LfoWaveform,
+	LineSelect,
+	ModMode,
+	PolyMode,
+	PortamentoMode,
+	VelocityTarget,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
 import type { SynthPresetData } from "@/lib/synth/presetStorage";
 
-type LineSelect = "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";export type PolyMode = "poly8" | "mono";
-export type VelocityTarget = "amp" | "dcw" | "both" | "off";
+export type { PolyMode, VelocityTarget };
 export type UseSynthStateResult = {
 	// Line 1 warping
 	warpAAmount: number;
@@ -41,8 +51,8 @@ export type UseSynthStateResult = {
 	setPhaseModEnabled: (v: boolean) => void;
 
 	// Window
-	windowType: "off" | "saw" | "triangle";
-	setWindowType: (v: "off" | "saw" | "triangle") => void;
+	windowType: WindowType;
+	setWindowType: (v: WindowType) => void;
 
 	// Master volume
 	volume: number;
@@ -95,8 +105,8 @@ export type UseSynthStateResult = {
 	// Modulation
 	lineSelect: LineSelect;
 	setLineSelect: (v: LineSelect) => void;
-	modMode: "normal" | "ring" | "noise";
-	setModMode: (v: "normal" | "ring" | "noise") => void;
+	modMode: ModMode;
+	setModMode: (v: ModMode) => void;
 
 	// Poly
 	polyMode: PolyMode;
@@ -149,8 +159,8 @@ export type UseSynthStateResult = {
 	// Portamento
 	portamentoEnabled: boolean;
 	setPortamentoEnabled: (v: boolean) => void;
-	portamentoMode: "rate" | "time";
-	setPortamentoMode: (v: "rate" | "time") => void;
+	portamentoMode: PortamentoMode;
+	setPortamentoMode: (v: PortamentoMode) => void;
 	portamentoRate: number;
 	setPortamentoRate: (v: number) => void;
 	portamentoTime: number;
@@ -159,22 +169,22 @@ export type UseSynthStateResult = {
 	// LFO
 	lfoEnabled: boolean;
 	setLfoEnabled: (v: boolean) => void;
-	lfoWaveform: "sine" | "triangle" | "square" | "saw";
-	setLfoWaveform: (v: "sine" | "triangle" | "square" | "saw") => void;
+	lfoWaveform: LfoWaveform;
+	setLfoWaveform: (v: LfoWaveform) => void;
 	lfoRate: number;
 	setLfoRate: (v: number) => void;
 	lfoDepth: number;
 	setLfoDepth: (v: number) => void;
 	lfoOffset: number;
 	setLfoOffset: (v: number) => void;
-	lfoTarget: "pitch" | "dcw" | "dca" | "filter";
-	setLfoTarget: (v: "pitch" | "dcw" | "dca" | "filter") => void;
+	lfoTarget: LfoTarget;
+	setLfoTarget: (v: LfoTarget) => void;
 
 	// Filter
 	filterEnabled: boolean;
 	setFilterEnabled: (v: boolean) => void;
-	filterType: "lp" | "hp" | "bp";
-	setFilterType: (v: "lp" | "hp" | "bp") => void;
+	filterType: FilterType;
+	setFilterType: (v: FilterType) => void;
 	filterCutoff: number;
 	setFilterCutoff: (v: number) => void;
 	filterResonance: number;
@@ -246,7 +256,7 @@ export function useSynthState(): UseSynthStateResult {
 
 	// Modulation
 	const [lineSelect, setLineSelect] = useState<LineSelect>("L1+L2");
-	const [modMode, setModMode] = useState<"normal" | "ring" | "noise">("normal");
+	const [modMode, setModMode] = useState<ModMode>("normal");
 
 	// Poly
 	const [polyMode, setPolyMode] = useState<PolyMode>("poly8");
@@ -279,25 +289,21 @@ export function useSynthState(): UseSynthStateResult {
 
 	// Portamento
 	const [portamentoEnabled, setPortamentoEnabled] = useState(false);
-	const [portamentoMode, setPortamentoMode] = useState<"rate" | "time">("rate");
+	const [portamentoMode, setPortamentoMode] = useState<PortamentoMode>("rate");
 	const [portamentoRate, setPortamentoRate] = useState(50);
 	const [portamentoTime, setPortamentoTime] = useState(0.5);
 
 	// LFO
 	const [lfoEnabled, setLfoEnabled] = useState(false);
-	const [lfoWaveform, setLfoWaveform] = useState<
-		"sine" | "triangle" | "square" | "saw"
-	>("sine");
+	const [lfoWaveform, setLfoWaveform] = useState<LfoWaveform>("sine");
 	const [lfoRate, setLfoRate] = useState(5);
 	const [lfoDepth, setLfoDepth] = useState(0);
 	const [lfoOffset, setLfoOffset] = useState(0);
-	const [lfoTarget, setLfoTarget] = useState<
-		"pitch" | "dcw" | "dca" | "filter"
-	>("pitch");
+	const [lfoTarget, setLfoTarget] = useState<LfoTarget>("pitch");
 
 	// Filter
 	const [filterEnabled, setFilterEnabled] = useState(false);
-	const [filterType, setFilterType] = useState<"lp" | "hp" | "bp">("lp");
+	const [filterType, setFilterType] = useState<FilterType>("lp");
 	const [filterCutoff, setFilterCutoff] = useState(5000);
 	const [filterResonance, setFilterResonance] = useState(0);
 	const [filterEnvAmount, setFilterEnvAmount] = useState(0);
@@ -472,7 +478,7 @@ export function useSynthState(): UseSynthStateResult {
 		setIntPmRatio(safe(data.intPmRatio, 1));
 		setPhaseModEnabled(data.phaseModEnabled ?? false);
 		setPmPre(data.pmPre ?? true);
-		setWindowType((data.windowType as "off" | "saw" | "triangle") ?? "off");
+		setWindowType((data.windowType as WindowType) ?? "off");
 		setVolume(safe(data.volume, 1));
 		setLine1Level(safe(data.line1Level, 1));
 		setLine2Level(safe(data.line2Level, 1));
@@ -505,7 +511,7 @@ export function useSynthState(): UseSynthStateResult {
 		setReverbEnabled(data.reverbEnabled ?? false);
 		setReverbMix(safe(data.reverbMix, 0));
 		setLineSelect(data.lineSelect ?? "L1+L2");
-		setModMode((data.modMode as "normal" | "ring" | "noise") ?? "normal");
+		setModMode((data.modMode as ModMode) ?? "normal");
 		setLine1DcwKeyFollow(safe(data.line1DcwKeyFollow, 0));
 		setLine1DcaKeyFollow(safe(data.line1DcaKeyFollow, 0));
 		setLine2DcwKeyFollow(safe(data.line2DcwKeyFollow, 0));
@@ -516,21 +522,17 @@ export function useSynthState(): UseSynthStateResult {
 		setVibratoDepth(safe(data.vibratoDepth, 30));
 		setVibratoDelay(safe(data.vibratoDelay, 0));
 		setPortamentoEnabled(data.portamentoEnabled ?? false);
-		setPortamentoMode((data.portamentoMode as "rate" | "time") ?? "rate");
+		setPortamentoMode((data.portamentoMode as PortamentoMode) ?? "rate");
 		setPortamentoRate(safe(data.portamentoRate, 50));
 		setPortamentoTime(safe(data.portamentoTime, 0.5));
 		setLfoEnabled(data.lfoEnabled ?? false);
-		setLfoWaveform(
-			(data.lfoWaveform as "sine" | "triangle" | "square" | "saw") ?? "sine",
-		);
+		setLfoWaveform((data.lfoWaveform as LfoWaveform) ?? "sine");
 		setLfoRate(safe(data.lfoRate, 5));
 		setLfoDepth(safe(data.lfoDepth, 0));
 		setLfoOffset(safe(data.lfoOffset, 0));
-		setLfoTarget(
-			(data.lfoTarget as "pitch" | "dcw" | "dca" | "filter") ?? "pitch",
-		);
+		setLfoTarget((data.lfoTarget as LfoTarget) ?? "pitch");
 		setFilterEnabled(data.filterEnabled ?? false);
-		setFilterType((data.filterType as "lp" | "hp" | "bp") ?? "lp");
+		setFilterType((data.filterType as FilterType) ?? "lp");
 		setFilterCutoff(safe(data.filterCutoff, 5000));
 		setFilterResonance(safe(data.filterResonance, 0));
 		setFilterEnvAmount(safe(data.filterEnvAmount, 0));

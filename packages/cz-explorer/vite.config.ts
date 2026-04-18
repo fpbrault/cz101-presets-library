@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { existsSync, rmSync, watch } from "node:fs";
+import { existsSync, mkdirSync, rmSync, watch } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -56,12 +56,64 @@ function wasmDevPlugin() {
 	};
 }
 
+const spectaTsBindingsOutFile = fileURLToPath(
+	new URL("./src/lib/synth/bindings/synth.ts", import.meta.url),
+);
+const cosmoSynthEngineDir = fileURLToPath(
+	new URL("../cosmo-synth-engine", import.meta.url),
+);
+
+function spectaBindingsDevPlugin() {
+	const wasmSrcDir = fileURLToPath(
+		new URL("../cosmo-synth-engine/src", import.meta.url),
+	);
+	const exportBindings = () => {
+		console.log("[specta-bindings] Exporting TypeScript bindings...");
+		try {
+			mkdirSync(fileURLToPath(new URL("./src/lib/synth/bindings", import.meta.url)), {
+				recursive: true,
+			});
+			execSync(
+				"cargo run --features specta-bindings --bin export-specta-bindings",
+				{
+					stdio: "inherit",
+					cwd: cosmoSynthEngineDir,
+					env: {
+						...process.env,
+						CARGO_TARGET_DIR: wasmCargoTargetDir,
+						SPECTA_TS_EXPORT_PATH: spectaTsBindingsOutFile,
+					},
+				},
+			);
+			console.log("[specta-bindings] TypeScript bindings updated.");
+		} catch {
+			console.error("[specta-bindings] TypeScript bindings export failed.");
+		}
+	};
+
+	return {
+		name: "specta-bindings-dev",
+		apply: "serve",
+		configureServer(server) {
+			exportBindings();
+			let debounce: ReturnType<typeof setTimeout> | undefined;
+			watch(wasmSrcDir, { recursive: true }, () => {
+				clearTimeout(debounce);
+				debounce = setTimeout(() => {
+					exportBindings();
+					server.ws.send({ type: "full-reload" });
+				}, 500);
+			});
+		},
+	};
+}
+
 const _host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
 	publicDir: "public",
-	plugins: [wasmDevPlugin(), react(), tailwindcss()],
+	plugins: [spectaBindingsDevPlugin(), wasmDevPlugin(), react(), tailwindcss()],
 	// Ensure .env is resolved relative to this config file even when launched via tauri tooling.
 	envDir: fileURLToPath(new URL(".", import.meta.url)),
 	envPrefix: ["VITE_", "TAURI_ENV_"],

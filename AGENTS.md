@@ -47,6 +47,7 @@ Tauri 2 desktop app for managing Casio CZ-101 synthesizer `.SYX` presets.
 - **Styling**: Tailwind CSS + DaisyUI; prefer DaisyUI semantic classes (`btn`, `badge-primary`, etc.) over raw Tailwind utilities. No inline `style=` attributes.
 - **Formatting**: Biome — tabs, double quotes, organized imports (`bun run lint:fix`)
 - **MIDI/SysEx**: Always use `Uint8Array` for raw MIDI data, never `number[]`. SysEx starts `0xF0`, ends `0xF7`.
+- **Temporary code**: If a change is temporary, add an explicit `TODO:` comment at the relevant code location so follow-up work is trackable.
 
 ## Testing
 

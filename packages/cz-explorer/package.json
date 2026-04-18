@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
+		"gen:bindings": "SPECTA_TS_EXPORT_PATH=./src/lib/synth/bindings/synth.ts cargo run --features specta-bindings --bin export-specta-bindings --manifest-path ../cosmo-synth-engine/Cargo.toml",
 		"preview": "vite preview",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
