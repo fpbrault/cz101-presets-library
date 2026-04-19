@@ -6,15 +6,14 @@ import {
 	useRef,
 	useState,
 } from "react";
-import SharedSynthUiRenderer, {
-	useSharedSynthUiState,
-} from "@/components/synth/SharedSynthUiRenderer";
+import type { AsidePanelTab } from "@/components/synth/AsidePanelSwitcher";
+import SynthRenderer from "@/components/synth/SynthRenderer";
+import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
 import { getSynthRuntimeCapabilities } from "@/features/synth/runtimeCapabilities";
 import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
 import { useSynthState } from "@/features/synth/useSynthState";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
 import { usePluginParamBridge } from "./usePluginParamBridge";
-import { usePluginScopeRenderer } from "./usePluginScopeRenderer";
 
 const UI_SCALE_KEY = "cz-plugin-ui-scale";
 const PLUGIN_RUNTIME_CAPABILITIES = getSynthRuntimeCapabilities("plugin");
@@ -26,14 +25,8 @@ type PluginPageProps = {
 
 export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	const synthState = useSynthState();
-	const {
-		lineSelect,
-		polyMode,
-		filterEnabled,
-		intPmAmount,
-		gatherState,
-		applyPreset,
-	} = synthState;
+	const { lineSelect, polyMode, filterEnabled, gatherState, applyPreset } =
+		synthState;
 
 	const [uiScale, setUiScale] = useState<UiScale>(() => {
 		const saved = localStorage.getItem(UI_SCALE_KEY);
@@ -43,17 +36,42 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 		) as UiScale;
 	});
 	const [scopeActiveHz, setScopeActiveHz] = useState(220);
-	const oscilloscopeCanvasRef = useRef<HTMLCanvasElement>(null);
-	const uiState = useSharedSynthUiState({ defaultAsidePanel: "global" });
+	const analyserNodeRef = useRef<AnalyserNode | null>(null);
+	const audioCtxRef = useRef<AudioContext | null>(null);
+	const [activeAsidePanel, setActiveAsidePanel] = useState<AsidePanelTab>(
+		"global",
+	);
+	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 
 	usePluginParamBridge();
-	usePluginScopeRenderer({
-		oscilloscopeCanvasRef,
-		scopeCycles: uiState.scopeCycles,
-		scopeVerticalZoom: uiState.scopeVerticalZoom,
-		scopeTriggerLevel: uiState.scopeTriggerLevel,
-		onScopeHzChange: setScopeActiveHz,
-	});
+
+	const subscribeScopeFrames = useCallback(
+		(
+			onFrame: (frame: {
+				samples: Float32Array;
+				sampleRate: number;
+				hz: number;
+			}) => void,
+		) => {
+			window.__czOnScope = (
+				samples: number[],
+				sampleRate: number,
+				hz: number,
+			) => {
+				onFrame({
+					samples: new Float32Array(samples),
+					sampleRate,
+					hz,
+				});
+				setScopeActiveHz(Math.round(hz * 10) / 10);
+			};
+
+			return () => {
+				window.__czOnScope = undefined;
+			};
+		},
+		[],
+	);
 
 	useEffect(() => {
 		localStorage.setItem(UI_SCALE_KEY, String(uiScale));
@@ -92,7 +110,7 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	}, [lineSelect, polyMode, filterEnabled]);
 
 	return (
-		<SharedSynthUiRenderer
+		<SynthRenderer
 			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
@@ -139,10 +157,14 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 			}
 			lcdPrimaryText={lcdPrimaryText}
 			lcdSecondaryText={lcdSecondaryText}
-			effectiveIntPmAmount={intPmAmount}
+			lcdTransientReadout={lcdControlReadout}
 			effectivePitchHz={scopeActiveHz}
-			oscilloscopeCanvasRef={oscilloscopeCanvasRef}
-			uiState={uiState}
+			analyserNodeRef={analyserNodeRef}
+			audioCtxRef={audioCtxRef}
+			subscribeScopeFrames={subscribeScopeFrames}
+			activeAsidePanel={activeAsidePanel}
+			onAsidePanelChange={setActiveAsidePanel}
+			onControlReadout={pushLcdControlReadout}
 		/>
 	);
 }

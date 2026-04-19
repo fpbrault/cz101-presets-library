@@ -1,30 +1,34 @@
 import { ReverbSection } from "@/components/ReverbSection";
+import { useSynthParam } from "@/features/synth/SynthParamController";
+import type { AsidePanelComponent } from "./AsidePanelSwitcher";
 import SynthPanelContainer from "./SynthPanelContainer";
 
-type ReverbPanelProps = {
-	enabled: boolean;
-	setEnabled: (v: boolean) => void;
-	size: number;
-	setSize: (v: number) => void;
-	mix: number;
-	setMix: (v: number) => void;
-};
+const ReverbPanel: AsidePanelComponent<"reverb"> = Object.assign(
+	function ReverbPanel() {
+		const { value: enabled, setValue: setEnabled } =
+			useSynthParam("reverbEnabled");
+		const { value: size, setValue: setSize } = useSynthParam("reverbSize");
+		const { value: mix, setValue: setMix } = useSynthParam("reverbMix");
 
-export default function ReverbPanel({
-	enabled,
-	setEnabled,
-	size,
-	setSize,
-	mix,
-	setMix,
-}: ReverbPanelProps) {
-	return (
-		<SynthPanelContainer
-			showEnableToggle
-			enabled={enabled}
-			onToggleEnabled={setEnabled}
-		>
-			<ReverbSection size={size} setSize={setSize} mix={mix} setMix={setMix} />
-		</SynthPanelContainer>
-	);
-}
+		return (
+			<SynthPanelContainer
+				showEnableToggle
+				enabled={enabled}
+				onToggleEnabled={setEnabled}
+			>
+				<ReverbSection
+					size={size}
+					setSize={setSize}
+					mix={mix}
+					setMix={setMix}
+				/>
+			</SynthPanelContainer>
+		);
+	},
+	{
+		panelId: "reverb" as const,
+		panelTab: { topLabel: "Reverb", bottomLabel: "FX" },
+	},
+);
+
+export default ReverbPanel;

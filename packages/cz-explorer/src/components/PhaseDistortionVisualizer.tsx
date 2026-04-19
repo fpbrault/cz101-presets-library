@@ -3,15 +3,13 @@ import {
 	type CSSProperties,
 	type ReactNode,
 	useCallback,
-	useEffect,
 	useMemo,
 	useRef,
 	useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import SharedSynthUiRenderer, {
-	useSharedSynthUiState,
-} from "@/components/synth/SharedSynthUiRenderer";
+import type { AsidePanelTab } from "@/components/synth/AsidePanelSwitcher";
+import SynthRenderer from "@/components/synth/SynthRenderer";
 import { useAudioEngine } from "@/features/synth/hooks/useAudioEngine";
 import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
 import { useNoteHandling } from "@/features/synth/hooks/useNoteHandling";
@@ -22,7 +20,6 @@ import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
-import { drawOscilloscope } from "@/lib/synth/drawOscilloscope";
 import {
 	pdVisualizerWorkletUrl,
 	synthBindingsUrl,
@@ -128,8 +125,9 @@ export function SharedPhaseDistortionVisualizer({
 	} = synthState;
 
 	const [extPmAmount] = useState(0);
-	const [scopeTriggerMode] = useState<"off" | "rise" | "fall">("rise");
-	const uiState = useSharedSynthUiState({ defaultAsidePanel: "scope" });
+	const [activeAsidePanel, setActiveAsidePanel] = useState<AsidePanelTab>(
+		"scope",
+	);
 
 	const { audioCtxRef, analyserNodeRef, workletNodeRef, paramsRef } =
 		useAudioEngine({
@@ -320,101 +318,29 @@ export function SharedPhaseDistortionVisualizer({
 			return t("display.noteWithFreq", {
 				note: heldNote,
 				freq: effectivePitchHz.toFixed(1),
+				defaultValue: `NOTE ${heldNote} ${effectivePitchHz.toFixed(1)}HZ`,
 			});
 		}
-		return t("display.preset", { preset: activePresetName.toUpperCase() });
+		return t("display.preset", {
+			preset: activePresetName.toUpperCase(),
+			defaultValue: `PRESET ${activePresetName.toUpperCase()}`,
+		});
 	}, [heldNote, effectivePitchHz, activePresetName, t]);
 
 	const lcdSecondaryText = useMemo(() => {
 		const filterStatus = filterEnabled
-			? t("states.filterOn")
-			: t("states.filterOff");
+			? t("states.filterOn", { defaultValue: "FILT ON" })
+			: t("states.filterOff", { defaultValue: "FILT OFF" });
 		return t("display.linePolyFilter", {
 			line: lineSelect,
 			poly: polyMode.toUpperCase(),
 			filter: filterStatus,
+			defaultValue: `LINE ${lineSelect} | ${polyMode.toUpperCase()} | ${filterStatus}`,
 		});
 	}, [lineSelect, polyMode, filterEnabled, t]);
 
-	useEffect(() => {
-		const canvas = oscilloscopeCanvasRef.current;
-		if (!canvas) return;
-		let raf = 0;
-
-		const draw = () => {
-			raf = window.requestAnimationFrame(draw);
-			const analyser = analyserNodeRef.current;
-			if (!analyser) {
-				const ctx = canvas.getContext("2d");
-				if (!ctx) return;
-				const dpr = window.devicePixelRatio || 1;
-				const drawWidth = Math.max(1, Math.floor(canvas.clientWidth));
-				const drawHeight = Math.max(1, Math.floor(canvas.clientHeight));
-				const pixelWidth = Math.floor(drawWidth * dpr);
-				const pixelHeight = Math.floor(drawHeight * dpr);
-				if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-					canvas.width = pixelWidth;
-					canvas.height = pixelHeight;
-				}
-				ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-				ctx.fillStyle = "#051005";
-				ctx.fillRect(0, 0, drawWidth, drawHeight);
-				ctx.strokeStyle = "rgba(0, 120, 0, 0.35)";
-				ctx.lineWidth = 1;
-				for (let y = 0.25; y < 1; y += 0.25) {
-					ctx.beginPath();
-					ctx.moveTo(0, drawHeight * y);
-					ctx.lineTo(drawWidth, drawHeight * y);
-					ctx.stroke();
-				}
-				for (let x = 0.1; x < 1; x += 0.1) {
-					ctx.beginPath();
-					ctx.moveTo(drawWidth * x, 0);
-					ctx.lineTo(drawWidth * x, drawHeight);
-					ctx.stroke();
-				}
-				ctx.strokeStyle = "rgba(0, 120, 0, 0.6)";
-				ctx.lineWidth = 1.5;
-				ctx.beginPath();
-				ctx.moveTo(0, drawHeight / 2);
-				ctx.lineTo(drawWidth, drawHeight / 2);
-				ctx.stroke();
-				return;
-			}
-
-			const data = new Uint8Array(analyser.fftSize);
-			analyser.getByteTimeDomainData(data);
-			const sampleRate = audioCtxRef.current?.sampleRate ?? 44100;
-			const hz = Math.max(1, effectivePitchHz);
-
-			drawOscilloscope(
-				canvas,
-				data,
-				{
-					cycles: uiState.scopeCycles,
-					verticalZoom: uiState.scopeVerticalZoom,
-					triggerLevel: uiState.scopeTriggerLevel,
-					triggerMode: scopeTriggerMode,
-				},
-				hz,
-				sampleRate,
-			);
-		};
-
-		draw();
-		return () => window.cancelAnimationFrame(raf);
-	}, [
-		effectivePitchHz,
-		uiState.scopeCycles,
-		uiState.scopeVerticalZoom,
-		scopeTriggerMode,
-		uiState.scopeTriggerLevel,
-		analyserNodeRef,
-		audioCtxRef,
-	]);
-
 	return (
-		<SharedSynthUiRenderer
+		<SynthRenderer
 			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
@@ -437,10 +363,13 @@ export function SharedPhaseDistortionVisualizer({
 			lcdPrimaryText={lcdPrimaryText}
 			lcdSecondaryText={lcdSecondaryText}
 			lcdTransientReadout={lcdControlReadout}
-			effectiveIntPmAmount={phaseModEnabled ? intPmAmount : 0}
 			effectivePitchHz={effectivePitchHz}
 			oscilloscopeCanvasRef={oscilloscopeCanvasRef}
-			uiState={uiState}
+			analyserNodeRef={analyserNodeRef}
+			audioCtxRef={audioCtxRef}
+			activeAsidePanel={activeAsidePanel}
+			onAsidePanelChange={setActiveAsidePanel}
+			onControlReadout={pushLcdControlReadout}
 			envOverrideHandlers={{
 				onLine1DcoEnvChange: handleLine1DcoEnvChange,
 				onLine1DcwEnvChange: handleLine1DcwEnvChange,

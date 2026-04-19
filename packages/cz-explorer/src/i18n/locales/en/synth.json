@@ -81,7 +81,14 @@
 		"on": "ON",
 		"off": "OFF",
 		"poly8": "POLY 8",
-		"mono": "MONO"
+		"mono": "MONO",
+		"filterOn": "FILT ON",
+		"filterOff": "FILT OFF"
+	},
+	"display": {
+		"preset": "PRESET {{preset}}",
+		"linePolyFilter": "LINE {{line}} | {{poly}} | {{filter}}",
+		"noteWithFreq": "NOTE {{note}} {{freq}}HZ"
 	},
 	"panels": {
 		"global": "Global",
