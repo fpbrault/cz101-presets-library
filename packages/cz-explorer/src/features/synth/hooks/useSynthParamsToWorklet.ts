@@ -3,15 +3,25 @@ import { useSynthEngineController } from "@/features/synth/engine/synthEngineAda
 import { buildSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { createWorkletSynthEngineAdapter } from "@/features/synth/engine/workletSynthEngineAdapter";
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
-import type { StepEnvData } from "@/lib/synth/bindings/synth";
+import type {
+	AlgoRefV1,
+	FilterType,
+	LfoTarget,
+	LfoWaveform,
+	LineSelect,
+	ModMode,
+	PortamentoMode,
+	StepEnvData,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
 import type { EngineParams } from "./useAudioEngine";
 
 type UseSynthParamsToWorkletParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
 	paramsRef: React.MutableRefObject<EngineParams>;
 	effectivePitchHz: number;
-	lineSelect: string;
-	modMode: string;
+	lineSelect: LineSelect;
+	modMode: ModMode;
 	warpAAmount: number;
 	warpBAmount: number;
 	line1Level: number;
@@ -20,14 +30,14 @@ type UseSynthParamsToWorkletParams = {
 	line2DcoDepth: number;
 	line1DcwComp: number;
 	line2DcwComp: number;
-	warpAAlgo: string;
-	warpBAlgo: string;
+	warpAAlgo: AlgoRefV1;
+	warpBAlgo: AlgoRefV1;
 	intPmAmount: number;
 	intPmRatio: number;
 	phaseModEnabled: boolean;
 	extPmAmount: number;
 	pmPre: boolean;
-	windowType: string;
+	windowType: WindowType;
 	volume: number;
 	line1Detune: number;
 	line2Detune: number;
@@ -53,8 +63,8 @@ type UseSynthParamsToWorkletParams = {
 	reverbSize: number;
 	reverbEnabled: boolean;
 	reverbMix: number;
-	algo2A: string | null;
-	algo2B: string | null;
+	algo2A: AlgoRefV1 | null;
+	algo2B: AlgoRefV1 | null;
 	algoBlendA: number;
 	algoBlendB: number;
 	line1DcwKeyFollow: number;
@@ -65,17 +75,17 @@ type UseSynthParamsToWorkletParams = {
 	vibratoDepth: number;
 	vibratoDelay: number;
 	portamentoEnabled: boolean;
-	portamentoMode: string;
+	portamentoMode: PortamentoMode;
 	portamentoRate: number;
 	portamentoTime: number;
 	lfoEnabled: boolean;
-	lfoWaveform: string;
+	lfoWaveform: LfoWaveform;
 	lfoRate: number;
 	lfoDepth: number;
 	lfoOffset: number;
-	lfoTarget: string;
+	lfoTarget: LfoTarget;
 	filterEnabled: boolean;
-	filterType: string;
+	filterType: FilterType;
 	filterCutoff: number;
 	filterResonance: number;
 	filterEnvAmount: number;

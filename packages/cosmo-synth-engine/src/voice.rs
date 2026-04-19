@@ -9,10 +9,10 @@ use alloc::vec::Vec;
 use libm::{cosf, sinf};
 
 use crate::envelope::EnvGen;
-use crate::oscillator::{apply_warp_algo, apply_window, cz_waveform, lfo_output, wrap01};
+use crate::oscillator::{algo_sample, algo_warp_phase, apply_window, lfo_output, wrap01};
 use crate::params::{
     FilterType, LfoTarget, LineSelect, ModMode, PortamentoMode, SynthParams, VelocityTarget,
-    WarpAlgo,
+    Algo,
 };
 
 // TWO_PI for f32
@@ -378,8 +378,8 @@ pub fn render_voice(
     let blend_a = l1.algo_blend;
     let blend_b = l2.algo_blend;
 
-    let warped_a = apply_warp_algo(l1.warp_algo, phase_a_input, final_dcw1, l1.waveform);
-    let warped_b = apply_warp_algo(l2.warp_algo, phase_b_input, final_dcw2, l2.waveform);
+    let warped_a = algo_warp_phase(l1.algo, phase_a_input, final_dcw1);
+    let warped_b = algo_warp_phase(l2.algo, phase_b_input, final_dcw2);
 
     let phase_a_post = wrap01(if p.pm_pre {
         warped_a
@@ -429,71 +429,39 @@ pub fn render_voice(
         let dcw2a = final_dcw1 * blend_a;
         let dcw1_effective = final_dcw1 * (1.0 - blend_a);
 
-        let sig_a1 = match l1.warp_algo {
-            WarpAlgo::Karpunk => ks_raw1,
-            WarpAlgo::Cz101 => lerp(
-                sinf(TWO_PI * phase_a_post),
-                cz_waveform(l1.waveform, phase_a_post),
-                dcw1_effective,
-            ),
-            _ => sinf(TWO_PI * phase_a_post),
+        let sig_a1 = if l1.algo == Algo::Karpunk {
+            ks_raw1
+        } else {
+            algo_sample(l1.algo, phase_a_post, dcw1_effective)
         };
 
-        let sig_a2 = match a2 {
-            WarpAlgo::Karpunk => ks_raw1, // share the same KS output for the blend target
-            WarpAlgo::Cz101 => {
-                let warped_a2 = apply_warp_algo(a2, phase_a_input, dcw2a, l1.waveform2);
-                let phase_a_post2 = wrap01(if p.pm_pre {
-                    warped_a2
-                } else {
-                    warped_a2 + pm_mod
-                });
-                lerp(
-                    sinf(TWO_PI * phase_a_post2),
-                    cz_waveform(l1.waveform2, phase_a_post2),
-                    dcw2a,
-                )
-            }
-            _ => {
-                let warped_a2 = apply_warp_algo(a2, phase_a_input, dcw2a, l1.waveform2);
-                let phase_a_post2 = wrap01(if p.pm_pre {
-                    warped_a2
-                } else {
-                    warped_a2 + pm_mod
-                });
-                sinf(TWO_PI * phase_a_post2)
-            }
+        let sig_a2 = if a2 == Algo::Karpunk {
+            ks_raw1 // share the same KS output for the blend target
+        } else {
+            let warped_a2 = algo_warp_phase(a2, phase_a_input, dcw2a);
+            let phase_a_post2 = wrap01(if p.pm_pre {
+                warped_a2
+            } else {
+                warped_a2 + pm_mod
+            });
+            algo_sample(a2, phase_a_post2, dcw2a)
         };
 
         // Karpunk-aware blending (asymmetric):
         // - KS as base (A slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
         // - KS as target (B slot): plain lerp — blend=0 pure osc, blend=1 pure KS (fade into pluck)
-        let combined_a = if l1.warp_algo == WarpAlgo::Karpunk {
-            // KS is the base; morph it toward a ring-modulated version of the other algo
+        let combined_a = if l1.algo == Algo::Karpunk {
             let ks = sig_a1;
             let osc = sig_a2;
             lerp(ks, ks * osc * 2.0, blend_a)
-        } else if a2 == WarpAlgo::Karpunk {
-            // KS is the target; simple crossfade from osc into KS
-            lerp(sig_a1, sig_a2, blend_a)
         } else {
             lerp(sig_a1, sig_a2, blend_a)
         };
         combined_a * w1 * final_dca1
-    } else if l1.warp_algo == WarpAlgo::Karpunk {
+    } else if l1.algo == Algo::Karpunk {
         ks_raw1 * w1 * final_dca1
     } else {
-        // Standard single-algo path
-        if l1.warp_algo == WarpAlgo::Cz101 {
-            lerp(
-                sinf(TWO_PI * phase_a_post),
-                cz_waveform(l1.waveform, phase_a_post),
-                final_dcw1,
-            ) * w1
-                * final_dca1
-        } else {
-            sinf(TWO_PI * phase_a_post) * w1 * final_dca1
-        }
+        algo_sample(l1.algo, phase_a_post, final_dcw1) * w1 * final_dca1
     };
 
     // -----------------------------------------------------------------------
@@ -526,70 +494,39 @@ pub fn render_voice(
         let dcw2b = final_dcw2 * blend_b;
         let dcw1_effective_b = final_dcw2 * (1.0 - blend_b);
 
-        let sig_b1 = match l2.warp_algo {
-            WarpAlgo::Karpunk => ks_raw2,
-            WarpAlgo::Cz101 => lerp(
-                sinf(TWO_PI * phase_b_post),
-                cz_waveform(l2.waveform, phase_b_post),
-                dcw1_effective_b,
-            ),
-            _ => sinf(TWO_PI * phase_b_post),
+        let sig_b1 = if l2.algo == Algo::Karpunk {
+            ks_raw2
+        } else {
+            algo_sample(l2.algo, phase_b_post, dcw1_effective_b)
         };
 
-        let sig_b2 = match a2 {
-            WarpAlgo::Karpunk => ks_raw2,
-            WarpAlgo::Cz101 => {
-                let warped_b2 = apply_warp_algo(a2, phase_b_input, dcw2b, l2.waveform2);
-                let phase_b_post2 = wrap01(if p.pm_pre {
-                    warped_b2
-                } else {
-                    warped_b2 + pm_mod
-                });
-                lerp(
-                    sinf(TWO_PI * phase_b_post2),
-                    cz_waveform(l2.waveform2, phase_b_post2),
-                    dcw2b,
-                )
-            }
-            _ => {
-                let warped_b2 = apply_warp_algo(a2, phase_b_input, dcw2b, l2.waveform2);
-                let phase_b_post2 = wrap01(if p.pm_pre {
-                    warped_b2
-                } else {
-                    warped_b2 + pm_mod
-                });
-                sinf(TWO_PI * phase_b_post2)
-            }
+        let sig_b2 = if a2 == Algo::Karpunk {
+            ks_raw2
+        } else {
+            let warped_b2 = algo_warp_phase(a2, phase_b_input, dcw2b);
+            let phase_b_post2 = wrap01(if p.pm_pre {
+                warped_b2
+            } else {
+                warped_b2 + pm_mod
+            });
+            algo_sample(a2, phase_b_post2, dcw2b)
         };
 
         // Karpunk-aware blending (asymmetric):
         // - KS as base (B slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
         // - KS as target (B-target slot): plain lerp — blend=0 pure osc, blend=1 pure KS
-        let combined_b = if l2.warp_algo == WarpAlgo::Karpunk {
-            // KS is the base; morph it toward a ring-modulated version of the other algo
+        let combined_b = if l2.algo == Algo::Karpunk {
             let ks = sig_b1;
             let osc = sig_b2;
             lerp(ks, ks * osc * 2.0, blend_b)
-        } else if a2 == WarpAlgo::Karpunk {
-            // KS is the target; simple crossfade from osc into KS
-            lerp(sig_b1, sig_b2, blend_b)
         } else {
             lerp(sig_b1, sig_b2, blend_b)
         };
         combined_b * w2 * final_dca2
-    } else if l2.warp_algo == WarpAlgo::Karpunk {
+    } else if l2.algo == Algo::Karpunk {
         ks_raw2 * w2 * final_dca2
     } else {
-        if l2.warp_algo == WarpAlgo::Cz101 {
-            lerp(
-                sinf(TWO_PI * phase_b_post),
-                cz_waveform(l2.waveform, phase_b_post),
-                final_dcw2,
-            ) * w2
-                * final_dca2
-        } else {
-            sinf(TWO_PI * phase_b_post) * w2 * final_dca2
-        }
+        algo_sample(l2.algo, phase_b_post, final_dcw2) * w2 * final_dca2
     };
 
     // -----------------------------------------------------------------------
@@ -600,26 +537,14 @@ pub fn render_voice(
 
     match p.line_select {
         LineSelect::L1PlusL1Prime => {
-            let s1p = cz_waveform(
-                if l1.waveform2 != Default::default() {
-                    l1.waveform2
-                } else {
-                    l1.waveform
-                },
-                phi1,
-            ) * final_dca1;
+            let algo_prime = l1.algo2.unwrap_or(l1.algo);
+            let s1p = algo_sample(algo_prime, phi1, 0.0) * final_dca1;
             mix_a = s1;
             mix_b = s1p;
         }
         LineSelect::L1PlusL2Prime => {
-            let s2p = cz_waveform(
-                if l2.waveform2 != Default::default() {
-                    l2.waveform2
-                } else {
-                    l2.waveform
-                },
-                phi1,
-            ) * final_dca2;
+            let algo_prime = l2.algo2.unwrap_or(l2.algo);
+            let s2p = algo_sample(algo_prime, phi1, 0.0) * final_dca2;
             mix_a = s1;
             mix_b = s2p;
         }

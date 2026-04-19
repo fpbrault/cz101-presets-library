@@ -1,11 +1,15 @@
 import { useCallback, useState } from "react";
-import type { PdAlgo } from "@/components/pdAlgorithms";
 import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
 } from "@/components/pdAlgorithms";
+import {
+	DEFAULT_ALGO_REF,
+	toAlgoRefV1,
+} from "@/lib/synth/algoRef";
 import type {
+	AlgoRefV1,
 	FilterType,
 	LfoTarget,
 	LfoWaveform,
@@ -24,20 +28,20 @@ export type UseSynthStateResult = {
 	// Line 1 warping
 	warpAAmount: number;
 	setWarpAAmount: (v: number) => void;
-	warpAAlgo: PdAlgo;
-	setWarpAAlgo: (v: PdAlgo) => void;
-	algo2A: PdAlgo | null;
-	setAlgo2A: (v: PdAlgo | null) => void;
+	warpAAlgo: AlgoRefV1;
+	setWarpAAlgo: (v: AlgoRefV1) => void;
+	algo2A: AlgoRefV1 | null;
+	setAlgo2A: (v: AlgoRefV1 | null) => void;
 	algoBlendA: number;
 	setAlgoBlendA: (v: number) => void;
 
 	// Line 2 warping
 	warpBAmount: number;
 	setWarpBAmount: (v: number) => void;
-	warpBAlgo: PdAlgo;
-	setWarpBAlgo: (v: PdAlgo) => void;
-	algo2B: PdAlgo | null;
-	setAlgo2B: (v: PdAlgo | null) => void;
+	warpBAlgo: AlgoRefV1;
+	setWarpBAlgo: (v: AlgoRefV1) => void;
+	algo2B: AlgoRefV1 | null;
+	setAlgo2B: (v: AlgoRefV1 | null) => void;
 	algoBlendB: number;
 	setAlgoBlendB: (v: number) => void;
 
@@ -207,14 +211,14 @@ export type UseSynthStateResult = {
 export function useSynthState(): UseSynthStateResult {
 	// Line 1 warping
 	const [warpAAmount, setWarpAAmount] = useState(0);
-	const [warpAAlgo, setWarpAAlgo] = useState<PdAlgo>("bend");
-	const [algo2A, setAlgo2A] = useState<PdAlgo | null>(null);
+	const [warpAAlgo, setWarpAAlgo] = useState<AlgoRefV1>(DEFAULT_ALGO_REF);
+	const [algo2A, setAlgo2A] = useState<AlgoRefV1 | null>(null);
 	const [algoBlendA, setAlgoBlendA] = useState(0);
 
 	// Line 2 warping
 	const [warpBAmount, setWarpBAmount] = useState(0);
-	const [warpBAlgo, setWarpBAlgo] = useState<PdAlgo>("bend");
-	const [algo2B, setAlgo2B] = useState<PdAlgo | null>(null);
+	const [warpBAlgo, setWarpBAlgo] = useState<AlgoRefV1>(DEFAULT_ALGO_REF);
+	const [algo2B, setAlgo2B] = useState<AlgoRefV1 | null>(null);
 	const [algoBlendB, setAlgoBlendB] = useState(0);
 
 	// Phase mod
@@ -469,10 +473,10 @@ export function useSynthState(): UseSynthStateResult {
 
 		setWarpAAmount(safe(data.warpAAmount, 0));
 		setWarpBAmount(safe(data.warpBAmount, 0));
-		setWarpAAlgo((data.warpAAlgo as PdAlgo) ?? "bend");
-		setWarpBAlgo((data.warpBAlgo as PdAlgo) ?? "bend");
-		setAlgo2A((data.algo2A as PdAlgo | null) ?? null);
-		setAlgo2B((data.algo2B as PdAlgo | null) ?? null);
+		setWarpAAlgo(toAlgoRefV1(data.warpAAlgo, DEFAULT_ALGO_REF));
+		setWarpBAlgo(toAlgoRefV1(data.warpBAlgo, DEFAULT_ALGO_REF));
+		setAlgo2A(data.algo2A != null ? toAlgoRefV1(data.algo2A) : null);
+		setAlgo2B(data.algo2B != null ? toAlgoRefV1(data.algo2B) : null);
 		setAlgoBlendA(safe(data.algoBlendA, 0));
 		setAlgoBlendB(safe(data.algoBlendB, 0));
 		setIntPmAmount(safe(data.intPmAmount, 0));

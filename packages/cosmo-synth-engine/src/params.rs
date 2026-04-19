@@ -123,11 +123,22 @@ impl Default for StepEnvData {
     }
 }
 
-/// Warp algorithm selector (mirrors the JS algo string)
+/// Flat algorithm selector — unifies CZ waveforms and warp variants.
+/// Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
-pub enum WarpAlgo {
+pub enum Algo {
+    // CZ waveforms — phase distortion with piecewise-linear carrier
+    Saw,
+    Square,
+    Pulse,
+    Null,
+    SinePulse,
+    SawPulse,
+    MultiSine,
+    Pulse2,
+    // Warp algorithms — phase distortion applied to a sine carrier
     #[default]
     Cz101,
     Bend,
@@ -145,50 +156,19 @@ pub enum WarpAlgo {
     Sine,
 }
 
-/// CZ waveform id [1-8]
-///
-/// JS sends these as integers (1-8), so we deserialize from `u8`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[repr(u8)]
-pub enum WaveformId {
-    #[default]
-    Saw = 1,
-    Square = 2,
-    Pulse = 3,
-    Null = 4,
-    SinePulse = 5,
-    SawPulse = 6,
-    MultiSine = 7,
-    Pulse2 = 8,
-}
-
-impl WaveformId {
-    pub fn from_u8(v: u8) -> Self {
-        match v {
-            1 => WaveformId::Saw,
-            2 => WaveformId::Square,
-            3 => WaveformId::Pulse,
-            4 => WaveformId::Null,
-            5 => WaveformId::SinePulse,
-            6 => WaveformId::SawPulse,
-            7 => WaveformId::MultiSine,
-            8 => WaveformId::Pulse2,
-            _ => WaveformId::Saw,
-        }
-    }
-}
-
-impl Serialize for WaveformId {
-    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        s.serialize_u8(*self as u8)
-    }
-}
-
-impl<'de> Deserialize<'de> for WaveformId {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let v = u8::deserialize(d)?;
-        Ok(WaveformId::from_u8(v))
+impl Algo {
+    pub fn is_cz_waveform(self) -> bool {
+        matches!(
+            self,
+            Algo::Saw
+                | Algo::Square
+                | Algo::Pulse
+                | Algo::Null
+                | Algo::SinePulse
+                | Algo::SawPulse
+                | Algo::MultiSine
+                | Algo::Pulse2
+        )
     }
 }
 
@@ -296,11 +276,8 @@ pub enum PortamentoMode {
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub struct LineParams {
-    #[cfg_attr(feature = "specta-bindings", specta(type = u8))]
-    pub waveform: WaveformId,
-    #[cfg_attr(feature = "specta-bindings", specta(type = u8))]
-    pub waveform2: WaveformId,
-    pub algo2: Option<WarpAlgo>,
+    pub algo: Algo,
+    pub algo2: Option<Algo>,
     pub algo_blend: f32,
     pub dcw_comp: f32,
     pub window: WindowType,
@@ -308,7 +285,6 @@ pub struct LineParams {
     pub dcw_base: f32,
     pub dco_depth: f32,
     pub modulation: f32,
-    pub warp_algo: WarpAlgo,
     pub detune_cents: f32,
     pub octave: f32,
     pub dco_env: StepEnvData,
@@ -320,8 +296,7 @@ pub struct LineParams {
 impl Default for LineParams {
     fn default() -> Self {
         Self {
-            waveform: WaveformId::Saw,
-            waveform2: WaveformId::Saw,
+            algo: Algo::Saw,
             algo2: None,
             algo_blend: 0.0,
             dcw_comp: 0.0,
@@ -330,7 +305,6 @@ impl Default for LineParams {
             dcw_base: 0.0,
             dco_depth: 0.0,
             modulation: 0.0,
-            warp_algo: WarpAlgo::Cz101,
             detune_cents: 0.0,
             octave: 0.0,
             dco_env: StepEnvData::default(),

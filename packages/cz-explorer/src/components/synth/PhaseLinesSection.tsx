@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { PerLineWarpBlock } from "@/components/PerLineWarpBlock";
-import type { PdAlgo } from "@/components/pdAlgorithms";
 import Card, { joinClasses } from "@/components/ui/Card";
 import CzTabButton from "@/components/ui/CzTabButton";
 import { useSynthParam } from "@/features/synth/SynthParamController";
-import type { StepEnvData } from "@/lib/synth/bindings/synth";
+import type { AlgoRefV1, StepEnvData } from "@/lib/synth/bindings/synth";
 
 export type LineSelect = "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
 
@@ -89,10 +88,10 @@ export default function PhaseLinesSection({
 	const line1 = {
 		warpAmount: warpAAmount,
 		setWarpAmount: setWarpAAmount,
-		algo: warpAAlgo as PdAlgo,
-		setAlgo: setWarpAAlgo as (value: PdAlgo) => void,
-		algo2: algo2A as PdAlgo | null,
-		setAlgo2: setAlgo2A as (value: PdAlgo | null) => void,
+		algo: warpAAlgo,
+		setAlgo: setWarpAAlgo as (value: AlgoRefV1) => void,
+		algo2: algo2A,
+		setAlgo2: setAlgo2A as (value: AlgoRefV1 | null) => void,
 		algoBlend: algoBlendA,
 		setAlgoBlend: setAlgoBlendA,
 		dcwComp: line1DcwComp,
@@ -118,10 +117,10 @@ export default function PhaseLinesSection({
 	const line2 = {
 		warpAmount: warpBAmount,
 		setWarpAmount: setWarpBAmount,
-		algo: warpBAlgo as PdAlgo,
-		setAlgo: setWarpBAlgo as (value: PdAlgo) => void,
-		algo2: algo2B as PdAlgo | null,
-		setAlgo2: setAlgo2B as (value: PdAlgo | null) => void,
+		algo: warpBAlgo,
+		setAlgo: setWarpBAlgo as (value: AlgoRefV1) => void,
+		algo2: algo2B,
+		setAlgo2: setAlgo2B as (value: AlgoRefV1 | null) => void,
 		algoBlend: algoBlendB,
 		setAlgoBlend: setAlgoBlendB,
 		dcwComp: line2DcwComp,

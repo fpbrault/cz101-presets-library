@@ -35,7 +35,17 @@ stepCount: number;
 loop: boolean }
 
 /**
- * Warp algorithm selector (mirrors the JS algo string)
+ * Flat algorithm selection unifying waveforms and warp variants.
+ */
+export type AlgoRefV1 = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" | "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
+
+/**
+ * CZ waveform identifier (compatibility alias).
+ */
+export type WaveformId = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2"
+
+/**
+ * Warp algorithm selector (compatibility alias).
  */
 export type WarpAlgo = "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
 
@@ -154,12 +164,7 @@ export type FilterParams = { enabled: boolean; type: FilterType; cutoff: number;
 /**
  * Per-line parameters
  */
-export type LineParams = { waveform: number; waveform2: number; algo2: WarpAlgo | null; algoBlend: number; dcwComp: number; window: WindowType; dcaBase: number; dcwBase: number; dcoDepth: number; modulation: number; warpAlgo: WarpAlgo; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number }
-
-/**
- * Explicit algorithm selection for wire/preset compatibility.
- */
-export type AlgoRefV1 = { kind: "waveform"; waveform: number } | { kind: "warp"; warp: WarpAlgo }
+export type LineParams = { algo: AlgoRefV1; algo2: AlgoRefV1 | null; algoBlend: number; dcwComp: number; window: WindowType; dcaBase: number; dcwBase: number; dcoDepth: number; modulation: number; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number }
 
 /**
  * Top-level synth parameters (mirrors this.params in the JS)

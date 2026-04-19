@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 use crate::params::{
-    default_pitch_bend_range, ChorusParams, DelayParams, FilterParams, FilterType, LfoParams,
+    default_pitch_bend_range, Algo, ChorusParams, DelayParams, FilterParams, FilterType, LfoParams,
     LfoTarget, LfoWaveform, LineParams, LineSelect, ModMode, PolyMode, PortamentoMode,
     PortamentoParams, ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams,
-    WarpAlgo, WaveformId, WindowType,
+    WindowType,
 };
 
 pub const SYNTH_SCHEMA_VERSION_V1: u16 = 1;
@@ -34,24 +34,37 @@ impl Default for SynthPresetV1 {
     }
 }
 
-/// Explicit algorithm selection for wire/preset compatibility.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// Flat algorithm selection unifying waveforms and warp variants.
+/// Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub enum AlgoRefV1 {
-    Waveform {
-        #[cfg_attr(feature = "specta-bindings", specta(type = u8))]
-        waveform: WaveformId,
-    },
-    Warp { warp: WarpAlgo },
-}
-
-impl Default for AlgoRefV1 {
-    fn default() -> Self {
-        Self::Warp {
-            warp: WarpAlgo::Cz101,
-        }
-    }
+    // Waveforms
+    Saw,
+    Square,
+    Pulse,
+    Null,
+    SinePulse,
+    SawPulse,
+    MultiSine,
+    Pulse2,
+    // Warp algorithms
+    #[default]
+    Cz101,
+    Bend,
+    Sync,
+    Pinch,
+    Fold,
+    Skew,
+    Quantize,
+    Twist,
+    Clip,
+    Ripple,
+    Mirror,
+    Fof,
+    Karpunk,
+    Sine,
 }
 
 /// TODO: Remove this compatibility shape after all preset reads/writes migrate to `SynthPresetV1`.
@@ -147,49 +160,65 @@ impl Default for SynthPresetFlatV1 {
     }
 }
 
-fn algo_ref_to_line(algo: AlgoRefV1) -> (WaveformId, WarpAlgo) {
+fn algo_ref_to_line(algo: AlgoRefV1) -> Algo {
     match algo {
-        AlgoRefV1::Waveform { waveform } => (waveform, WarpAlgo::Cz101),
-        AlgoRefV1::Warp { warp } => (WaveformId::Saw, warp),
+        AlgoRefV1::Saw => Algo::Saw,
+        AlgoRefV1::Square => Algo::Square,
+        AlgoRefV1::Pulse => Algo::Pulse,
+        AlgoRefV1::Null => Algo::Null,
+        AlgoRefV1::SinePulse => Algo::SinePulse,
+        AlgoRefV1::SawPulse => Algo::SawPulse,
+        AlgoRefV1::MultiSine => Algo::MultiSine,
+        AlgoRefV1::Pulse2 => Algo::Pulse2,
+        AlgoRefV1::Cz101 => Algo::Cz101,
+        AlgoRefV1::Bend => Algo::Bend,
+        AlgoRefV1::Sync => Algo::Sync,
+        AlgoRefV1::Pinch => Algo::Pinch,
+        AlgoRefV1::Fold => Algo::Fold,
+        AlgoRefV1::Skew => Algo::Skew,
+        AlgoRefV1::Quantize => Algo::Quantize,
+        AlgoRefV1::Twist => Algo::Twist,
+        AlgoRefV1::Clip => Algo::Clip,
+        AlgoRefV1::Ripple => Algo::Ripple,
+        AlgoRefV1::Mirror => Algo::Mirror,
+        AlgoRefV1::Fof => Algo::Fof,
+        AlgoRefV1::Karpunk => Algo::Karpunk,
+        AlgoRefV1::Sine => Algo::Sine,
     }
 }
 
-fn line_to_algo_ref(waveform: WaveformId, warp: WarpAlgo) -> AlgoRefV1 {
-    if warp == WarpAlgo::Cz101 {
-        AlgoRefV1::Waveform { waveform }
-    } else {
-        AlgoRefV1::Warp { warp }
+fn line_to_algo_ref(algo: Algo) -> AlgoRefV1 {
+    match algo {
+        Algo::Saw => AlgoRefV1::Saw,
+        Algo::Square => AlgoRefV1::Square,
+        Algo::Pulse => AlgoRefV1::Pulse,
+        Algo::Null => AlgoRefV1::Null,
+        Algo::SinePulse => AlgoRefV1::SinePulse,
+        Algo::SawPulse => AlgoRefV1::SawPulse,
+        Algo::MultiSine => AlgoRefV1::MultiSine,
+        Algo::Pulse2 => AlgoRefV1::Pulse2,
+        Algo::Cz101 => AlgoRefV1::Cz101,
+        Algo::Bend => AlgoRefV1::Bend,
+        Algo::Sync => AlgoRefV1::Sync,
+        Algo::Pinch => AlgoRefV1::Pinch,
+        Algo::Fold => AlgoRefV1::Fold,
+        Algo::Skew => AlgoRefV1::Skew,
+        Algo::Quantize => AlgoRefV1::Quantize,
+        Algo::Twist => AlgoRefV1::Twist,
+        Algo::Clip => AlgoRefV1::Clip,
+        Algo::Ripple => AlgoRefV1::Ripple,
+        Algo::Mirror => AlgoRefV1::Mirror,
+        Algo::Fof => AlgoRefV1::Fof,
+        Algo::Karpunk => AlgoRefV1::Karpunk,
+        Algo::Sine => AlgoRefV1::Sine,
     }
 }
 
 pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
-    let (line1_waveform, line1_warp) = algo_ref_to_line(flat.warp_a_algo);
-    let (line2_waveform, line2_warp) = algo_ref_to_line(flat.warp_b_algo);
-
-    let line1_secondary = flat.algo2_a.and_then(|a| match a {
-        AlgoRefV1::Warp { warp } => Some(warp),
-        AlgoRefV1::Waveform { .. } => None,
-    });
-    let line2_secondary = flat.algo2_b.and_then(|a| match a {
-        AlgoRefV1::Warp { warp } => Some(warp),
-        AlgoRefV1::Waveform { .. } => None,
-    });
-
-    let line1_waveform2 = flat
-        .algo2_a
-        .and_then(|a| match a {
-            AlgoRefV1::Waveform { waveform } => Some(waveform),
-            AlgoRefV1::Warp { .. } => None,
-        })
-        .unwrap_or(line1_waveform);
-
-    let line2_waveform2 = flat
-        .algo2_b
-        .and_then(|a| match a {
-            AlgoRefV1::Waveform { waveform } => Some(waveform),
-            AlgoRefV1::Warp { .. } => None,
-        })
-        .unwrap_or(line2_waveform);
+    let line1_algo = algo_ref_to_line(flat.warp_a_algo);
+    let line2_algo = algo_ref_to_line(flat.warp_b_algo);
+    let line1_secondary = flat.algo2_a.map(algo_ref_to_line);
+    let line2_secondary = flat.algo2_b.map(algo_ref_to_line);
 
     // TODO: Remove bridge defaults (`octave`, `ext_pm_amount`, `frequency`) once
     // legacy flat payloads are fully replaced by canonical `SynthPresetV1` payloads.
@@ -198,8 +227,7 @@ pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
         mod_mode: flat.mod_mode,
         octave: 0.0,
         line1: LineParams {
-            waveform: line1_waveform,
-            waveform2: line1_waveform2,
+            algo: line1_algo,
             algo2: line1_secondary,
             algo_blend: flat.algo_blend_a,
             dcw_comp: flat.line1_dcw_comp,
@@ -208,7 +236,6 @@ pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
             dcw_base: flat.warp_a_amount,
             dco_depth: flat.line1_dco_depth,
             modulation: 0.0,
-            warp_algo: line1_warp,
             detune_cents: flat.line1_detune,
             octave: flat.line1_octave,
             dco_env: flat.line1_dco_env.clone(),
@@ -217,8 +244,7 @@ pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
             key_follow: flat.line1_dcw_key_follow,
         },
         line2: LineParams {
-            waveform: line2_waveform,
-            waveform2: line2_waveform2,
+            algo: line2_algo,
             algo2: line2_secondary,
             algo_blend: flat.algo_blend_b,
             dcw_comp: flat.line2_dcw_comp,
@@ -227,7 +253,6 @@ pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
             dcw_base: flat.warp_b_amount,
             dco_depth: flat.line2_dco_depth,
             modulation: 0.0,
-            warp_algo: line2_warp,
             detune_cents: flat.line2_detune,
             octave: flat.line2_octave,
             dco_env: flat.line2_dco_env.clone(),
@@ -301,10 +326,10 @@ pub fn params_to_flat(params: &SynthParams) -> SynthPresetFlatV1 {
         schema_version: SYNTH_SCHEMA_VERSION_V1,
         warp_a_amount: params.line1.dcw_base,
         warp_b_amount: params.line2.dcw_base,
-        warp_a_algo: line_to_algo_ref(params.line1.waveform, params.line1.warp_algo),
-        warp_b_algo: line_to_algo_ref(params.line2.waveform, params.line2.warp_algo),
-        algo2_a: params.line1.algo2.map(|warp| AlgoRefV1::Warp { warp }),
-        algo2_b: params.line2.algo2.map(|warp| AlgoRefV1::Warp { warp }),
+        warp_a_algo: line_to_algo_ref(params.line1.algo),
+        warp_b_algo: line_to_algo_ref(params.line2.algo),
+        algo2_a: params.line1.algo2.map(line_to_algo_ref),
+        algo2_b: params.line2.algo2.map(line_to_algo_ref),
         algo_blend_a: params.line1.algo_blend,
         algo_blend_b: params.line2.algo_blend,
         int_pm_amount: params.int_pm_amount,

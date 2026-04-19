@@ -1,10 +1,10 @@
-import type { PdAlgo } from "@/components/pdAlgorithms";
 import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
 } from "@/components/pdAlgorithms";
 import type {
+	AlgoRefV1,
 	FilterType,
 	LfoTarget,
 	LfoWaveform,
@@ -23,8 +23,8 @@ const CURRENT_STATE_KEY = "cz101-current-state";
 export const DEFAULT_PRESET: SynthPresetData = {
 	warpAAmount: 1,
 	warpBAmount: 1,
-	warpAAlgo: 1,
-	warpBAlgo: 1,
+	warpAAlgo: "saw",
+	warpBAlgo: "saw",
 	algo2A: null,
 	algo2B: null,
 	algoBlendA: 0,
@@ -98,10 +98,10 @@ export const DEFAULT_PRESET: SynthPresetData = {
 export interface SynthPresetData {
 	warpAAmount: number;
 	warpBAmount: number;
-	warpAAlgo: PdAlgo;
-	warpBAlgo: PdAlgo;
-	algo2A: PdAlgo | null;
-	algo2B: PdAlgo | null;
+	warpAAlgo: AlgoRefV1;
+	warpBAlgo: AlgoRefV1;
+	algo2A: AlgoRefV1 | null;
+	algo2B: AlgoRefV1 | null;
 	algoBlendA: number;
 	algoBlendB: number;
 	intPmAmount: number;

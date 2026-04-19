@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from "react";
 import type { StepEnvData } from "@/lib/synth/bindings/synth";
 import AlgoIconGrid from "./AlgoIconGrid";
 import type { PdAlgo } from "./pdAlgorithms";
-import { PD_ALGOS } from "./pdAlgorithms";
+import { getPdAlgoDef, PD_ALGOS } from "./pdAlgorithms";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
 import Card from "./ui/Card";
 import CzButton from "./ui/CzButton";
@@ -80,7 +80,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	// Auto-set algo2 to first algo when blend is raised from 0 with nothing selected
 	useEffect(() => {
 		if (algoBlend > 0 && algo2 == null) {
-			setAlgo2(PD_ALGOS[0].value as PdAlgo);
+			setAlgo2(PD_ALGOS[0].value);
 		}
 	}, [algoBlend, algo2, setAlgo2]);
 
@@ -128,7 +128,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											Algo A
 										</div>
 										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
-											{PD_ALGOS.find((a) => a.value === algo)?.label}
+											{getPdAlgoDef(algo)?.label}
 										</span>
 									</div>
 									<AlgoIconGrid value={algo} onChange={setAlgo} size={36} />
@@ -139,7 +139,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											Algo B
 										</div>
 										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
-											{PD_ALGOS.find((b) => b.value === algo2)?.label}
+											{algo2 ? getPdAlgoDef(algo2)?.label : undefined}
 										</span>
 									</div>
 									<AlgoIconGrid

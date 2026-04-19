@@ -2,10 +2,14 @@ import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
-	type PdAlgo,
 } from "@/components/pdAlgorithms";
 import type { DecodedPatch, EnvelopeStep } from "@/lib/midi/czSysexDecoder";
-import type { EnvStep, StepEnvData } from "@/lib/synth/bindings/synth";
+import type {
+	AlgoRefV1,
+	EnvStep,
+	StepEnvData,
+	WaveformId,
+} from "@/lib/synth/bindings/synth";
 import {
 	DEFAULT_PRESET,
 	type SynthPresetData,
@@ -13,8 +17,25 @@ import {
 
 function waveformToPdAlgo(
 	waveform: DecodedPatch["dco1"]["firstWaveform"],
-): PdAlgo {
-	return waveform;
+): AlgoRefV1 {
+	const waveformName: WaveformId =
+		waveform === 1
+			? "saw"
+			: waveform === 2
+				? "square"
+				: waveform === 3
+					? "pulse"
+					: waveform === 4
+						? "null"
+						: waveform === 5
+							? "sinePulse"
+							: waveform === 6
+								? "sawPulse"
+								: waveform === 7
+									? "multiSine"
+									: "pulse2";
+
+	return waveformName;
 }
 
 function applyLineSettings(

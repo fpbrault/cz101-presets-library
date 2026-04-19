@@ -1,11 +1,21 @@
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
-import type { StepEnvData } from "@/lib/synth/bindings/synth";
+import type {
+	AlgoRefV1,
+	FilterType,
+	LfoTarget,
+	LfoWaveform,
+	LineSelect,
+	ModMode,
+	PortamentoMode,
+	StepEnvData,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
 
 type BuildSynthEngineSnapshotParams = {
 	effectivePitchHz: number;
 	extPmAmount: number;
-	lineSelect: string;
-	modMode: string;
+	lineSelect: LineSelect;
+	modMode: ModMode;
 	warpAAmount: number;
 	warpBAmount: number;
 	line1Level: number;
@@ -14,13 +24,13 @@ type BuildSynthEngineSnapshotParams = {
 	line2DcoDepth: number;
 	line1DcwComp: number;
 	line2DcwComp: number;
-	warpAAlgo: string;
-	warpBAlgo: string;
+	warpAAlgo: AlgoRefV1;
+	warpBAlgo: AlgoRefV1;
 	intPmAmount: number;
 	intPmRatio: number;
 	phaseModEnabled: boolean;
 	pmPre: boolean;
-	windowType: string;
+	windowType: WindowType;
 	volume: number;
 	line1Detune: number;
 	line2Detune: number;
@@ -46,8 +56,8 @@ type BuildSynthEngineSnapshotParams = {
 	reverbSize: number;
 	reverbEnabled: boolean;
 	reverbMix: number;
-	algo2A: string | null;
-	algo2B: string | null;
+	algo2A: AlgoRefV1 | null;
+	algo2B: AlgoRefV1 | null;
 	algoBlendA: number;
 	algoBlendB: number;
 	line1DcwKeyFollow: number;
@@ -58,17 +68,17 @@ type BuildSynthEngineSnapshotParams = {
 	vibratoDepth: number;
 	vibratoDelay: number;
 	portamentoEnabled: boolean;
-	portamentoMode: string;
+	portamentoMode: PortamentoMode;
 	portamentoRate: number;
 	portamentoTime: number;
 	lfoEnabled: boolean;
-	lfoWaveform: string;
+	lfoWaveform: LfoWaveform;
 	lfoRate: number;
 	lfoDepth: number;
 	lfoOffset: number;
-	lfoTarget: string;
+	lfoTarget: LfoTarget;
 	filterEnabled: boolean;
-	filterType: string;
+	filterType: FilterType;
 	filterCutoff: number;
 	filterResonance: number;
 	filterEnvAmount: number;

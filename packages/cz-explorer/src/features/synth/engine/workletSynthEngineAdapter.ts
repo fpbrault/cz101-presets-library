@@ -1,7 +1,7 @@
-import { PD_ALGOS } from "@/components/pdAlgorithms";
 import type { SynthEngineAdapter } from "@/features/synth/engine/synthEngineAdapter";
 import type { SynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import type { EngineParams } from "@/features/synth/hooks/useAudioEngine";
+import { toAlgoRefV1 } from "@/lib/synth/algoRef";
 
 type CreateWorkletSynthEngineAdapterParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
@@ -14,29 +14,18 @@ export function createWorkletSynthEngineAdapter({
 }: CreateWorkletSynthEngineAdapterParams): SynthEngineAdapter {
 	return {
 		sync(snapshot: SynthEngineSnapshot) {
-			const algoA =
-				PD_ALGOS.find((a) => String(a.value) === String(snapshot.warpAAlgo)) ??
-				PD_ALGOS[0];
-			const algoB =
-				PD_ALGOS.find((a) => String(a.value) === String(snapshot.warpBAlgo)) ??
-				PD_ALGOS[0];
-			const algo2ADef = snapshot.algo2A
-				? (PD_ALGOS.find((a) => String(a.value) === String(snapshot.algo2A)) ??
-					null)
-				: null;
-			const algo2BDef = snapshot.algo2B
-				? (PD_ALGOS.find((a) => String(a.value) === String(snapshot.algo2B)) ??
-					null)
-				: null;
+			const algoA = toAlgoRefV1(snapshot.warpAAlgo);
+			const algoB = toAlgoRefV1(snapshot.warpBAlgo);
+			const algo2A = snapshot.algo2A ? toAlgoRefV1(snapshot.algo2A) : null;
+			const algo2B = snapshot.algo2B ? toAlgoRefV1(snapshot.algo2B) : null;
 
 			const params: EngineParams = {
 				lineSelect: snapshot.lineSelect,
 				modMode: snapshot.modMode,
 				octave: 0,
 				line1: {
-					waveform: algoA.waveform,
-					waveform2: algo2ADef?.waveform ?? 1,
-					algo2: algo2ADef?.algo ?? null,
+					algo: algoA,
+					algo2: algo2A,
 					algoBlend: snapshot.algoBlendA,
 					window: snapshot.windowType,
 					dcaBase: snapshot.line1Level,
@@ -44,7 +33,6 @@ export function createWorkletSynthEngineAdapter({
 					dcoDepth: snapshot.line1DcoDepth,
 					modulation: 0,
 					dcwComp: snapshot.line1DcwComp,
-					warpAlgo: algoA.algo,
 					detuneCents: snapshot.line1Detune,
 					octave: snapshot.line1Octave,
 					dcoEnv: snapshot.line1DcoEnv,
@@ -53,9 +41,8 @@ export function createWorkletSynthEngineAdapter({
 					keyFollow: snapshot.line1DcwKeyFollow,
 				},
 				line2: {
-					waveform: algoB.waveform,
-					waveform2: algo2BDef?.waveform ?? 1,
-					algo2: algo2BDef?.algo ?? null,
+					algo: algoB,
+					algo2: algo2B,
 					algoBlend: snapshot.algoBlendB,
 					window: snapshot.windowType,
 					dcaBase: snapshot.line2Level,
@@ -63,7 +50,6 @@ export function createWorkletSynthEngineAdapter({
 					dcoDepth: snapshot.line2DcoDepth,
 					modulation: 0,
 					dcwComp: snapshot.line2DcwComp,
-					warpAlgo: algoB.algo,
 					detuneCents: snapshot.line2Detune,
 					octave: snapshot.line2Octave,
 					dcoEnv: snapshot.line2DcoEnv,
