@@ -1,4 +1,4 @@
-import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
+import type { PdAlgo } from "@/components/pdAlgorithms";
 import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
@@ -12,6 +12,7 @@ import type {
 	ModMode,
 	PolyMode,
 	PortamentoMode,
+	StepEnvData,
 	VelocityTarget,
 	WindowType,
 } from "@/lib/synth/bindings/synth";

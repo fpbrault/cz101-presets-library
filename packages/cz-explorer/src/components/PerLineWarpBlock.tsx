@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 import AlgoIconGrid from "./AlgoIconGrid";
-import type { PdAlgo, StepEnvData } from "./pdAlgorithms";
+import type { PdAlgo } from "./pdAlgorithms";
 import { PD_ALGOS } from "./pdAlgorithms";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
 import Card from "./ui/Card";

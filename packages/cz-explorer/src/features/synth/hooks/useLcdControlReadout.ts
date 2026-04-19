@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { StepEnvData } from "@/components/pdAlgorithms";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 
 type LcdControlReadout = {
 	label: string;

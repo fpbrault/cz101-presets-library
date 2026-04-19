@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import type { StepEnvData } from "@/components/pdAlgorithms";
 import { useSynthEngineController } from "@/features/synth/engine/synthEngineAdapter";
 import { buildSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { createWorkletSynthEngineAdapter } from "@/features/synth/engine/workletSynthEngineAdapter";
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 import type { EngineParams } from "./useAudioEngine";
 
 type UseSynthParamsToWorkletParams = {

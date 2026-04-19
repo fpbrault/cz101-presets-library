@@ -1,5 +1,5 @@
-import type { StepEnvData } from "@/components/pdAlgorithms";
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 
 type BuildSynthEngineSnapshotParams = {
 	effectivePitchHz: number;

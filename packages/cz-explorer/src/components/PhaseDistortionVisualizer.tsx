@@ -18,6 +18,7 @@ import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
 import { useSynthState } from "@/features/synth/useSynthState";
 import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
 import {
@@ -25,7 +26,7 @@ import {
 	synthBindingsUrl,
 	synthWasmUrl,
 } from "@/lib/synth/pdVisualizerWorkletUrl";
-import { noteToFreq, type StepEnvData } from "./pdAlgorithms";
+import { noteToFreq } from "./pdAlgorithms";
 
 type PhaseDistortionVisualizerProps = {
 	frameStyle?: CSSProperties;

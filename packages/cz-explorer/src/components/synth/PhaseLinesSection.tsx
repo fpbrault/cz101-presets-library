@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { PerLineWarpBlock } from "@/components/PerLineWarpBlock";
-import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
+import type { PdAlgo } from "@/components/pdAlgorithms";
 import Card, { joinClasses } from "@/components/ui/Card";
 import CzTabButton from "@/components/ui/CzTabButton";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 
 export type LineSelect = "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
 

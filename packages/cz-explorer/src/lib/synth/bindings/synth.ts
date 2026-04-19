@@ -3,338 +3,185 @@
 /**
  * A single step in a step envelope
  */
-export type EnvStep = {
-	/**
-	 * Level [0.0, 1.0]
-	 */
-	level: number;
-	/**
-	 * Rate [0, 99] — JS may send floats; we round to u8.
-	 */
-	rate: number;
-};
+export type EnvStep = { 
+/**
+ * Level [0.0, 1.0]
+ */
+level: number; 
+/**
+ * Rate [0, 99] — JS may send floats; we round to u8.
+ */
+rate: number }
 
 /**
  * Step envelope data (CZ-style)
- *
+ * 
  * Field names match the JS `StepEnvData` type exactly (camelCase).
  * `steps` is always stored as a fixed [EnvStep; 8] internally; JS may
  * send a shorter array which gets padded with silent steps.
  */
-export type StepEnvData = {
-	steps: EnvStep[];
-	/**
-	 * Which step to sustain on (0-based index into steps)
-	 */
-	sustainStep: number;
-	/**
-	 * Number of active steps (JS `stepCount`)
-	 */
-	stepCount: number;
-	/**
-	 * Whether envelope loops after end
-	 */
-	loop: boolean;
-};
+export type StepEnvData = { steps: EnvStep[]; 
+/**
+ * Which step to sustain on (0-based index into steps)
+ */
+sustainStep: number; 
+/**
+ * Number of active steps (JS `stepCount`)
+ */
+stepCount: number; 
+/**
+ * Whether envelope loops after end
+ */
+loop: boolean }
 
 /**
  * Warp algorithm selector (mirrors the JS algo string)
  */
-export type WarpAlgo =
-	| "cz101"
-	| "bend"
-	| "sync"
-	| "pinch"
-	| "fold"
-	| "skew"
-	| "quantize"
-	| "twist"
-	| "clip"
-	| "ripple"
-	| "mirror"
-	| "fof"
-	| "karpunk"
-	| "sine";
+export type WarpAlgo = "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
 
 /**
  * Window type applied to oscillator output
  */
-export type WindowType = "off" | "saw" | "triangle";
+export type WindowType = "off" | "saw" | "triangle"
 
 /**
  * Line select
  */
-export type LineSelect = "L1+L2" | "L1" | "L2" | "L1+L1'" | "L1+L2'";
+export type LineSelect = "L1+L2" | "L1" | "L2" | "L1+L1'" | "L1+L2'"
 
 /**
  * Modulation mode
  */
-export type ModMode = "normal" | "ring" | "noise";
+export type ModMode = "normal" | "ring" | "noise"
 
 /**
  * Polyphony mode
  */
-export type PolyMode = "poly8" | "mono";
+export type PolyMode = "poly8" | "mono"
 
 /**
  * Velocity routing target
  */
-export type VelocityTarget =
-	| "amp"
-	| "dcw"
-	| "both"
-	/**
-	 * JS "off" means velocity is ignored (worklet passes 0 velocity)
-	 */
-	| "off";
+export type VelocityTarget = "amp" | "dcw" | "both" | 
+/**
+ * JS "off" means velocity is ignored (worklet passes 0 velocity)
+ */
+"off"
 
 /**
  * LFO waveform
  */
-export type LfoWaveform = "sine" | "triangle" | "square" | "saw";
+export type LfoWaveform = "sine" | "triangle" | "square" | "saw"
 
 /**
  * Filter type
  */
-export type FilterType = "lp" | "hp" | "bp";
+export type FilterType = "lp" | "hp" | "bp"
 
 /**
  * Portamento mode
  */
-export type PortamentoMode = "rate" | "time";
+export type PortamentoMode = "rate" | "time"
 
 /**
  * LFO target
  */
-export type LfoTarget = "pitch" | "dcw" | "dca" | "filter";
+export type LfoTarget = "pitch" | "dcw" | "dca" | "filter"
 
 /**
  * Chorus parameters
  */
-export type ChorusParams = { rate: number; depth: number; mix: number };
+export type ChorusParams = { rate: number; depth: number; mix: number }
 
 /**
  * Delay parameters
  */
-export type DelayParams = { time: number; feedback: number; mix: number };
+export type DelayParams = { time: number; feedback: number; mix: number }
 
 /**
  * Reverb parameters
  */
-export type ReverbParams = { size: number; mix: number };
+export type ReverbParams = { size: number; mix: number }
 
 /**
  * Vibrato parameters
  */
-export type VibratoParams = {
-	enabled: boolean;
-	/**
-	 * Waveform as integer 1-4 (JS sends a number: 1=sine 2=tri 3=sq 4=saw)
-	 */
-	waveform: number;
-	/**
-	 * Rate in Hz
-	 */
-	rate: number;
-	/**
-	 * Depth in "per mille" (divide by 1000 for pitch multiplier)
-	 */
-	depth: number;
-	/**
-	 * Delay in milliseconds
-	 */
-	delay: number;
-};
+export type VibratoParams = { enabled: boolean; 
+/**
+ * Waveform as integer 1-4 (JS sends a number: 1=sine 2=tri 3=sq 4=saw)
+ */
+waveform: number; 
+/**
+ * Rate in Hz
+ */
+rate: number; 
+/**
+ * Depth in "per mille" (divide by 1000 for pitch multiplier)
+ */
+depth: number; 
+/**
+ * Delay in milliseconds
+ */
+delay: number }
 
 /**
  * Portamento parameters
  */
-export type PortamentoParams = {
-	enabled: boolean;
-	mode: PortamentoMode;
-	rate: number;
-	time: number;
-};
+export type PortamentoParams = { enabled: boolean; mode: PortamentoMode; rate: number; time: number }
 
 /**
  * LFO parameters
  */
-export type LfoParams = {
-	enabled: boolean;
-	waveform: LfoWaveform;
-	/**
-	 * Rate in Hz
-	 */
-	rate: number;
-	/**
-	 * Depth [0, 1]
-	 */
-	depth: number;
-	target: LfoTarget;
-	/**
-	 * DC offset/bias applied to LFO output [-1, 1]
-	 */
-	offset?: number;
-};
+export type LfoParams = { enabled: boolean; waveform: LfoWaveform; 
+/**
+ * Rate in Hz
+ */
+rate: number; 
+/**
+ * Depth [0, 1]
+ */
+depth: number; target: LfoTarget; 
+/**
+ * DC offset/bias applied to LFO output [-1, 1]
+ */
+offset?: number }
 
 /**
  * Filter parameters
  */
-export type FilterParams = {
-	enabled: boolean;
-	type: FilterType;
-	cutoff: number;
-	resonance: number;
-	envAmount: number;
-};
+export type FilterParams = { enabled: boolean; type: FilterType; cutoff: number; resonance: number; envAmount: number }
 
 /**
  * Per-line parameters
  */
-export type LineParams = {
-	waveform: number;
-	waveform2: number;
-	algo2: WarpAlgo | null;
-	algoBlend: number;
-	dcwComp: number;
-	window: WindowType;
-	dcaBase: number;
-	dcwBase: number;
-	dcoDepth: number;
-	modulation: number;
-	warpAlgo: WarpAlgo;
-	detuneCents: number;
-	octave: number;
-	dcoEnv: StepEnvData;
-	dcwEnv: StepEnvData;
-	dcaEnv: StepEnvData;
-	keyFollow: number;
-};
+export type LineParams = { waveform: number; waveform2: number; algo2: WarpAlgo | null; algoBlend: number; dcwComp: number; window: WindowType; dcaBase: number; dcwBase: number; dcoDepth: number; modulation: number; warpAlgo: WarpAlgo; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number }
 
 /**
  * Explicit algorithm selection for wire/preset compatibility.
  */
-export type AlgoRefV1 =
-	| { kind: "waveform"; waveform: number }
-	| { kind: "warp"; warp: WarpAlgo };
+export type AlgoRefV1 = { kind: "waveform"; waveform: number } | { kind: "warp"; warp: WarpAlgo }
 
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
-export type SynthParams = {
-	lineSelect: LineSelect;
-	modMode: ModMode;
-	octave: number;
-	line1: LineParams;
-	line2: LineParams;
-	intPmAmount: number;
-	intPmRatio: number;
-	extPmAmount: number;
-	pmPre: boolean;
-	frequency: number;
-	volume: number;
-	polyMode: PolyMode;
-	legato: boolean;
-	velocityTarget: VelocityTarget;
-	chorus: ChorusParams;
-	delay: DelayParams;
-	reverb: ReverbParams;
-	vibrato: VibratoParams;
-	portamento: PortamentoParams;
-	lfo: LfoParams;
-	filter: FilterParams;
-	/**
-	 * Pitch bend wheel range in semitones (1-24). Default 2.
-	 */
-	pitchBendRange?: number;
-	/**
-	 * How much the mod wheel adds to vibrato depth (0-99 UI units).
-	 * When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
-	 */
-	modWheelVibratoDepth?: number;
-};
+export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; octave: number; line1: LineParams; line2: LineParams; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; filter: FilterParams; 
+/**
+ * Pitch bend wheel range in semitones (1-24). Default 2.
+ */
+pitchBendRange?: number; 
+/**
+ * How much the mod wheel adds to vibrato depth (0-99 UI units).
+ * When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
+ */
+modWheelVibratoDepth?: number }
 
 /**
  * Canonical, versioned synth preset wire contract.
  */
-export type SynthPresetV1 = { schemaVersion?: number; params: SynthParams };
+export type SynthPresetV1 = { schemaVersion?: number; params: SynthParams }
 
 /**
  * TODO: Remove this compatibility shape after all preset reads/writes migrate to `SynthPresetV1`.
  * Temporary compatibility shape matching current flat TS preset storage.
  */
-export type SynthPresetFlatV1 = {
-	schemaVersion?: number;
-	warpAAmount: number;
-	warpBAmount: number;
-	warpAAlgo: AlgoRefV1;
-	warpBAlgo: AlgoRefV1;
-	algo2A: AlgoRefV1 | null;
-	algo2B: AlgoRefV1 | null;
-	algoBlendA: number;
-	algoBlendB: number;
-	intPmAmount: number;
-	intPmRatio: number;
-	phaseModEnabled?: boolean;
-	pmPre: boolean;
-	windowType: WindowType;
-	volume: number;
-	line1Level: number;
-	line2Level: number;
-	line1Octave: number;
-	line2Octave: number;
-	line1Detune: number;
-	line2Detune: number;
-	line1DcoDepth: number;
-	line2DcoDepth: number;
-	line1DcwComp: number;
-	line2DcwComp: number;
-	line1DcoEnv: StepEnvData;
-	line1DcwEnv: StepEnvData;
-	line1DcaEnv: StepEnvData;
-	line2DcoEnv: StepEnvData;
-	line2DcwEnv: StepEnvData;
-	line2DcaEnv: StepEnvData;
-	lineSelect: LineSelect;
-	modMode: ModMode;
-	polyMode: PolyMode;
-	legato: boolean;
-	velocityTarget: VelocityTarget;
-	chorusEnabled: boolean;
-	chorusRate: number;
-	chorusDepth: number;
-	chorusMix: number;
-	delayEnabled: boolean;
-	delayTime: number;
-	delayFeedback: number;
-	delayMix: number;
-	reverbEnabled: boolean;
-	reverbSize: number;
-	reverbMix: number;
-	line1DcwKeyFollow: number;
-	line1DcaKeyFollow?: number;
-	line2DcwKeyFollow: number;
-	line2DcaKeyFollow?: number;
-	vibratoEnabled: boolean;
-	vibratoWave: number;
-	vibratoRate: number;
-	vibratoDepth: number;
-	vibratoDelay: number;
-	portamentoEnabled: boolean;
-	portamentoMode: PortamentoMode;
-	portamentoRate: number;
-	portamentoTime: number;
-	lfoEnabled: boolean;
-	lfoWaveform: LfoWaveform;
-	lfoRate: number;
-	lfoDepth: number;
-	lfoOffset: number;
-	lfoTarget: LfoTarget;
-	filterEnabled: boolean;
-	filterType: FilterType;
-	filterCutoff: number;
-	filterResonance: number;
-	filterEnvAmount: number;
-	pitchBendRange?: number;
-	modWheelVibratoDepth?: number;
-};
+export type SynthPresetFlatV1 = { schemaVersion?: number; warpAAmount: number; warpBAmount: number; warpAAlgo: AlgoRefV1; warpBAlgo: AlgoRefV1; algo2A: AlgoRefV1 | null; algo2B: AlgoRefV1 | null; algoBlendA: number; algoBlendB: number; intPmAmount: number; intPmRatio: number; phaseModEnabled?: boolean; pmPre: boolean; windowType: WindowType; volume: number; line1Level: number; line2Level: number; line1Octave: number; line2Octave: number; line1Detune: number; line2Detune: number; line1DcoDepth: number; line2DcoDepth: number; line1DcwComp: number; line2DcwComp: number; line1DcoEnv: StepEnvData; line1DcwEnv: StepEnvData; line1DcaEnv: StepEnvData; line2DcoEnv: StepEnvData; line2DcwEnv: StepEnvData; line2DcaEnv: StepEnvData; lineSelect: LineSelect; modMode: ModMode; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorusEnabled: boolean; chorusRate: number; chorusDepth: number; chorusMix: number; delayEnabled: boolean; delayTime: number; delayFeedback: number; delayMix: number; reverbEnabled: boolean; reverbSize: number; reverbMix: number; line1DcwKeyFollow: number; line1DcaKeyFollow?: number; line2DcwKeyFollow: number; line2DcaKeyFollow?: number; vibratoEnabled: boolean; vibratoWave: number; vibratoRate: number; vibratoDepth: number; vibratoDelay: number; portamentoEnabled: boolean; portamentoMode: PortamentoMode; portamentoRate: number; portamentoTime: number; lfoEnabled: boolean; lfoWaveform: LfoWaveform; lfoRate: number; lfoDepth: number; lfoOffset: number; lfoTarget: LfoTarget; filterEnabled: boolean; filterType: FilterType; filterCutoff: number; filterResonance: number; filterEnvAmount: number; pitchBendRange?: number; modWheelVibratoDepth?: number }
