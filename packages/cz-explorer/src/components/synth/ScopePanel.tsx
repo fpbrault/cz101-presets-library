@@ -1,4 +1,4 @@
-import { Component, type ReactElement, type RefObject } from "react";
+import { Component, createRef, type ReactElement, type RefObject } from "react";
 import ControlKnob from "@/components/ControlKnob";
 import { drawOscilloscope } from "@/lib/synth/drawOscilloscope";
 import type { AsidePanelComponent } from "./AsidePanelSwitcher";
@@ -10,6 +10,13 @@ export type ScopePanelProps = {
 	analyserNodeRef?: RefObject<AnalyserNode | null>;
 	audioCtxRef?: RefObject<AudioContext | null>;
 	effectivePitchHz: number;
+	subscribeScopeFrames?: (
+		onFrame: (frame: {
+			samples: Float32Array;
+			sampleRate: number;
+			hz: number;
+		}) => void,
+	) => () => void;
 };
 
 type ScopePanelState = {
@@ -62,6 +69,8 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 
 	private readonly scopeTriggerMode: ScopeTriggerMode = "rise";
 	private rafId = 0;
+	private readonly canvasRef = createRef<HTMLCanvasElement>();
+	private unsubscribeScopeFrames: (() => void) | null = null;
 
 	constructor(props: ScopePanelProps) {
 		super(props);
@@ -74,10 +83,14 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 	}
 
 	componentDidMount() {
+		this.subscribeToScopeFrames();
 		this.startDrawLoop();
 	}
 
 	componentDidUpdate(prevProps: ScopePanelProps) {
+		if (prevProps.subscribeScopeFrames !== this.props.subscribeScopeFrames) {
+			this.subscribeToScopeFrames();
+		}
 		if (
 			prevProps.effectivePitchHz !== this.props.effectivePitchHz &&
 			this.state.displayedHz !== this.props.effectivePitchHz
@@ -88,12 +101,35 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 
 	componentWillUnmount() {
 		window.cancelAnimationFrame(this.rafId);
+		this.unsubscribeScopeFrames?.();
+		this.unsubscribeScopeFrames = null;
+	}
+
+	private subscribeToScopeFrames() {
+		this.unsubscribeScopeFrames?.();
+		this.unsubscribeScopeFrames = null;
+		if (!this.props.subscribeScopeFrames) {
+			return;
+		}
+		this.unsubscribeScopeFrames = this.props.subscribeScopeFrames((frame) => {
+			const canvas = this.canvasRef.current;
+			if (!canvas) return;
+			this.drawScopeFrame(
+				canvas,
+				frame.samples,
+				Math.max(1, frame.hz),
+				frame.sampleRate,
+			);
+			if (this.state.displayedHz !== frame.hz) {
+				this.setState({ displayedHz: frame.hz });
+			}
+		});
 	}
 
 	private startDrawLoop() {
 		const draw = () => {
 			this.rafId = window.requestAnimationFrame(draw);
-			const canvas = document.querySelector("canvas");
+			const canvas = this.canvasRef.current;
 			if (!canvas) return;
 
 			const analyser = this.props.analyserNodeRef?.current;
@@ -147,6 +183,7 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 							{displayedHz.toFixed(1)} Hz
 						</div>
 						<canvas
+							ref={this.canvasRef}
 							width={900}
 							height={220}
 							className="h-36 w-full"

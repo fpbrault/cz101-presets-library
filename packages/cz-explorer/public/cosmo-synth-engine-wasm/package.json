@@ -1,12 +1,12 @@
 {
-  "name": "cosmo-synth-engine",
-  "description": "Cosmo PD-101 Phase Distortion synthesizer DSP core",
-  "version": "0.1.0",
-  "files": [
-    "cosmo_synth_engine_bg.wasm",
-    "cosmo_synth_engine.js",
-    "cosmo_synth_engine.d.ts"
-  ],
-  "browser": "cosmo_synth_engine.js",
-  "types": "cosmo_synth_engine.d.ts"
+	"name": "cosmo-synth-engine",
+	"description": "Cosmo PD-101 Phase Distortion synthesizer DSP core",
+	"version": "0.1.0",
+	"files": [
+		"cosmo_synth_engine_bg.wasm",
+		"cosmo_synth_engine.js",
+		"cosmo_synth_engine.d.ts"
+	],
+	"browser": "cosmo_synth_engine.js",
+	"types": "cosmo_synth_engine.d.ts"
 }

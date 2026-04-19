@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
 	PD_ALGOS,
 	type PdAlgo,
 	type StepEnvData,
 } from "@/components/pdAlgorithms";
+import {
+	type SynthEngineAdapter,
+	useSynthEngineController,
+} from "@/features/synth/engine/synthEngineAdapter";
+import { buildSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { useSynthState } from "@/features/synth/useSynthState";
 import type {
 	FilterType,
@@ -27,10 +32,6 @@ import {
 	LINE_SELECT_IDS,
 	MOD_MODE_FROM_ID,
 	MOD_MODE_IDS,
-	POLY_MODE_FROM_ID,
-	POLY_MODE_IDS,
-	PORT_MODE_FROM_ID,
-	PORT_MODE_IDS,
 	P_CHORUS_DEPTH,
 	P_CHORUS_MIX,
 	P_CHORUS_RATE,
@@ -89,6 +90,10 @@ import {
 	P_VIB_RATE,
 	P_VIB_WAVEFORM,
 	P_VOLUME,
+	POLY_MODE_FROM_ID,
+	POLY_MODE_IDS,
+	PORT_MODE_FROM_ID,
+	PORT_MODE_IDS,
 	VEL_TARGET_FROM_ID,
 	VEL_TARGET_IDS,
 	WARP_ALGO_FROM_ID,
@@ -135,8 +140,10 @@ export function usePluginParamBridge() {
 		setIntPmAmount,
 		intPmRatio,
 		setIntPmRatio,
+		phaseModEnabled,
 		pmPre,
 		setPmPre,
+		windowType,
 		volume,
 		setVolume,
 		line1Level,
@@ -181,16 +188,19 @@ export function usePluginParamBridge() {
 		setChorusRate,
 		chorusDepth,
 		setChorusDepth,
+		chorusEnabled,
 		chorusMix,
 		setChorusMix,
 		delayTime,
 		setDelayTime,
 		delayFeedback,
 		setDelayFeedback,
+		delayEnabled,
 		delayMix,
 		setDelayMix,
 		reverbSize,
 		setReverbSize,
+		reverbEnabled,
 		reverbMix,
 		setReverbMix,
 		lineSelect,
@@ -215,6 +225,7 @@ export function usePluginParamBridge() {
 		setPortamentoEnabled,
 		portamentoMode,
 		setPortamentoMode,
+		portamentoRate,
 		portamentoTime,
 		setPortamentoTime,
 		lfoEnabled,
@@ -225,6 +236,7 @@ export function usePluginParamBridge() {
 		setLfoRate,
 		lfoDepth,
 		setLfoDepth,
+		lfoOffset,
 		lfoTarget,
 		setLfoTarget,
 		filterEnabled,
@@ -237,6 +249,8 @@ export function usePluginParamBridge() {
 		setFilterResonance,
 		filterEnvAmount,
 		setFilterEnvAmount,
+		pitchBendRange,
+		modWheelVibratoDepth,
 	} = synthState;
 
 	const sentParamsRef = useRef<Map<number, number>>(new Map());
@@ -275,138 +289,250 @@ export function usePluginParamBridge() {
 		[],
 	);
 
-	useEffect(() => {
-		queueParam(P_VOLUME, volume);
-		queueParam(P_OCTAVE, 0);
-		queueParam(P_LINE_SELECT, LINE_SELECT_IDS[lineSelect] ?? 0);
-		queueParam(P_MOD_MODE, MOD_MODE_IDS[modMode] ?? 0);
-		queueParam(P_POLY_MODE, POLY_MODE_IDS[polyMode] ?? 0);
-		queueParam(P_LEGATO, legato ? 1 : 0);
-		queueParam(P_VEL_TARGET, VEL_TARGET_IDS[velocityTarget] ?? 0);
-		queueParam(P_INT_PM_AMOUNT, intPmAmount);
-		queueParam(P_INT_PM_RATIO, intPmRatio);
-		queueParam(P_PM_PRE, pmPre ? 1 : 0);
-		queueParam(P_L1_WAVEFORM, algoKeyToWaveform(warpAAlgo));
-		queueParam(P_L1_WARP_ALGO, algoKeyToId(warpAAlgo));
-		queueParam(P_L1_DCW_BASE, warpAAmount);
-		queueParam(P_L1_DCA_BASE, line1Level);
-		queueParam(P_L1_DCO_DEPTH, line1DcoDepth);
-		queueParam(P_L1_OCTAVE, line1Octave);
-		queueParam(P_L1_DETUNE, line1Detune);
-		queueParam(P_L1_DCW_COMP, line1DcwComp);
-		queueParam(P_L1_KEY_FOLLOW, line1DcwKeyFollow);
-		queueParam(P_L1_ALGO_BLEND, algoBlendA);
-		queueParam(P_L1_WARP_ALGO2, algo2A === null ? -1 : algoKeyToId(algo2A));
-		queueParam(P_L2_WAVEFORM, algoKeyToWaveform(warpBAlgo));
-		queueParam(P_L2_WARP_ALGO, algoKeyToId(warpBAlgo));
-		queueParam(P_L2_DCW_BASE, warpBAmount);
-		queueParam(P_L2_DCA_BASE, line2Level);
-		queueParam(P_L2_DCO_DEPTH, line2DcoDepth);
-		queueParam(P_L2_OCTAVE, line2Octave);
-		queueParam(P_L2_DETUNE, line2Detune);
-		queueParam(P_L2_DCW_COMP, line2DcwComp);
-		queueParam(P_L2_KEY_FOLLOW, line2DcwKeyFollow);
-		queueParam(P_L2_ALGO_BLEND, algoBlendB);
-		queueParam(P_L2_WARP_ALGO2, algo2B === null ? -1 : algoKeyToId(algo2B));
-		queueParam(P_VIB_ENABLED, vibratoEnabled ? 1 : 0);
-		queueParam(P_VIB_WAVEFORM, vibratoWave);
-		queueParam(P_VIB_RATE, vibratoRate);
-		queueParam(P_VIB_DEPTH, vibratoDepth);
-		queueParam(P_VIB_DELAY, vibratoDelay);
-		queueParam(P_CHORUS_MIX, chorusMix);
-		queueParam(P_CHORUS_RATE, chorusRate);
-		queueParam(P_CHORUS_DEPTH, chorusDepth);
-		queueParam(P_DELAY_MIX, delayMix);
-		queueParam(P_DELAY_TIME, delayTime);
-		queueParam(P_DELAY_FEEDBACK, delayFeedback);
-		queueParam(P_REVERB_MIX, reverbMix);
-		queueParam(P_REVERB_SIZE, reverbSize);
-		queueParam(P_LFO_ENABLED, lfoEnabled ? 1 : 0);
-		queueParam(P_LFO_WAVEFORM, LFO_WAVE_IDS[lfoWaveform] ?? 0);
-		queueParam(P_LFO_RATE, lfoRate);
-		queueParam(P_LFO_DEPTH, lfoDepth);
-		queueParam(P_LFO_TARGET, LFO_TARGET_IDS[lfoTarget] ?? 0);
-		queueParam(P_FILTER_ENABLED, filterEnabled ? 1 : 0);
-		queueParam(P_FILTER_CUTOFF, filterCutoff);
-		queueParam(P_FILTER_RESONANCE, filterResonance);
-		queueParam(P_FILTER_ENV_AMOUNT, filterEnvAmount);
-		queueParam(P_FILTER_TYPE, FILTER_TYPE_IDS[filterType] ?? 0);
-		queueParam(P_PORT_ENABLED, portamentoEnabled ? 1 : 0);
-		queueParam(P_PORT_MODE, PORT_MODE_IDS[portamentoMode] ?? 0);
-		queueParam(P_PORT_TIME, portamentoTime);
-		sendEnvelope("l1_dco", line1DcoEnv);
-		sendEnvelope("l1_dcw", line1DcwEnv);
-		sendEnvelope("l1_dca", line1DcaEnv);
-		sendEnvelope("l2_dco", line2DcoEnv);
-		sendEnvelope("l2_dcw", line2DcwEnv);
-		sendEnvelope("l2_dca", line2DcaEnv);
-	}, [
-		volume,
-		lineSelect,
-		modMode,
-		polyMode,
-		legato,
-		velocityTarget,
-		intPmAmount,
-		intPmRatio,
-		pmPre,
-		warpAAlgo,
-		warpAAmount,
-		line1Level,
-		line1DcoDepth,
-		line1Octave,
-		line1Detune,
-		line1DcwComp,
-		line1DcwKeyFollow,
-		algoBlendA,
-		warpBAlgo,
-		warpBAmount,
-		line2Level,
-		line2DcoDepth,
-		line2Octave,
-		line2Detune,
-		line2DcwComp,
-		line2DcwKeyFollow,
-		algoBlendB,
-		vibratoEnabled,
-		vibratoWave,
-		vibratoRate,
-		vibratoDepth,
-		vibratoDelay,
-		chorusMix,
-		chorusRate,
-		chorusDepth,
-		delayMix,
-		delayTime,
-		delayFeedback,
-		reverbMix,
-		reverbSize,
-		lfoEnabled,
-		lfoWaveform,
-		lfoRate,
-		lfoDepth,
-		lfoTarget,
-		filterEnabled,
-		filterCutoff,
-		filterResonance,
-		filterEnvAmount,
-		filterType,
-		portamentoEnabled,
-		portamentoMode,
-		portamentoTime,
-		line1DcoEnv,
-		line1DcwEnv,
-		line1DcaEnv,
-		line2DcoEnv,
-		line2DcwEnv,
-		line2DcaEnv,
-		queueParam,
-		sendEnvelope,
-		algoKeyToId,
-		algoKeyToWaveform,
-		algo2B,
-		algo2A,
-	]);
+	const adapter = useMemo<SynthEngineAdapter>(
+		() => ({
+			sync(snapshot) {
+				queueParam(P_VOLUME, snapshot.volume);
+				queueParam(P_OCTAVE, 0);
+				queueParam(
+					P_LINE_SELECT,
+					LINE_SELECT_IDS[snapshot.lineSelect as LineSelect] ?? 0,
+				);
+				queueParam(P_MOD_MODE, MOD_MODE_IDS[snapshot.modMode as ModMode] ?? 0);
+				queueParam(P_POLY_MODE, POLY_MODE_IDS[snapshot.polyMode] ?? 0);
+				queueParam(P_LEGATO, snapshot.legato ? 1 : 0);
+				queueParam(P_VEL_TARGET, VEL_TARGET_IDS[snapshot.velocityTarget] ?? 0);
+				queueParam(P_INT_PM_AMOUNT, snapshot.intPmAmount);
+				queueParam(P_INT_PM_RATIO, snapshot.intPmRatio);
+				queueParam(P_PM_PRE, snapshot.pmPre ? 1 : 0);
+				queueParam(P_L1_WAVEFORM, algoKeyToWaveform(snapshot.warpAAlgo));
+				queueParam(P_L1_WARP_ALGO, algoKeyToId(snapshot.warpAAlgo));
+				queueParam(P_L1_DCW_BASE, snapshot.warpAAmount);
+				queueParam(P_L1_DCA_BASE, snapshot.line1Level);
+				queueParam(P_L1_DCO_DEPTH, snapshot.line1DcoDepth);
+				queueParam(P_L1_OCTAVE, snapshot.line1Octave);
+				queueParam(P_L1_DETUNE, snapshot.line1Detune);
+				queueParam(P_L1_DCW_COMP, snapshot.line1DcwComp);
+				queueParam(P_L1_KEY_FOLLOW, snapshot.line1DcwKeyFollow);
+				queueParam(P_L1_ALGO_BLEND, snapshot.algoBlendA);
+				queueParam(
+					P_L1_WARP_ALGO2,
+					snapshot.algo2A === null ? -1 : algoKeyToId(snapshot.algo2A),
+				);
+				queueParam(P_L2_WAVEFORM, algoKeyToWaveform(snapshot.warpBAlgo));
+				queueParam(P_L2_WARP_ALGO, algoKeyToId(snapshot.warpBAlgo));
+				queueParam(P_L2_DCW_BASE, snapshot.warpBAmount);
+				queueParam(P_L2_DCA_BASE, snapshot.line2Level);
+				queueParam(P_L2_DCO_DEPTH, snapshot.line2DcoDepth);
+				queueParam(P_L2_OCTAVE, snapshot.line2Octave);
+				queueParam(P_L2_DETUNE, snapshot.line2Detune);
+				queueParam(P_L2_DCW_COMP, snapshot.line2DcwComp);
+				queueParam(P_L2_KEY_FOLLOW, snapshot.line2DcwKeyFollow);
+				queueParam(P_L2_ALGO_BLEND, snapshot.algoBlendB);
+				queueParam(
+					P_L2_WARP_ALGO2,
+					snapshot.algo2B === null ? -1 : algoKeyToId(snapshot.algo2B),
+				);
+				queueParam(P_VIB_ENABLED, snapshot.vibratoEnabled ? 1 : 0);
+				queueParam(P_VIB_WAVEFORM, snapshot.vibratoWave);
+				queueParam(P_VIB_RATE, snapshot.vibratoRate);
+				queueParam(P_VIB_DEPTH, snapshot.vibratoDepth);
+				queueParam(P_VIB_DELAY, snapshot.vibratoDelay);
+				queueParam(P_CHORUS_MIX, snapshot.chorusMix);
+				queueParam(P_CHORUS_RATE, snapshot.chorusRate);
+				queueParam(P_CHORUS_DEPTH, snapshot.chorusDepth);
+				queueParam(P_DELAY_MIX, snapshot.delayMix);
+				queueParam(P_DELAY_TIME, snapshot.delayTime);
+				queueParam(P_DELAY_FEEDBACK, snapshot.delayFeedback);
+				queueParam(P_REVERB_MIX, snapshot.reverbMix);
+				queueParam(P_REVERB_SIZE, snapshot.reverbSize);
+				queueParam(P_LFO_ENABLED, snapshot.lfoEnabled ? 1 : 0);
+				queueParam(
+					P_LFO_WAVEFORM,
+					LFO_WAVE_IDS[snapshot.lfoWaveform as LfoWaveform] ?? 0,
+				);
+				queueParam(P_LFO_RATE, snapshot.lfoRate);
+				queueParam(P_LFO_DEPTH, snapshot.lfoDepth);
+				queueParam(
+					P_LFO_TARGET,
+					LFO_TARGET_IDS[snapshot.lfoTarget as LfoTarget] ?? 0,
+				);
+				queueParam(P_FILTER_ENABLED, snapshot.filterEnabled ? 1 : 0);
+				queueParam(P_FILTER_CUTOFF, snapshot.filterCutoff);
+				queueParam(P_FILTER_RESONANCE, snapshot.filterResonance);
+				queueParam(P_FILTER_ENV_AMOUNT, snapshot.filterEnvAmount);
+				queueParam(
+					P_FILTER_TYPE,
+					FILTER_TYPE_IDS[snapshot.filterType as FilterType] ?? 0,
+				);
+				queueParam(P_PORT_ENABLED, snapshot.portamentoEnabled ? 1 : 0);
+				queueParam(
+					P_PORT_MODE,
+					PORT_MODE_IDS[snapshot.portamentoMode as PortamentoMode] ?? 0,
+				);
+				queueParam(P_PORT_TIME, snapshot.portamentoTime);
+				sendEnvelope("l1_dco", snapshot.line1DcoEnv);
+				sendEnvelope("l1_dcw", snapshot.line1DcwEnv);
+				sendEnvelope("l1_dca", snapshot.line1DcaEnv);
+				sendEnvelope("l2_dco", snapshot.line2DcoEnv);
+				sendEnvelope("l2_dcw", snapshot.line2DcwEnv);
+				sendEnvelope("l2_dca", snapshot.line2DcaEnv);
+			},
+		}),
+		[queueParam, sendEnvelope, algoKeyToId, algoKeyToWaveform],
+	);
+
+	const snapshot = useMemo(
+		() =>
+			buildSynthEngineSnapshot({
+				effectivePitchHz: 220,
+				extPmAmount: 0,
+				lineSelect,
+				modMode,
+				warpAAmount,
+				warpBAmount,
+				line1Level,
+				line2Level,
+				line1DcoDepth,
+				line2DcoDepth,
+				line1DcwComp,
+				line2DcwComp,
+				warpAAlgo: String(warpAAlgo),
+				warpBAlgo: String(warpBAlgo),
+				intPmAmount,
+				intPmRatio,
+				phaseModEnabled,
+				pmPre,
+				windowType,
+				volume,
+				line1Detune,
+				line2Detune,
+				line1Octave,
+				line2Octave,
+				line1DcoEnv,
+				line1DcwEnv,
+				line1DcaEnv,
+				line2DcoEnv,
+				line2DcwEnv,
+				line2DcaEnv,
+				polyMode,
+				legato,
+				velocityTarget,
+				chorusRate,
+				chorusDepth,
+				chorusEnabled,
+				chorusMix,
+				delayTime,
+				delayFeedback,
+				delayEnabled,
+				delayMix,
+				reverbSize,
+				reverbEnabled,
+				reverbMix,
+				algo2A: algo2A != null ? String(algo2A) : null,
+				algo2B: algo2B != null ? String(algo2B) : null,
+				algoBlendA,
+				algoBlendB,
+				line1DcwKeyFollow,
+				line2DcwKeyFollow,
+				vibratoEnabled,
+				vibratoWave,
+				vibratoRate,
+				vibratoDepth,
+				vibratoDelay,
+				portamentoEnabled,
+				portamentoMode,
+				portamentoRate,
+				portamentoTime,
+				lfoEnabled,
+				lfoWaveform,
+				lfoRate,
+				lfoDepth,
+				lfoOffset,
+				lfoTarget,
+				filterEnabled,
+				filterType,
+				filterCutoff,
+				filterResonance,
+				filterEnvAmount,
+				pitchBendRange,
+				modWheelVibratoDepth,
+			}),
+		[
+			lineSelect,
+			modMode,
+			warpAAmount,
+			warpBAmount,
+			line1Level,
+			line2Level,
+			line1DcoDepth,
+			line2DcoDepth,
+			line1DcwComp,
+			line2DcwComp,
+			warpAAlgo,
+			warpBAlgo,
+			intPmAmount,
+			intPmRatio,
+			phaseModEnabled,
+			pmPre,
+			windowType,
+			volume,
+			line1Detune,
+			line2Detune,
+			line1Octave,
+			line2Octave,
+			line1DcoEnv,
+			line1DcwEnv,
+			line1DcaEnv,
+			line2DcoEnv,
+			line2DcwEnv,
+			line2DcaEnv,
+			polyMode,
+			legato,
+			velocityTarget,
+			chorusRate,
+			chorusDepth,
+			chorusEnabled,
+			chorusMix,
+			delayTime,
+			delayFeedback,
+			delayEnabled,
+			delayMix,
+			reverbSize,
+			reverbEnabled,
+			reverbMix,
+			algo2A,
+			algo2B,
+			algoBlendA,
+			algoBlendB,
+			line1DcwKeyFollow,
+			line2DcwKeyFollow,
+			vibratoEnabled,
+			vibratoWave,
+			vibratoRate,
+			vibratoDepth,
+			vibratoDelay,
+			portamentoEnabled,
+			portamentoMode,
+			portamentoRate,
+			portamentoTime,
+			lfoEnabled,
+			lfoWaveform,
+			lfoRate,
+			lfoDepth,
+			lfoOffset,
+			lfoTarget,
+			filterEnabled,
+			filterType,
+			filterCutoff,
+			filterResonance,
+			filterEnvAmount,
+			pitchBendRange,
+			modWheelVibratoDepth,
+		],
+	);
+
+	useSynthEngineController({ adapter, snapshot });
 
 	useEffect(() => {
 		window.__czOnParams = (json: string) => {

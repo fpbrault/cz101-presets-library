@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import { SynthSingleCycleDisplay } from "@/components/SingleCycleDisplay";
-import AsidePanelSwitcher from "@/components/synth/AsidePanelSwitcher";
 import type { AsidePanelTab } from "@/components/synth/AsidePanelSwitcher";
+import AsidePanelSwitcher from "@/components/synth/AsidePanelSwitcher";
 import ChorusPanel from "@/components/synth/ChorusPanel";
 import DelayPanel from "@/components/synth/DelayPanel";
 import GlobalVoicePanel from "@/components/synth/GlobalVoicePanel";
@@ -100,6 +100,7 @@ export default function SynthRenderer({
 								analyserNodeRef={analyserNodeRef}
 								audioCtxRef={audioCtxRef}
 								effectivePitchHz={effectivePitchHz}
+								subscribeScopeFrames={subscribeScopeFrames}
 							/>
 							<SynthFilterPanel />
 							<ChorusPanel />

@@ -125,9 +125,8 @@ export function SharedPhaseDistortionVisualizer({
 	} = synthState;
 
 	const [extPmAmount] = useState(0);
-	const [activeAsidePanel, setActiveAsidePanel] = useState<AsidePanelTab>(
-		"scope",
-	);
+	const [activeAsidePanel, setActiveAsidePanel] =
+		useState<AsidePanelTab>("scope");
 
 	const { audioCtxRef, analyserNodeRef, workletNodeRef, paramsRef } =
 		useAudioEngine({
@@ -260,7 +259,6 @@ export function SharedPhaseDistortionVisualizer({
 		onLoadLibraryPreset: handleLoadLibraryPreset,
 	});
 
-	const oscilloscopeCanvasRef = useRef<HTMLCanvasElement>(null);
 	const lastHeldFreqRef = useRef(currentFreq);
 	lastHeldFreqRef.current = currentFreq;
 	const effectivePitchHz = lastHeldFreqRef.current;
@@ -364,7 +362,6 @@ export function SharedPhaseDistortionVisualizer({
 			lcdSecondaryText={lcdSecondaryText}
 			lcdTransientReadout={lcdControlReadout}
 			effectivePitchHz={effectivePitchHz}
-			oscilloscopeCanvasRef={oscilloscopeCanvasRef}
 			analyserNodeRef={analyserNodeRef}
 			audioCtxRef={audioCtxRef}
 			activeAsidePanel={activeAsidePanel}

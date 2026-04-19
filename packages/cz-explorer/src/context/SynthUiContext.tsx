@@ -1,8 +1,8 @@
 import {
 	createContext,
+	type MutableRefObject,
 	type ReactNode,
 	useContext,
-	type MutableRefObject,
 } from "react";
 import type { UseSynthStateResult } from "@/features/synth/useSynthState";
 
