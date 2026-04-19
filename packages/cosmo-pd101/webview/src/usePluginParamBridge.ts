@@ -112,9 +112,8 @@ function sendParam(parameterId: number, value: number) {
 	}
 }
 
-type SynthState = ReturnType<typeof useSynthState>;
-
-export function usePluginParamBridge(synthState: SynthState) {
+export function usePluginParamBridge() {
+	const synthState = useSynthState();
 	const {
 		warpAAmount,
 		setWarpAAmount,
@@ -267,11 +266,14 @@ export function usePluginParamBridge(synthState: SynthState) {
 		return WARP_ALGO_IDS[warpName as keyof typeof WARP_ALGO_IDS] ?? 0;
 	}, []);
 
-	const algoKeyToWaveform = useCallback((key: PdAlgo | string | null): number => {
-		if (key === null) return 1;
-		const found = PD_ALGOS.find((a) => String(a.value) === String(key));
-		return found?.waveform ?? 1;
-	}, []);
+	const algoKeyToWaveform = useCallback(
+		(key: PdAlgo | string | null): number => {
+			if (key === null) return 1;
+			const found = PD_ALGOS.find((a) => String(a.value) === String(key));
+			return found?.waveform ?? 1;
+		},
+		[],
+	);
 
 	useEffect(() => {
 		queueParam(P_VOLUME, volume);
@@ -417,7 +419,9 @@ export function usePluginParamBridge(synthState: SynthState) {
 							setVolume(value);
 							break;
 						case P_LINE_SELECT:
-							setLineSelect((LINE_SELECT_FROM_ID[value] ?? "L1+L2") as LineSelect);
+							setLineSelect(
+								(LINE_SELECT_FROM_ID[value] ?? "L1+L2") as LineSelect,
+							);
 							break;
 						case P_MOD_MODE:
 							setModMode((MOD_MODE_FROM_ID[value] ?? "normal") as ModMode);
@@ -429,7 +433,9 @@ export function usePluginParamBridge(synthState: SynthState) {
 							setLegato(value >= 0.5);
 							break;
 						case P_VEL_TARGET:
-							setVelocityTarget((VEL_TARGET_FROM_ID[value] ?? "amp") as VelocityTarget);
+							setVelocityTarget(
+								(VEL_TARGET_FROM_ID[value] ?? "amp") as VelocityTarget,
+							);
 							break;
 						case P_INT_PM_AMOUNT:
 							setIntPmAmount(value);
@@ -474,7 +480,8 @@ export function usePluginParamBridge(synthState: SynthState) {
 							if (value < 0) {
 								setAlgo2A(null);
 							} else {
-								const algoName = WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
+								const algoName =
+									WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
 								const entry = PD_ALGOS.find((a) => a.algo === algoName);
 								if (entry) setAlgo2A(entry.value as PdAlgo);
 							}
@@ -514,7 +521,8 @@ export function usePluginParamBridge(synthState: SynthState) {
 							if (value < 0) {
 								setAlgo2B(null);
 							} else {
-								const algoName = WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
+								const algoName =
+									WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
 								const entry = PD_ALGOS.find((a) => a.algo === algoName);
 								if (entry) setAlgo2B(entry.value as PdAlgo);
 							}
@@ -563,7 +571,9 @@ export function usePluginParamBridge(synthState: SynthState) {
 							setLfoEnabled(value >= 0.5);
 							break;
 						case P_LFO_WAVEFORM:
-							setLfoWaveform((LFO_WAVE_FROM_ID[Math.round(value)] ?? "sine") as LfoWaveform);
+							setLfoWaveform(
+								(LFO_WAVE_FROM_ID[Math.round(value)] ?? "sine") as LfoWaveform,
+							);
 							break;
 						case P_LFO_RATE:
 							setLfoRate(value);
@@ -572,7 +582,9 @@ export function usePluginParamBridge(synthState: SynthState) {
 							setLfoDepth(value);
 							break;
 						case P_LFO_TARGET:
-							setLfoTarget((LFO_TARGET_FROM_ID[Math.round(value)] ?? "pitch") as LfoTarget);
+							setLfoTarget(
+								(LFO_TARGET_FROM_ID[Math.round(value)] ?? "pitch") as LfoTarget,
+							);
 							break;
 						case P_FILTER_ENABLED:
 							setFilterEnabled(value >= 0.5);
@@ -587,13 +599,18 @@ export function usePluginParamBridge(synthState: SynthState) {
 							setFilterEnvAmount(value);
 							break;
 						case P_FILTER_TYPE:
-							setFilterType((FILTER_TYPE_FROM_ID[Math.round(value)] ?? "lp") as FilterType);
+							setFilterType(
+								(FILTER_TYPE_FROM_ID[Math.round(value)] ?? "lp") as FilterType,
+							);
 							break;
 						case P_PORT_ENABLED:
 							setPortamentoEnabled(value >= 0.5);
 							break;
 						case P_PORT_MODE:
-							setPortamentoMode((PORT_MODE_FROM_ID[Math.round(value)] ?? "rate") as PortamentoMode);
+							setPortamentoMode(
+								(PORT_MODE_FROM_ID[Math.round(value)] ??
+									"rate") as PortamentoMode,
+							);
 							break;
 						case P_PORT_TIME:
 							setPortamentoTime(value);

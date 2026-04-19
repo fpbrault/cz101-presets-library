@@ -24,18 +24,19 @@ export type DefaultAsidePanelTab =
 	| "delay"
 	| "reverb";
 
-export const DEFAULT_SYNTH_ASIDE_TABS: AsidePanelButtonTab<DefaultAsidePanelTab>[] = [
-	{ id: "global", topLabel: "Global", bottomLabel: "" },
-	{ id: "portamento", topLabel: "Porta", bottomLabel: "mento" },
-	{ id: "phaseMod", topLabel: "Phase", bottomLabel: "Mod" },
-	{ id: "vibrato", topLabel: "Vibrato", bottomLabel: "" },
-	{ id: "lfo", topLabel: "LFO", bottomLabel: "" },
-	{ id: "scope", topLabel: "Scope", bottomLabel: "View" },
-	{ id: "filter", topLabel: "Filter", bottomLabel: "" },
-	{ id: "chorus", topLabel: "Chorus", bottomLabel: "FX" },
-	{ id: "delay", topLabel: "Delay", bottomLabel: "FX" },
-	{ id: "reverb", topLabel: "Reverb", bottomLabel: "FX" },
-];
+export const DEFAULT_SYNTH_ASIDE_TABS: AsidePanelButtonTab<DefaultAsidePanelTab>[] =
+	[
+		{ id: "global", topLabel: "Global", bottomLabel: "" },
+		{ id: "portamento", topLabel: "Porta", bottomLabel: "mento" },
+		{ id: "phaseMod", topLabel: "Phase", bottomLabel: "Mod" },
+		{ id: "vibrato", topLabel: "Vibrato", bottomLabel: "" },
+		{ id: "lfo", topLabel: "LFO", bottomLabel: "" },
+		{ id: "scope", topLabel: "Scope", bottomLabel: "View" },
+		{ id: "filter", topLabel: "Filter", bottomLabel: "" },
+		{ id: "chorus", topLabel: "Chorus", bottomLabel: "FX" },
+		{ id: "delay", topLabel: "Delay", bottomLabel: "FX" },
+		{ id: "reverb", topLabel: "Reverb", bottomLabel: "FX" },
+	];
 
 type SynthUiLayoutProps<T extends string> = {
 	frameClassName: string;

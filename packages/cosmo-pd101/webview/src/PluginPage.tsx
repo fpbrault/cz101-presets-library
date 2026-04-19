@@ -1,4 +1,11 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import SharedSynthUiRenderer, {
 	useSharedSynthUiState,
 } from "@/components/synth/SharedSynthUiRenderer";
@@ -19,23 +26,27 @@ type PluginPageProps = {
 
 export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	const synthState = useSynthState();
-	const { lineSelect, polyMode, filterEnabled, intPmAmount, gatherState, applyPreset } =
-		synthState;
+	const {
+		lineSelect,
+		polyMode,
+		filterEnabled,
+		intPmAmount,
+		gatherState,
+		applyPreset,
+	} = synthState;
 
 	const [uiScale, setUiScale] = useState<UiScale>(() => {
 		const saved = localStorage.getItem(UI_SCALE_KEY);
 		const parsed = saved ? Number(saved) : 100;
 		return (
-			PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.includes(parsed)
-				? parsed
-				: 100
+			PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.includes(parsed) ? parsed : 100
 		) as UiScale;
 	});
 	const [scopeActiveHz, setScopeActiveHz] = useState(220);
 	const oscilloscopeCanvasRef = useRef<HTMLCanvasElement>(null);
 	const uiState = useSharedSynthUiState({ defaultAsidePanel: "global" });
 
-	usePluginParamBridge(synthState);
+	usePluginParamBridge();
 	usePluginScopeRenderer({
 		oscilloscopeCanvasRef,
 		scopeCycles: uiState.scopeCycles,
@@ -47,6 +58,8 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	useEffect(() => {
 		localStorage.setItem(UI_SCALE_KEY, String(uiScale));
 	}, [uiScale]);
+
+	const shouldLoadCurrentState = useCallback(() => !window.ipc, []);
 
 	const {
 		allPresetEntries,
@@ -66,7 +79,7 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 		builtinPresets: DEFAULT_SYNTH_PRESETS,
 		gatherState,
 		applyPreset,
-		shouldLoadCurrentState: () => !window.ipc,
+		shouldLoadCurrentState,
 	});
 
 	const lcdPrimaryText = useMemo(
@@ -106,16 +119,18 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 								UI Scale
 							</span>
 							<div className="flex gap-1">
-								{PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.map((scaleOption) => (
-									<button
-										key={scaleOption}
-										type="button"
-										className={`btn btn-xs font-mono ${uiScale === scaleOption ? "btn-primary" : "btn-ghost opacity-50"}`}
-										onClick={() => setUiScale(scaleOption as UiScale)}
-									>
-										{scaleOption}%
-									</button>
-								))}
+								{PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.map(
+									(scaleOption) => (
+										<button
+											key={scaleOption}
+											type="button"
+											className={`btn btn-xs font-mono ${uiScale === scaleOption ? "btn-primary" : "btn-ghost opacity-50"}`}
+											onClick={() => setUiScale(scaleOption as UiScale)}
+										>
+											{scaleOption}%
+										</button>
+									),
+								)}
 							</div>
 						</div>
 					) : null}

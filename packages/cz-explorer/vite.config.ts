@@ -70,9 +70,12 @@ function spectaBindingsDevPlugin() {
 	const exportBindings = () => {
 		console.log("[specta-bindings] Exporting TypeScript bindings...");
 		try {
-			mkdirSync(fileURLToPath(new URL("./src/lib/synth/bindings", import.meta.url)), {
-				recursive: true,
-			});
+			mkdirSync(
+				fileURLToPath(new URL("./src/lib/synth/bindings", import.meta.url)),
+				{
+					recursive: true,
+				},
+			);
 			execSync(
 				"cargo run --features specta-bindings --bin export-specta-bindings",
 				{

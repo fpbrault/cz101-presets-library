@@ -28,7 +28,10 @@ export function isUiScale(value: number): value is UiScale {
 	return LAB_UI_SCALE_OPTIONS.includes(value as UiScale);
 }
 
-export function labUiReducer(state: LabUiState, action: LabUiAction): LabUiState {
+export function labUiReducer(
+	state: LabUiState,
+	action: LabUiAction,
+): LabUiState {
 	switch (action.type) {
 		case "setScopeCycles":
 			return { ...state, scopeCycles: action.value };

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { initI18n } from "@/i18n";
 import App from "@/App";
+import { initI18n } from "@/i18n";
 
 initI18n();
 
