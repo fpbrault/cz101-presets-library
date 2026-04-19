@@ -3,15 +3,13 @@ import {
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
 	type PdAlgo,
-	type StepEnvData,
 } from "@/components/pdAlgorithms";
 import type { DecodedPatch, EnvelopeStep } from "@/lib/midi/czSysexDecoder";
+import type { EnvStep, StepEnvData } from "@/lib/synth/bindings/synth";
 import {
 	DEFAULT_PRESET,
 	type SynthPresetData,
 } from "@/lib/synth/presetStorage";
-
-type StepEnvStep = { level: number; rate: number };
 
 function waveformToPdAlgo(
 	waveform: DecodedPatch["dco1"]["firstWaveform"],
@@ -75,7 +73,7 @@ function convertEnvelope(
 	_defaultEnv: StepEnvData,
 ): StepEnvData {
 	const czSteps = env.steps.slice(0, env.endStep);
-	const steps: StepEnvStep[] = czSteps.map((step) => ({
+	const steps: EnvStep[] = czSteps.map((step) => ({
 		level: step.level / 99,
 		rate: step.rate,
 	}));

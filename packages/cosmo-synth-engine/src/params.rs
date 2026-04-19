@@ -1,10 +1,13 @@
 use serde::{Deserialize, Deserializer, Serialize};
+#[cfg(feature = "specta-bindings")]
+use specta::Type;
 
 pub const NUM_VOICES: usize = 8;
 pub const NUM_ENV_STEPS: usize = 8;
 
 /// A single step in a step envelope
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct EnvStep {
     /// Level [0.0, 1.0]
     pub level: f32,
@@ -25,12 +28,16 @@ fn deserialize_rate<'de, D: Deserializer<'de>>(d: D) -> Result<u8, D::Error> {
 /// `steps` is always stored as a fixed [EnvStep; 8] internally; JS may
 /// send a shorter array which gets padded with silent steps.
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub struct StepEnvData {
+    #[cfg_attr(feature = "specta-bindings", specta(type = Vec<EnvStep>))]
     pub steps: [EnvStep; NUM_ENV_STEPS],
     /// Which step to sustain on (0-based index into steps)
+    #[cfg_attr(feature = "specta-bindings", specta(type = u32))]
     pub sustain_step: usize,
     /// Number of active steps (JS `stepCount`)
+    #[cfg_attr(feature = "specta-bindings", specta(type = u32))]
     pub step_count: usize,
     /// Whether envelope loops after end
     #[serde(rename = "loop")]
@@ -118,6 +125,7 @@ impl Default for StepEnvData {
 
 /// Warp algorithm selector (mirrors the JS algo string)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum WarpAlgo {
     #[default]
@@ -141,6 +149,7 @@ pub enum WarpAlgo {
 ///
 /// JS sends these as integers (1-8), so we deserialize from `u8`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[repr(u8)]
 pub enum WaveformId {
     #[default]
@@ -185,6 +194,7 @@ impl<'de> Deserialize<'de> for WaveformId {
 
 /// Window type applied to oscillator output
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum WindowType {
     #[default]
@@ -195,6 +205,7 @@ pub enum WindowType {
 
 /// Line select
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub enum LineSelect {
     #[serde(rename = "L1+L2")]
     #[default]
@@ -211,6 +222,7 @@ pub enum LineSelect {
 
 /// Modulation mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum ModMode {
     #[default]
@@ -221,6 +233,7 @@ pub enum ModMode {
 
 /// Polyphony mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum PolyMode {
     #[default]
@@ -231,6 +244,7 @@ pub enum PolyMode {
 
 /// Velocity routing target
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum VelocityTarget {
     #[default]
@@ -243,6 +257,7 @@ pub enum VelocityTarget {
 
 /// LFO waveform
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum LfoWaveform {
     #[default]
@@ -254,6 +269,7 @@ pub enum LfoWaveform {
 
 /// Filter type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum FilterType {
     #[default]
@@ -267,6 +283,7 @@ pub enum FilterType {
 
 /// Portamento mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum PortamentoMode {
     #[default]
@@ -276,9 +293,12 @@ pub enum PortamentoMode {
 
 /// Per-line parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub struct LineParams {
+    #[cfg_attr(feature = "specta-bindings", specta(type = u8))]
     pub waveform: WaveformId,
+    #[cfg_attr(feature = "specta-bindings", specta(type = u8))]
     pub waveform2: WaveformId,
     pub algo2: Option<WarpAlgo>,
     pub algo_blend: f32,
@@ -323,6 +343,7 @@ impl Default for LineParams {
 
 /// Chorus parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct ChorusParams {
     pub rate: f32,
     pub depth: f32,
@@ -341,6 +362,7 @@ impl Default for ChorusParams {
 
 /// Delay parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct DelayParams {
     pub time: f32,
     pub feedback: f32,
@@ -359,6 +381,7 @@ impl Default for DelayParams {
 
 /// Reverb parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct ReverbParams {
     pub size: f32,
     pub mix: f32,
@@ -375,6 +398,7 @@ impl Default for ReverbParams {
 
 /// Vibrato parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct VibratoParams {
     pub enabled: bool,
     /// Waveform as integer 1-4 (JS sends a number: 1=sine 2=tri 3=sq 4=saw)
@@ -401,6 +425,7 @@ impl Default for VibratoParams {
 
 /// Portamento parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct PortamentoParams {
     pub enabled: bool,
     pub mode: PortamentoMode,
@@ -421,6 +446,7 @@ impl Default for PortamentoParams {
 
 /// LFO target
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum LfoTarget {
     #[default]
@@ -432,6 +458,7 @@ pub enum LfoTarget {
 
 /// LFO parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct LfoParams {
     pub enabled: bool,
     pub waveform: LfoWaveform,
@@ -460,6 +487,7 @@ impl Default for LfoParams {
 
 /// Filter parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub struct FilterParams {
     pub enabled: bool,
@@ -484,6 +512,7 @@ impl Default for FilterParams {
 
 /// Top-level synth parameters (mirrors this.params in the JS)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub struct SynthParams {
     pub line_select: LineSelect,
@@ -516,7 +545,7 @@ pub struct SynthParams {
     pub mod_wheel_vibrato_depth: f32,
 }
 
-fn default_pitch_bend_range() -> f32 {
+pub(crate) fn default_pitch_bend_range() -> f32 {
     2.0
 }
 

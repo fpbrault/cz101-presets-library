@@ -1,20 +1,14 @@
+import type {
+	StepEnvData,
+	WarpAlgo,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
+
 const N = 1024;
 const TAU = Math.PI * 2;
 
 export type PdAlgo =
-	| "bend"
-	| "sync"
-	| "pinch"
-	| "fold"
-	| "cz101"
-	| "skew"
-	| "quantize"
-	| "twist"
-	| "clip"
-	| "ripple"
-	| "mirror"
-	| "karpunk"
-	| "fof"
+	| WarpAlgo
 	| 1
 	| 2
 	| 3
@@ -24,7 +18,7 @@ export type PdAlgo =
 	| 7
 	| 8;
 
-export type PdAlgoDef = {
+type PdAlgoDef = {
 	value: PdAlgo;
 	label: string;
 	waveform: number;
@@ -49,7 +43,7 @@ const generatePath = (fn: (phase: number) => number, res = 64): string => {
 	return steps.join("");
 };
 
-export const getWarpIcon = (algo: string): string => {
+const getWarpIcon = (algo: string): string => {
 	const amt = 0.5; // The "preview" amount for the icon
 
 	switch (algo) {
@@ -309,29 +303,6 @@ export const PD_ALGOS: PdAlgoDef[] = [
 	},
 ];
 
-export type Adsr = {
-	attack: number;
-	decay: number;
-	sustain: number;
-	release: number;
-};
-
-export const DEFAULT_ADSR: Adsr = {
-	attack: 0.03,
-	decay: 0.2,
-	sustain: 1,
-	release: 0.25,
-};
-
-export type StepEnvStep = { level: number; rate: number };
-
-export type StepEnvData = {
-	steps: StepEnvStep[];
-	sustainStep: number;
-	stepCount: number;
-	loop: boolean;
-};
-
 export const DEFAULT_DCA_ENV: StepEnvData = {
 	steps: [
 		{ level: 1, rate: 75 },
@@ -380,42 +351,6 @@ export const DEFAULT_DCO_ENV: StepEnvData = {
 	loop: false,
 };
 
-export function rateToSeconds(rate: number): number {
-	return 5.0 * 0.0002 ** (rate / 99);
-}
-
-function stepDurationSeconds(
-	fromLevel: number,
-	toLevel: number,
-	rate: number,
-): number {
-	const distance = Math.abs(toLevel - fromLevel);
-	if (distance <= 0) return 0;
-	return rateToSeconds(rate) * distance;
-}
-
-export function stepEnvLevelAtTime(env: StepEnvData, timeSec: number): number {
-	const activeSteps = env.steps.slice(0, env.stepCount);
-	let t = 0;
-	let prevLevel = 0;
-	for (let i = 0; i < activeSteps.length; i++) {
-		const step = activeSteps[i];
-		const duration = stepDurationSeconds(prevLevel, step.level, step.rate);
-		if (t + duration > timeSec) {
-			const progress = duration > 0 ? (timeSec - t) / duration : 1;
-			return lerp(prevLevel, step.level, Math.min(progress, 1));
-		}
-		t += duration;
-		prevLevel = step.level;
-		if (!env.loop && i === env.sustainStep) {
-			return step.level;
-		}
-	}
-	return prevLevel;
-}
-
-export const KEYBOARD_NOTES = [60, 62, 64, 65, 67, 69, 71, 72];
-
 export const PC_KEY_TO_NOTE: Record<string, number> = {
 	a: 60,
 	s: 62,
@@ -432,20 +367,20 @@ function wrap01(value: number): number {
 	return wrapped < 0 ? wrapped + 1 : wrapped;
 }
 
-export function pdBend(phase: number, amount: number): number {
+function pdBend(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	return phase < amount
 		? (phase / amount) * 0.5
 		: 0.5 + ((phase - amount) / (1 - amount)) * 0.5;
 }
 
-export function pdSync(phase: number, amount: number): number {
+function pdSync(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const n = 1 + amount * 7;
 	return (phase * n) % 1;
 }
 
-export function pdPinch(phase: number, amount: number): number {
+function pdPinch(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const center = 0.5;
 	const a = amount * 0.98 + 0.01;
@@ -454,7 +389,7 @@ export function pdPinch(phase: number, amount: number): number {
 	);
 }
 
-export function pdFold(phase: number, amount: number): number {
+function pdFold(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	let p = phase;
 	const folds = 1 + Math.floor(amount * 5);
@@ -465,7 +400,7 @@ export function pdFold(phase: number, amount: number): number {
 	return p % 1;
 }
 
-export function pdSkew(phase: number, amount: number): number {
+function pdSkew(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const breakpoint = 0.2;
 	const target =
@@ -475,20 +410,20 @@ export function pdSkew(phase: number, amount: number): number {
 	return phase + (target - phase) * amount;
 }
 
-export function pdQuantize(phase: number, amount: number): number {
+function pdQuantize(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const levels = 2 + Math.floor(amount * 30);
 	const target = Math.round(phase * levels) / levels;
 	return phase + (target - phase) * amount;
 }
 
-export function pdTwist(phase: number, amount: number): number {
+function pdTwist(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const target = phase + amount * 0.2 * Math.sin(TAU * phase * 3);
 	return wrap01(target);
 }
 
-export function pdClip(phase: number, amount: number): number {
+function pdClip(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const gain = 1 + amount * 4;
 	const x = (phase - 0.5) * gain;
@@ -496,19 +431,19 @@ export function pdClip(phase: number, amount: number): number {
 	return clipped + 0.5;
 }
 
-export function pdRipple(phase: number, amount: number): number {
+function pdRipple(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const ripple = amount * 0.08 * Math.sin(TAU * phase * 10);
 	return wrap01(phase + ripple);
 }
 
-export function pdMirror(phase: number, amount: number): number {
+function pdMirror(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const mirrored = 1 - phase;
 	return phase + (mirrored - phase) * amount;
 }
 
-export function pdTransfer(waveformId: number, phi: number): number {
+function pdTransfer(waveformId: number, phi: number): number {
 	switch (waveformId) {
 		case 1:
 			return phi;
@@ -531,7 +466,7 @@ export function pdTransfer(waveformId: number, phi: number): number {
 	}
 }
 
-export function czWaveform(waveformId: number, phi: number): number {
+function czWaveform(waveformId: number, phi: number): number {
 	const p = pdTransfer(waveformId, phi);
 	switch (waveformId) {
 		case 1:
@@ -555,7 +490,7 @@ export function czWaveform(waveformId: number, phi: number): number {
 	}
 }
 
-export function pdCz101(phase: number, amount: number): number {
+function pdCz101(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const t = amount;
 	if (t < 0.5) {
@@ -567,7 +502,7 @@ export function pdCz101(phase: number, amount: number): number {
 	}
 }
 
-export function applyPdAlgo(
+function applyPdAlgo(
 	phase: number,
 	amount: number,
 	algo: PdAlgo,
@@ -612,9 +547,9 @@ export function applyPdAlgo(
 	}
 }
 
-export function applyWindow(
+function applyWindow(
 	phase: number,
-	type: "off" | "saw" | "triangle",
+	type: WindowType,
 ): number {
 	if (type === "off") return 1;
 	if (type === "saw") return phase;
@@ -622,7 +557,7 @@ export function applyWindow(
 	return 1;
 }
 
-export function lerp(a: number, b: number, t: number): number {
+function lerp(a: number, b: number, t: number): number {
 	return a + (b - a) * t;
 }
 
@@ -630,55 +565,7 @@ export function noteToFreq(note: number): number {
 	return 440 * 2 ** ((note - 69) / 12);
 }
 
-export function noteName(note: number): string {
-	const names = [
-		"C",
-		"C#",
-		"D",
-		"D#",
-		"E",
-		"F",
-		"F#",
-		"G",
-		"G#",
-		"A",
-		"A#",
-		"B",
-	];
-	const n = ((note % 12) + 12) % 12;
-	const oct = Math.floor(note / 12) - 1;
-	return `${names[n]}${oct}`;
-}
-
-export function adsLevel(env: Adsr, gateSeconds: number): number {
-	if (gateSeconds <= 0) return 0;
-	if (gateSeconds < env.attack) return gateSeconds / env.attack;
-	const decayPos = gateSeconds - env.attack;
-	if (decayPos < env.decay) {
-		const t = decayPos / env.decay;
-		return 1 - (1 - env.sustain) * t;
-	}
-	return env.sustain;
-}
-
-export function envLevel(
-	env: Adsr,
-	nowSec: number,
-	noteOnSec: number | null,
-	noteOffSec: number | null,
-	releaseStartLevel: number,
-): number {
-	if (noteOnSec == null) return 0;
-	if (noteOffSec == null || nowSec < noteOffSec) {
-		return adsLevel(env, nowSec - noteOnSec);
-	}
-	const releaseSeconds = nowSec - noteOffSec;
-	if (releaseSeconds >= env.release) return 0;
-	const t = releaseSeconds / env.release;
-	return releaseStartLevel * (1 - t);
-}
-
-export interface WaveformData {
+interface WaveformData {
 	out1: Float32Array;
 	out2: Float32Array;
 	phase: Float32Array;
@@ -697,7 +584,7 @@ export function computeWaveform(params: {
 	intPmRatio: number;
 	extPmAmount: number;
 	pmPre: boolean;
-	windowType: "off" | "saw" | "triangle";
+	windowType: WindowType;
 	line1Level: number;
 	line2Level: number;
 }): WaveformData {

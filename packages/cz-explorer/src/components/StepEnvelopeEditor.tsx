@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 import ControlKnob from "./ControlKnob";
-import type { StepEnvData } from "./pdAlgorithms";
 import Card from "./ui/Card";
 
 const STEP_KEYS = ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7"] as const;

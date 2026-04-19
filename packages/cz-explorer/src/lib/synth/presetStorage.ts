@@ -1,9 +1,21 @@
-import type { PdAlgo, StepEnvData } from "@/components/pdAlgorithms";
+import type { PdAlgo } from "@/components/pdAlgorithms";
 import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
 } from "@/components/pdAlgorithms";
+import type {
+	FilterType,
+	LfoTarget,
+	LfoWaveform,
+	LineSelect,
+	ModMode,
+	PolyMode,
+	PortamentoMode,
+	StepEnvData,
+	VelocityTarget,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
 
 const STORAGE_PREFIX = "cz101-preset-";
 const CURRENT_STATE_KEY = "cz101-current-state";
@@ -96,7 +108,7 @@ export interface SynthPresetData {
 	intPmRatio: number;
 	phaseModEnabled: boolean;
 	pmPre: boolean;
-	windowType: string;
+	windowType: WindowType;
 	volume: number;
 	line1Level: number;
 	line2Level: number;
@@ -114,9 +126,9 @@ export interface SynthPresetData {
 	line2DcoEnv: StepEnvData;
 	line2DcwEnv: StepEnvData;
 	line2DcaEnv: StepEnvData;
-	polyMode: string;
+	polyMode: PolyMode;
 	legato: boolean;
-	velocityTarget: string;
+	velocityTarget: VelocityTarget;
 	chorusRate: number;
 	chorusDepth: number;
 	chorusEnabled: boolean;
@@ -128,8 +140,8 @@ export interface SynthPresetData {
 	reverbSize: number;
 	reverbEnabled: boolean;
 	reverbMix: number;
-	lineSelect: "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
-	modMode: "normal" | "ring" | "noise";
+	lineSelect: LineSelect;
+	modMode: ModMode;
 	line1DcwKeyFollow: number;
 	line1DcaKeyFollow: number;
 	line2DcwKeyFollow: number;
@@ -140,17 +152,17 @@ export interface SynthPresetData {
 	vibratoDepth: number;
 	vibratoDelay: number;
 	portamentoEnabled: boolean;
-	portamentoMode: "rate" | "time";
+	portamentoMode: PortamentoMode;
 	portamentoRate: number;
 	portamentoTime: number;
 	lfoEnabled: boolean;
-	lfoWaveform: "sine" | "triangle" | "square" | "saw" | "random";
+	lfoWaveform: LfoWaveform;
 	lfoRate: number;
 	lfoDepth: number;
 	lfoOffset: number;
-	lfoTarget: "pitch" | "dcw" | "dca" | "filter";
+	lfoTarget: LfoTarget;
 	filterEnabled: boolean;
-	filterType: "lp" | "hp" | "bp";
+	filterType: FilterType;
 	filterCutoff: number;
 	filterResonance: number;
 	filterEnvAmount: number;
