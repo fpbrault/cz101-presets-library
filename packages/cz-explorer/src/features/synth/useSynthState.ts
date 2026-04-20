@@ -228,9 +228,7 @@ export function useSynthState(): UseSynthStateResult {
 	const [phaseModEnabled, setPhaseModEnabled] = useState(false);
 
 	// Window
-	const [windowType, setWindowType] = useState<"off" | "saw" | "triangle">(
-		"off",
-	);
+	const [windowType, setWindowType] = useState<WindowType>("off");
 
 	// Master volume
 	const [volume, setVolume] = useState(1);

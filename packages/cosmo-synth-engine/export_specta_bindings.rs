@@ -9,9 +9,13 @@
 use cosmo_synth_engine::params::{
     ChorusParams, DelayParams, EnvStep, FilterParams, FilterType, LfoParams, LfoTarget,
     LfoWaveform, LineParams, LineSelect, ModMode, PolyMode, PortamentoMode, PortamentoParams,
-    ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType,
+    ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType, CzAlgo,
+    CzWaveform,
+    Algo,
 };
-use cosmo_synth_engine::preset_wire::{AlgoRefV1, SynthPresetFlatV1, SynthPresetV1};
+use cosmo_synth_engine::preset_wire::{
+    algo_ui_catalog_v1, AlgoRefV1, AlgoUiEntryV1, SynthPresetFlatV1, SynthPresetV1,
+};
 use specta_typescript::{export, Typescript};
 
 fn main() {
@@ -35,7 +39,11 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(&export::<StepEnvData>(&config).expect("Failed to export StepEnvData"));
     out.push_str("\n\n");
-    out.push_str(&export::<WarpAlgo>(&config).expect("Failed to export WarpAlgo"));
+    out.push_str(&export::<CzAlgo>(&config).expect("Failed to export CzAlgo"));
+    out.push_str("\n\n");
+    out.push_str(&export::<CzWaveform>(&config).expect("Failed to export CzWaveform"));
+    out.push_str("\n\n");
+    out.push_str(&export::<Algo>(&config).expect("Failed to export Algo"));
     out.push_str("\n\n");
     out.push_str(&export::<WindowType>(&config).expect("Failed to export WindowType"));
     out.push_str("\n\n");
@@ -73,11 +81,21 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(&export::<AlgoRefV1>(&config).expect("Failed to export AlgoRefV1"));
     out.push_str("\n\n");
+    out.push_str(&export::<AlgoUiEntryV1>(&config).expect("Failed to export AlgoUiEntryV1"));
+    out.push_str("\n\n");
     out.push_str(&export::<SynthParams>(&config).expect("Failed to export SynthParams"));
     out.push_str("\n\n");
     out.push_str(&export::<SynthPresetV1>(&config).expect("Failed to export SynthPresetV1"));
     out.push_str("\n\n");
     out.push_str(&export::<SynthPresetFlatV1>(&config).expect("Failed to export SynthPresetFlatV1"));
+
+    let catalog_json = serde_json::to_string_pretty(algo_ui_catalog_v1())
+        .expect("Failed to serialize ALGO_UI_CATALOG_V1");
+    out.push_str("\n\n");
+    out.push_str("/** Rust-owned algorithm UI catalog. */\n");
+    out.push_str("export const ALGO_UI_CATALOG_V1: AlgoUiEntryV1[] = ");
+    out.push_str(&catalog_json);
+    out.push_str(";\n");
 
     std::fs::write(&ts_path, out)
         .unwrap_or_else(|e| panic!("Failed to write TypeScript bindings to '{ts_path}': {e}"));

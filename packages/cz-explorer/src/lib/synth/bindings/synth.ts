@@ -35,24 +35,27 @@ stepCount: number;
 loop: boolean }
 
 /**
- * Flat algorithm selection unifying waveforms and warp variants.
+ * Front-panel CZ algorithm shortcuts.
+ * 
+ * These map to a `(CzWaveform, WindowType)` pair.
  */
-export type AlgoRefV1 = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" | "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
+export type CzAlgo = "saw" | "square" | "pulse" | "doubleSine" | "sawPulse" | "reso1" | "reso2" | "reso3"
 
 /**
- * CZ waveform identifier (compatibility alias).
+ * Low-level CZ waveform selector.
  */
-export type WaveformId = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2"
+export type CzWaveform = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2"
 
 /**
- * Warp algorithm selector (compatibility alias).
+ * Flat algorithm selector — unifies CZ waveforms and warp variants.
+ * Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
  */
-export type WarpAlgo = "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
+export type Algo = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" | "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
 
 /**
  * Window type applied to oscillator output
  */
-export type WindowType = "off" | "saw" | "triangle"
+export type WindowType = "off" | "saw" | "triangle" | "trapezoid" | "pulse" | "doubleSaw"
 
 /**
  * Line select
@@ -164,7 +167,20 @@ export type FilterParams = { enabled: boolean; type: FilterType; cutoff: number;
 /**
  * Per-line parameters
  */
-export type LineParams = { algo: AlgoRefV1; algo2: AlgoRefV1 | null; algoBlend: number; dcwComp: number; window: WindowType; dcaBase: number; dcwBase: number; dcoDepth: number; modulation: number; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number }
+export type LineParams = { algo: Algo; algo2: Algo | null; algoBlend: number; dcwComp: number; window: WindowType; dcaBase: number; dcwBase: number; dcoDepth: number; modulation: number; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number }
+
+/**
+ * Flat algorithm selection unifying waveforms and warp variants.
+ * Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
+ */
+export type AlgoRefV1 = "czSaw" | "czSquare" | "czPulse" | "czDoubleSine" | "czSawPulse" | "czReso1" | "czReso2" | "czReso3" | "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" | "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
+
+/**
+ * UI catalog entry for algorithm pickers.
+ * 
+ * This is exported to TypeScript so frontend option labels/icons are Rust-owned.
+ */
+export type AlgoUiEntryV1 = { id: AlgoRefV1; label: string; iconPath: string; visible: boolean }
 
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
@@ -190,3 +206,127 @@ export type SynthPresetV1 = { schemaVersion?: number; params: SynthParams }
  * Temporary compatibility shape matching current flat TS preset storage.
  */
 export type SynthPresetFlatV1 = { schemaVersion?: number; warpAAmount: number; warpBAmount: number; warpAAlgo: AlgoRefV1; warpBAlgo: AlgoRefV1; algo2A: AlgoRefV1 | null; algo2B: AlgoRefV1 | null; algoBlendA: number; algoBlendB: number; intPmAmount: number; intPmRatio: number; phaseModEnabled?: boolean; pmPre: boolean; windowType: WindowType; volume: number; line1Level: number; line2Level: number; line1Octave: number; line2Octave: number; line1Detune: number; line2Detune: number; line1DcoDepth: number; line2DcoDepth: number; line1DcwComp: number; line2DcwComp: number; line1DcoEnv: StepEnvData; line1DcwEnv: StepEnvData; line1DcaEnv: StepEnvData; line2DcoEnv: StepEnvData; line2DcwEnv: StepEnvData; line2DcaEnv: StepEnvData; lineSelect: LineSelect; modMode: ModMode; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorusEnabled: boolean; chorusRate: number; chorusDepth: number; chorusMix: number; delayEnabled: boolean; delayTime: number; delayFeedback: number; delayMix: number; reverbEnabled: boolean; reverbSize: number; reverbMix: number; line1DcwKeyFollow: number; line1DcaKeyFollow?: number; line2DcwKeyFollow: number; line2DcaKeyFollow?: number; vibratoEnabled: boolean; vibratoWave: number; vibratoRate: number; vibratoDepth: number; vibratoDelay: number; portamentoEnabled: boolean; portamentoMode: PortamentoMode; portamentoRate: number; portamentoTime: number; lfoEnabled: boolean; lfoWaveform: LfoWaveform; lfoRate: number; lfoDepth: number; lfoOffset: number; lfoTarget: LfoTarget; filterEnabled: boolean; filterType: FilterType; filterCutoff: number; filterResonance: number; filterEnvAmount: number; pitchBendRange?: number; modWheelVibratoDepth?: number }
+
+/** Rust-owned algorithm UI catalog. */
+export const ALGO_UI_CATALOG_V1: AlgoUiEntryV1[] = [
+  {
+    "id": "czSaw",
+    "label": "CZ Saw",
+    "iconPath": "M4,4 L20,20",
+    "visible": true
+  },
+  {
+    "id": "czSquare",
+    "label": "CZ Square",
+    "iconPath": "M4,4 L12,4 L12,20 L20,20",
+    "visible": true
+  },
+  {
+    "id": "czPulse",
+    "label": "CZ Pulse",
+    "iconPath": "M4,20 L8,20 L8,4 L16,4 L16,20 L20,20",
+    "visible": true
+  },
+  {
+    "id": "czDoubleSine",
+    "label": "CZ DoubleSine",
+    "iconPath": "M4,12 C6,4 10,4 12,12 C14,20 18,20 20,12",
+    "visible": true
+  },
+  {
+    "id": "czSawPulse",
+    "label": "CZ SawPulse",
+    "iconPath": "M4,20 L7,4 L9,20 L12,4 L14,20 L17,4 L20,20",
+    "visible": true
+  },
+  {
+    "id": "czReso1",
+    "label": "CZ Reso1",
+    "iconPath": "M4,18 C7,6 9,6 12,18 C15,6 17,6 20,18",
+    "visible": true
+  },
+  {
+    "id": "czReso2",
+    "label": "CZ Reso2",
+    "iconPath": "M4,18 C6,4 10,4 12,12 C14,20 18,20 20,6",
+    "visible": true
+  },
+  {
+    "id": "czReso3",
+    "label": "CZ Reso3",
+    "iconPath": "M4,12 L8,4 L12,20 L16,4 L20,12",
+    "visible": true
+  },
+  {
+    "id": "bend",
+    "label": "Bend",
+    "iconPath": "M4,18 C10,18 14,10 20,4",
+    "visible": true
+  },
+  {
+    "id": "sync",
+    "label": "Sync",
+    "iconPath": "M4,20 L8,4 L8,20 L12,4 L12,20 L16,4 L16,20 L20,4",
+    "visible": true
+  },
+  {
+    "id": "pinch",
+    "label": "Pinch",
+    "iconPath": "M4,12 C8,4 10,12 12,12 C14,12 16,20 20,12",
+    "visible": true
+  },
+  {
+    "id": "fold",
+    "label": "Fold",
+    "iconPath": "M4,20 L8,4 L12,20 L16,4 L20,20",
+    "visible": true
+  },
+  {
+    "id": "skew",
+    "label": "Skew",
+    "iconPath": "M4,20 L10,6 L20,4",
+    "visible": true
+  },
+  {
+    "id": "twist",
+    "label": "Twist",
+    "iconPath": "M4,12 C8,2 16,22 20,12",
+    "visible": true
+  },
+  {
+    "id": "clip",
+    "label": "Clip",
+    "iconPath": "M4,16 L8,16 L8,8 L16,8 L16,16 L20,16",
+    "visible": true
+  },
+  {
+    "id": "ripple",
+    "label": "Ripple",
+    "iconPath": "M4,12 C6,8 8,16 10,12 C12,8 14,16 16,12 C18,8 19,13 20,12",
+    "visible": true
+  },
+  {
+    "id": "mirror",
+    "label": "Mirror",
+    "iconPath": "M4,20 L12,4 L20,20",
+    "visible": true
+  },
+  {
+    "id": "karpunk",
+    "label": "Karpunk",
+    "iconPath": "M4,16 C8,2 12,22 16,8 L20,12",
+    "visible": true
+  },
+  {
+    "id": "fof",
+    "label": "FOF",
+    "iconPath": "M4,16 C8,4 10,4 12,16 C14,4 16,4 20,16",
+    "visible": true
+  },
+  {
+    "id": "cz101",
+    "label": "CZ101",
+    "iconPath": "M4,12 L20,12",
+    "visible": false
+  }
+];

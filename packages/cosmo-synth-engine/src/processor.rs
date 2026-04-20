@@ -199,6 +199,8 @@ impl CosmoProcessor {
             voice.velocity = vel;
             voice.phi1 = 0.0;
             voice.phi2 = 0.0;
+            voice.cycle_count1 = 0;
+            voice.cycle_count2 = 0;
             voice.pm_phi = 0.0;
             voice.is_releasing = false;
             voice.is_silent = false;
@@ -294,6 +296,8 @@ impl CosmoProcessor {
             voice.velocity = vel;
             voice.phi1 = 0.0;
             voice.phi2 = 0.0;
+            voice.cycle_count1 = 0;
+            voice.cycle_count2 = 0;
             voice.pm_phi = 0.0;
             voice.is_releasing = false;
             voice.is_silent = false;

@@ -40,6 +40,8 @@ pub struct LineEnvs {
 pub struct Voice {
     pub phi1: f32,
     pub phi2: f32,
+    pub cycle_count1: u32,
+    pub cycle_count2: u32,
     pub pm_phi: f32,
     pub vibrato_phase: f32,
     pub vibrato_delay_counter: u32,
@@ -78,6 +80,8 @@ impl Voice {
         Self {
             phi1: 0.0,
             phi2: 0.0,
+            cycle_count1: 0,
+            cycle_count2: 0,
             pm_phi: 0.0,
             vibrato_phase: 0.0,
             vibrato_delay_counter: 0,
@@ -195,11 +199,13 @@ pub fn render_voice(
         voice.phi1 += freq1 / sr;
         voice.phi2 += freq2 / sr;
         voice.pm_phi += (base_freq * p.int_pm_ratio) / sr;
-        if voice.phi1 >= 1.0 {
+        while voice.phi1 >= 1.0 {
             voice.phi1 -= 1.0;
+            voice.cycle_count1 = voice.cycle_count1.wrapping_add(1);
         }
-        if voice.phi2 >= 1.0 {
+        while voice.phi2 >= 1.0 {
             voice.phi2 -= 1.0;
+            voice.cycle_count2 = voice.cycle_count2.wrapping_add(1);
         }
         if voice.pm_phi >= 1.0 {
             voice.pm_phi -= 1.0;
@@ -425,39 +431,45 @@ pub fn render_voice(
     };
 
     let s1 = if let Some(a2) = algo2a {
-        // Dual-algorithm blending — either or both algos may be Karpunk.
-        let dcw2a = final_dcw1 * blend_a;
-        let dcw1_effective = final_dcw1 * (1.0 - blend_a);
-
-        let sig_a1 = if l1.algo == Algo::Karpunk {
-            ks_raw1
+        if l1.algo.as_cz_waveform().is_some() && a2.as_cz_waveform().is_some() {
+            // CZ two-wave mode alternates per cycle (A/B/A/B), rather than blending.
+            let active_algo = if voice.cycle_count1 & 1 == 0 { l1.algo } else { a2 };
+            algo_sample(active_algo, phase_a_post, final_dcw1) * w1 * final_dca1
         } else {
-            algo_sample(l1.algo, phase_a_post, dcw1_effective)
-        };
+            // Dual-algorithm blending — either or both algos may be Karpunk.
+            let dcw2a = final_dcw1 * blend_a;
+            let dcw1_effective = final_dcw1 * (1.0 - blend_a);
 
-        let sig_a2 = if a2 == Algo::Karpunk {
-            ks_raw1 // share the same KS output for the blend target
-        } else {
-            let warped_a2 = algo_warp_phase(a2, phase_a_input, dcw2a);
-            let phase_a_post2 = wrap01(if p.pm_pre {
-                warped_a2
+            let sig_a1 = if l1.algo == Algo::Karpunk {
+                ks_raw1
             } else {
-                warped_a2 + pm_mod
-            });
-            algo_sample(a2, phase_a_post2, dcw2a)
-        };
+                algo_sample(l1.algo, phase_a_post, dcw1_effective)
+            };
 
-        // Karpunk-aware blending (asymmetric):
-        // - KS as base (A slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
-        // - KS as target (B slot): plain lerp — blend=0 pure osc, blend=1 pure KS (fade into pluck)
-        let combined_a = if l1.algo == Algo::Karpunk {
-            let ks = sig_a1;
-            let osc = sig_a2;
-            lerp(ks, ks * osc * 2.0, blend_a)
-        } else {
-            lerp(sig_a1, sig_a2, blend_a)
-        };
-        combined_a * w1 * final_dca1
+            let sig_a2 = if a2 == Algo::Karpunk {
+                ks_raw1 // share the same KS output for the blend target
+            } else {
+                let warped_a2 = algo_warp_phase(a2, phase_a_input, dcw2a);
+                let phase_a_post2 = wrap01(if p.pm_pre {
+                    warped_a2
+                } else {
+                    warped_a2 + pm_mod
+                });
+                algo_sample(a2, phase_a_post2, dcw2a)
+            };
+
+            // Karpunk-aware blending (asymmetric):
+            // - KS as base (A slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
+            // - KS as target (B slot): plain lerp — blend=0 pure osc, blend=1 pure KS (fade into pluck)
+            let combined_a = if l1.algo == Algo::Karpunk {
+                let ks = sig_a1;
+                let osc = sig_a2;
+                lerp(ks, ks * osc * 2.0, blend_a)
+            } else {
+                lerp(sig_a1, sig_a2, blend_a)
+            };
+            combined_a * w1 * final_dca1
+        }
     } else if l1.algo == Algo::Karpunk {
         ks_raw1 * w1 * final_dca1
     } else {
@@ -490,39 +502,45 @@ pub fn render_voice(
     };
 
     let s2 = if let Some(a2) = algo2b {
-        // Dual-algorithm blending — either or both algos may be Karpunk.
-        let dcw2b = final_dcw2 * blend_b;
-        let dcw1_effective_b = final_dcw2 * (1.0 - blend_b);
-
-        let sig_b1 = if l2.algo == Algo::Karpunk {
-            ks_raw2
+        if l2.algo.as_cz_waveform().is_some() && a2.as_cz_waveform().is_some() {
+            // CZ two-wave mode alternates per cycle (A/B/A/B), rather than blending.
+            let active_algo = if voice.cycle_count2 & 1 == 0 { l2.algo } else { a2 };
+            algo_sample(active_algo, phase_b_post, final_dcw2) * w2 * final_dca2
         } else {
-            algo_sample(l2.algo, phase_b_post, dcw1_effective_b)
-        };
+            // Dual-algorithm blending — either or both algos may be Karpunk.
+            let dcw2b = final_dcw2 * blend_b;
+            let dcw1_effective_b = final_dcw2 * (1.0 - blend_b);
 
-        let sig_b2 = if a2 == Algo::Karpunk {
-            ks_raw2
-        } else {
-            let warped_b2 = algo_warp_phase(a2, phase_b_input, dcw2b);
-            let phase_b_post2 = wrap01(if p.pm_pre {
-                warped_b2
+            let sig_b1 = if l2.algo == Algo::Karpunk {
+                ks_raw2
             } else {
-                warped_b2 + pm_mod
-            });
-            algo_sample(a2, phase_b_post2, dcw2b)
-        };
+                algo_sample(l2.algo, phase_b_post, dcw1_effective_b)
+            };
 
-        // Karpunk-aware blending (asymmetric):
-        // - KS as base (B slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
-        // - KS as target (B-target slot): plain lerp — blend=0 pure osc, blend=1 pure KS
-        let combined_b = if l2.algo == Algo::Karpunk {
-            let ks = sig_b1;
-            let osc = sig_b2;
-            lerp(ks, ks * osc * 2.0, blend_b)
-        } else {
-            lerp(sig_b1, sig_b2, blend_b)
-        };
-        combined_b * w2 * final_dca2
+            let sig_b2 = if a2 == Algo::Karpunk {
+                ks_raw2
+            } else {
+                let warped_b2 = algo_warp_phase(a2, phase_b_input, dcw2b);
+                let phase_b_post2 = wrap01(if p.pm_pre {
+                    warped_b2
+                } else {
+                    warped_b2 + pm_mod
+                });
+                algo_sample(a2, phase_b_post2, dcw2b)
+            };
+
+            // Karpunk-aware blending (asymmetric):
+            // - KS as base (B slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
+            // - KS as target (B-target slot): plain lerp — blend=0 pure osc, blend=1 pure KS
+            let combined_b = if l2.algo == Algo::Karpunk {
+                let ks = sig_b1;
+                let osc = sig_b2;
+                lerp(ks, ks * osc * 2.0, blend_b)
+            } else {
+                lerp(sig_b1, sig_b2, blend_b)
+            };
+            combined_b * w2 * final_dca2
+        }
     } else if l2.algo == Algo::Karpunk {
         ks_raw2 * w2 * final_dca2
     } else {
@@ -635,11 +653,13 @@ pub fn render_voice(
     voice.phi1 += effective_freq1 / sr;
     voice.phi2 += effective_freq2 / sr;
     voice.pm_phi += pm_delta;
-    if voice.phi1 >= 1.0 {
+    while voice.phi1 >= 1.0 {
         voice.phi1 -= 1.0;
+        voice.cycle_count1 = voice.cycle_count1.wrapping_add(1);
     }
-    if voice.phi2 >= 1.0 {
+    while voice.phi2 >= 1.0 {
         voice.phi2 -= 1.0;
+        voice.cycle_count2 = voice.cycle_count2.wrapping_add(1);
     }
     if voice.pm_phi >= 1.0 {
         voice.pm_phi -= 1.0;

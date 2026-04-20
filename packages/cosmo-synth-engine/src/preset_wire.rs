@@ -40,6 +40,15 @@ impl Default for SynthPresetV1 {
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum AlgoRefV1 {
+    // Front-panel CZ algorithms
+    CzSaw,
+    CzSquare,
+    CzPulse,
+    CzDoubleSine,
+    CzSawPulse,
+    CzReso1,
+    CzReso2,
+    CzReso3,
     // Waveforms
     Saw,
     Square,
@@ -65,6 +74,149 @@ pub enum AlgoRefV1 {
     Fof,
     Karpunk,
     Sine,
+}
+
+/// UI catalog entry for algorithm pickers.
+///
+/// This is exported to TypeScript so frontend option labels/icons are Rust-owned.
+#[derive(Debug, Clone, Copy, Serialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub struct AlgoUiEntryV1 {
+    pub id: AlgoRefV1,
+    pub label: &'static str,
+    pub icon_path: &'static str,
+    pub visible: bool,
+}
+
+pub const ALGO_UI_CATALOG_V1: [AlgoUiEntryV1; 20] = [
+    // CZ front-panel algorithms (first-class)
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzSaw,
+        label: "CZ Saw",
+        icon_path: "M4,4 L20,20",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzSquare,
+        label: "CZ Square",
+        icon_path: "M4,4 L12,4 L12,20 L20,20",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzPulse,
+        label: "CZ Pulse",
+        icon_path: "M4,20 L8,20 L8,4 L16,4 L16,20 L20,20",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzDoubleSine,
+        label: "CZ DoubleSine",
+        icon_path: "M4,12 C6,4 10,4 12,12 C14,20 18,20 20,12",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzSawPulse,
+        label: "CZ SawPulse",
+        icon_path: "M4,20 L7,4 L9,20 L12,4 L14,20 L17,4 L20,20",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzReso1,
+        label: "CZ Reso1",
+        icon_path: "M4,18 C7,6 9,6 12,18 C15,6 17,6 20,18",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzReso2,
+        label: "CZ Reso2",
+        icon_path: "M4,18 C6,4 10,4 12,12 C14,20 18,20 20,6",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::CzReso3,
+        label: "CZ Reso3",
+        icon_path: "M4,12 L8,4 L12,20 L16,4 L20,12",
+        visible: true,
+    },
+    // Warp algorithms
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Bend,
+        label: "Bend",
+        icon_path: "M4,18 C10,18 14,10 20,4",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Sync,
+        label: "Sync",
+        icon_path: "M4,20 L8,4 L8,20 L12,4 L12,20 L16,4 L16,20 L20,4",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Pinch,
+        label: "Pinch",
+        icon_path: "M4,12 C8,4 10,12 12,12 C14,12 16,20 20,12",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Fold,
+        label: "Fold",
+        icon_path: "M4,20 L8,4 L12,20 L16,4 L20,20",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Skew,
+        label: "Skew",
+        icon_path: "M4,20 L10,6 L20,4",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Twist,
+        label: "Twist",
+        icon_path: "M4,12 C8,2 16,22 20,12",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Clip,
+        label: "Clip",
+        icon_path: "M4,16 L8,16 L8,8 L16,8 L16,16 L20,16",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Ripple,
+        label: "Ripple",
+        icon_path: "M4,12 C6,8 8,16 10,12 C12,8 14,16 16,12 C18,8 19,13 20,12",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Mirror,
+        label: "Mirror",
+        icon_path: "M4,20 L12,4 L20,20",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Karpunk,
+        label: "Karpunk",
+        icon_path: "M4,16 C8,2 12,22 16,8 L20,12",
+        visible: true,
+    },
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Fof,
+        label: "FOF",
+        icon_path: "M4,16 C8,4 10,4 12,16 C14,4 16,4 20,16",
+        visible: true,
+    },
+    // Hidden compatibility entries for persisted values and sysex-level combos.
+    AlgoUiEntryV1 {
+        id: AlgoRefV1::Cz101,
+        label: "CZ101",
+        icon_path: "M4,12 L20,12",
+        visible: false,
+    },
+];
+
+pub fn algo_ui_catalog_v1() -> &'static [AlgoUiEntryV1] {
+    &ALGO_UI_CATALOG_V1
 }
 
 /// TODO: Remove this compatibility shape after all preset reads/writes migrate to `SynthPresetV1`.
@@ -160,8 +312,28 @@ impl Default for SynthPresetFlatV1 {
     }
 }
 
+fn algo_ref_window_override(algo: AlgoRefV1) -> Option<WindowType> {
+    match algo {
+        AlgoRefV1::CzSaw
+        | AlgoRefV1::CzSquare
+        | AlgoRefV1::CzPulse
+        | AlgoRefV1::CzDoubleSine
+        | AlgoRefV1::CzSawPulse => Some(WindowType::Off),
+        AlgoRefV1::CzReso1 => Some(WindowType::Saw),
+        AlgoRefV1::CzReso2 => Some(WindowType::Triangle),
+        AlgoRefV1::CzReso3 => Some(WindowType::Trapezoid),
+        _ => None,
+    }
+}
+
 fn algo_ref_to_line(algo: AlgoRefV1) -> Algo {
     match algo {
+        AlgoRefV1::CzSaw => Algo::Saw,
+        AlgoRefV1::CzSquare => Algo::Square,
+        AlgoRefV1::CzPulse => Algo::Pulse,
+        AlgoRefV1::CzDoubleSine => Algo::SinePulse,
+        AlgoRefV1::CzSawPulse => Algo::SawPulse,
+        AlgoRefV1::CzReso1 | AlgoRefV1::CzReso2 | AlgoRefV1::CzReso3 => Algo::MultiSine,
         AlgoRefV1::Saw => Algo::Saw,
         AlgoRefV1::Square => Algo::Square,
         AlgoRefV1::Pulse => Algo::Pulse,
@@ -187,15 +359,20 @@ fn algo_ref_to_line(algo: AlgoRefV1) -> Algo {
     }
 }
 
-fn line_to_algo_ref(algo: Algo) -> AlgoRefV1 {
+fn line_to_algo_ref(algo: Algo, window: WindowType) -> AlgoRefV1 {
     match algo {
-        Algo::Saw => AlgoRefV1::Saw,
-        Algo::Square => AlgoRefV1::Square,
-        Algo::Pulse => AlgoRefV1::Pulse,
+        Algo::Saw => AlgoRefV1::CzSaw,
+        Algo::Square => AlgoRefV1::CzSquare,
+        Algo::Pulse => AlgoRefV1::CzPulse,
         Algo::Null => AlgoRefV1::Null,
-        Algo::SinePulse => AlgoRefV1::SinePulse,
-        Algo::SawPulse => AlgoRefV1::SawPulse,
-        Algo::MultiSine => AlgoRefV1::MultiSine,
+        Algo::SinePulse => AlgoRefV1::CzDoubleSine,
+        Algo::SawPulse => AlgoRefV1::CzSawPulse,
+        Algo::MultiSine => match window {
+            WindowType::Saw => AlgoRefV1::CzReso1,
+            WindowType::Triangle => AlgoRefV1::CzReso2,
+            WindowType::Trapezoid => AlgoRefV1::CzReso3,
+            _ => AlgoRefV1::MultiSine,
+        },
         Algo::Pulse2 => AlgoRefV1::Pulse2,
         Algo::Cz101 => AlgoRefV1::Cz101,
         Algo::Bend => AlgoRefV1::Bend,
@@ -219,6 +396,8 @@ pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
     let line2_algo = algo_ref_to_line(flat.warp_b_algo);
     let line1_secondary = flat.algo2_a.map(algo_ref_to_line);
     let line2_secondary = flat.algo2_b.map(algo_ref_to_line);
+    let line1_window = algo_ref_window_override(flat.warp_a_algo).unwrap_or(flat.window_type);
+    let line2_window = algo_ref_window_override(flat.warp_b_algo).unwrap_or(flat.window_type);
 
     // TODO: Remove bridge defaults (`octave`, `ext_pm_amount`, `frequency`) once
     // legacy flat payloads are fully replaced by canonical `SynthPresetV1` payloads.
@@ -231,7 +410,7 @@ pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
             algo2: line1_secondary,
             algo_blend: flat.algo_blend_a,
             dcw_comp: flat.line1_dcw_comp,
-            window: flat.window_type,
+            window: line1_window,
             dca_base: flat.line1_level,
             dcw_base: flat.warp_a_amount,
             dco_depth: flat.line1_dco_depth,
@@ -248,7 +427,7 @@ pub fn flat_to_params(flat: &SynthPresetFlatV1) -> SynthParams {
             algo2: line2_secondary,
             algo_blend: flat.algo_blend_b,
             dcw_comp: flat.line2_dcw_comp,
-            window: flat.window_type,
+            window: line2_window,
             dca_base: flat.line2_level,
             dcw_base: flat.warp_b_amount,
             dco_depth: flat.line2_dco_depth,
@@ -326,10 +505,16 @@ pub fn params_to_flat(params: &SynthParams) -> SynthPresetFlatV1 {
         schema_version: SYNTH_SCHEMA_VERSION_V1,
         warp_a_amount: params.line1.dcw_base,
         warp_b_amount: params.line2.dcw_base,
-        warp_a_algo: line_to_algo_ref(params.line1.algo),
-        warp_b_algo: line_to_algo_ref(params.line2.algo),
-        algo2_a: params.line1.algo2.map(line_to_algo_ref),
-        algo2_b: params.line2.algo2.map(line_to_algo_ref),
+        warp_a_algo: line_to_algo_ref(params.line1.algo, params.line1.window),
+        warp_b_algo: line_to_algo_ref(params.line2.algo, params.line2.window),
+        algo2_a: params
+            .line1
+            .algo2
+            .map(|algo| line_to_algo_ref(algo, params.line1.window)),
+        algo2_b: params
+            .line2
+            .algo2
+            .map(|algo| line_to_algo_ref(algo, params.line2.window)),
         algo_blend_a: params.line1.algo_blend,
         algo_blend_b: params.line2.algo_blend,
         int_pm_amount: params.int_pm_amount,

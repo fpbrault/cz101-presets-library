@@ -123,6 +123,66 @@ impl Default for StepEnvData {
     }
 }
 
+/// Low-level CZ waveform selector.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub enum CzWaveform {
+    #[default]
+    Saw,
+    Square,
+    Pulse,
+    Null,
+    SinePulse,
+    SawPulse,
+    MultiSine,
+    Pulse2,
+}
+
+/// Front-panel CZ algorithm shortcuts.
+///
+/// These map to a `(CzWaveform, WindowType)` pair.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub enum CzAlgo {
+    #[default]
+    Saw,
+    Square,
+    Pulse,
+    DoubleSine,
+    SawPulse,
+    Reso1,
+    Reso2,
+    Reso3,
+}
+
+impl CzAlgo {
+    pub fn waveform(self) -> CzWaveform {
+        match self {
+            CzAlgo::Saw => CzWaveform::Saw,
+            CzAlgo::Square => CzWaveform::Square,
+            CzAlgo::Pulse => CzWaveform::Pulse,
+            CzAlgo::DoubleSine => CzWaveform::SinePulse,
+            CzAlgo::SawPulse => CzWaveform::SawPulse,
+            CzAlgo::Reso1 | CzAlgo::Reso2 | CzAlgo::Reso3 => CzWaveform::MultiSine,
+        }
+    }
+
+    pub fn window(self) -> WindowType {
+        match self {
+            CzAlgo::Saw
+            | CzAlgo::Square
+            | CzAlgo::Pulse
+            | CzAlgo::DoubleSine
+            | CzAlgo::SawPulse => WindowType::Off,
+            CzAlgo::Reso1 => WindowType::Saw,
+            CzAlgo::Reso2 => WindowType::Triangle,
+            CzAlgo::Reso3 => WindowType::Trapezoid,
+        }
+    }
+}
+
 /// Flat algorithm selector — unifies CZ waveforms and warp variants.
 /// Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -130,12 +190,18 @@ impl Default for StepEnvData {
 #[serde(rename_all = "camelCase")]
 pub enum Algo {
     // CZ waveforms — phase distortion with piecewise-linear carrier
+    #[serde(alias = "czSaw")]
     Saw,
+    #[serde(alias = "czSquare")]
     Square,
+    #[serde(alias = "czPulse")]
     Pulse,
     Null,
+    #[serde(alias = "czDoubleSine")]
     SinePulse,
+    #[serde(alias = "czSawPulse")]
     SawPulse,
+    #[serde(alias = "czReso1", alias = "czReso2", alias = "czReso3")]
     MultiSine,
     Pulse2,
     // Warp algorithms — phase distortion applied to a sine carrier
@@ -157,18 +223,22 @@ pub enum Algo {
 }
 
 impl Algo {
+    pub fn as_cz_waveform(self) -> Option<CzWaveform> {
+        match self {
+            Algo::Saw => Some(CzWaveform::Saw),
+            Algo::Square => Some(CzWaveform::Square),
+            Algo::Pulse => Some(CzWaveform::Pulse),
+            Algo::Null => Some(CzWaveform::Null),
+            Algo::SinePulse => Some(CzWaveform::SinePulse),
+            Algo::SawPulse => Some(CzWaveform::SawPulse),
+            Algo::MultiSine => Some(CzWaveform::MultiSine),
+            Algo::Pulse2 => Some(CzWaveform::Pulse2),
+            _ => None,
+        }
+    }
+
     pub fn is_cz_waveform(self) -> bool {
-        matches!(
-            self,
-            Algo::Saw
-                | Algo::Square
-                | Algo::Pulse
-                | Algo::Null
-                | Algo::SinePulse
-                | Algo::SawPulse
-                | Algo::MultiSine
-                | Algo::Pulse2
-        )
+        self.as_cz_waveform().is_some()
     }
 }
 
@@ -181,6 +251,9 @@ pub enum WindowType {
     Off,
     Saw,
     Triangle,
+    Trapezoid,
+    Pulse,
+    DoubleSaw,
 }
 
 /// Line select

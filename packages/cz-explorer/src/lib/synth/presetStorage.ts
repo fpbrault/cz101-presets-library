@@ -23,8 +23,8 @@ const CURRENT_STATE_KEY = "cz101-current-state";
 export const DEFAULT_PRESET: SynthPresetData = {
 	warpAAmount: 1,
 	warpBAmount: 1,
-	warpAAlgo: "saw",
-	warpBAlgo: "saw",
+	warpAAlgo: "czSaw",
+	warpBAlgo: "czSaw",
 	algo2A: null,
 	algo2B: null,
 	algoBlendA: 0,

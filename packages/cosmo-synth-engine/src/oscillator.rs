@@ -1,4 +1,4 @@
-use crate::params::{Algo, LfoWaveform, WindowType};
+use crate::params::{Algo, CzWaveform, LfoWaveform, WindowType};
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicU8, Ordering};
 
@@ -89,13 +89,13 @@ fn sine_lut(phase: f32) -> f32 {
 ///
 /// The returned phase is fed into a sine carrier rather than treated as
 /// an audio amplitude directly.
-fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
+fn cz_warp_phase(waveform: CzWaveform, phi: f32, dcw: f32) -> f32 {
     // Clamp DCW slightly below 1.0 for division safety on extreme edges
     let dcw = dcw.clamp(0.0, 0.999);
 
-    match algo {
+    match waveform {
         // WAVE 000: Sawtooth (Smooth morph to sharp single kink)
-        Algo::Saw => {
+        CzWaveform::Saw => {
             let p_peak = lerp(0.5, 0.01, dcw);
 
             if phi < p_peak {
@@ -106,7 +106,7 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
         }
 
         // WAVE 001: Square (Expands outwards from the center)
-        Algo::Square => {
+        CzWaveform::Square => {
             let p_peak = lerp(0.5, 0.01, dcw);
             let p_fall = lerp(1.0, 0.51, dcw);
 
@@ -122,7 +122,7 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
         }
 
         // WAVE 010: Pulse (Same as square, but asymmetrical holding times)
-        Algo::Pulse => {
+        CzWaveform::Pulse => {
             let p_peak = lerp(0.5, 0.01, dcw);
             let p_hold = lerp(0.5, 0.03, dcw);
             let p_fall = lerp(1.0, 0.04, dcw);
@@ -139,7 +139,7 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
         }
 
         // WAVE 011: Null (Morphs from sawtooth to a flat line at the trough)
-        Algo::Null => {
+        CzWaveform::Null => {
             let p_peak = lerp(0.5, 0.01, dcw);
 
             if phi < p_peak {
@@ -150,7 +150,7 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
         }
 
         // WAVE 100: Sine-Pulse (Morphs from sine to pulse by squeezing the center of the phase)
-        Algo::SinePulse => {
+        CzWaveform::SinePulse => {
             let p_end = lerp(1.0, 0.5, dcw);
 
             // Prevent division by zero when DCW is 0
@@ -164,7 +164,7 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
         }
 
         // WAVE 101: Saw-Pulse
-        Algo::SawPulse => {
+        CzWaveform::SawPulse => {
             let p_peak = lerp(0.5, 0.01, dcw);
             let p_end = lerp(1.0, 0.5, dcw);
 
@@ -178,7 +178,7 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
         }
 
         // WAVE 110: Resonance / MultiSine (Sysex only)
-        Algo::MultiSine => {
+        CzWaveform::MultiSine => {
             // Scales the carrier frequency up to ~15x at max DCW.
             // Note: This intentionally wraps the phase. The CZ architecture relies
             // on an Amplitude Window function to pinch the volume to 0 at the wrap points!
@@ -186,7 +186,7 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
         }
 
         // WAVE 111: Pulse2 (Sysex only)
-        Algo::Pulse2 => {
+        CzWaveform::Pulse2 => {
             // Wrap the master phase at 2x speed to play the entire shape twice per cycle
             let p = wrap01(phi * 2.0);
 
@@ -206,8 +206,6 @@ fn cz_warp_phase(algo: Algo, phi: f32, dcw: f32) -> f32 {
             }
         }
 
-        // Fallback for non-CZ or undefined algos
-        _ => phi,
     }
 }
 
@@ -288,9 +286,9 @@ fn warp_phase(algo: Algo, phase: f32, amt: f32) -> f32 {
 /// `algo_warp_phase` in the voice path), so this function performs only the
 /// final sine-table readout.
 pub fn algo_sample(algo: Algo, phase: f32, dcw: f32) -> f32 {
-    if algo.is_cz_waveform() {
+    if let Some(cz_waveform) = algo.as_cz_waveform() {
         // The function now returns a perfectly continuous phase line at all DCW levels
-        let final_phase = cz_warp_phase(algo, phase, dcw);
+        let final_phase = cz_warp_phase(cz_waveform, phase, dcw);
 
         // Read out using the inverted cosine
         -libm::cosf(TWO_PI * final_phase)
@@ -305,7 +303,7 @@ pub fn algo_sample(algo: Algo, phase: f32, dcw: f32) -> f32 {
 ///
 /// For CZ algos, expose the final distorted phase for visualizers and sync logic.
 pub fn algo_warp_phase(algo: Algo, phase: f32, dcw: f32) -> f32 {
-    if algo.is_cz_waveform() {
+    if algo.as_cz_waveform().is_some() {
         phase
     } else if algo == Algo::Karpunk || algo == Algo::Sine {
         phase
@@ -322,6 +320,21 @@ pub fn apply_window(phase: f32, window: WindowType) -> f32 {
         WindowType::Off => 1.0,
         WindowType::Saw => phase,
         WindowType::Triangle => 1.0 - libm::fabsf(phase * 2.0 - 1.0),
+        WindowType::Trapezoid => {
+            if phase < 0.5 {
+                1.0
+            } else {
+                2.0 * (1.0 - phase)
+            }
+        }
+        WindowType::Pulse => {
+            if phase < 0.5 {
+                1.0
+            } else {
+                0.0
+            }
+        }
+        WindowType::DoubleSaw => 1.0 - libm::fabsf(2.0 * wrap01(phase * 2.0) - 1.0),
     }
 }
 

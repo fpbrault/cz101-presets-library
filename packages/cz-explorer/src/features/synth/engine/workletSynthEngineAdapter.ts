@@ -1,7 +1,7 @@
 import type { SynthEngineAdapter } from "@/features/synth/engine/synthEngineAdapter";
 import type { SynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import type { EngineParams } from "@/features/synth/hooks/useAudioEngine";
-import { toAlgoRefV1 } from "@/lib/synth/algoRef";
+import { resolveAlgoRef, toAlgoRefV1 } from "@/lib/synth/algoRef";
 
 type CreateWorkletSynthEngineAdapterParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
@@ -18,6 +18,10 @@ export function createWorkletSynthEngineAdapter({
 			const algoB = toAlgoRefV1(snapshot.warpBAlgo);
 			const algo2A = snapshot.algo2A ? toAlgoRefV1(snapshot.algo2A) : null;
 			const algo2B = snapshot.algo2B ? toAlgoRefV1(snapshot.algo2B) : null;
+			const resolvedAlgoA = resolveAlgoRef(algoA);
+			const resolvedAlgoB = resolveAlgoRef(algoB);
+			const line1Window = resolvedAlgoA.windowType ?? snapshot.windowType;
+			const line2Window = resolvedAlgoB.windowType ?? snapshot.windowType;
 
 			const params: EngineParams = {
 				lineSelect: snapshot.lineSelect,
@@ -27,7 +31,7 @@ export function createWorkletSynthEngineAdapter({
 					algo: algoA,
 					algo2: algo2A,
 					algoBlend: snapshot.algoBlendA,
-					window: snapshot.windowType,
+					window: line1Window,
 					dcaBase: snapshot.line1Level,
 					dcwBase: snapshot.warpAAmount,
 					dcoDepth: snapshot.line1DcoDepth,
@@ -44,7 +48,7 @@ export function createWorkletSynthEngineAdapter({
 					algo: algoB,
 					algo2: algo2B,
 					algoBlend: snapshot.algoBlendB,
-					window: snapshot.windowType,
+					window: line2Window,
 					dcaBase: snapshot.line2Level,
 					dcwBase: snapshot.warpBAmount,
 					dcoDepth: snapshot.line2DcoDepth,

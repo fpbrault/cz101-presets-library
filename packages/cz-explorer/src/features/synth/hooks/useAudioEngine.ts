@@ -80,7 +80,7 @@ export type LineParams = {
 };
 
 const DEFAULT_LINE_PARAMS: LineParams = {
-	algo: "saw",
+	algo: "czSaw",
 	algo2: null,
 	algoBlend: 0,
 	window: "off",
