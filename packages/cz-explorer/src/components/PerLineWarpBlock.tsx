@@ -145,12 +145,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 			setCzSlotBWaveform(defaults.waveform2);
 			setCzWindow(defaults.windowFunction);
 		},
-		[
-			setAlgo,
-			setCzSlotAWaveform,
-			setCzSlotBWaveform,
-			setCzWindow,
-		],
+		[setAlgo, setCzSlotAWaveform, setCzSlotBWaveform, setCzWindow],
 	);
 	const czWaveforms: CzWaveform[] = [
 		"saw",
@@ -187,7 +182,11 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											{getPdAlgoDef(algo)?.label}
 										</span>
 									</div>
-									<AlgoIconGrid value={algo} onChange={handleAlgoChange} size={36} />
+									<AlgoIconGrid
+										value={algo}
+										onChange={handleAlgoChange}
+										size={36}
+									/>
 								</Card>
 								<Card variant="subtle" className="p-3 col-span-1">
 									<div className="flex justify-between">
@@ -328,10 +327,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									</div>
 								</Card>
 
-								<Card
-									variant="subtle"
-									className="p-3 min-h-0 flex flex-col"
-								>
+								<Card variant="subtle" className="p-3 min-h-0 flex flex-col">
 									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 										Algo Controls
 									</div>
@@ -343,7 +339,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 												</div>
 												<select
 													value={czWindow}
-													onChange={(e) => setCzWindow(e.target.value as WindowType)}
+													onChange={(e) =>
+														setCzWindow(e.target.value as WindowType)
+													}
 													className="select select-xs w-full bg-cz-inset border-cz-border text-cz-cream"
 												>
 													{czWindows.map((w) => (

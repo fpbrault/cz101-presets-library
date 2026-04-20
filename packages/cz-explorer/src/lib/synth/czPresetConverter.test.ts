@@ -71,8 +71,8 @@ describe("convertDecodedPatchToSynthPreset", () => {
 
 		expect(preset.lineSelect).toBe("L1+L2'");
 		expect(preset.warpAAlgo).toBe("sawPulse");
-		expect(preset.warpBAlgo).toBe('pulse2');
-		expect(preset.algo2B).toBe('pulse');
+		expect(preset.warpBAlgo).toBe("pulse2");
+		expect(preset.algo2B).toBe("pulse");
 		expect(preset.modMode).toBe("ring"); // global modMode set from dco1 (line 1 takes precedence)
 		expect(preset.line2Detune).toBe(1720);
 		expect(preset.line2Octave).toBe(1);

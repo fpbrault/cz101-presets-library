@@ -4,10 +4,7 @@ import {
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
 } from "@/components/pdAlgorithms";
-import {
-	DEFAULT_ALGO_REF,
-	toAlgoRefV1,
-} from "@/lib/synth/algoRef";
+import { DEFAULT_ALGO_REF, toAlgoRefV1 } from "@/lib/synth/algoRef";
 import type {
 	AlgoRefV1,
 	CzWaveform,
