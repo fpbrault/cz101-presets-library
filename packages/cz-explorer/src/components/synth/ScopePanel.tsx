@@ -75,7 +75,7 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 	constructor(props: ScopePanelProps) {
 		super(props);
 		this.state = {
-			scopeCycles: 2,
+			scopeCycles: 4,
 			scopeVerticalZoom: 1,
 			scopeTriggerLevel: 128,
 			displayedHz: props.effectivePitchHz,

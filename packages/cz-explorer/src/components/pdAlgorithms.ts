@@ -185,7 +185,7 @@ export const PD_ALGOS: PdAlgoDef[] = [
 	},
 	{
 		value: "null",
-		label: "CZ Double Sine",
+		label: "CZ null",
 		waveform: "null",
 		algo: "cz101",
 		key: algoRefKey("null"),
@@ -193,7 +193,7 @@ export const PD_ALGOS: PdAlgoDef[] = [
 	},
 	{
 		value: "sinePulse",
-		label: "CZ Saw-Pulse",
+		label: "CZ Sine-Pulse",
 		waveform: "sinePulse",
 		algo: "cz101",
 		key: algoRefKey("sinePulse"),
@@ -201,7 +201,7 @@ export const PD_ALGOS: PdAlgoDef[] = [
 	},
 	{
 		value: "sawPulse",
-		label: "CZ Reso 1",
+		label: "CZ Saw-Pulse",
 		waveform: "sawPulse",
 		algo: "cz101",
 		key: algoRefKey("sawPulse"),
@@ -209,7 +209,7 @@ export const PD_ALGOS: PdAlgoDef[] = [
 	},
 	{
 		value: "multiSine",
-		label: "CZ Reso 2",
+		label: "CZ Multi-Sine",
 		waveform: "multiSine",
 		algo: "cz101",
 		key: algoRefKey("multiSine"),
@@ -217,7 +217,7 @@ export const PD_ALGOS: PdAlgoDef[] = [
 	},
 	{
 		value: "pulse2",
-		label: "CZ Reso 3",
+		label: "CZ Pulse 2",
 		waveform: "pulse2",
 		algo: "cz101",
 		key: algoRefKey("pulse2"),

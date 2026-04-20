@@ -9,7 +9,7 @@
 use cosmo_synth_engine::params::{
     ChorusParams, DelayParams, EnvStep, FilterParams, FilterType, LfoParams, LfoTarget,
     LfoWaveform, LineParams, LineSelect, ModMode, PolyMode, PortamentoMode, PortamentoParams,
-    ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WarpAlgo, WindowType,
+    ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType,
 };
 use cosmo_synth_engine::preset_wire::{AlgoRefV1, SynthPresetFlatV1, SynthPresetV1};
 use specta_typescript::{export, Typescript};
