@@ -10,6 +10,7 @@ export type PresetEntry = {
 
 type PresetNavigatorProps = {
 	allEntries: PresetEntry[];
+	activeEntryId: string | null;
 	activePresetName: string;
 	onLoadLocal: (name: string) => void;
 	onLoadLibrary: (preset: Preset) => void;
@@ -26,6 +27,7 @@ type PresetNavigatorProps = {
 
 export default function PresetNavigator({
 	allEntries,
+	activeEntryId,
 	activePresetName,
 	onLoadLocal,
 	onLoadLibrary,
@@ -257,7 +259,7 @@ export default function PresetNavigator({
 												key={entry.id}
 												type="button"
 												className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${
-													entry.label === activePresetName
+														entry.id === activeEntryId
 														? "bg-cz-gold text-white"
 														: "text-cz-cream hover:bg-cz-surface"
 												}`}
@@ -266,7 +268,7 @@ export default function PresetNavigator({
 												<span className="truncate">{entry.label}</span>
 												<span
 													className={`ml-3 shrink-0 text-3xs font-mono uppercase tracking-[0.22em] ${
-														entry.label === activePresetName
+														entry.id === activeEntryId
 															? "text-white/75"
 															: "text-cz-cream-dim"
 													}`}
@@ -287,7 +289,7 @@ export default function PresetNavigator({
 											<div
 												key={entry.id}
 												className={`group flex w-full items-center rounded-lg px-3 py-2 ${
-													entry.label === activePresetName
+													entry.id === activeEntryId
 														? "bg-cz-gold"
 														: "hover:bg-cz-surface"
 												}`}
@@ -340,7 +342,7 @@ export default function PresetNavigator({
 														>
 															<span
 																className={`truncate ${
-																	entry.label === activePresetName
+																	entry.id === activeEntryId
 																		? "text-white"
 																		: "text-cz-cream"
 																}`}
@@ -349,7 +351,7 @@ export default function PresetNavigator({
 															</span>
 															<span
 																className={`ml-3 shrink-0 text-3xs font-mono uppercase tracking-[0.22em] ${
-																	entry.label === activePresetName
+																	entry.id === activeEntryId
 																		? "text-white/75"
 																		: "text-cz-cream-dim"
 																}`}
@@ -411,7 +413,7 @@ export default function PresetNavigator({
 												key={entry.id}
 												type="button"
 												className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${
-													entry.label === activePresetName
+														entry.id === activeEntryId
 														? "bg-cz-gold text-white"
 														: "text-cz-cream hover:bg-cz-surface"
 												}`}
@@ -420,7 +422,7 @@ export default function PresetNavigator({
 												<span className="truncate">{entry.label}</span>
 												<span
 													className={`ml-3 shrink-0 text-3xs font-mono uppercase tracking-[0.22em] ${
-														entry.label === activePresetName
+														entry.id === activeEntryId
 															? "text-white/75"
 															: "text-cz-cream-dim"
 													}`}

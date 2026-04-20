@@ -252,6 +252,7 @@ export function SharedPhaseDistortionVisualizer({
 
 	const {
 		allPresetEntries,
+		activePresetId,
 		activePresetName,
 		handleLoadLocal,
 		handleLoadBuiltin,
@@ -355,6 +356,7 @@ export function SharedPhaseDistortionVisualizer({
 			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
+				activeEntryId: activePresetId,
 				activePresetName,
 				onLoadLocal: handleLoadLocal,
 				onLoadLibrary: handleLoadLibrary,

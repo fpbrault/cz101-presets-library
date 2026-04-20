@@ -4,6 +4,7 @@ import PresetNavigator, { type PresetEntry } from "./PresetNavigator";
 
 export type SynthHeaderProps = {
 	allEntries: PresetEntry[];
+	activeEntryId: string | null;
 	activePresetName: string;
 	onLoadLocal: (name: string) => void;
 	onLoadLibrary: (preset: Preset) => void;
@@ -21,6 +22,7 @@ export type SynthHeaderProps = {
 
 export default function SynthHeader({
 	allEntries,
+	activeEntryId,
 	activePresetName,
 	onLoadLocal,
 	onLoadLibrary,
@@ -57,6 +59,7 @@ export default function SynthHeader({
 
 			<PresetNavigator
 				allEntries={allEntries}
+				activeEntryId={activeEntryId}
 				activePresetName={activePresetName}
 				onLoadLocal={onLoadLocal}
 				onLoadLibrary={onLoadLibrary}

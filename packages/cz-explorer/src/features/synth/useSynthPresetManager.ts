@@ -26,6 +26,7 @@ type UseSynthPresetManagerOptions = {
 
 type UseSynthPresetManagerResult = {
 	allPresetEntries: PresetEntry[];
+	activePresetId: string | null;
 	activePresetName: string;
 	handleLoadLocal: (name: string) => void;
 	handleLoadBuiltin: (name: string) => void;
@@ -40,6 +41,10 @@ type UseSynthPresetManagerResult = {
 	handleExportCurrentState: (name: string) => void;
 };
 
+const getBuiltinPresetEntryId = (name: string) => `builtin:${name}`;
+const getLocalPresetEntryId = (name: string) => `local:${name}`;
+const getLibraryPresetEntryId = (presetId: string) => `library:${presetId}`;
+
 export function useSynthPresetManager({
 	builtinPresets,
 	gatherState,
@@ -49,6 +54,7 @@ export function useSynthPresetManager({
 	shouldLoadCurrentState,
 }: UseSynthPresetManagerOptions): UseSynthPresetManagerResult {
 	const [presetList, setPresetList] = useState<string[]>([]);
+	const [activePresetId, setActivePresetId] = useState<string | null>(null);
 	const [activePresetName, setActivePresetName] = useState("Current State");
 
 	const handleLoadLocal = useCallback(
@@ -56,6 +62,7 @@ export function useSynthPresetManager({
 			const data = loadPreset(name);
 			if (!data) return;
 			applyPreset(data);
+			setActivePresetId(getLocalPresetEntryId(name));
 			setActivePresetName(name);
 		},
 		[applyPreset],
@@ -66,6 +73,7 @@ export function useSynthPresetManager({
 			const data = builtinPresets[name];
 			if (!data) return;
 			applyPreset(data);
+			setActivePresetId(getBuiltinPresetEntryId(name));
 			setActivePresetName(name);
 		},
 		[applyPreset, builtinPresets],
@@ -75,6 +83,7 @@ export function useSynthPresetManager({
 		(preset: Preset) => {
 			if (!onLoadLibraryPreset) return;
 			onLoadLibraryPreset(preset);
+			setActivePresetId(getLibraryPresetEntryId(preset.id));
 			setActivePresetName(preset.name);
 		},
 		[onLoadLibraryPreset],
@@ -83,17 +92,17 @@ export function useSynthPresetManager({
 	const allPresetEntries = useMemo(
 		(): PresetEntry[] => [
 			...Object.keys(builtinPresets).map((name) => ({
-				id: `builtin:${name}`,
+				id: getBuiltinPresetEntryId(name),
 				label: name,
 				type: "builtin" as const,
 			})),
 			...presetList.map((name) => ({
-				id: `local:${name}`,
+				id: getLocalPresetEntryId(name),
 				label: name,
 				type: "local" as const,
 			})),
 			...libraryPresets.map((preset) => ({
-				id: `library:${preset.id}`,
+				id: getLibraryPresetEntryId(preset.id),
 				label: preset.name,
 				type: "library" as const,
 				preset,
@@ -103,9 +112,8 @@ export function useSynthPresetManager({
 	);
 
 	const activePresetIndex = useMemo(
-		() =>
-			allPresetEntries.findIndex((entry) => entry.label === activePresetName),
-		[allPresetEntries, activePresetName],
+		() => allPresetEntries.findIndex((entry) => entry.id === activePresetId),
+		[allPresetEntries, activePresetId],
 	);
 
 	const handleStepPreset = useCallback(
@@ -141,6 +149,7 @@ export function useSynthPresetManager({
 		(name: string) => {
 			savePreset(name, gatherState());
 			setPresetList(listPresets());
+			setActivePresetId(getLocalPresetEntryId(name));
 			setActivePresetName(name);
 		},
 		[gatherState],
@@ -149,6 +158,9 @@ export function useSynthPresetManager({
 	const handleDeletePreset = useCallback((name: string) => {
 		deletePreset(name);
 		setPresetList(listPresets());
+		setActivePresetId((prev) =>
+			prev === getLocalPresetEntryId(name) ? null : prev,
+		);
 		setActivePresetName((prev) => (prev === name ? "Current State" : prev));
 	}, []);
 
@@ -157,11 +169,17 @@ export function useSynthPresetManager({
 		if (!trimmed || trimmed === oldName) return;
 		renamePreset(oldName, trimmed);
 		setPresetList(listPresets());
+		setActivePresetId((prev) =>
+			prev === getLocalPresetEntryId(oldName)
+				? getLocalPresetEntryId(trimmed)
+				: prev,
+		);
 		setActivePresetName((prev) => (prev === oldName ? trimmed : prev));
 	}, []);
 
 	const handleInitPreset = useCallback(() => {
 		applyPreset(DEFAULT_PRESET);
+		setActivePresetId(null);
 		setActivePresetName("Current State");
 	}, [applyPreset]);
 
@@ -191,6 +209,7 @@ export function useSynthPresetManager({
 			savePreset(candidate, data);
 			setPresetList(listPresets());
 			applyPreset(data);
+			setActivePresetId(getLocalPresetEntryId(candidate));
 			setActivePresetName(candidate);
 		},
 		[applyPreset],
@@ -228,6 +247,7 @@ export function useSynthPresetManager({
 
 	return {
 		allPresetEntries,
+		activePresetId,
 		activePresetName,
 		handleLoadLocal,
 		handleLoadBuiltin,
