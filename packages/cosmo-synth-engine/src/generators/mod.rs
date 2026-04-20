@@ -20,6 +20,51 @@ pub mod skew;
 pub mod sync;
 pub mod twist;
 
+/// Per-line render inputs passed to a voice's generator for one sample.
+#[derive(Debug, Clone, Copy)]
+pub struct LineRenderConfig {
+	pub primary_algo: Algo,
+	pub secondary_algo: Option<Algo>,
+	pub blend: f32,
+	pub phase: f32,
+	pub window_gain: f32,
+	pub final_dcw: f32,
+	pub final_dca: f32,
+	pub effective_freq: f32,
+	pub sample_rate: f32,
+}
+
+/// Per-voice state for any generator algorithms that need note-lifetime memory.
+///
+/// Today this wraps Karpunk state only. Keeping the API here avoids leaking
+/// individual stateful algorithm details into the processor or voice layers.
+#[derive(Debug, Clone, Default)]
+pub struct AlgoRuntimeState {
+	karpunk: karpunk::KarpunkPair,
+}
+
+impl AlgoRuntimeState {
+	/// Create empty state for all state-aware algorithms used by one voice.
+	pub fn new() -> Self {
+		Self::default()
+	}
+
+	/// Reset note-scoped state when a voice starts a new note.
+	pub fn note_on(&mut self, note: u8) {
+		self.karpunk.reseed_for_note(note);
+	}
+
+	/// Render line 1, applying any stateful algorithm behavior as needed.
+	pub fn render_line1(&mut self, config: LineRenderConfig) -> (f32, Option<f32>) {
+		self.karpunk.render_line1(config)
+	}
+
+	/// Render line 2, applying any stateful algorithm behavior as needed.
+	pub fn render_line2(&mut self, config: LineRenderConfig) -> (f32, Option<f32>) {
+		self.karpunk.render_line2(config)
+	}
+}
+
 /// Flat algorithm selection unifying waveforms and warp variants.
 /// Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]

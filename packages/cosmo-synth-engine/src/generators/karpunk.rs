@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 
 use crate::params::Algo;
 
-use super::{AlgoDefinitionV1, AlgoRefV1, NO_CONTROLS};
+use super::{AlgoDefinitionV1, AlgoRefV1, LineRenderConfig, NO_CONTROLS};
 
 pub const DEFINITION: AlgoDefinitionV1 = AlgoDefinitionV1 {
 	id: AlgoRefV1::Karpunk,
@@ -17,6 +17,45 @@ pub const DEFINITION: AlgoDefinitionV1 = AlgoDefinitionV1 {
 
 pub const KS_BUFFER_SIZE: usize = 2048;
 pub const DEFAULT_PRNG_SEED: u32 = 0x1234_5678;
+pub const SECONDARY_PRNG_SALT: u32 = 0x9e37_79b9;
+
+/// All Karpunk state owned by a single synth voice.
+#[derive(Debug, Clone)]
+pub struct KarpunkPair {
+	line1: KarpunkState,
+	line2: KarpunkState,
+}
+
+impl KarpunkPair {
+	pub fn new() -> Self {
+		Self {
+			line1: KarpunkState::default(),
+			line2: KarpunkState::new(DEFAULT_PRNG_SEED ^ SECONDARY_PRNG_SALT),
+		}
+	}
+
+	/// Reseed both Karpunk lines for a note-on event.
+	pub fn reseed_for_note(&mut self, note: u8) {
+		self.line1.reseed_for_note(note);
+		self.line2.reseed_for_note(note.wrapping_add(1));
+	}
+
+	/// Render line 1 using the first Karpunk state buffer when needed.
+	pub fn render_line1(&mut self, config: LineRenderConfig) -> (f32, Option<f32>) {
+		render_line(&mut self.line1, config)
+	}
+
+	/// Render line 2 using the second Karpunk state buffer when needed.
+	pub fn render_line2(&mut self, config: LineRenderConfig) -> (f32, Option<f32>) {
+		render_line(&mut self.line2, config)
+	}
+}
+
+impl Default for KarpunkPair {
+	fn default() -> Self {
+		Self::new()
+	}
+}
 
 /// Stateful Karplus-Strong engine state for one oscillator line.
 #[derive(Debug, Clone)]
@@ -72,6 +111,45 @@ impl Default for KarpunkState {
 	}
 }
 
+fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig) -> (f32, Option<f32>) {
+	let ks_raw = if requires_state_tick(config.primary_algo, config.secondary_algo) {
+		Some(ks_state.advance(
+			config.effective_freq,
+			config.sample_rate,
+			config.final_dcw,
+		))
+	} else {
+		None
+	};
+
+	let sample = if let Some(secondary_algo) = config.secondary_algo {
+		let secondary_dcw = config.final_dcw * config.blend;
+		let primary_dcw = config.final_dcw * (1.0 - config.blend);
+		let primary = super::render_algo_sample(
+			config.primary_algo,
+			config.phase,
+			primary_dcw,
+			ks_raw,
+		);
+		let secondary = super::render_algo_sample(
+			secondary_algo,
+			config.phase,
+			secondary_dcw,
+			ks_raw,
+		);
+		blend(config.primary_algo, primary, secondary, config.blend)
+	} else {
+		super::render_algo_sample(
+			config.primary_algo,
+			config.phase,
+			config.final_dcw,
+			ks_raw,
+		)
+	};
+
+	(sample * config.window_gain * config.final_dca, ks_raw)
+}
+
 #[inline(always)]
 pub fn requires_state_tick(primary_algo: Algo, secondary_algo: Option<Algo>) -> bool {
 	primary_algo == Algo::Karpunk || secondary_algo == Some(Algo::Karpunk)
@@ -85,7 +163,6 @@ pub fn blend(primary_algo: Algo, primary: f32, secondary: f32, blend: f32) -> f3
 		lerp(primary, secondary, blend)
 	}
 }
-
 
 #[inline(always)]
 fn lerp(a: f32, b: f32, t: f32) -> f32 {

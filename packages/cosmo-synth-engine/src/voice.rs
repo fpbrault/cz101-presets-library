@@ -8,8 +8,7 @@ use libm::{cosf, sinf};
 
 use crate::dsp_utils::{apply_window, lfo_output, wrap01};
 use crate::envelope::EnvGen;
-use crate::generators;
-use crate::generators::karpunk::{self, KarpunkState};
+use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
     Algo, FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModMode, PortamentoMode,
     SynthParams, VelocityTarget,
@@ -54,7 +53,7 @@ pub struct Voice {
     pub sustained: bool,
     pub gate_was_open: bool,
     pub note: Option<u8>,
-    pub env_note: u8, // <-- ADD THIS
+    pub env_note: u8,
     pub frequency: f32,
     pub velocity: f32,
 
@@ -64,9 +63,8 @@ pub struct Voice {
     pub filter_state1: [f32; 4],
     pub filter_state2: [f32; 4],
 
-    // Per-line Karplus-Strong engines for Karpunk.
-    pub ks_line1: KarpunkState,
-    pub ks_line2: KarpunkState,
+    /// Per-voice runtime state owned by generator algorithms.
+    pub algo_runtime: AlgoRuntimeState,
 }
 
 impl Voice {
@@ -95,8 +93,7 @@ impl Voice {
             line2_env: LineEnvs::default(),
             filter_state1: [0.0; 4],
             filter_state2: [0.0; 4],
-            ks_line1: KarpunkState::default(),
-            ks_line2: KarpunkState::new(karpunk::DEFAULT_PRNG_SEED ^ 0x9e37_79b9),
+            algo_runtime: AlgoRuntimeState::default(),
         }
     }
 
@@ -146,19 +143,6 @@ struct PhaseFrame {
     pm_delta: f32,
     phase_a_post: f32,
     phase_b_post: f32,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct LineRenderConfig {
-    primary_algo: Algo,
-    secondary_algo: Option<Algo>,
-    blend: f32,
-    phase: f32,
-    window_gain: f32,
-    final_dcw: f32,
-    final_dca: f32,
-    effective_freq: f32,
-    sample_rate: f32,
 }
 
 // ---------------------------------------------------------------------------
@@ -214,8 +198,7 @@ pub fn render_voice(
     let window1 = apply_window(phase.phi1, line_window(l1));
     let window2 = apply_window(phase.phi2, line_window(l2));
 
-    let (s1, ks_raw1) = render_line_sample(
-        &mut voice.ks_line1,
+    let (s1, ks_raw1) = voice.algo_runtime.render_line1(
         LineRenderConfig {
             primary_algo: line1_primary_algo,
             secondary_algo: l1.algo2,
@@ -228,8 +211,7 @@ pub fn render_voice(
             sample_rate: sr,
         },
     );
-    let (s2, ks_raw2) = render_line_sample(
-        &mut voice.ks_line2,
+    let (s2, ks_raw2) = voice.algo_runtime.render_line2(
         LineRenderConfig {
             primary_algo: line2_primary_algo,
             secondary_algo: l2.algo2,
@@ -565,28 +547,6 @@ fn line_window(line: &LineParams) -> crate::params::WindowType {
     } else {
         line.window
     }
-}
-
-fn render_line_sample(ks_state: &mut KarpunkState, config: LineRenderConfig) -> (f32, Option<f32>) {
-    let ks_raw = if karpunk::requires_state_tick(config.primary_algo, config.secondary_algo) {
-        Some(ks_state.advance(config.effective_freq, config.sample_rate, config.final_dcw))
-    } else {
-        None
-    };
-
-    let sample = if let Some(secondary_algo) = config.secondary_algo {
-        let secondary_dcw = config.final_dcw * config.blend;
-        let primary_dcw = config.final_dcw * (1.0 - config.blend);
-        let primary =
-            generators::render_algo_sample(config.primary_algo, config.phase, primary_dcw, ks_raw);
-        let secondary =
-            generators::render_algo_sample(secondary_algo, config.phase, secondary_dcw, ks_raw);
-        karpunk::blend(config.primary_algo, primary, secondary, config.blend)
-    } else {
-        generators::render_algo_sample(config.primary_algo, config.phase, config.final_dcw, ks_raw)
-    };
-
-    (sample * config.window_gain * config.final_dca, ks_raw)
 }
 
 fn mix_line_outputs(
