@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
-import type { AlgoRefV1, StepEnvData } from "@/lib/synth/bindings/synth";
+import type {
+	AlgoRefV1,
+	CzWaveform,
+	StepEnvData,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
 
 export type UseAudioEngineParams = {
 	synthWasmUrl: string;
@@ -66,6 +71,11 @@ export type LineParams = {
 	algo2: AlgoRefV1 | null;
 	algoBlend: number;
 	window: string;
+	cz: {
+		slotAWaveform: CzWaveform;
+		slotBWaveform: CzWaveform;
+		window: WindowType;
+	};
 	dcaBase: number;
 	dcwBase: number;
 	dcoDepth: number;
@@ -84,6 +94,11 @@ const DEFAULT_LINE_PARAMS: LineParams = {
 	algo2: null,
 	algoBlend: 0,
 	window: "off",
+	cz: {
+		slotAWaveform: "saw",
+		slotBWaveform: "saw",
+		window: "off",
+	},
 	dcaBase: 1.0,
 	dcwBase: 0,
 	dcoDepth: 12,

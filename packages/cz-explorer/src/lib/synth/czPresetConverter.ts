@@ -6,9 +6,9 @@ import {
 import type { DecodedPatch, EnvelopeStep } from "@/lib/midi/czSysexDecoder";
 import type {
 	AlgoRefV1,
+	CzWaveform,
 	EnvStep,
 	StepEnvData,
-	WaveformId,
 } from "@/lib/synth/bindings/synth";
 import {
 	DEFAULT_PRESET,
@@ -18,7 +18,7 @@ import {
 function waveformToPdAlgo(
 	waveform: DecodedPatch["dco1"]["firstWaveform"],
 ): AlgoRefV1 {
-	const waveformName: WaveformId =
+	const waveformName: CzWaveform =
 		waveform === 1
 			? "saw"
 			: waveform === 2

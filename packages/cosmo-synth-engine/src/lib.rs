@@ -8,7 +8,8 @@
 
 pub mod envelope;
 pub mod fx;
-pub mod oscillator;
+pub mod generators;
+pub mod dsp_utils;
 pub mod params;
 pub mod preset_wire;
 pub mod processor;

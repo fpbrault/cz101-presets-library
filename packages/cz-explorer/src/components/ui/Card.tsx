@@ -23,7 +23,7 @@ export const CARD_VARIANT_CLASSES: Record<CardVariant, string> = {
 	"panel-slanted": "rounded-none cz-section-slanted",
 	"panel-gold": "rounded-none cz-section-gold",
 	hero: "rounded-2xl bg-cz-surface",
-	subtle: "rounded-xl bg-cz-surface/50 ",
+	subtle: "rounded-none bg-cz-surface/50",
 	inset: "rounded-lg bg-cz-inset",
 };
 

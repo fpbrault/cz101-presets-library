@@ -10,6 +10,7 @@ import {
 } from "@/lib/synth/algoRef";
 import type {
 	AlgoRefV1,
+	CzWaveform,
 	FilterType,
 	LfoTarget,
 	LfoWaveform,
@@ -84,6 +85,12 @@ export type UseSynthStateResult = {
 	setLine1DcwEnv: (v: StepEnvData) => void;
 	line1DcaEnv: StepEnvData;
 	setLine1DcaEnv: (v: StepEnvData) => void;
+	line1CzSlotAWaveform: CzWaveform;
+	setLine1CzSlotAWaveform: (v: CzWaveform) => void;
+	line1CzSlotBWaveform: CzWaveform;
+	setLine1CzSlotBWaveform: (v: CzWaveform) => void;
+	line1CzWindow: WindowType;
+	setLine1CzWindow: (v: WindowType) => void;
 
 	// Line 2
 	line2Level: number;
@@ -106,6 +113,12 @@ export type UseSynthStateResult = {
 	setLine2DcwEnv: (v: StepEnvData) => void;
 	line2DcaEnv: StepEnvData;
 	setLine2DcaEnv: (v: StepEnvData) => void;
+	line2CzSlotAWaveform: CzWaveform;
+	setLine2CzSlotAWaveform: (v: CzWaveform) => void;
+	line2CzSlotBWaveform: CzWaveform;
+	setLine2CzSlotBWaveform: (v: CzWaveform) => void;
+	line2CzWindow: WindowType;
+	setLine2CzWindow: (v: WindowType) => void;
 
 	// Modulation
 	lineSelect: LineSelect;
@@ -244,6 +257,11 @@ export function useSynthState(): UseSynthStateResult {
 	const [line1DcoEnv, setLine1DcoEnv] = useState<StepEnvData>(DEFAULT_DCO_ENV);
 	const [line1DcwEnv, setLine1DcwEnv] = useState<StepEnvData>(DEFAULT_DCW_ENV);
 	const [line1DcaEnv, setLine1DcaEnv] = useState<StepEnvData>(DEFAULT_DCA_ENV);
+	const [line1CzSlotAWaveform, setLine1CzSlotAWaveform] =
+		useState<CzWaveform>("saw");
+	const [line1CzSlotBWaveform, setLine1CzSlotBWaveform] =
+		useState<CzWaveform>("saw");
+	const [line1CzWindow, setLine1CzWindow] = useState<WindowType>("off");
 
 	// Line 2
 	const [line2Level, setLine2Level] = useState(1);
@@ -256,6 +274,11 @@ export function useSynthState(): UseSynthStateResult {
 	const [line2DcoEnv, setLine2DcoEnv] = useState<StepEnvData>(DEFAULT_DCO_ENV);
 	const [line2DcwEnv, setLine2DcwEnv] = useState<StepEnvData>(DEFAULT_DCW_ENV);
 	const [line2DcaEnv, setLine2DcaEnv] = useState<StepEnvData>(DEFAULT_DCA_ENV);
+	const [line2CzSlotAWaveform, setLine2CzSlotAWaveform] =
+		useState<CzWaveform>("saw");
+	const [line2CzSlotBWaveform, setLine2CzSlotBWaveform] =
+		useState<CzWaveform>("saw");
+	const [line2CzWindow, setLine2CzWindow] = useState<WindowType>("off");
 
 	// Modulation
 	const [lineSelect, setLineSelect] = useState<LineSelect>("L1+L2");
@@ -344,9 +367,15 @@ export function useSynthState(): UseSynthStateResult {
 			line1DcoEnv,
 			line1DcwEnv,
 			line1DcaEnv,
+			line1CzSlotAWaveform,
+			line1CzSlotBWaveform,
+			line1CzWindow,
 			line2DcoEnv,
 			line2DcwEnv,
 			line2DcaEnv,
+			line2CzSlotAWaveform,
+			line2CzSlotBWaveform,
+			line2CzWindow,
 			polyMode,
 			legato,
 			velocityTarget,
@@ -418,9 +447,15 @@ export function useSynthState(): UseSynthStateResult {
 		line1DcoEnv,
 		line1DcwEnv,
 		line1DcaEnv,
+		line1CzSlotAWaveform,
+		line1CzSlotBWaveform,
+		line1CzWindow,
 		line2DcoEnv,
 		line2DcwEnv,
 		line2DcaEnv,
+		line2CzSlotAWaveform,
+		line2CzSlotBWaveform,
+		line2CzWindow,
 		polyMode,
 		legato,
 		velocityTarget,
@@ -496,9 +531,15 @@ export function useSynthState(): UseSynthStateResult {
 		setLine1DcoEnv(data.line1DcoEnv);
 		setLine1DcwEnv(data.line1DcwEnv);
 		setLine1DcaEnv(data.line1DcaEnv);
+		setLine1CzSlotAWaveform(data.line1CzSlotAWaveform ?? "saw");
+		setLine1CzSlotBWaveform(data.line1CzSlotBWaveform ?? "saw");
+		setLine1CzWindow((data.line1CzWindow as WindowType) ?? "off");
 		setLine2DcoEnv(data.line2DcoEnv);
 		setLine2DcwEnv(data.line2DcwEnv);
 		setLine2DcaEnv(data.line2DcaEnv);
+		setLine2CzSlotAWaveform(data.line2CzSlotAWaveform ?? "saw");
+		setLine2CzSlotBWaveform(data.line2CzSlotBWaveform ?? "saw");
+		setLine2CzWindow((data.line2CzWindow as WindowType) ?? "off");
 		setPolyMode((data.polyMode as PolyMode) ?? "poly8");
 		setLegato(data.legato ?? false);
 		setVelocityTarget((data.velocityTarget as VelocityTarget) ?? "amp");
@@ -592,6 +633,12 @@ export function useSynthState(): UseSynthStateResult {
 		setLine1DcwEnv,
 		line1DcaEnv,
 		setLine1DcaEnv,
+		line1CzSlotAWaveform,
+		setLine1CzSlotAWaveform,
+		line1CzSlotBWaveform,
+		setLine1CzSlotBWaveform,
+		line1CzWindow,
+		setLine1CzWindow,
 		line2Level,
 		setLine2Level,
 		line2Octave,
@@ -612,6 +659,12 @@ export function useSynthState(): UseSynthStateResult {
 		setLine2DcwEnv,
 		line2DcaEnv,
 		setLine2DcaEnv,
+		line2CzSlotAWaveform,
+		setLine2CzSlotAWaveform,
+		line2CzSlotBWaveform,
+		setLine2CzSlotBWaveform,
+		line2CzWindow,
+		setLine2CzWindow,
 		lineSelect,
 		setLineSelect,
 		modMode,

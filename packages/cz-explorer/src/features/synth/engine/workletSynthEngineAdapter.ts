@@ -32,6 +32,11 @@ export function createWorkletSynthEngineAdapter({
 					algo2: algo2A,
 					algoBlend: snapshot.algoBlendA,
 					window: line1Window,
+					cz: {
+						slotAWaveform: snapshot.line1CzSlotAWaveform,
+						slotBWaveform: snapshot.line1CzSlotBWaveform,
+						window: snapshot.line1CzWindow,
+					},
 					dcaBase: snapshot.line1Level,
 					dcwBase: snapshot.warpAAmount,
 					dcoDepth: snapshot.line1DcoDepth,
@@ -49,6 +54,11 @@ export function createWorkletSynthEngineAdapter({
 					algo2: algo2B,
 					algoBlend: snapshot.algoBlendB,
 					window: line2Window,
+					cz: {
+						slotAWaveform: snapshot.line2CzSlotAWaveform,
+						slotBWaveform: snapshot.line2CzSlotBWaveform,
+						window: snapshot.line2CzWindow,
+					},
 					dcaBase: snapshot.line2Level,
 					dcwBase: snapshot.warpBAmount,
 					dcoDepth: snapshot.line2DcoDepth,

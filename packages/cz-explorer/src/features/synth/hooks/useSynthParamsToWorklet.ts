@@ -5,6 +5,7 @@ import { createWorkletSynthEngineAdapter } from "@/features/synth/engine/worklet
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
 import type {
 	AlgoRefV1,
+	CzWaveform,
 	FilterType,
 	LfoTarget,
 	LfoWaveform,
@@ -46,9 +47,15 @@ type UseSynthParamsToWorkletParams = {
 	line1DcoEnv: StepEnvData;
 	line1DcwEnv: StepEnvData;
 	line1DcaEnv: StepEnvData;
+	line1CzSlotAWaveform: CzWaveform;
+	line1CzSlotBWaveform: CzWaveform;
+	line1CzWindow: WindowType;
 	line2DcoEnv: StepEnvData;
 	line2DcwEnv: StepEnvData;
 	line2DcaEnv: StepEnvData;
+	line2CzSlotAWaveform: CzWaveform;
+	line2CzSlotBWaveform: CzWaveform;
+	line2CzWindow: WindowType;
 	polyMode: PolyMode;
 	legato: boolean;
 	velocityTarget: VelocityTarget;
@@ -123,9 +130,15 @@ export function useSynthParamsToWorklet({
 	line1DcoEnv,
 	line1DcwEnv,
 	line1DcaEnv,
+	line1CzSlotAWaveform,
+	line1CzSlotBWaveform,
+	line1CzWindow,
 	line2DcoEnv,
 	line2DcwEnv,
 	line2DcaEnv,
+	line2CzSlotAWaveform,
+	line2CzSlotBWaveform,
+	line2CzWindow,
 	polyMode,
 	legato,
 	velocityTarget,
@@ -208,9 +221,15 @@ export function useSynthParamsToWorklet({
 				line1DcoEnv,
 				line1DcwEnv,
 				line1DcaEnv,
+				line1CzSlotAWaveform,
+				line1CzSlotBWaveform,
+				line1CzWindow,
 				line2DcoEnv,
 				line2DcwEnv,
 				line2DcaEnv,
+				line2CzSlotAWaveform,
+				line2CzSlotBWaveform,
+				line2CzWindow,
 				polyMode,
 				legato,
 				velocityTarget,
@@ -282,9 +301,15 @@ export function useSynthParamsToWorklet({
 			line1DcoEnv,
 			line1DcwEnv,
 			line1DcaEnv,
+			line1CzSlotAWaveform,
+			line1CzSlotBWaveform,
+			line1CzWindow,
 			line2DcoEnv,
 			line2DcwEnv,
 			line2DcaEnv,
+			line2CzSlotAWaveform,
+			line2CzSlotBWaveform,
+			line2CzWindow,
 			polyMode,
 			legato,
 			velocityTarget,

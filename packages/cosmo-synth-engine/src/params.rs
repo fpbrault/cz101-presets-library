@@ -223,6 +223,20 @@ pub enum Algo {
 }
 
 impl Algo {
+    /// Convert a CZ waveform identifier into its corresponding `Algo` variant.
+    pub fn from_cz_waveform(waveform: CzWaveform) -> Self {
+        match waveform {
+            CzWaveform::Saw => Algo::Saw,
+            CzWaveform::Square => Algo::Square,
+            CzWaveform::Pulse => Algo::Pulse,
+            CzWaveform::Null => Algo::Null,
+            CzWaveform::SinePulse => Algo::SinePulse,
+            CzWaveform::SawPulse => Algo::SawPulse,
+            CzWaveform::MultiSine => Algo::MultiSine,
+            CzWaveform::Pulse2 => Algo::Pulse2,
+        }
+    }
+
     pub fn as_cz_waveform(self) -> Option<CzWaveform> {
         match self {
             Algo::Saw => Some(CzWaveform::Saw),
@@ -344,6 +358,29 @@ pub enum PortamentoMode {
     Time,
 }
 
+/// Per-line CZ slot controls.
+///
+/// Slot A/Slot B alternate per cycle in CZ mode. Setting both slots to the
+/// same waveform effectively yields single-wave behavior.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CzLineParams {
+    pub slot_a_waveform: CzWaveform,
+    pub slot_b_waveform: CzWaveform,
+    pub window: WindowType,
+}
+
+impl Default for CzLineParams {
+    fn default() -> Self {
+        Self {
+            slot_a_waveform: CzWaveform::Saw,
+            slot_b_waveform: CzWaveform::Saw,
+            window: WindowType::Off,
+        }
+    }
+}
+
 /// Per-line parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -364,6 +401,8 @@ pub struct LineParams {
     pub dcw_env: StepEnvData,
     pub dca_env: StepEnvData,
     pub key_follow: f32,
+	#[serde(default)]
+	pub cz: CzLineParams,
 }
 
 impl Default for LineParams {
@@ -384,6 +423,7 @@ impl Default for LineParams {
             dcw_env: StepEnvData::default(),
             dca_env: StepEnvData::default(),
             key_follow: 0.0,
+			cz: CzLineParams::default(),
         }
     }
 }

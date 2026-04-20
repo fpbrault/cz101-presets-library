@@ -5,6 +5,7 @@ import {
 } from "@/components/pdAlgorithms";
 import type {
 	AlgoRefV1,
+	CzWaveform,
 	FilterType,
 	LfoTarget,
 	LfoWaveform,
@@ -51,6 +52,12 @@ export const DEFAULT_PRESET: SynthPresetData = {
 	line2DcoEnv: DEFAULT_DCO_ENV,
 	line2DcwEnv: DEFAULT_DCW_ENV,
 	line2DcaEnv: DEFAULT_DCA_ENV,
+	line1CzSlotAWaveform: "saw",
+	line1CzSlotBWaveform: "saw",
+	line1CzWindow: "off",
+	line2CzSlotAWaveform: "saw",
+	line2CzSlotBWaveform: "saw",
+	line2CzWindow: "off",
 	polyMode: "poly8",
 	legato: false,
 	velocityTarget: "amp",
@@ -126,6 +133,12 @@ export interface SynthPresetData {
 	line2DcoEnv: StepEnvData;
 	line2DcwEnv: StepEnvData;
 	line2DcaEnv: StepEnvData;
+	line1CzSlotAWaveform: CzWaveform;
+	line1CzSlotBWaveform: CzWaveform;
+	line1CzWindow: WindowType;
+	line2CzSlotAWaveform: CzWaveform;
+	line2CzSlotBWaveform: CzWaveform;
+	line2CzWindow: WindowType;
 	polyMode: PolyMode;
 	legato: boolean;
 	velocityTarget: VelocityTarget;

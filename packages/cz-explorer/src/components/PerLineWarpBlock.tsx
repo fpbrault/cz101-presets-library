@@ -1,5 +1,10 @@
-import { memo, useEffect, useState } from "react";
-import type { StepEnvData } from "@/lib/synth/bindings/synth";
+import { memo, useCallback, useEffect, useState } from "react";
+import { getCzPresetDefaults, isCzAlgo } from "@/lib/synth/algoRef";
+import type {
+	CzWaveform,
+	StepEnvData,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
 import AlgoIconGrid from "./AlgoIconGrid";
 import type { PdAlgo } from "./pdAlgorithms";
 import { getPdAlgoDef, PD_ALGOS } from "./pdAlgorithms";
@@ -35,6 +40,12 @@ interface PerLineWarpBlockProps {
 	setDcwEnv: (e: StepEnvData) => void;
 	dcaEnv: StepEnvData;
 	setDcaEnv: (e: StepEnvData) => void;
+	czSlotAWaveform: CzWaveform;
+	setCzSlotAWaveform: (v: CzWaveform) => void;
+	czSlotBWaveform: CzWaveform;
+	setCzSlotBWaveform: (v: CzWaveform) => void;
+	czWindow: WindowType;
+	setCzWindow: (v: WindowType) => void;
 	keyFollow: number;
 	setKeyFollow: (v: number) => void;
 	activeSection?: SectionTab;
@@ -70,6 +81,12 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setDcwEnv,
 	dcaEnv,
 	setDcaEnv,
+	czSlotAWaveform,
+	setCzSlotAWaveform,
+	czSlotBWaveform,
+	setCzSlotBWaveform,
+	czWindow,
+	setCzWindow,
 	keyFollow,
 	setKeyFollow,
 	activeSection: activeSectionProp,
@@ -114,6 +131,45 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	};
 
 	const activeEnv = envMap[activeEnvTab];
+	const showCzControls = isCzAlgo(algo);
+
+	const handleAlgoChange = useCallback(
+		(nextAlgo: PdAlgo) => {
+			setAlgo(nextAlgo);
+			const defaults = getCzPresetDefaults(nextAlgo);
+			if (!defaults) {
+				return;
+			}
+
+			setCzSlotAWaveform(defaults.waveform1);
+			setCzSlotBWaveform(defaults.waveform2);
+			setCzWindow(defaults.windowFunction);
+		},
+		[
+			setAlgo,
+			setCzSlotAWaveform,
+			setCzSlotBWaveform,
+			setCzWindow,
+		],
+	);
+	const czWaveforms: CzWaveform[] = [
+		"saw",
+		"square",
+		"pulse",
+		"null",
+		"sinePulse",
+		"sawPulse",
+		"multiSine",
+		"pulse2",
+	];
+	const czWindows: WindowType[] = [
+		"off",
+		"saw",
+		"triangle",
+		"trapezoid",
+		"pulse",
+		"doubleSaw",
+	];
 
 	return (
 		<div className="min-w-0 min-h-0 flex-1 flex flex-col">
@@ -121,7 +177,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 				<div className="min-h-0 min-w-0 h-full flex-1 flex flex-col overflow-hidden">
 					{activeSection === "algos" ? (
 						<div className="flex-1 min-h-0 flex flex-col p-3">
-							<div className="flex-1 min-h-0 grid gap-4 md:grid-cols-2 md:grid-rows-[auto_minmax(0,1fr)]">
+							<div className="flex-1 min-h-0 grid gap-4 md:grid-cols-3 md:grid-rows-[auto_minmax(0,1fr)]">
 								<Card variant="subtle" className="p-3 col-span-1">
 									<div className="flex justify-between">
 										<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
@@ -131,7 +187,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											{getPdAlgoDef(algo)?.label}
 										</span>
 									</div>
-									<AlgoIconGrid value={algo} onChange={setAlgo} size={36} />
+									<AlgoIconGrid value={algo} onChange={handleAlgoChange} size={36} />
 								</Card>
 								<Card variant="subtle" className="p-3 col-span-1">
 									<div className="flex justify-between">
@@ -256,7 +312,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
 														{fmt(value)}
 													</span>
-													<div className="flex-1 min-h-0 w-[30px]">
+													<div className="flex-1 min-h-0 w-7.5">
 														<CzVerticalSlider
 															value={value}
 															min={min}
@@ -270,6 +326,79 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 											),
 										)}
 									</div>
+								</Card>
+
+								<Card
+									variant="subtle"
+									className="p-3 min-h-0 flex flex-col"
+								>
+									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
+										Algo Controls
+									</div>
+									{showCzControls ? (
+										<div className="flex-1 min-h-0 space-y-3 overflow-y-auto">
+											<div className="space-y-1.5">
+												<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
+													Window
+												</div>
+												<select
+													value={czWindow}
+													onChange={(e) => setCzWindow(e.target.value as WindowType)}
+													className="select select-xs w-full bg-cz-inset border-cz-border text-cz-cream"
+												>
+													{czWindows.map((w) => (
+														<option key={w} value={w}>
+															{w}
+														</option>
+													))}
+												</select>
+											</div>
+
+											<div className="grid grid-cols-1 gap-2">
+												<div className="rounded-md bg-cz-inset/70 p-2 space-y-1.5">
+													<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
+														Slot 1 Waveform
+													</div>
+													<select
+														value={czSlotAWaveform}
+														onChange={(e) =>
+															setCzSlotAWaveform(e.target.value as CzWaveform)
+														}
+														className="select select-xs w-full bg-cz-inset border-cz-border text-cz-cream"
+													>
+														{czWaveforms.map((w) => (
+															<option key={w} value={w}>
+																{w}
+															</option>
+														))}
+													</select>
+												</div>
+
+												<div className="rounded-md bg-cz-inset/70 p-2 space-y-1.5">
+													<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
+														Slot 2 Waveform
+													</div>
+													<select
+														value={czSlotBWaveform}
+														onChange={(e) =>
+															setCzSlotBWaveform(e.target.value as CzWaveform)
+														}
+														className="select select-xs w-full bg-cz-inset border-cz-border text-cz-cream"
+													>
+														{czWaveforms.map((w) => (
+															<option key={w} value={w}>
+																{w}
+															</option>
+														))}
+													</select>
+												</div>
+											</div>
+										</div>
+									) : (
+										<div className="text-3xs text-cz-cream/70 uppercase tracking-[0.2em]">
+											No algo-specific controls
+										</div>
+									)}
 								</Card>
 							</div>
 						</div>

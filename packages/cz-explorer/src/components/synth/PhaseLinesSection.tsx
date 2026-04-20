@@ -74,12 +74,24 @@ export default function PhaseLinesSection({
 		useSynthParam("line1DcwEnv");
 	const { value: line1DcaEnv, setValue: setLine1DcaEnv } =
 		useSynthParam("line1DcaEnv");
+	const { value: line1CzSlotAWaveform, setValue: setLine1CzSlotAWaveform } =
+		useSynthParam("line1CzSlotAWaveform");
+	const { value: line1CzSlotBWaveform, setValue: setLine1CzSlotBWaveform } =
+		useSynthParam("line1CzSlotBWaveform");
+	const { value: line1CzWindow, setValue: setLine1CzWindow } =
+		useSynthParam("line1CzWindow");
 	const { value: line2DcoEnv, setValue: setLine2DcoEnv } =
 		useSynthParam("line2DcoEnv");
 	const { value: line2DcwEnv, setValue: setLine2DcwEnv } =
 		useSynthParam("line2DcwEnv");
 	const { value: line2DcaEnv, setValue: setLine2DcaEnv } =
 		useSynthParam("line2DcaEnv");
+	const { value: line2CzSlotAWaveform, setValue: setLine2CzSlotAWaveform } =
+		useSynthParam("line2CzSlotAWaveform");
+	const { value: line2CzSlotBWaveform, setValue: setLine2CzSlotBWaveform } =
+		useSynthParam("line2CzSlotBWaveform");
+	const { value: line2CzWindow, setValue: setLine2CzWindow } =
+		useSynthParam("line2CzWindow");
 	const { value: line1DcwKeyFollow, setValue: setLine1DcwKeyFollow } =
 		useSynthParam("line1DcwKeyFollow");
 	const { value: line2DcwKeyFollow, setValue: setLine2DcwKeyFollow } =
@@ -110,6 +122,12 @@ export default function PhaseLinesSection({
 		setDcwEnv: envOverrideHandlers?.onLine1DcwEnvChange ?? setLine1DcwEnv,
 		dcaEnv: line1DcaEnv,
 		setDcaEnv: envOverrideHandlers?.onLine1DcaEnvChange ?? setLine1DcaEnv,
+		czSlotAWaveform: line1CzSlotAWaveform,
+		setCzSlotAWaveform: setLine1CzSlotAWaveform,
+		czSlotBWaveform: line1CzSlotBWaveform,
+		setCzSlotBWaveform: setLine1CzSlotBWaveform,
+		czWindow: line1CzWindow,
+		setCzWindow: setLine1CzWindow,
 		keyFollow: line1DcwKeyFollow,
 		setKeyFollow: setLine1DcwKeyFollow,
 	};
@@ -139,6 +157,12 @@ export default function PhaseLinesSection({
 		setDcwEnv: envOverrideHandlers?.onLine2DcwEnvChange ?? setLine2DcwEnv,
 		dcaEnv: line2DcaEnv,
 		setDcaEnv: envOverrideHandlers?.onLine2DcaEnvChange ?? setLine2DcaEnv,
+		czSlotAWaveform: line2CzSlotAWaveform,
+		setCzSlotAWaveform: setLine2CzSlotAWaveform,
+		czSlotBWaveform: line2CzSlotBWaveform,
+		setCzSlotBWaveform: setLine2CzSlotBWaveform,
+		czWindow: line2CzWindow,
+		setCzWindow: setLine2CzWindow,
 		keyFollow: line2DcwKeyFollow,
 		setKeyFollow: setLine2DcwKeyFollow,
 	};
@@ -247,6 +271,12 @@ export default function PhaseLinesSection({
 						setDcwEnv={activeLineConfig.setDcwEnv}
 						dcaEnv={activeLineConfig.dcaEnv}
 						setDcaEnv={activeLineConfig.setDcaEnv}
+						czSlotAWaveform={activeLineConfig.czSlotAWaveform}
+						setCzSlotAWaveform={activeLineConfig.setCzSlotAWaveform}
+						czSlotBWaveform={activeLineConfig.czSlotBWaveform}
+						setCzSlotBWaveform={activeLineConfig.setCzSlotBWaveform}
+						czWindow={activeLineConfig.czWindow}
+						setCzWindow={activeLineConfig.setCzWindow}
 						keyFollow={activeLineConfig.keyFollow}
 						setKeyFollow={activeLineConfig.setKeyFollow}
 						activeSection={activeSection}

@@ -1,4 +1,9 @@
-import type { AlgoRefV1, WindowType } from "@/lib/synth/bindings/synth";
+import {
+	ALGO_DEFINITIONS_V1,
+	type AlgoRefV1,
+	type CzWaveform,
+	type WindowType,
+} from "@/lib/synth/bindings/synth";
 
 const CZ_FRONT_PANEL_ALGOS = [
 	"czSaw",
@@ -74,6 +79,38 @@ const WAVEFORM_NAME_TO_LEGACY: Record<WaveformId, number> = {
 	multiSine: 7,
 	pulse2: 8,
 };
+
+const WAVEFORM_ORDER: CzWaveform[] = [
+	"saw",
+	"square",
+	"pulse",
+	"null",
+	"sinePulse",
+	"sawPulse",
+	"multiSine",
+	"pulse2",
+];
+
+const WINDOW_ORDER: WindowType[] = [
+	"off",
+	"saw",
+	"triangle",
+	"trapezoid",
+	"pulse",
+	"doubleSaw",
+];
+
+type AlgoControlRuntime = {
+	id: string;
+	default: number;
+};
+
+type AlgoDefinitionRuntime = {
+	id: AlgoRefV1;
+	controls: AlgoControlRuntime[];
+};
+
+const ALGO_DEFINITIONS = ALGO_DEFINITIONS_V1 as AlgoDefinitionRuntime[];
 
 export type LegacyPdAlgo = AlgoRefV1;
 
@@ -174,5 +211,40 @@ export function resolveAlgoRef(algo: AlgoRefV1): {
 		warpAlgo: algo,
 		windowType: null,
 		isFrontPanelCzAlgo: false,
+	};
+}
+
+export function getCzPresetDefaults(algo: AlgoRefV1): {
+	waveform1: CzWaveform;
+	waveform2: CzWaveform;
+	windowFunction: WindowType;
+} | null {
+	const definition = ALGO_DEFINITIONS.find((entry) => entry.id === algo);
+	if (!definition) {
+		return null;
+	}
+
+	const waveform1Control = definition.controls.find(
+		(control) => control.id === "waveform1",
+	);
+	const waveform2Control = definition.controls.find(
+		(control) => control.id === "waveform2",
+	);
+	const windowControl = definition.controls.find(
+		(control) => control.id === "windowFunction",
+	);
+
+	if (!waveform1Control || !waveform2Control || !windowControl) {
+		return null;
+	}
+
+	const waveform1Index = Math.round(waveform1Control.default);
+	const waveform2Index = Math.round(waveform2Control.default);
+	const windowIndex = Math.round(windowControl.default);
+
+	return {
+		waveform1: WAVEFORM_ORDER[waveform1Index] ?? "saw",
+		waveform2: WAVEFORM_ORDER[waveform2Index] ?? "saw",
+		windowFunction: WINDOW_ORDER[windowIndex] ?? "off",
 	};
 }

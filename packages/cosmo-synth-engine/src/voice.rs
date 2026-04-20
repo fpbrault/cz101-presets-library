@@ -4,12 +4,12 @@
 /// (lines 488-1257).
 extern crate alloc;
 
-use alloc::vec;
-use alloc::vec::Vec;
 use libm::{cosf, sinf};
 
 use crate::envelope::EnvGen;
-use crate::oscillator::{algo_sample, algo_warp_phase, apply_window, lfo_output, wrap01};
+use crate::generators;
+use crate::generators::karpunk::{self, KarpunkState};
+use crate::dsp_utils::{apply_window, lfo_output, wrap01};
 use crate::params::{
     FilterType, LfoTarget, LineSelect, ModMode, PortamentoMode, SynthParams, VelocityTarget,
     Algo,
@@ -17,8 +17,6 @@ use crate::params::{
 
 // TWO_PI for f32
 const TWO_PI: f32 = core::f32::consts::PI * 2.0;
-
-pub const KS_BUFFER_SIZE: usize = 2048;
 
 // ---------------------------------------------------------------------------
 // LineEnvs — per-line group of three envelope generators
@@ -57,8 +55,6 @@ pub struct Voice {
     pub env_note: u8, // <-- ADD THIS
     pub frequency: f32,
     pub velocity: f32,
-    /// LCG PRNG state for Karplus-Strong buffer initialisation.
-    pub ks_prng: u32,
 
     pub line1_env: LineEnvs,
     pub line2_env: LineEnvs,
@@ -66,13 +62,9 @@ pub struct Voice {
     pub filter_state1: [f32; 4],
     pub filter_state2: [f32; 4],
 
-    // Karplus-Strong delay buffers (heap-allocated)
-    pub ks_buffer1: Vec<f32>,
-    pub ks_write_pos1: usize,
-    pub ks_last_sample1: f32,
-    pub ks_buffer2: Vec<f32>,
-    pub ks_write_pos2: usize,
-    pub ks_last_sample2: f32,
+    // Per-line Karplus-Strong engines for Karpunk.
+    pub ks_line1: KarpunkState,
+    pub ks_line2: KarpunkState,
 }
 
 impl Voice {
@@ -97,17 +89,12 @@ impl Voice {
             note: None,
             frequency: 0.0,
             velocity: 1.0,
-            ks_prng: 0x1234_5678,
             line1_env: LineEnvs::default(),
             line2_env: LineEnvs::default(),
             filter_state1: [0.0; 4],
             filter_state2: [0.0; 4],
-            ks_buffer1: vec![0.0_f32; KS_BUFFER_SIZE],
-            ks_write_pos1: 0,
-            ks_last_sample1: 0.0,
-            ks_buffer2: vec![0.0_f32; KS_BUFFER_SIZE],
-            ks_write_pos2: 0,
-            ks_last_sample2: 0.0,
+            ks_line1: KarpunkState::default(),
+            ks_line2: KarpunkState::new(karpunk::DEFAULT_PRNG_SEED ^ 0x9e37_79b9),
         }
     }
 
@@ -384,167 +371,93 @@ pub fn render_voice(
     let blend_a = l1.algo_blend;
     let blend_b = l2.algo_blend;
 
-    let warped_a = algo_warp_phase(l1.algo, phase_a_input, final_dcw1);
-    let warped_b = algo_warp_phase(l2.algo, phase_b_input, final_dcw2);
-
     let phase_a_post = wrap01(if p.pm_pre {
-        warped_a
+        phase_a_input
     } else {
-        warped_a + pm_mod
+        phase_a_input + pm_mod
     });
     let phase_b_post = wrap01(if p.pm_pre {
-        warped_b
+        phase_b_input
     } else {
-        warped_b + pm_mod
+        phase_b_input + pm_mod
     });
 
-    let w1 = apply_window(phi1, l1.window);
-    let w2 = apply_window(phi2, l2.window);
+    let line1_primary_algo = if l1.algo.is_cz_waveform() {
+        let slot = if voice.cycle_count1 & 1 == 0 {
+            l1.cz.slot_a_waveform
+        } else {
+            l1.cz.slot_b_waveform
+        };
+        Algo::from_cz_waveform(slot)
+    } else {
+        l1.algo
+    };
+    let line2_primary_algo = if l2.algo.is_cz_waveform() {
+        let slot = if voice.cycle_count2 & 1 == 0 {
+            l2.cz.slot_a_waveform
+        } else {
+            l2.cz.slot_b_waveform
+        };
+        Algo::from_cz_waveform(slot)
+    } else {
+        l2.algo
+    };
+
+    let w1 = apply_window(phi1, if l1.algo.is_cz_waveform() { l1.cz.window } else { l1.window });
+    let w2 = apply_window(phi2, if l2.algo.is_cz_waveform() { l2.cz.window } else { l2.window });
 
     // -----------------------------------------------------------------------
     // Line 1 signal
-    //
-    // KS sample is computed unconditionally when either algo A or algo B2 is
-    // Karpunk, so that the buffer always advances and blending works correctly.
     // -----------------------------------------------------------------------
 
-    // Advance the KS1 buffer and capture the filtered output for this sample.
-    // This runs even when algo A is not Karpunk, so that blend-to-Karpunk
-    // (algo2 == Karpunk) has a valid, live signal to lerp toward.
-    let ks_raw1 = {
-        let ks_size1 = (libm::roundf(
-            sr / if effective_freq1 > 0.0 {
-                effective_freq1
-            } else {
-                220.0
-            },
-        ) as usize)
-            .clamp(2, KS_BUFFER_SIZE - 1);
-        let ks_read1 = (voice.ks_write_pos1 + KS_BUFFER_SIZE - ks_size1) % KS_BUFFER_SIZE;
-        let ks_out1 = voice.ks_buffer1[ks_read1];
-        let ks_damp1 = 0.4 + final_dcw1 * 0.58;
-        let ks_filtered1 = ks_damp1 * ks_out1 + (1.0 - ks_damp1) * voice.ks_last_sample1;
-        voice.ks_last_sample1 = ks_filtered1;
-        voice.ks_buffer1[voice.ks_write_pos1] = ks_filtered1 * 0.995;
-        voice.ks_write_pos1 = (voice.ks_write_pos1 + 1) % KS_BUFFER_SIZE;
-        ks_filtered1
+    let ks_raw1 = if karpunk::requires_state_tick(line1_primary_algo, algo2a) {
+        Some(voice.ks_line1.advance(effective_freq1, sr, final_dcw1))
+    } else {
+        None
     };
 
     let s1 = if let Some(a2) = algo2a {
-        if l1.algo.as_cz_waveform().is_some() && a2.as_cz_waveform().is_some() {
-            // CZ two-wave mode alternates per cycle (A/B/A/B), rather than blending.
-            let active_algo = if voice.cycle_count1 & 1 == 0 { l1.algo } else { a2 };
-            algo_sample(active_algo, phase_a_post, final_dcw1) * w1 * final_dca1
-        } else {
-            // Dual-algorithm blending — either or both algos may be Karpunk.
-            let dcw2a = final_dcw1 * blend_a;
-            let dcw1_effective = final_dcw1 * (1.0 - blend_a);
+        // Dual-algorithm blending — either or both algos may be Karpunk.
+        let dcw2a = final_dcw1 * blend_a;
+        let dcw1_effective = final_dcw1 * (1.0 - blend_a);
 
-            let sig_a1 = if l1.algo == Algo::Karpunk {
-                ks_raw1
-            } else {
-                algo_sample(l1.algo, phase_a_post, dcw1_effective)
-            };
+        let sig_a1 = generators::render_algo_sample(line1_primary_algo, phase_a_post, dcw1_effective, ks_raw1);
 
-            let sig_a2 = if a2 == Algo::Karpunk {
-                ks_raw1 // share the same KS output for the blend target
-            } else {
-                let warped_a2 = algo_warp_phase(a2, phase_a_input, dcw2a);
-                let phase_a_post2 = wrap01(if p.pm_pre {
-                    warped_a2
-                } else {
-                    warped_a2 + pm_mod
-                });
-                algo_sample(a2, phase_a_post2, dcw2a)
-            };
+        let sig_a2 = generators::render_algo_sample(a2, phase_a_post, dcw2a, ks_raw1);
 
-            // Karpunk-aware blending (asymmetric):
-            // - KS as base (A slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
-            // - KS as target (B slot): plain lerp — blend=0 pure osc, blend=1 pure KS (fade into pluck)
-            let combined_a = if l1.algo == Algo::Karpunk {
-                let ks = sig_a1;
-                let osc = sig_a2;
-                lerp(ks, ks * osc * 2.0, blend_a)
-            } else {
-                lerp(sig_a1, sig_a2, blend_a)
-            };
-            combined_a * w1 * final_dca1
-        }
-    } else if l1.algo == Algo::Karpunk {
-        ks_raw1 * w1 * final_dca1
+        let combined_a = karpunk::blend(line1_primary_algo, sig_a1, sig_a2, blend_a);
+        combined_a * w1 * final_dca1
     } else {
-        algo_sample(l1.algo, phase_a_post, final_dcw1) * w1 * final_dca1
+        generators::render_algo_sample(line1_primary_algo, phase_a_post, final_dcw1, ks_raw1)
+            * w1
+            * final_dca1
     };
 
     // -----------------------------------------------------------------------
     // Line 2 signal
-    //
-    // Same KS-first extraction pattern as Line 1.
     // -----------------------------------------------------------------------
 
-    let ks_raw2 = {
-        let ks_size2 = (libm::roundf(
-            sr / if effective_freq2 > 0.0 {
-                effective_freq2
-            } else {
-                220.0
-            },
-        ) as usize)
-            .clamp(2, KS_BUFFER_SIZE - 1);
-        let ks_read2 = (voice.ks_write_pos2 + KS_BUFFER_SIZE - ks_size2) % KS_BUFFER_SIZE;
-        let ks_out2 = voice.ks_buffer2[ks_read2];
-        let ks_damp2 = 0.4 + final_dcw2 * 0.58;
-        let ks_filtered2 = ks_damp2 * ks_out2 + (1.0 - ks_damp2) * voice.ks_last_sample2;
-        voice.ks_last_sample2 = ks_filtered2;
-        voice.ks_buffer2[voice.ks_write_pos2] = ks_filtered2 * 0.995;
-        voice.ks_write_pos2 = (voice.ks_write_pos2 + 1) % KS_BUFFER_SIZE;
-        ks_filtered2
+    let ks_raw2 = if karpunk::requires_state_tick(line2_primary_algo, algo2b) {
+        Some(voice.ks_line2.advance(effective_freq2, sr, final_dcw2))
+    } else {
+        None
     };
 
     let s2 = if let Some(a2) = algo2b {
-        if l2.algo.as_cz_waveform().is_some() && a2.as_cz_waveform().is_some() {
-            // CZ two-wave mode alternates per cycle (A/B/A/B), rather than blending.
-            let active_algo = if voice.cycle_count2 & 1 == 0 { l2.algo } else { a2 };
-            algo_sample(active_algo, phase_b_post, final_dcw2) * w2 * final_dca2
-        } else {
-            // Dual-algorithm blending — either or both algos may be Karpunk.
-            let dcw2b = final_dcw2 * blend_b;
-            let dcw1_effective_b = final_dcw2 * (1.0 - blend_b);
+        // Dual-algorithm blending — either or both algos may be Karpunk.
+        let dcw2b = final_dcw2 * blend_b;
+        let dcw1_effective_b = final_dcw2 * (1.0 - blend_b);
 
-            let sig_b1 = if l2.algo == Algo::Karpunk {
-                ks_raw2
-            } else {
-                algo_sample(l2.algo, phase_b_post, dcw1_effective_b)
-            };
+        let sig_b1 = generators::render_algo_sample(line2_primary_algo, phase_b_post, dcw1_effective_b, ks_raw2);
 
-            let sig_b2 = if a2 == Algo::Karpunk {
-                ks_raw2
-            } else {
-                let warped_b2 = algo_warp_phase(a2, phase_b_input, dcw2b);
-                let phase_b_post2 = wrap01(if p.pm_pre {
-                    warped_b2
-                } else {
-                    warped_b2 + pm_mod
-                });
-                algo_sample(a2, phase_b_post2, dcw2b)
-            };
+        let sig_b2 = generators::render_algo_sample(a2, phase_b_post, dcw2b, ks_raw2);
 
-            // Karpunk-aware blending (asymmetric):
-            // - KS as base (B slot): ring-mod — blend=0 pure KS, blend=1 KS*osc*2 (plucked oscillator)
-            // - KS as target (B-target slot): plain lerp — blend=0 pure osc, blend=1 pure KS
-            let combined_b = if l2.algo == Algo::Karpunk {
-                let ks = sig_b1;
-                let osc = sig_b2;
-                lerp(ks, ks * osc * 2.0, blend_b)
-            } else {
-                lerp(sig_b1, sig_b2, blend_b)
-            };
-            combined_b * w2 * final_dca2
-        }
-    } else if l2.algo == Algo::Karpunk {
-        ks_raw2 * w2 * final_dca2
+        let combined_b = karpunk::blend(line2_primary_algo, sig_b1, sig_b2, blend_b);
+        combined_b * w2 * final_dca2
     } else {
-        algo_sample(l2.algo, phase_b_post, final_dcw2) * w2 * final_dca2
+        generators::render_algo_sample(line2_primary_algo, phase_b_post, final_dcw2, ks_raw2)
+            * w2
+            * final_dca2
     };
 
     // -----------------------------------------------------------------------
@@ -556,13 +469,13 @@ pub fn render_voice(
     match p.line_select {
         LineSelect::L1PlusL1Prime => {
             let algo_prime = l1.algo2.unwrap_or(l1.algo);
-            let s1p = algo_sample(algo_prime, phi1, 0.0) * final_dca1;
+            let s1p = generators::render_algo_sample(algo_prime, phi1, 0.0, ks_raw1) * final_dca1;
             mix_a = s1;
             mix_b = s1p;
         }
         LineSelect::L1PlusL2Prime => {
             let algo_prime = l2.algo2.unwrap_or(l2.algo);
-            let s2p = algo_sample(algo_prime, phi1, 0.0) * final_dca2;
+            let s2p = generators::render_algo_sample(algo_prime, phi1, 0.0, ks_raw2) * final_dca2;
             mix_a = s1;
             mix_b = s2p;
         }
@@ -672,18 +585,3 @@ pub fn render_voice(
 // Helpers
 // ---------------------------------------------------------------------------
 
-#[inline(always)]
-fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    a + (b - a) * t
-}
-
-/// Simple LCG PRNG — produces a value in [-1.0, 1.0].
-///
-/// Parameters from Numerical Recipes (Knuth): multiplier 1664525, increment 1013904223.
-#[inline(always)]
-pub fn lcg_rand(state: &mut u32) -> f32 {
-    *state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
-    // Map top 16 bits to [-1.0, 1.0]
-    let bits = (*state >> 16) as f32;
-    bits / 32767.5 - 1.0
-}

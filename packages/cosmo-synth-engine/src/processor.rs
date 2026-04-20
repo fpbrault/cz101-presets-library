@@ -8,9 +8,9 @@ use alloc::vec::Vec;
 use core::array;
 
 use crate::fx::FxChain;
-use crate::oscillator::lfo_output;
+use crate::dsp_utils::lfo_output;
 use crate::params::{PolyMode, SynthParams, NUM_VOICES};
-use crate::voice::{lcg_rand, render_voice, Voice};
+use crate::voice::{render_voice, Voice};
 
 // ---------------------------------------------------------------------------
 // NoteEntry — maps a MIDI note to a voice index
@@ -215,23 +215,11 @@ impl CosmoProcessor {
 
             self.reset_voice_envs(0);
 
-            // KS buffer init with fresh noise
+            // Karpunk state init with fresh noise
             {
                 let voice = &mut self.voices[0];
-                voice.ks_prng = voice
-                    .ks_prng
-                    .wrapping_add(note as u32)
-                    .wrapping_mul(0x9e37_79b9);
-                for s in voice.ks_buffer1.iter_mut() {
-                    *s = lcg_rand(&mut voice.ks_prng);
-                }
-                voice.ks_write_pos1 = 0;
-                voice.ks_last_sample1 = 0.0;
-                for s in voice.ks_buffer2.iter_mut() {
-                    *s = lcg_rand(&mut voice.ks_prng);
-                }
-                voice.ks_write_pos2 = 0;
-                voice.ks_last_sample2 = 0.0;
+                voice.ks_line1.reseed_for_note(note);
+                voice.ks_line2.reseed_for_note(note.wrapping_add(1));
             }
 
             // Push previous note to stack (it will be resumed on release)
@@ -312,24 +300,11 @@ impl CosmoProcessor {
 
             self.reset_voice_envs(vi);
 
-            // KS buffer init
+            // Karpunk state init
             {
                 let voice = &mut self.voices[vi];
-                // Seed differently per note-on.
-                voice.ks_prng = voice
-                    .ks_prng
-                    .wrapping_add(note as u32)
-                    .wrapping_mul(0x9e37_79b9);
-                for s in voice.ks_buffer1.iter_mut() {
-                    *s = lcg_rand(&mut voice.ks_prng);
-                }
-                voice.ks_write_pos1 = 0;
-                voice.ks_last_sample1 = 0.0;
-                for s in voice.ks_buffer2.iter_mut() {
-                    *s = lcg_rand(&mut voice.ks_prng);
-                }
-                voice.ks_write_pos2 = 0;
-                voice.ks_last_sample2 = 0.0;
+                voice.ks_line1.reseed_for_note(note);
+                voice.ks_line2.reseed_for_note(note.wrapping_add(1));
             }
 
             // Remove any stale entry for this voice index then add fresh one
