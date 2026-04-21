@@ -1,107 +1,125 @@
 # CZ101 Presets Library
 
-A collection of presets for CZ101.
+A managed library and toolset for Casio CZ-101 synthesizer `.SYX` presets — including a desktop preset manager, an in-browser phase distortion synthesizer, and a VST3/AUv2/AUv3 plugin.
 
 ## Overview
 
-This library provides a managed way to store, organize, and interact with presets for the CZ101 synthesizer. It leverages Tauri for a desktop application experience, React for the user interface, and Drizzle ORM for database management.
+This is a **Bun monorepo** containing:
 
-## Setup Instructions
+| Package | Description |
+|---------|-------------|
+| `packages/cz-explorer` | React + Vite web app: preset library, setlists, browser synth |
+| `packages/cz-explorer-desktop` | Tauri 2 desktop wrapper for cz-explorer |
+| `packages/cosmo-synth-engine` | Rust WebAssembly phase distortion synth engine |
+| `packages/cosmo-pd101` | beamer-based VST3/AUv2/AUv3 plugin host |
+| `packages/xtask` | Build automation (xtask pattern) |
+
+## Setup
 
 ### Prerequisites
 
 - [Bun](https://bun.sh/)
 - [Rust](https://www.rust-lang.org/tools/install)
-- [Tauri CLI](https://tauri.app/v1/guides/getting-started/prerequisites/)
+- [wasm-pack](https://rustwasm.github.io/wasm-pack/) (auto-installed via `postinstall`)
 
 ### Installation
 
-1. Clone the repository.
-2. Install dependencies using bun:
-   ```bash
-   bun install
-   ```
+```bash
+bun install
+```
+
+## Commands
 
 ### Development
 
-- Start the development server:
-  ```bash
-  bun dev
-  ```
-- Run Tauri in development mode:
-  ```bash
-  bun tauri dev
-  ```
+```bash
+bun run dev              # Start the cz-explorer Vite dev server
+```
 
-## Features
+### Build
 
-- Preset management for CZ101.
-- Desktop application via Tauri.
-- Database integration with Drizzle ORM and Neon/Postgres.
-- High-performance UI using React and Tailwind CSS.
+```bash
+bun run build            # Full build: web + plugin + desktop
+bun run build:web        # Build WASM engine + cz-explorer web app
+bun run build:plugin     # Build VST3/AUv2/AUv3 plugin (macOS, current arch)
+bun run build:standalone # Build the Tauri desktop app
+```
 
-## Architecture
+### Testing
 
-### Frontend
+```bash
+bun run test             # All tests (JS + Rust)
+bun run test:unit        # Unit tests (Happy DOM)
+bun run test:browser     # Browser tests (Playwright)
+bun run test:component   # Component tests only
+bun run test:coverage    # Unit test coverage report
+```
 
-- **React**: UI library.
-- **Tailwind CSS**: Styling.
-- **TanStack Query**: Data fetching and state management.
-- **TanStack Table**: Data grid management.
-- **Vite**: Build tool and dev server.
+### Lint & Format
 
-### Backend / Desktop
-
-- **Tauri**: Provides the bridge between the web frontend and the native OS.
-- **Rust**: Core logic for the desktop application.
+```bash
+bun run lint             # Biome + cargo fmt/clippy check
+bun run lint:fix         # Biome auto-fix + cargo fmt
+```
 
 ### Database
 
-- **Drizzle ORM**: Type-safe database access.
-- **PostgreSQL**: Database backend (can be local or hosted via Neon).
+```bash
+bun run db:generate      # Generate Drizzle migration files
+bun run db:migrate       # Apply pending migrations (requires DATABASE_URL)
+bun run db:studio        # Open Drizzle Studio
+```
+
+For database migration details, see [docs/db-migrations.md](docs/db-migrations.md).
+
+## Architecture
+
+### Frontend (`packages/cz-explorer`)
+
+- **React 18** + **Vite**: UI and build tooling.
+- **TanStack Router**: File-based routing.
+- **TanStack Query**: Server state and caching.
+- **TanStack Table**: Data grid.
+- **Tailwind CSS** + **DaisyUI**: Styling.
+- **Drizzle ORM**: Type-safe database access (Postgres/Neon + IndexedDB fallback).
+
+### Synth Engine (`packages/cosmo-synth-engine`)
+
+- Rust compiled to **WebAssembly** via wasm-pack.
+- Phase distortion oscillators, CZ envelopes, polyphonic voice management.
+- Bindings exported to TypeScript via Specta.
+
+### Desktop (`packages/cz-explorer-desktop`)
+
+- **Tauri 2** wrapping the cz-explorer web app.
+- Provides native file system and MIDI access.
+
+### Plugin (`packages/cosmo-pd101`)
+
+- **beamer** framework: VST3 + AUv2 + AUv3 from a single Rust codebase.
+- Embeds the cosmo-synth-engine and exposes the React/Vite GUI via WebView IPC.
+
+### Database
+
+- **Drizzle ORM** with **PostgreSQL** (Neon hosted or local).
+- Browser fallback uses **IndexedDB**.
 
 ## Development Tools
 
-### Package Management
-
-- **Bun**: Fast JavaScript runtime and package manager.
-
-### Linting & Formatting
-
-- **Biome**: Unified linter and formatter.
+- **Bun**: Package manager and script runner.
+- **Biome**: Linter and formatter (tabs, double quotes).
+- **Vitest**: Unit and browser tests.
+- **Playwright**: Browser test runner.
 
 ## Testing
 
-This project uses **Vitest** for all testing needs, supporting multiple environments:
+Two Vitest projects: `unit` (Happy DOM) and `browser` (Playwright/Chromium).
 
-### Test Types
+- Unit test files: `*.{test,spec}.{ts,tsx}` (excluding `.browser.test.`)
+- Browser test files: `*.browser.test.{ts,tsx}`
 
-- **Unit Tests**: Fast, logic-focused tests running in a simulated DOM (Happy DOM).
-- **Component Tests**: Testing UI components with React Testing Library.
-- **Browser Tests**: High-fidelity UI tests running in a real browser via Playwright.
+For detailed testing patterns, see [docs/component-testing.md](docs/component-testing.md).
 
-### Commands
+## SysEx Reference
 
-- `bun run test`: Run all tests.
-- `bun run test:unit`: Run unit tests.
-- `bun run test:component`: Run component tests.
-- `bun run test:browser`: Run browser-based tests.
-- `bun run test:ui`: Launch Vitest UI for interactive testing.
-- `bun run test:coverage`: Generate test coverage reports.
-
-For detailed testing strategies and patterns, see [docs/component-testing.md](docs/component-testing.md).
-
-### Commands
-
-- `bun run test`: Run all tests.
-- `bun run test:unit`: Run unit tests.
-- `bun run test:component`: Run component tests.
-- `bun run test:browser`: Run browser-based tests.
-- `bun run test:ui`: Launch Vitest UI for interactive testing.
-- `bun run test:coverage`: Generate test coverage reports.
-- `bun dev`: Run Vite dev server.
-- `bun build`: Build the application.
-- `bun lint`: Run Biome check.
-- `bun lint:fix`: Run Biome check and fix.
-- `bun db:generate`: Generate Drizzle migrations.
-- `bun db:migrate`: Run Drizzle migrations.
+CZ-101 patch format documentation: [docs/CZ101_SYSEX_FORMAT.md](docs/CZ101_SYSEX_FORMAT.md).
