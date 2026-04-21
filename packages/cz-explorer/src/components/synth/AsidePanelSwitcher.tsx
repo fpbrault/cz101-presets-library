@@ -1,8 +1,14 @@
-import type { ReactNode } from "react";
+import {
+	Children,
+	isValidElement,
+	type ReactElement,
+	type ReactNode,
+} from "react";
 import CzTabButton, {
 	type CzTabButtonColor,
 	type CzTabButtonLedColor,
 } from "@/components/ui/CzTabButton";
+import { useSynthParam } from "@/features/synth/SynthParamController";
 
 export type AsidePanelButtonTab<T extends string> = {
 	id: T;
@@ -10,21 +16,72 @@ export type AsidePanelButtonTab<T extends string> = {
 	bottomLabel: string;
 };
 
+export type AsidePanelTab =
+	| "scope"
+	| "global"
+	| "phaseMod"
+	| "vibrato"
+	| "portamento"
+	| "lfo"
+	| "filter"
+	| "chorus"
+	| "delay"
+	| "reverb";
+
+export type AsidePanelTabMeta = {
+	topLabel: string;
+	bottomLabel: string;
+};
+
+export type AsidePanelComponent<T extends string = string> = {
+	(props: object): ReactElement;
+	panelId: T;
+	panelTab: AsidePanelTabMeta;
+};
+
 type AsidePanelSwitcherProps<T extends string> = {
-	tabs: AsidePanelButtonTab<T>[];
 	activeTab: T;
 	onTabChange: (tab: T) => void;
-	panels: Record<T, ReactNode>;
-	tabEnabledState?: Partial<Record<T, boolean>>;
+	children: ReactNode;
 };
 
 export default function AsidePanelSwitcher<T extends string>({
-	tabs,
 	activeTab,
 	onTabChange,
-	panels,
-	tabEnabledState,
+	children,
 }: AsidePanelSwitcherProps<T>) {
+	const { value: phaseModEnabled } = useSynthParam("phaseModEnabled");
+	const { value: vibratoEnabled } = useSynthParam("vibratoEnabled");
+	const { value: portamentoEnabled } = useSynthParam("portamentoEnabled");
+	const { value: lfoEnabled } = useSynthParam("lfoEnabled");
+	const { value: filterEnabled } = useSynthParam("filterEnabled");
+	const { value: chorusEnabled } = useSynthParam("chorusEnabled");
+	const { value: delayEnabled } = useSynthParam("delayEnabled");
+	const { value: reverbEnabled } = useSynthParam("reverbEnabled");
+
+	const isTabEnabled = (tabId: T): boolean => {
+		switch (String(tabId).toLowerCase()) {
+			case "phasemod":
+				return phaseModEnabled;
+			case "vibrato":
+				return vibratoEnabled;
+			case "portamento":
+				return portamentoEnabled;
+			case "lfo":
+				return lfoEnabled;
+			case "filter":
+				return filterEnabled;
+			case "chorus":
+				return chorusEnabled;
+			case "delay":
+				return delayEnabled;
+			case "reverb":
+				return reverbEnabled;
+			default:
+				return false;
+		}
+	};
+
 	const getTabColor = (tabId: T): CzTabButtonColor => {
 		const normalizedTabId = String(tabId).toLowerCase();
 
@@ -51,7 +108,7 @@ export default function AsidePanelSwitcher<T extends string>({
 	};
 
 	const getTabLedColor = (tabId: T, isActive: boolean): CzTabButtonLedColor => {
-		const isEnabled = tabEnabledState?.[tabId] === true;
+		const isEnabled = isTabEnabled(tabId);
 		if (isEnabled && isActive) {
 			return "blue";
 		}
@@ -67,10 +124,28 @@ export default function AsidePanelSwitcher<T extends string>({
 		return "off";
 	};
 
+	const panelElements = Children.toArray(children).filter(
+		(child): child is ReactElement => isValidElement(child),
+	);
+
+	const activePanel = panelElements.find(
+		(child) =>
+			(child.type as AsidePanelComponent).panelId === String(activeTab),
+	);
+
+	const visibleTabs = panelElements.map((child) => {
+		const panelType = child.type as AsidePanelComponent<T>;
+		return {
+			id: panelType.panelId,
+			topLabel: panelType.panelTab.topLabel,
+			bottomLabel: panelType.panelTab.bottomLabel,
+		};
+	});
+
 	return (
 		<div className="px-2 pb-2 space-y-2">
 			<div className="grid grid-cols-5 gap-1 gap-y-2 mt-2">
-				{tabs.map((tab) => (
+				{visibleTabs.map((tab) => (
 					<CzTabButton
 						key={tab.id}
 						color={getTabColor(tab.id)}
@@ -83,7 +158,7 @@ export default function AsidePanelSwitcher<T extends string>({
 					/>
 				))}
 			</div>
-			{panels[activeTab]}
+			{activePanel}
 		</div>
 	);
 }

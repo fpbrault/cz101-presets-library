@@ -219,11 +219,11 @@ const WF_NAMES: Record<WaveformId, string> = {
 	1: "Sawtooth",
 	2: "Square",
 	3: "Pulse",
-	4: "Double Sine",
-	5: "Saw-Pulse",
-	6: "Resonance 1",
-	7: "Resonance 2",
-	8: "Resonance 3",
+	4: "Null",
+	5: "Sine-Pulse",
+	6: "Saw-Pulse",
+	7: "Multi-Sine",
+	8: "Pulse 2",
 };
 
 // 3-bit prefix → waveform id (index 3 is unused/invalid in original spec)

@@ -5,6 +5,12 @@
 
 import { spawnSync } from "node:child_process";
 
+// Skip in CI/Vercel — WASM is pre-built by the build-wasm workflow
+if (process.env.CI || process.env.VERCEL) {
+	console.log("CI/Vercel detected — skipping wasm-pack install.");
+	process.exit(0);
+}
+
 const WASM_PACK_VERSION = "0.13.1";
 
 // Check if wasm-pack is already installed

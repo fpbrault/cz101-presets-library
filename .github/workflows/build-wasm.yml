@@ -1,19 +1,25 @@
 name: Build WASM
 
+permissions:
+  contents: write
+
 on:
-  push:
-    branches: ["**"]
-    paths:
-      - 'packages/cosmo-synth-engine/**'
-      - 'Cargo.lock'
-      - 'Cargo.toml'
-      - '.github/workflows/build-wasm.yml'
+  workflow_dispatch: # TODO: re-enable push trigger when ready
+  # push:
+  #   branches: []
+  #   paths:
+  #     - 'packages/cosmo-synth-engine/**'
+  #     - 'Cargo.lock'
+  #     - 'Cargo.toml'
+  #     - '.github/workflows/build-wasm.yml'
 
 jobs:
   build-wasm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -26,9 +32,10 @@ jobs:
           mv wasm-pack-v0.13.1-x86_64-unknown-linux-musl/wasm-pack ~/.cargo/bin/
 
       - name: Build WASM
+        working-directory: packages/cosmo-synth-engine
         run: |
-          CARGO_TARGET_DIR=packages/cosmo-synth-engine/target wasm-pack build packages/cosmo-synth-engine --target no-modules --out-dir ${{ github.workspace }}/packages/cz-explorer/public/cosmo-synth-engine-wasm --features wasm
-          rm -f ${{ github.workspace }}/packages/cz-explorer/public/cosmo-synth-engine-wasm/.gitignore
+          wasm-pack build . --target no-modules --out-dir ../cz-explorer/public/cosmo-synth-engine-wasm --features wasm
+          rm -f ../cz-explorer/public/cosmo-synth-engine-wasm/.gitignore
 
       - name: Commit WASM
         uses: stefanzweifel/git-auto-commit-action@v5

@@ -1,34 +1,28 @@
+import {
+	algoRefKey,
+	isAlgoRefEqual,
+	isWarpAlgo,
+	resolveAlgoRef,
+} from "@/lib/synth/algoRef";
+import type {
+	Algo,
+	CzWaveform,
+	StepEnvData,
+	WindowType,
+} from "@/lib/synth/bindings/synth";
+import { ALGO_UI_CATALOG_V1 } from "@/lib/synth/bindings/synth";
+
 const N = 1024;
 const TAU = Math.PI * 2;
 
-export type PdAlgo =
-	| "bend"
-	| "sync"
-	| "pinch"
-	| "fold"
-	| "cz101"
-	| "skew"
-	| "quantize"
-	| "twist"
-	| "clip"
-	| "ripple"
-	| "mirror"
-	| "karpunk"
-	| "fof"
-	| 1
-	| 2
-	| 3
-	| 4
-	| 5
-	| 6
-	| 7
-	| 8;
+export type PdAlgo = Algo;
 
-export type PdAlgoDef = {
+type PdAlgoDef = {
 	value: PdAlgo;
 	label: string;
-	waveform: number;
+	waveform: CzWaveform;
 	algo: string;
+	key: string;
 	icon: string;
 };
 
@@ -40,7 +34,7 @@ const generatePath = (fn: (phase: number) => number, res = 64): string => {
 	const steps = [];
 	for (let i = 0; i <= res; i++) {
 		const phase = i / res; // 0 to 1
-		const amplitude = fn(phase); // Expected -1 to 1
+		const amplitude = Math.max(-1, Math.min(1, fn(phase)));
 
 		const x = 4 + phase * 16;
 		const y = 12 - amplitude * 8;
@@ -49,288 +43,39 @@ const generatePath = (fn: (phase: number) => number, res = 64): string => {
 	return steps.join("");
 };
 
-export const getWarpIcon = (algo: string): string => {
-	const amt = 0.5; // The "preview" amount for the icon
-
-	switch (algo) {
-		case "bend":
-			// Image_52db9f: Phase is exponential. Wave "bunches up" at the end.
-			return generatePath((p) => Math.sin(2 * Math.PI * p ** (1 + amt * 3)));
-
-		case "sync":
-			// Image_52d85e: Phase resets multiple times.
-			return generatePath((p) =>
-				Math.sin(2 * Math.PI * ((p * (1 + amt * 2)) % 1)),
-			);
-
-		case "pinch":
-			// Image_52d87c: Phase is pushed toward the center.
-			return generatePath((p) => {
-				const centered = (p - 0.5) * 2;
-				const pinched =
-					Math.sign(centered) * Math.abs(centered) ** (1 / (1 + amt * 4));
-				return Math.sin(Math.PI * pinched);
-			});
-
-		case "fold":
-			// Image_52d8b8: Wave mirrors back when exceeding 1.0/-1.0
-			return generatePath((p) => {
-				const v = Math.sin(2 * Math.PI * p) * (1 + amt * 2);
-				return v > 1 ? 2 - v : v < -1 ? -2 - v : v;
-			});
-
-		case "twist":
-			// Image_52dbac: Phase is warped by a sine function, creating an S-shaped curve
-			return generatePath((p) => {
-				const twisted = p + amt * 0.2 * Math.sin(TAU * p * 3);
-				return Math.sin(2 * Math.PI * twisted);
-			});
-
-		case "skew":
-			// Image_52dbbf: Saw-like tilt. Linear phase shift.
-			return generatePath((p) => {
-				const skew =
-					p < 0.5 ? p / (0.5 + amt * 0.4) : 0.5 + (p - 0.5) / (0.5 - amt * 0.4);
-				return Math.sin(2 * Math.PI * skew);
-			});
-
-		case "quantize":
-			// Image_52dbde: Sample and hold (stepping)
-			return generatePath((p) => {
-				const steps = Math.floor(3 + (1 - amt) * 12);
-				return Math.round(Math.sin(2 * Math.PI * p) * steps) / steps;
-			});
-
-		case "clip":
-			// Image_52dc1c: Hard ceiling
-			return generatePath((p) => {
-				const limit = 1.1 - amt;
-				return Math.max(Math.min(Math.sin(2 * Math.PI * p), limit), -limit);
-			});
-
-		case "ripple":
-			// Image_52dc39: Sine + high freq sine
-			return generatePath(
-				(p) =>
-					Math.sin(2 * Math.PI * p) +
-					Math.sin(2 * Math.PI * p * 10) * amt * 0.3,
-			);
-
-		case "mirror":
-			// Image_52dc76: Absolute value/rectification style
-			return generatePath((p) => Math.abs(Math.sin(Math.PI * p)) * 2 - 1);
-
-		case "karpunk":
-			return generatePath((p) => Math.sin(TAU * p * 3) * Math.exp(-p * 2.2));
-
-		case "fof":
-			return generatePath((p) => {
-				const carrier = Math.sin(TAU * p * 5);
-				const window = Math.exp(-18 * (p - 0.5) ** 2);
-				return carrier * window;
-			});
-
-		default:
-			return generatePath((p) => Math.sin(2 * Math.PI * p));
+const sampleAlgoFullDcw = (algo: PdAlgo, phase: number): number => {
+	const resolved = resolveAlgoRef(algo);
+	if (resolved.warpAlgo === "cz101") {
+		const raw = czWaveform(resolved.waveform, phase);
+		const w = resolved.windowType ? applyWindow(phase, resolved.windowType) : 1;
+		return raw * w;
 	}
+
+	const warpedPhase = applyPdAlgo(phase, 1, algo, resolved.waveform);
+	return Math.sin(TAU * warpedPhase);
 };
 
-const getCzIcon = (waveform: number): string => {
-	switch (waveform) {
-		case 1: // Saw: Ramp phase 0->1
-			return generatePath((p) => 1 - p * 2);
-		case 2: // Square: Sine but hard stepped
-			return generatePath((p) => (p < 0.5 ? 1 : -1));
-		case 3: // Pulse: Narrow high, wide low
-			return generatePath((p) => (p < 0.2 ? 1 : -1));
-		case 4: // Double Sine: Two humps per cycle
-			return generatePath((p) => Math.sin(2 * Math.PI * p * 2));
-		case 5: // Saw-Pulse: Saw that resets at 0.15
-			return generatePath((p) => (p < 0.15 ? 1 - p * (2 / 0.15) : -1));
-		case 6: // Reso: High frequency sine windowed by a ramp
-			return generatePath((p) => Math.sin(2 * Math.PI * p * 8) * (1 - p));
-		case 7: // Reso 2: Sine with resonant shelf
-			return generatePath(
-				(p) => Math.sin(2 * Math.PI * p) + 0.5 * Math.sin(2 * Math.PI * p * 8),
-			);
-		case 8: // Reso 3: Sine with formant-like peak
-			return generatePath(
-				(p) =>
-					Math.sin(2 * Math.PI * p) *
-					(p < 0.15 || (p >= 0.5 && p < 0.65) ? 1 : 0),
-			);
-		default:
-			return generatePath((p) => Math.sin(2 * Math.PI * p));
-	}
+const getAlgoIcon = (algo: PdAlgo): string => {
+	return generatePath((phase) => sampleAlgoFullDcw(algo, phase));
 };
 
 export const PD_ALGOS: PdAlgoDef[] = [
-	// --- CZ (Casio) Specific Waveforms ---
-	{
-		value: "1" as PdAlgo,
-		label: "CZ Saw",
-		waveform: 1,
-		algo: "cz101",
-		icon: getCzIcon(1), // Standard sawtooth
-	},
-	{
-		value: "2" as PdAlgo,
-		label: "CZ Square",
-		waveform: 2,
-		algo: "cz101",
-		icon: getCzIcon(2), // Single pulse cycle
-	},
-	{
-		value: "3" as PdAlgo,
-		label: "CZ Pulse",
-		waveform: 3,
-		algo: "cz101",
-		icon: getCzIcon(3), // Double thin pulse
-	},
-	{
-		value: "4" as PdAlgo,
-		label: "CZ Double Sine",
-		waveform: 4,
-		algo: "cz101",
-		icon: getCzIcon(4), // Two sine humps
-	},
-	{
-		value: "5" as PdAlgo,
-		label: "CZ Saw-Pulse",
-		waveform: 5,
-		algo: "cz101",
-		icon: getCzIcon(5), // Sawtooth then reset
-	},
-	{
-		value: "6" as PdAlgo,
-		label: "CZ Reso 1",
-		waveform: 6,
-		algo: "cz101",
-		icon: getCzIcon(6), // Resonant spikes
-	},
-	{
-		value: "7" as PdAlgo,
-		label: "CZ Reso 2",
-		waveform: 7,
-		algo: "cz101",
-		icon: getCzIcon(7), // Sine with resonant shelf
-	},
-	{
-		value: "8" as PdAlgo,
-		label: "CZ Reso 3",
-		waveform: 8,
-		algo: "cz101",
-		icon: getCzIcon(8), // Formant-style peak
-	},
-	// --- Generic Phase Distortion Algos ---
-	{
-		value: "bend",
-		label: "Bend",
-		waveform: 1,
-		algo: "bend",
-		icon: getWarpIcon("bend"), // Smooth curve (Current is good)
-	},
-	{
-		value: "sync",
-		label: "Sync",
-		waveform: 1,
-		algo: "sync",
-		icon: getWarpIcon("sync"), // Hard reset steps
-	},
-	{
-		value: "pinch",
-		label: "Pinch",
-		waveform: 1,
-		algo: "pinch",
-		icon: getWarpIcon("pinch"), // Squeezed center
-	},
-	{
-		value: "fold",
-		label: "Fold",
-		waveform: 1,
-		algo: "fold",
-		icon: getWarpIcon("fold"), // Triangle folding back
-	},
-	{
-		value: "skew",
-		label: "Skew",
-		waveform: 1,
-		algo: "skew",
-		icon: getWarpIcon("skew"), // Peak shifted to the right
-	},
-	/* 	{
-		value: "quantize",
-		label: "Quantize",
-		waveform: 1,
-		algo: "quantize",
-		icon: getWarpIcon("quantize"), // Steps
-	}, */
-	{
-		value: "twist",
-		label: "Twist",
-		waveform: 1,
-		algo: "twist",
-		icon: getWarpIcon("twist"), // S-curve rotation
-	},
-	{
-		value: "clip",
-		label: "Clip",
-		waveform: 1,
-		algo: "clip",
-		icon: getWarpIcon("clip"), // Hard ceiling/floor
-	},
-	{
-		value: "ripple",
-		label: "Ripple",
-		waveform: 1,
-		algo: "ripple",
-		icon: getWarpIcon("ripple"), // Small sine oscillations
-	},
-	{
-		value: "mirror",
-		label: "Mirror",
-		waveform: 1,
-		algo: "mirror",
-		icon: getWarpIcon("mirror"), // Reflected peaks
-	},
-	{
-		value: "karpunk",
-		label: "Karpunk",
-		waveform: 1,
-		algo: "karpunk",
-		icon: getWarpIcon("karpunk"),
-	},
-	{
-		value: "fof",
-		label: "FOF",
-		waveform: 1,
-		algo: "fof",
-		icon: getWarpIcon("fof"),
-	},
+	...ALGO_UI_CATALOG_V1.filter((entry) => entry.visible).map((entry) => {
+		const resolved = resolveAlgoRef(entry.id);
+		return {
+			value: entry.id,
+			label: entry.label,
+			waveform: resolved.waveform,
+			algo: resolved.warpAlgo,
+			key: algoRefKey(entry.id),
+			icon: getAlgoIcon(entry.id),
+		};
+	}),
 ];
 
-export type Adsr = {
-	attack: number;
-	decay: number;
-	sustain: number;
-	release: number;
-};
-
-export const DEFAULT_ADSR: Adsr = {
-	attack: 0.03,
-	decay: 0.2,
-	sustain: 1,
-	release: 0.25,
-};
-
-export type StepEnvStep = { level: number; rate: number };
-
-export type StepEnvData = {
-	steps: StepEnvStep[];
-	sustainStep: number;
-	stepCount: number;
-	loop: boolean;
-};
+export function getPdAlgoDef(algo: PdAlgo): PdAlgoDef | undefined {
+	return PD_ALGOS.find((entry) => isAlgoRefEqual(entry.value, algo));
+}
 
 export const DEFAULT_DCA_ENV: StepEnvData = {
 	steps: [
@@ -380,42 +125,6 @@ export const DEFAULT_DCO_ENV: StepEnvData = {
 	loop: false,
 };
 
-export function rateToSeconds(rate: number): number {
-	return 5.0 * 0.0002 ** (rate / 99);
-}
-
-function stepDurationSeconds(
-	fromLevel: number,
-	toLevel: number,
-	rate: number,
-): number {
-	const distance = Math.abs(toLevel - fromLevel);
-	if (distance <= 0) return 0;
-	return rateToSeconds(rate) * distance;
-}
-
-export function stepEnvLevelAtTime(env: StepEnvData, timeSec: number): number {
-	const activeSteps = env.steps.slice(0, env.stepCount);
-	let t = 0;
-	let prevLevel = 0;
-	for (let i = 0; i < activeSteps.length; i++) {
-		const step = activeSteps[i];
-		const duration = stepDurationSeconds(prevLevel, step.level, step.rate);
-		if (t + duration > timeSec) {
-			const progress = duration > 0 ? (timeSec - t) / duration : 1;
-			return lerp(prevLevel, step.level, Math.min(progress, 1));
-		}
-		t += duration;
-		prevLevel = step.level;
-		if (!env.loop && i === env.sustainStep) {
-			return step.level;
-		}
-	}
-	return prevLevel;
-}
-
-export const KEYBOARD_NOTES = [60, 62, 64, 65, 67, 69, 71, 72];
-
 export const PC_KEY_TO_NOTE: Record<string, number> = {
 	a: 60,
 	s: 62,
@@ -432,20 +141,20 @@ function wrap01(value: number): number {
 	return wrapped < 0 ? wrapped + 1 : wrapped;
 }
 
-export function pdBend(phase: number, amount: number): number {
+function pdBend(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	return phase < amount
 		? (phase / amount) * 0.5
 		: 0.5 + ((phase - amount) / (1 - amount)) * 0.5;
 }
 
-export function pdSync(phase: number, amount: number): number {
+function pdSync(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const n = 1 + amount * 7;
 	return (phase * n) % 1;
 }
 
-export function pdPinch(phase: number, amount: number): number {
+function pdPinch(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const center = 0.5;
 	const a = amount * 0.98 + 0.01;
@@ -454,7 +163,7 @@ export function pdPinch(phase: number, amount: number): number {
 	);
 }
 
-export function pdFold(phase: number, amount: number): number {
+function pdFold(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	let p = phase;
 	const folds = 1 + Math.floor(amount * 5);
@@ -465,7 +174,7 @@ export function pdFold(phase: number, amount: number): number {
 	return p % 1;
 }
 
-export function pdSkew(phase: number, amount: number): number {
+function pdSkew(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const breakpoint = 0.2;
 	const target =
@@ -475,20 +184,20 @@ export function pdSkew(phase: number, amount: number): number {
 	return phase + (target - phase) * amount;
 }
 
-export function pdQuantize(phase: number, amount: number): number {
+function pdQuantize(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const levels = 2 + Math.floor(amount * 30);
 	const target = Math.round(phase * levels) / levels;
 	return phase + (target - phase) * amount;
 }
 
-export function pdTwist(phase: number, amount: number): number {
+function pdTwist(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const target = phase + amount * 0.2 * Math.sin(TAU * phase * 3);
 	return wrap01(target);
 }
 
-export function pdClip(phase: number, amount: number): number {
+function pdClip(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const gain = 1 + amount * 4;
 	const x = (phase - 0.5) * gain;
@@ -496,66 +205,66 @@ export function pdClip(phase: number, amount: number): number {
 	return clipped + 0.5;
 }
 
-export function pdRipple(phase: number, amount: number): number {
+function pdRipple(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const ripple = amount * 0.08 * Math.sin(TAU * phase * 10);
 	return wrap01(phase + ripple);
 }
 
-export function pdMirror(phase: number, amount: number): number {
+function pdMirror(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const mirrored = 1 - phase;
 	return phase + (mirrored - phase) * amount;
 }
 
-export function pdTransfer(waveformId: number, phi: number): number {
+function pdTransfer(waveformId: CzWaveform, phi: number): number {
 	switch (waveformId) {
-		case 1:
+		case "saw":
 			return phi;
-		case 2:
+		case "square":
 			return phi < 0.5 ? 0 : 1;
-		case 3:
+		case "pulse":
 			return phi >= 0.25 && phi < 0.75 ? 1 : 0;
-		case 4:
+		case "null":
 			return phi < 0.01 ? phi / 0.01 : 0;
-		case 5:
+		case "sinePulse":
 			return phi < 0.15 ? phi / 0.15 : 0;
-		case 6:
+		case "sawPulse":
 			return phi < 0.15 ? phi / 0.15 : phi;
-		case 7:
+		case "multiSine":
 			return phi + 3 * Math.sin(TAU * phi) * Math.sin(Math.PI * phi);
-		case 8:
+		case "pulse2":
 			return phi < 0.15 || (phi >= 0.5 && phi < 0.65) ? 1 : 0;
 		default:
 			return phi;
 	}
 }
 
-export function czWaveform(waveformId: number, phi: number): number {
+function czWaveform(waveformId: CzWaveform, phi: number): number {
 	const p = pdTransfer(waveformId, phi);
 	switch (waveformId) {
-		case 1:
+		case "saw":
 			return 2 * p - 1;
-		case 2:
+		case "square":
 			return p === 1 ? 1 : -1;
-		case 3:
+		case "pulse":
 			return p === 1 ? 1 : -1;
-		case 4:
+		case "null":
 			return p * 2 - 1;
-		case 5:
+		case "sinePulse":
 			return p * 2 - 1;
-		case 6:
+		case "sawPulse":
 			return 2 * p - 1;
-		case 7:
+		case "multiSine":
 			return Math.sin(TAU * p);
-		case 8:
+		case "pulse2":
 			return p === 1 ? 1 : -1;
 		default:
 			return 2 * phi - 1;
 	}
 }
 
-export function pdCz101(phase: number, amount: number): number {
+function pdCz101(phase: number, amount: number): number {
 	if (amount === 0) return phase;
 	const t = amount;
 	if (t < 0.5) {
@@ -567,13 +276,13 @@ export function pdCz101(phase: number, amount: number): number {
 	}
 }
 
-export function applyPdAlgo(
+function applyPdAlgo(
 	phase: number,
 	amount: number,
 	algo: PdAlgo,
-	_waveformId: number,
+	_waveformId: CzWaveform,
 ): number {
-	switch (algo) {
+	switch (isWarpAlgo(algo) ? algo : "cz101") {
 		case "bend":
 			return pdBend(phase, amount);
 		case "sync":
@@ -612,17 +321,17 @@ export function applyPdAlgo(
 	}
 }
 
-export function applyWindow(
-	phase: number,
-	type: "off" | "saw" | "triangle",
-): number {
+function applyWindow(phase: number, type: WindowType): number {
 	if (type === "off") return 1;
 	if (type === "saw") return phase;
 	if (type === "triangle") return 1 - Math.abs(phase * 2 - 1);
+	if (type === "trapezoid") return phase < 0.5 ? 1 : 2 * (1 - phase);
+	if (type === "pulse") return phase < 0.5 ? 1 : 0;
+	if (type === "doubleSaw") return 1 - Math.abs(2 * ((phase * 2) % 1) - 1);
 	return 1;
 }
 
-export function lerp(a: number, b: number, t: number): number {
+function lerp(a: number, b: number, t: number): number {
 	return a + (b - a) * t;
 }
 
@@ -630,55 +339,7 @@ export function noteToFreq(note: number): number {
 	return 440 * 2 ** ((note - 69) / 12);
 }
 
-export function noteName(note: number): string {
-	const names = [
-		"C",
-		"C#",
-		"D",
-		"D#",
-		"E",
-		"F",
-		"F#",
-		"G",
-		"G#",
-		"A",
-		"A#",
-		"B",
-	];
-	const n = ((note % 12) + 12) % 12;
-	const oct = Math.floor(note / 12) - 1;
-	return `${names[n]}${oct}`;
-}
-
-export function adsLevel(env: Adsr, gateSeconds: number): number {
-	if (gateSeconds <= 0) return 0;
-	if (gateSeconds < env.attack) return gateSeconds / env.attack;
-	const decayPos = gateSeconds - env.attack;
-	if (decayPos < env.decay) {
-		const t = decayPos / env.decay;
-		return 1 - (1 - env.sustain) * t;
-	}
-	return env.sustain;
-}
-
-export function envLevel(
-	env: Adsr,
-	nowSec: number,
-	noteOnSec: number | null,
-	noteOffSec: number | null,
-	releaseStartLevel: number,
-): number {
-	if (noteOnSec == null) return 0;
-	if (noteOffSec == null || nowSec < noteOffSec) {
-		return adsLevel(env, nowSec - noteOnSec);
-	}
-	const releaseSeconds = nowSec - noteOffSec;
-	if (releaseSeconds >= env.release) return 0;
-	const t = releaseSeconds / env.release;
-	return releaseStartLevel * (1 - t);
-}
-
-export interface WaveformData {
+interface WaveformData {
 	out1: Float32Array;
 	out2: Float32Array;
 	phase: Float32Array;
@@ -697,9 +358,15 @@ export function computeWaveform(params: {
 	intPmRatio: number;
 	extPmAmount: number;
 	pmPre: boolean;
-	windowType: "off" | "saw" | "triangle";
+	windowType: WindowType;
 	line1Level: number;
 	line2Level: number;
+	line1CzSlotAWaveform?: CzWaveform;
+	line1CzSlotBWaveform?: CzWaveform;
+	line1CzWindow?: WindowType;
+	line2CzSlotAWaveform?: CzWaveform;
+	line2CzSlotBWaveform?: CzWaveform;
+	line2CzWindow?: WindowType;
 }): WaveformData {
 	const phasor = new Float32Array(N);
 	for (let i = 0; i < N; ++i) phasor[i] = i / N;
@@ -715,18 +382,35 @@ export function computeWaveform(params: {
 		for (let i = 0; i < N; ++i) phasor[i] = (phasor[i] + pm[i]) % 1;
 	}
 
-	const algoA =
-		PD_ALGOS.find((a) => String(a.value) === String(params.warpAAlgo)) ??
-		PD_ALGOS[0];
-	const algoB =
-		PD_ALGOS.find((a) => String(a.value) === String(params.warpBAlgo)) ??
-		PD_ALGOS[0];
-	const algo2ADef = params.algo2A
-		? (PD_ALGOS.find((a) => String(a.value) === String(params.algo2A)) ?? null)
-		: null;
-	const algo2BDef = params.algo2B
-		? (PD_ALGOS.find((a) => String(a.value) === String(params.algo2B)) ?? null)
-		: null;
+	const algoA = resolveAlgoRef(params.warpAAlgo);
+	const algoB = resolveAlgoRef(params.warpBAlgo);
+	const algo2AResolved = params.algo2A ? resolveAlgoRef(params.algo2A) : null;
+	const algo2BResolved = params.algo2B ? resolveAlgoRef(params.algo2B) : null;
+
+	// Use explicit CZ waveform params when available (from CzLineParams)
+	const algoAWaveform: CzWaveform = (algoA.warpAlgo === "cz101" && params.line1CzSlotAWaveform)
+		? params.line1CzSlotAWaveform
+		: algoA.waveform;
+	const algo2AWaveform: CzWaveform = (algo2AResolved?.warpAlgo === "cz101" && params.line1CzSlotBWaveform)
+		? params.line1CzSlotBWaveform
+		: algo2AResolved?.waveform ?? "saw";
+	const algoBWaveform: CzWaveform = (algoB.warpAlgo === "cz101" && params.line2CzSlotAWaveform)
+		? params.line2CzSlotAWaveform
+		: algoB.waveform;
+	const algo2BWaveform: CzWaveform = (algo2BResolved?.warpAlgo === "cz101" && params.line2CzSlotBWaveform)
+		? params.line2CzSlotBWaveform
+		: algo2BResolved?.waveform ?? "saw";
+
+	const line1Window = (algoA.warpAlgo === "cz101" && params.line1CzWindow && params.line1CzWindow !== "off")
+		? params.line1CzWindow
+		: algoA.windowType ?? params.windowType;
+	const line2Window = (algoB.warpAlgo === "cz101" && params.line2CzWindow && params.line2CzWindow !== "off")
+		? params.line2CzWindow
+		: algoB.windowType ?? params.windowType;
+
+	// Aliases for backward compat within this function
+	const algo2A = algo2AResolved;
+	const algo2B = algo2BResolved;
 
 	if (!params.pmPre) {
 		for (let i = 0; i < N; ++i) phasor[i] = (phasor[i] + pm[i]) % 1;
@@ -741,28 +425,41 @@ export function computeWaveform(params: {
 			phasor[i],
 			params.warpAAmount,
 			params.warpAAlgo,
-			algoA.waveform,
+			algoAWaveform,
 		);
 		phaseB[i] = applyPdAlgo(
 			phasor[i],
 			params.warpBAmount,
 			params.warpBAlgo,
-			algoB.waveform,
+			algoBWaveform,
 		);
 	}
 
 	for (let i = 0; i < N; ++i) {
-		const w = applyWindow(phasor[i], params.windowType);
+		const w1 = applyWindow(phasor[i], line1Window);
+		const w2 = applyWindow(phasor[i], line2Window);
 
-		if (algo2ADef) {
+		if (algo2A && algoA.warpAlgo === "cz101" && algo2A.warpAlgo === "cz101") {
+			const cyclePhase = (phasor[i] * 2) % 1;
+			const useSecondary = phasor[i] >= 0.5;
+			const activeWaveform = useSecondary ? algo2AWaveform : algoAWaveform;
+			out1[i] =
+				lerp(
+					Math.sin(TAU * cyclePhase),
+					czWaveform(activeWaveform, cyclePhase),
+					params.warpAAmount,
+				) *
+				w1 *
+				params.line1Level;
+		} else if (algo2A) {
 			const blendA = params.algoBlendA;
 			const dcw1eff = params.warpAAmount * (1 - blendA);
 			const dcw2A = params.warpAAmount * blendA;
 			const sigA1 =
-				algoA.algo === "cz101"
+				algoA.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algoA.waveform, phasor[i]),
+							czWaveform(algoAWaveform, phasor[i]),
 							dcw1eff,
 						)
 					: Math.sin(TAU * phaseA[i]);
@@ -770,39 +467,51 @@ export function computeWaveform(params: {
 				phasor[i],
 				dcw2A,
 				params.algo2A as PdAlgo,
-				algo2ADef.waveform,
+				algo2AWaveform,
 			);
 			const sigA2 =
-				algo2ADef.algo === "cz101"
+				algo2A.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algo2ADef.waveform, phasor[i]),
+							czWaveform(algo2AWaveform, phasor[i]),
 							dcw2A,
 						)
 					: Math.sin(TAU * phaseA2);
-			out1[i] = lerp(sigA1, sigA2, blendA) * w * params.line1Level;
-		} else if (algoA.algo === "cz101") {
+			out1[i] = lerp(sigA1, sigA2, blendA) * w1 * params.line1Level;
+		} else if (algoA.warpAlgo === "cz101") {
 			out1[i] =
 				lerp(
 					Math.sin(TAU * phasor[i]),
-					czWaveform(algoA.waveform, phasor[i]),
+					czWaveform(algoAWaveform, phasor[i]),
 					params.warpAAmount,
 				) *
-				w *
+				w1 *
 				params.line1Level;
 		} else {
-			out1[i] = Math.sin(TAU * phaseA[i]) * w * params.line1Level;
+			out1[i] = Math.sin(TAU * phaseA[i]) * w1 * params.line1Level;
 		}
 
-		if (algo2BDef) {
+		if (algo2B && algoB.warpAlgo === "cz101" && algo2B.warpAlgo === "cz101") {
+			const cyclePhase = (phasor[i] * 2) % 1;
+			const useSecondary = phasor[i] >= 0.5;
+			const activeWaveform = useSecondary ? algo2BWaveform : algoBWaveform;
+			out2[i] =
+				lerp(
+					Math.sin(TAU * cyclePhase),
+					czWaveform(activeWaveform, cyclePhase),
+					params.warpBAmount,
+				) *
+				w2 *
+				params.line2Level;
+		} else if (algo2B) {
 			const blendB = params.algoBlendB;
 			const dcw1effB = params.warpBAmount * (1 - blendB);
 			const dcw2B = params.warpBAmount * blendB;
 			const sigB1 =
-				algoB.algo === "cz101"
+				algoB.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algoB.waveform, phasor[i]),
+							czWaveform(algoBWaveform, phasor[i]),
 							dcw1effB,
 						)
 					: Math.sin(TAU * phaseB[i]);
@@ -810,28 +519,28 @@ export function computeWaveform(params: {
 				phasor[i],
 				dcw2B,
 				params.algo2B as PdAlgo,
-				algo2BDef.waveform,
+				algo2BWaveform,
 			);
 			const sigB2 =
-				algo2BDef.algo === "cz101"
+				algo2B.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algo2BDef.waveform, phasor[i]),
+							czWaveform(algo2BWaveform, phasor[i]),
 							dcw2B,
 						)
 					: Math.sin(TAU * phaseB2);
-			out2[i] = lerp(sigB1, sigB2, blendB) * w * params.line2Level;
-		} else if (algoB.algo === "cz101") {
+			out2[i] = lerp(sigB1, sigB2, blendB) * w2 * params.line2Level;
+		} else if (algoB.warpAlgo === "cz101") {
 			out2[i] =
 				lerp(
 					Math.sin(TAU * phasor[i]),
-					czWaveform(algoB.waveform, phasor[i]),
+					czWaveform(algoBWaveform, phasor[i]),
 					params.warpBAmount,
 				) *
-				w *
+				w2 *
 				params.line2Level;
 		} else {
-			out2[i] = Math.sin(TAU * phaseB[i]) * w * params.line2Level;
+			out2[i] = Math.sin(TAU * phaseB[i]) * w2 * params.line2Level;
 		}
 	}
 

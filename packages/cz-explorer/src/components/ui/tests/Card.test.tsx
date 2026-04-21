@@ -12,9 +12,7 @@ describe("Card", () => {
 
 	it("supports named variants", () => {
 		renderWithProviders(<Card variant="hero">Hero panel</Card>);
-		expect(screen.getByText("Hero panel").className).toContain(
-			"rounded-2xl",
-		);
+		expect(screen.getByText("Hero panel").className).toContain("rounded-2xl");
 	});
 
 	it("renders a custom element", () => {

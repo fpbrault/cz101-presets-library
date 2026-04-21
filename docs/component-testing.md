@@ -4,9 +4,9 @@ This project supports reusable component tests with Vitest + Testing Library, in
 
 ## Current foundation
 
-- `src/test/TestAppProviders.tsx`: wraps UI with Query + app contexts.
-- `src/test/renderWithProviders.tsx`: one-call render helper for component tests.
-- `setupTests.ts`: includes `@testing-library/jest-dom/vitest` matchers.
+- `packages/cz-explorer/src/test/TestAppProviders.tsx`: wraps UI with Query + app contexts.
+- `packages/cz-explorer/src/test/renderWithProviders.tsx`: one-call render helper for component tests.
+- `packages/cz-explorer/setupTests.ts`: includes `@testing-library/jest-dom/vitest` matchers.
 
 ## Test Environments
 
@@ -31,15 +31,16 @@ Used for high-fidelity UI tests that require a real browser environment. This is
 3. Prefer user-facing queries and interactions (`screen`, `userEvent`).
 4. Add stable `data-testid` attributes only where semantic queries are impractical (e.g., repeated controls).
 
-## Playwright readiness
+## Playwright / browser tests
 
-To keep Playwright component/e2e tests easy to add later:
+Browser tests run in a real Chromium environment via Vitest Browser mode + Playwright.
+
+- Name browser test files `*.browser.test.{ts,tsx}`.
+- Run with `bun run test:browser`.
+
+Guidelines for browser tests:
 
 1. Keep important controls discoverable by role/text first.
 2. Add `data-testid` for repeated or highly dynamic controls.
 3. Avoid coupling tests to implementation details like class names.
 4. Keep modals and tables as isolated, composable components.
-
-## Suggested next step
-
-- Add Playwright config and first UI smoke test once feature slices settle.

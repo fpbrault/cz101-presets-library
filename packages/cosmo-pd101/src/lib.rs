@@ -120,6 +120,8 @@ pub enum Waveform {
     Null,
     #[name = "Sine Pulse"]
     SinePulse,
+    #[name = "Double Sine"]
+    DoubleSine,
     #[name = "Saw Pulse"]
     SawPulse,
     #[name = "Multi Sine"]

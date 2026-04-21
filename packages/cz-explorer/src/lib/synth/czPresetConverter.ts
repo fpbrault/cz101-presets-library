@@ -2,80 +2,16 @@ import {
 	DEFAULT_DCA_ENV,
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
-	type PdAlgo,
-	type StepEnvData,
 } from "@/components/pdAlgorithms";
 import type { DecodedPatch, EnvelopeStep } from "@/lib/midi/czSysexDecoder";
-import {
-	DEFAULT_PRESET,
-	type SynthPresetData,
-} from "@/lib/synth/presetStorage";
-
-type StepEnvStep = { level: number; rate: number };
-
-function waveformToPdAlgo(
-	waveform: DecodedPatch["dco1"]["firstWaveform"],
-): PdAlgo {
-	return waveform;
-}
-
-function applyLineSettings(
-	preset: SynthPresetData,
-	line: 1 | 2,
-	decoded: {
-		octave: number;
-		detune: number;
-		dco: DecodedPatch["dco1"];
-		dcoEnv: DecodedPatch["dco1Env"];
-		dcwEnv: DecodedPatch["dcw1"];
-		dcaEnv: DecodedPatch["dca1"];
-		dcwKeyFollow: number;
-		dcaKeyFollow: number;
-	},
-): void {
-	if (line === 1) {
-		preset.line1Octave = decoded.octave;
-		preset.line1Detune = decoded.detune;
-		preset.line1DcoEnv = convertEnvelope(decoded.dcoEnv, DEFAULT_DCO_ENV);
-		preset.line1DcwEnv = convertEnvelope(decoded.dcwEnv, DEFAULT_DCW_ENV);
-		preset.line1DcaEnv = convertEnvelope(decoded.dcaEnv, DEFAULT_DCA_ENV);
-		preset.line1DcwKeyFollow = decoded.dcwKeyFollow;
-		preset.line1DcaKeyFollow = decoded.dcaKeyFollow;
-		preset.warpAAlgo = waveformToPdAlgo(decoded.dco.firstWaveform);
-		preset.algo2A = decoded.dco.secondWaveform
-			? waveformToPdAlgo(decoded.dco.secondWaveform)
-			: null;
-		// Set global modMode from line1 modulation (line1 is primary)
-		if (decoded.dco.modulation === "ring") preset.modMode = "ring";
-		else if (decoded.dco.modulation === "noise") preset.modMode = "noise";
-		else preset.modMode = "normal";
-		return;
-	}
-
-	preset.line2Octave = decoded.octave;
-	preset.line2Detune = decoded.detune;
-	preset.line2DcoEnv = convertEnvelope(decoded.dcoEnv, DEFAULT_DCO_ENV);
-	preset.line2DcwEnv = convertEnvelope(decoded.dcwEnv, DEFAULT_DCW_ENV);
-	preset.line2DcaEnv = convertEnvelope(decoded.dcaEnv, DEFAULT_DCA_ENV);
-	preset.line2DcwKeyFollow = decoded.dcwKeyFollow;
-	preset.line2DcaKeyFollow = decoded.dcaKeyFollow;
-	preset.warpBAlgo = waveformToPdAlgo(decoded.dco.firstWaveform);
-	preset.algo2B = decoded.dco.secondWaveform
-		? waveformToPdAlgo(decoded.dco.secondWaveform)
-		: null;
-	// Line 2 modulation: only override modMode if line 1 left it as "normal"
-	if (preset.modMode === "normal") {
-		if (decoded.dco.modulation === "ring") preset.modMode = "ring";
-		else if (decoded.dco.modulation === "noise") preset.modMode = "noise";
-	}
-}
+import type { EnvStep, StepEnvData, SynthPresetV1 } from "@/lib/synth/bindings/synth";
+import { DEFAULT_PRESET } from "@/lib/synth/presetStorage";
 
 function convertEnvelope(
 	env: { steps: EnvelopeStep[]; endStep: number },
-	_defaultEnv: StepEnvData,
 ): StepEnvData {
 	const czSteps = env.steps.slice(0, env.endStep);
-	const steps: StepEnvStep[] = czSteps.map((step) => ({
+	const steps: EnvStep[] = czSteps.map((step) => ({
 		level: step.level / 99,
 		rate: step.rate,
 	}));
@@ -95,6 +31,19 @@ function convertEnvelope(
 	};
 }
 
+function waveformToCzWaveform(
+	waveform: DecodedPatch["dco1"]["firstWaveform"],
+): "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" {
+	if (waveform === 1) return "saw";
+	if (waveform === 2) return "square";
+	if (waveform === 3) return "pulse";
+	if (waveform === 4) return "null";
+	if (waveform === 5) return "sinePulse";
+	if (waveform === 6) return "sawPulse";
+	if (waveform === 7) return "multiSine";
+	return "pulse2";
+}
+
 function calculateDetune(
 	direction: "+" | "-",
 	fine: number,
@@ -108,119 +57,134 @@ function calculateDetune(
 
 export function convertDecodedPatchToSynthPreset(
 	decoded: DecodedPatch,
-): SynthPresetData {
-	const preset: SynthPresetData = { ...DEFAULT_PRESET };
+): SynthPresetV1 {
+	const preset: SynthPresetV1 = JSON.parse(JSON.stringify(DEFAULT_PRESET));
+	const p = preset.params;
 
-	const detune1 = calculateDetune(
+	const detune = calculateDetune(
 		decoded.detuneDirection,
 		decoded.detuneFine,
 		decoded.detuneOctave,
 		decoded.detuneNote,
 	);
-	const detune2 = detune1;
 
-	applyLineSettings(preset, 1, {
-		octave: decoded.octave,
-		detune: 0,
-		dco: decoded.dco1,
-		dcoEnv: decoded.dco1Env,
-		dcwEnv: decoded.dcw1,
-		dcaEnv: decoded.dca1,
-		dcwKeyFollow: decoded.dcw1KeyFollow,
-		dcaKeyFollow: decoded.dca1KeyFollow,
-	});
-	applyLineSettings(preset, 2, {
-		octave: decoded.octave,
-		detune: detune2,
-		dco: decoded.dco2,
-		dcoEnv: decoded.dco2Env,
-		dcwEnv: decoded.dcw2,
-		dcaEnv: decoded.dca2,
-		dcwKeyFollow: decoded.dcw2KeyFollow,
-		dcaKeyFollow: decoded.dca2KeyFollow,
-	});
+	p.line1.algo = "cz101";
+	p.line1.algo2 = decoded.dco1.secondWaveform ? "cz101" : null;
+	p.line1.cz = {
+		slotAWaveform: waveformToCzWaveform(decoded.dco1.firstWaveform),
+		slotBWaveform: decoded.dco1.secondWaveform
+			? waveformToCzWaveform(decoded.dco1.secondWaveform)
+			: "saw",
+		window: "off",
+	};
+	p.line1.octave = decoded.octave;
+	p.line1.detuneCents = 0;
+	p.line1.dcoEnv = convertEnvelope(decoded.dco1Env);
+	p.line1.dcwEnv = convertEnvelope(decoded.dcw1);
+	p.line1.dcaEnv = convertEnvelope(decoded.dca1);
+	p.line1.keyFollow = decoded.dcw1KeyFollow;
 
-	switch (decoded.lineSelect) {
-		case "L1":
-			preset.lineSelect = "L1";
-			preset.line2Octave = 0;
-			preset.line2Detune = 0;
-			preset.line2DcoEnv = DEFAULT_DCO_ENV;
-			preset.line2DcwEnv = DEFAULT_DCW_ENV;
-			preset.line2DcaEnv = DEFAULT_DCA_ENV;
-			preset.line2DcaKeyFollow = 0;
-			preset.line2DcwKeyFollow = 0;
-			preset.warpBAlgo = DEFAULT_PRESET.warpBAlgo;
-			preset.algo2B = DEFAULT_PRESET.algo2B;
-			break;
-		case "L2":
-			preset.lineSelect = "L2";
-			preset.line1Octave = 0;
-			preset.line1Detune = 0;
-			preset.line1DcoEnv = DEFAULT_DCO_ENV;
-			preset.line1DcwEnv = DEFAULT_DCW_ENV;
-			preset.line1DcaEnv = DEFAULT_DCA_ENV;
-			preset.line1DcaKeyFollow = 0;
-			preset.line1DcwKeyFollow = 0;
-			preset.warpAAlgo = DEFAULT_PRESET.warpAAlgo;
-			preset.algo2A = DEFAULT_PRESET.algo2A;
-			break;
-		case "L1+1'":
-			preset.lineSelect = "L1+L1'";
-			preset.line1Detune = 0;
-			break;
-		case "L1+2'":
-			preset.lineSelect = "L1+L2'";
+	p.line2.algo = "cz101";
+	p.line2.algo2 = decoded.dco2.secondWaveform ? "cz101" : null;
+	p.line2.cz = {
+		slotAWaveform: waveformToCzWaveform(decoded.dco2.firstWaveform),
+		slotBWaveform: decoded.dco2.secondWaveform
+			? waveformToCzWaveform(decoded.dco2.secondWaveform)
+			: "saw",
+		window: "off",
+	};
+	p.line2.octave = decoded.octave;
+	p.line2.detuneCents = detune;
+	p.line2.dcoEnv = convertEnvelope(decoded.dco2Env);
+	p.line2.dcwEnv = convertEnvelope(decoded.dcw2);
+	p.line2.dcaEnv = convertEnvelope(decoded.dca2);
+	p.line2.keyFollow = decoded.dcw2KeyFollow;
+
+	if (decoded.dco1.modulation === "ring") p.modMode = "ring";
+	else if (decoded.dco1.modulation === "noise") p.modMode = "noise";
+	else p.modMode = "normal";
+
+	if (decoded.lineSelect === "L1") {
+		p.lineSelect = "L1";
+		p.line2.octave = 0;
+		p.line2.detuneCents = 0;
+		p.line2.dcoEnv = DEFAULT_DCO_ENV;
+		p.line2.dcwEnv = DEFAULT_DCW_ENV;
+		p.line2.dcaEnv = DEFAULT_DCA_ENV;
+		p.line2.keyFollow = 0;
+		p.line2.algo = DEFAULT_PRESET.params.line2.algo;
+		p.line2.algo2 = DEFAULT_PRESET.params.line2.algo2;
 	}
 
-	preset.vibratoEnabled = true;
-	preset.vibratoWave = decoded.vibratoWave;
-	preset.vibratoRate = decoded.vibratoRate;
-	preset.vibratoDepth = decoded.vibratoDepth;
-	preset.vibratoDelay = decoded.vibratoDelay;
+	if (decoded.lineSelect === "L2") {
+		p.lineSelect = "L2";
+		p.line1.octave = 0;
+		p.line1.detuneCents = 0;
+		p.line1.dcoEnv = DEFAULT_DCO_ENV;
+		p.line1.dcwEnv = DEFAULT_DCW_ENV;
+		p.line1.dcaEnv = DEFAULT_DCA_ENV;
+		p.line1.keyFollow = 0;
+		p.line1.algo = DEFAULT_PRESET.params.line1.algo;
+		p.line1.algo2 = DEFAULT_PRESET.params.line1.algo2;
+	}
 
-	preset.polyMode = "poly8";
-	preset.legato = false;
-	preset.velocityTarget = "amp";
+	if (decoded.lineSelect === "L1+1'") {
+		p.lineSelect = "L1+L1'";
+		p.line1.detuneCents = 0;
+	}
 
-	// Set defaults for parameters not stored in CZ-101 SysEx
-	preset.warpAAmount = 0.5;
-	preset.warpBAmount = 0.5;
-	preset.algoBlendA = 0;
-	preset.algoBlendB = 0;
-	preset.intPmAmount = 0;
-	preset.intPmRatio = 1;
-	preset.pmPre = true;
-	preset.windowType = "off";
-	preset.volume = 0.8;
-	preset.line1Level = 1;
-	preset.line2Level = 1;
-	preset.line1DcoDepth = 12;
-	preset.line2DcoDepth = 12;
-	preset.line1DcwComp = 0.5;
-	preset.line2DcwComp = 0.5;
-	preset.chorusRate = 0;
-	preset.chorusDepth = 0;
-	preset.chorusMix = 0;
-	preset.delayTime = 0;
-	preset.delayFeedback = 0;
-	preset.delayMix = 0;
-	preset.reverbSize = 0;
-	preset.reverbMix = 0;
-	preset.portamentoEnabled = false;
-	preset.portamentoMode = "rate";
-	preset.portamentoRate = 0;
-	preset.portamentoTime = 0.5;
-	preset.lfoEnabled = false;
-	preset.lfoWaveform = "sine";
-	preset.lfoRate = 5;
-	preset.lfoDepth = 0;
-	preset.lfoTarget = "pitch";
-	preset.filterEnabled = false;
-	preset.filterType = "lp";
-	preset.filterCutoff = 5000;
-	preset.filterResonance = 0;
-	preset.filterEnvAmount = 0;
+	if (decoded.lineSelect === "L1+2'") {
+		p.lineSelect = "L1+L2'";
+	}
+
+	p.vibrato.enabled = true;
+	p.vibrato.waveform = decoded.vibratoWave;
+	p.vibrato.rate = decoded.vibratoRate;
+	p.vibrato.depth = decoded.vibratoDepth;
+	p.vibrato.delay = decoded.vibratoDelay;
+
+	p.polyMode = "poly8";
+	p.legato = false;
+	p.velocityTarget = "amp";
+
+	p.line1.dcwBase = 1.0;
+	p.line2.dcwBase = 1.0;
+	p.line1.algoBlend = 0;
+	p.line2.algoBlend = 0;
+	p.intPmAmount = 0;
+	p.intPmRatio = 1;
+	p.pmPre = true;
+	p.line1.window = "off";
+	p.line2.window = "off";
+	p.volume = 0.8;
+	p.line1.dcaBase = 1;
+	p.line2.dcaBase = 1;
+	p.line1.dcoDepth = 12;
+	p.line2.dcoDepth = 12;
+	p.line1.dcwComp = 0.0;
+	p.line2.dcwComp = 0.0;
+	p.chorus.rate = 0;
+	p.chorus.depth = 0;
+	p.chorus.mix = 0;
+	p.delay.time = 0;
+	p.delay.feedback = 0;
+	p.delay.mix = 0;
+	p.reverb.size = 0;
+	p.reverb.mix = 0;
+	p.portamento.enabled = false;
+	p.portamento.mode = "rate";
+	p.portamento.rate = 0;
+	p.portamento.time = 0.5;
+	p.lfo.enabled = false;
+	p.lfo.waveform = "sine";
+	p.lfo.rate = 5;
+	p.lfo.depth = 0;
+	p.lfo.target = "pitch";
+	p.filter.enabled = false;
+	p.filter.type = "lp";
+	p.filter.cutoff = 5000;
+	p.filter.resonance = 0;
+	p.filter.envAmount = 0;
 
 	return preset;
 }

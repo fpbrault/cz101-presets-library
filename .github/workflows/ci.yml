@@ -10,14 +10,47 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Tests
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
-      - name: Run tests action
-        uses: ./.github/actions/tests
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Run unit tests
+        run: bun --filter @cosmo/cz-explorer test:unit
+        shell: bash
+
+  browser-tests:
+    name: Browser Tests (Vitest Browser Mode)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install chromium chromium-headless-shell --with-deps
+        shell: bash
+
+      - name: Run browser tests
+        run: bun --filter @cosmo/cz-explorer test:browser
+        shell: bash
 
   build-plugins:
     name: Build plugins (${{ matrix.platform }})
@@ -61,7 +94,7 @@ jobs:
 
   migrate:
     name: Database Migration
-    needs: [test, build-plugins, build-desktop]
+    needs: [unit-tests, browser-tests, build-plugins, build-desktop]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
