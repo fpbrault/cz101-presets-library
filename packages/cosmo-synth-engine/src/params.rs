@@ -616,6 +616,8 @@ impl Default for FilterParams {
 pub struct SynthParams {
     pub line_select: LineSelect,
     pub mod_mode: ModMode,
+    #[serde(default = "default_ring_gain")]
+    pub ring_gain: f32,
     pub octave: f32,
     pub line1: LineParams,
     pub line2: LineParams,
@@ -642,103 +644,14 @@ pub struct SynthParams {
     /// When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
     #[serde(default)]
     pub mod_wheel_vibrato_depth: f32,
-    /// Modulation matrix – routes from sources to destinations with amounts.
-    #[serde(default)]
-    pub mod_matrix: ModMatrix,
 }
 
 pub(crate) fn default_pitch_bend_range() -> f32 {
     2.0
 }
 
-/// Modulation source identifier
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
-pub enum ModSource {
-    Lfo1,
-    /// LFO2 – UI/types stub only; DSP contribution is always 0.0 this phase
-    Lfo2,
-    Velocity,
-    ModWheel,
-    Aftertouch,
-}
-
-/// Modulation destination – covers the full synth parameter surface
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
-pub enum ModDestination {
-    // Global
-    Volume,
-    Pitch,
-    IntPmAmount,
-    // Line 1
-    Line1DcwBase,
-    Line1DcaBase,
-    Line1DcoDepth,
-    Line1AlgoBlend,
-    Line1DcwComp,
-    Line1Detune,
-    Line1Octave,
-    // Line 1 algo control slots (DSP stub – amount = 0.0)
-    Line1AlgoParam1,
-    Line1AlgoParam2,
-    Line1AlgoParam3,
-    Line1AlgoParam4,
-    Line1AlgoParam5,
-    Line1AlgoParam6,
-    Line1AlgoParam7,
-    Line1AlgoParam8,
-    // Line 2
-    Line2DcwBase,
-    Line2DcaBase,
-    Line2DcoDepth,
-    Line2AlgoBlend,
-    Line2DcwComp,
-    Line2Detune,
-    Line2Octave,
-    // Line 2 algo control slots (DSP stub – amount = 0.0)
-    Line2AlgoParam1,
-    Line2AlgoParam2,
-    Line2AlgoParam3,
-    Line2AlgoParam4,
-    Line2AlgoParam5,
-    Line2AlgoParam6,
-    Line2AlgoParam7,
-    Line2AlgoParam8,
-    // Filter
-    FilterCutoff,
-    FilterResonance,
-    FilterEnvAmount,
-    // FX
-    ChorusMix,
-    DelayMix,
-    ReverbMix,
-    // Vibrato / LFO
-    VibratoDepth,
-    LfoDepth,
-    LfoRate,
-}
-
-/// A single modulation routing assignment
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
-pub struct ModRoute {
-    pub source: ModSource,
-    pub destination: ModDestination,
-    /// Modulation amount in range [-1.0, 1.0]
-    pub amount: f32,
-    pub enabled: bool,
-}
-
-/// The full modulation matrix (list of routes)
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
-pub struct ModMatrix {
-    pub routes: Vec<ModRoute>,
+pub(crate) fn default_ring_gain() -> f32 {
+    4.0
 }
 
 impl Default for SynthParams {
@@ -746,6 +659,7 @@ impl Default for SynthParams {
         Self {
             line_select: LineSelect::default(),
             mod_mode: ModMode::default(),
+            ring_gain: default_ring_gain(),
             octave: 0.0,
             line1: LineParams::default(),
             line2: LineParams::default(),
@@ -767,7 +681,6 @@ impl Default for SynthParams {
             filter: FilterParams::default(),
             pitch_bend_range: 2.0,
             mod_wheel_vibrato_depth: 0.0,
-            mod_matrix: ModMatrix::default(),
         }
     }
 }

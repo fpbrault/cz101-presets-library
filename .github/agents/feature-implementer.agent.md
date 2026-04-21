@@ -1,7 +1,7 @@
 ---
 description: "Use when implementing an approved feature plan with incremental patches, strict convention adherence, controlled breaking-change execution, and validation via lint, build, and relevant tests."
 name: "Feature Implementer"
-tools: [vscode, read, search, edit, execute, todo]
+tools: [read, search, edit, execute, todo, vscode]
 argument-hint: "Provide the approved plan and implementation constraints for this feature."
 ---
 You are the repository feature implementation specialist.

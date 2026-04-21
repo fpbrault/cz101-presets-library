@@ -468,35 +468,37 @@ pub struct CzParameters {
 }
 
 impl CzParameters {
-    fn map_waveform(value: Waveform) -> cosmo_synth_engine::params::WaveformId {
+    fn map_waveform(value: Waveform) -> cosmo_synth_engine::params::CzWaveform {
         match value {
-            Waveform::Saw => cosmo_synth_engine::params::WaveformId::Saw,
-            Waveform::Square => cosmo_synth_engine::params::WaveformId::Square,
-            Waveform::Pulse => cosmo_synth_engine::params::WaveformId::Pulse,
-            Waveform::Null => cosmo_synth_engine::params::WaveformId::Null,
-            Waveform::SinePulse => cosmo_synth_engine::params::WaveformId::SinePulse,
-            Waveform::SawPulse => cosmo_synth_engine::params::WaveformId::SawPulse,
-            Waveform::MultiSine => cosmo_synth_engine::params::WaveformId::MultiSine,
-            Waveform::Pulse2 => cosmo_synth_engine::params::WaveformId::Pulse2,
+            Waveform::Saw => cosmo_synth_engine::params::CzWaveform::Saw,
+            Waveform::Square => cosmo_synth_engine::params::CzWaveform::Square,
+            Waveform::Pulse => cosmo_synth_engine::params::CzWaveform::Pulse,
+            Waveform::Null => cosmo_synth_engine::params::CzWaveform::Null,
+            Waveform::SinePulse => cosmo_synth_engine::params::CzWaveform::SinePulse,
+            Waveform::SawPulse => cosmo_synth_engine::params::CzWaveform::SawPulse,
+            Waveform::DoubleSine | Waveform::MultiSine => {
+                cosmo_synth_engine::params::CzWaveform::MultiSine
+            }
+            Waveform::Pulse2 => cosmo_synth_engine::params::CzWaveform::Pulse2,
         }
     }
 
-    fn map_warp_algo(value: WarpAlgo) -> cosmo_synth_engine::params::WarpAlgo {
+    fn map_warp_algo(value: WarpAlgo) -> cosmo_synth_engine::params::Algo {
         match value {
-            WarpAlgo::Cz101 => cosmo_synth_engine::params::WarpAlgo::Cz101,
-            WarpAlgo::Bend => cosmo_synth_engine::params::WarpAlgo::Bend,
-            WarpAlgo::Sync => cosmo_synth_engine::params::WarpAlgo::Sync,
-            WarpAlgo::Pinch => cosmo_synth_engine::params::WarpAlgo::Pinch,
-            WarpAlgo::Fold => cosmo_synth_engine::params::WarpAlgo::Fold,
-            WarpAlgo::Skew => cosmo_synth_engine::params::WarpAlgo::Skew,
-            WarpAlgo::Quantize => cosmo_synth_engine::params::WarpAlgo::Quantize,
-            WarpAlgo::Twist => cosmo_synth_engine::params::WarpAlgo::Twist,
-            WarpAlgo::Clip => cosmo_synth_engine::params::WarpAlgo::Clip,
-            WarpAlgo::Ripple => cosmo_synth_engine::params::WarpAlgo::Ripple,
-            WarpAlgo::Mirror => cosmo_synth_engine::params::WarpAlgo::Mirror,
-            WarpAlgo::Fof => cosmo_synth_engine::params::WarpAlgo::Fof,
-            WarpAlgo::Karpunk => cosmo_synth_engine::params::WarpAlgo::Karpunk,
-            WarpAlgo::Sine => cosmo_synth_engine::params::WarpAlgo::Sine,
+            WarpAlgo::Cz101 => cosmo_synth_engine::params::Algo::Cz101,
+            WarpAlgo::Bend => cosmo_synth_engine::params::Algo::Bend,
+            WarpAlgo::Sync => cosmo_synth_engine::params::Algo::Sync,
+            WarpAlgo::Pinch => cosmo_synth_engine::params::Algo::Pinch,
+            WarpAlgo::Fold => cosmo_synth_engine::params::Algo::Fold,
+            WarpAlgo::Skew => cosmo_synth_engine::params::Algo::Skew,
+            WarpAlgo::Quantize => cosmo_synth_engine::params::Algo::Quantize,
+            WarpAlgo::Twist => cosmo_synth_engine::params::Algo::Twist,
+            WarpAlgo::Clip => cosmo_synth_engine::params::Algo::Clip,
+            WarpAlgo::Ripple => cosmo_synth_engine::params::Algo::Ripple,
+            WarpAlgo::Mirror => cosmo_synth_engine::params::Algo::Mirror,
+            WarpAlgo::Fof => cosmo_synth_engine::params::Algo::Fof,
+            WarpAlgo::Karpunk => cosmo_synth_engine::params::Algo::Karpunk,
+            WarpAlgo::Sine => cosmo_synth_engine::params::Algo::Sine,
         }
     }
 
@@ -533,24 +535,24 @@ impl CzParameters {
         }
     }
 
-    fn map_optional_warp(value: f32) -> Option<cosmo_synth_engine::params::WarpAlgo> {
+    fn map_optional_warp(value: f32) -> Option<cosmo_synth_engine::params::Algo> {
         let id = value.round() as i32;
         match id {
             -1 => None,
-            0 => Some(cosmo_synth_engine::params::WarpAlgo::Cz101),
-            1 => Some(cosmo_synth_engine::params::WarpAlgo::Bend),
-            2 => Some(cosmo_synth_engine::params::WarpAlgo::Sync),
-            3 => Some(cosmo_synth_engine::params::WarpAlgo::Pinch),
-            4 => Some(cosmo_synth_engine::params::WarpAlgo::Fold),
-            5 => Some(cosmo_synth_engine::params::WarpAlgo::Skew),
-            6 => Some(cosmo_synth_engine::params::WarpAlgo::Quantize),
-            7 => Some(cosmo_synth_engine::params::WarpAlgo::Twist),
-            8 => Some(cosmo_synth_engine::params::WarpAlgo::Clip),
-            9 => Some(cosmo_synth_engine::params::WarpAlgo::Ripple),
-            10 => Some(cosmo_synth_engine::params::WarpAlgo::Mirror),
-            11 => Some(cosmo_synth_engine::params::WarpAlgo::Fof),
-            12 => Some(cosmo_synth_engine::params::WarpAlgo::Karpunk),
-            13 => Some(cosmo_synth_engine::params::WarpAlgo::Sine),
+            0 => Some(cosmo_synth_engine::params::Algo::Cz101),
+            1 => Some(cosmo_synth_engine::params::Algo::Bend),
+            2 => Some(cosmo_synth_engine::params::Algo::Sync),
+            3 => Some(cosmo_synth_engine::params::Algo::Pinch),
+            4 => Some(cosmo_synth_engine::params::Algo::Fold),
+            5 => Some(cosmo_synth_engine::params::Algo::Skew),
+            6 => Some(cosmo_synth_engine::params::Algo::Quantize),
+            7 => Some(cosmo_synth_engine::params::Algo::Twist),
+            8 => Some(cosmo_synth_engine::params::Algo::Clip),
+            9 => Some(cosmo_synth_engine::params::Algo::Ripple),
+            10 => Some(cosmo_synth_engine::params::Algo::Mirror),
+            11 => Some(cosmo_synth_engine::params::Algo::Fof),
+            12 => Some(cosmo_synth_engine::params::Algo::Karpunk),
+            13 => Some(cosmo_synth_engine::params::Algo::Sine),
             _ => None,
         }
     }
@@ -589,8 +591,9 @@ impl CzParameters {
             ..Default::default()
         };
 
-        params.line1.waveform = Self::map_waveform(self.l1_waveform.get());
-        params.line1.warp_algo = Self::map_warp_algo(self.l1_warp_algo.get());
+        params.line1.cz.slot_a_waveform = Self::map_waveform(self.l1_waveform.get());
+        params.line1.cz.slot_b_waveform = Self::map_waveform(self.l1_waveform.get());
+        params.line1.algo = Self::map_warp_algo(self.l1_warp_algo.get());
         params.line1.dcw_base = self.l1_dcw_base.get() as f32;
         params.line1.dca_base = self.l1_dca_base.get() as f32;
         params.line1.dco_depth = self.l1_dco_depth.get() as f32;
@@ -602,8 +605,9 @@ impl CzParameters {
         params.line1.algo_blend = self.l1_algo_blend.get() as f32;
         params.line1.algo2 = Self::map_optional_warp(self.l1_warp_algo2.get() as f32);
 
-        params.line2.waveform = Self::map_waveform(self.l2_waveform.get());
-        params.line2.warp_algo = Self::map_warp_algo(self.l2_warp_algo.get());
+        params.line2.cz.slot_a_waveform = Self::map_waveform(self.l2_waveform.get());
+        params.line2.cz.slot_b_waveform = Self::map_waveform(self.l2_waveform.get());
+        params.line2.algo = Self::map_warp_algo(self.l2_warp_algo.get());
         params.line2.dcw_base = self.l2_dcw_base.get() as f32;
         params.line2.dca_base = self.l2_dca_base.get() as f32;
         params.line2.dco_depth = self.l2_dco_depth.get() as f32;
@@ -650,6 +654,144 @@ impl CzParameters {
 
         params
     }
+}
+
+// =============================================================================
+// Compile-time coverage guard
+// =============================================================================
+//
+// This function is NEVER called. It exists solely to force a compile error
+// whenever a new field is added to SynthParams (or any nested param struct) in
+// cosmo-synth-engine/src/params.rs without updating `to_synth_params` above.
+//
+// Rules:
+//   - Every struct destructure here must name ALL fields — no `..` allowed.
+//   - If params.rs adds a field, rustc will report "missing field `foo`" here.
+//   - Deliberately unmapped fields (e.g. `frequency`, `ring_gain`,
+//     `algo_controls`) must still be listed — use a `_`-prefixed binding to
+//     make the intentional omission visible.
+#[allow(dead_code, unused_variables, clippy::items_after_statements)]
+fn _assert_synth_params_coverage(p: SynthParams) {
+    use cosmo_synth_engine::params::{
+        ChorusParams, CzLineParams, DelayParams, FilterParams, LineParams, LfoParams,
+        PortamentoParams, ReverbParams, VibratoParams,
+    };
+
+    let SynthParams {
+        line_select,
+        mod_mode,
+        ring_gain: _ring_gain,             // intentionally not a VST param
+        octave,
+        line1,
+        line2,
+        int_pm_amount,
+        int_pm_ratio,
+        ext_pm_amount,
+        pm_pre,
+        frequency: _frequency,             // set by the MIDI layer, not a VST param
+        volume,
+        poly_mode,
+        legato,
+        velocity_target,
+        chorus,
+        delay,
+        reverb,
+        vibrato,
+        portamento,
+        lfo,
+        filter,
+        pitch_bend_range: _pitch_bend_range,               // not yet a VST param
+        mod_wheel_vibrato_depth: _mod_wheel_vibrato_depth, // not yet a VST param
+    } = p;
+
+    let ChorusParams { rate: _cho_rate, depth: _cho_depth, mix: _cho_mix } = chorus;
+    let DelayParams { time: _del_time, feedback: _del_fb, mix: _del_mix } = delay;
+    let ReverbParams { size: _rev_size, mix: _rev_mix } = reverb;
+    let VibratoParams {
+        enabled: _vib_enabled,
+        waveform: _vib_waveform,
+        rate: _vib_rate,
+        depth: _vib_depth,
+        delay: _vib_delay,
+    } = vibrato;
+    let PortamentoParams {
+        enabled: _port_enabled,
+        mode: _port_mode,
+        rate: _port_rate,
+        time: _port_time,
+    } = portamento;
+    let LfoParams {
+        enabled: _lfo_enabled,
+        waveform: _lfo_waveform,
+        rate: _lfo_rate,
+        depth: _lfo_depth,
+        target: _lfo_target,
+        offset: _lfo_offset,
+    } = lfo;
+    let FilterParams {
+        enabled: _fil_enabled,
+        filter_type: _fil_type,
+        cutoff: _fil_cutoff,
+        resonance: _fil_res,
+        env_amount: _fil_env,
+    } = filter;
+
+    // Both lines must be destructured exhaustively.
+    let LineParams {
+        algo: _l1_algo,
+        algo2: _l1_algo2,
+        algo_blend: _l1_blend,
+        dcw_comp: _l1_dcw_comp,
+        window: _l1_window,
+        dca_base: _l1_dca,
+        dcw_base: _l1_dcw,
+        dco_depth: _l1_dco,
+        modulation: _l1_mod,
+        detune_cents: _l1_detune,
+        octave: _l1_octave,
+        dco_env: _,
+        dcw_env: _,
+        dca_env: _,
+        key_follow: _l1_kf,
+        cz: _l1_cz,
+        algo_controls: _l1_algo_controls, // not yet a VST param — routed via IPC
+    } = line1;
+    let CzLineParams {
+        slot_a_waveform: _l1_slot_a,
+        slot_b_waveform: _l1_slot_b,
+        window: _l1_cz_window,
+    } = _l1_cz;
+
+    let LineParams {
+        algo: _l2_algo,
+        algo2: _l2_algo2,
+        algo_blend: _l2_blend,
+        dcw_comp: _l2_dcw_comp,
+        window: _l2_window,
+        dca_base: _l2_dca,
+        dcw_base: _l2_dcw,
+        dco_depth: _l2_dco,
+        modulation: _l2_mod,
+        detune_cents: _l2_detune,
+        octave: _l2_octave,
+        dco_env: _,
+        dcw_env: _,
+        dca_env: _,
+        key_follow: _l2_kf,
+        cz: _l2_cz,
+        algo_controls: _l2_algo_controls, // not yet a VST param — routed via IPC
+    } = line2;
+    let CzLineParams {
+        slot_a_waveform: _l2_slot_a,
+        slot_b_waveform: _l2_slot_b,
+        window: _l2_cz_window,
+    } = _l2_cz;
+
+    // Suppress unused-variable warnings for fields that ARE mapped to VST params.
+    let _ = (
+        line_select, mod_mode, octave, int_pm_amount, int_pm_ratio, ext_pm_amount,
+        pm_pre, volume, poly_mode, legato, velocity_target,
+    );
 }
 
 #[derive(Clone, Default)]
