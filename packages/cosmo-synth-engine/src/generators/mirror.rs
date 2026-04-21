@@ -5,6 +5,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "mirrorCenter",
 		label: "Center",
+		description: "Chooses the pivot around which the phase is mirrored.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -15,6 +16,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "mirrorBlend",
 		label: "Blend",
+		description: "Controls how strongly the mirrored phase replaces the original phase.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -25,6 +27,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "mirrorClip",
 		label: "Clip",
+		description: "Clamps the mirrored excursion for a tighter folded reflection.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -35,6 +38,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "mirrorSkew",
 		label: "Skew",
+		description: "Skews the mirrored side so reflection distance changes across the cycle.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),

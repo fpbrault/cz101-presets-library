@@ -7,6 +7,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "fofRatio",
 		label: "Ratio",
+		description: "Sets the internal carrier multiplier used for the formant-like repetition.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -17,6 +18,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "fofTightness",
 		label: "Tight",
+		description: "Narrows or widens the Gaussian-like formant window.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -27,6 +29,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "fofOffset",
 		label: "Offset",
+		description: "Offsets the repeated carrier phase before the formant window is applied.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -37,6 +40,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "fofSkew",
 		label: "Skew",
+		description: "Moves the center of the formant window toward the start or end of the cycle.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),

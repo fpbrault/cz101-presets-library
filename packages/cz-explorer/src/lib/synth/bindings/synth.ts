@@ -200,7 +200,7 @@ export type AlgoControlOptionV1 = { value: string; label: string; set: AlgoContr
 /**
  * Describes one control surfaced by an algorithm package.
  */
-export type AlgoControlV1 = { id: string; label: string; kind: AlgoControlKindV1; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1 }
+export type AlgoControlV1 = { id: string; label: string; description: string; kind: AlgoControlKindV1; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1 }
 
 /**
  * Complete algorithm package definition.
@@ -327,6 +327,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "preset",
         "label": "Preset",
+        "description": "Loads a predefined CZ waveform and window combination.",
         "kind": "select",
         "min": null,
         "max": null,
@@ -482,6 +483,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "waveform1",
         "label": "Waveform 1",
+        "description": "Selects the first CZ waveform slot used by the line.",
         "kind": "select",
         "min": 0.0,
         "max": 7.0,
@@ -533,6 +535,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "waveform2",
         "label": "Waveform 2",
+        "description": "Selects the second CZ waveform slot used by the line.",
         "kind": "select",
         "min": 0.0,
         "max": 7.0,
@@ -584,6 +587,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "windowFunction",
         "label": "Window Function",
+        "description": "Chooses the CZ windowing shape applied to the oscillator cycle.",
         "kind": "select",
         "min": 0.0,
         "max": 5.0,
@@ -633,6 +637,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "bendCurve",
         "label": "Curve",
+        "description": "Changes how aggressively the phase bends along the curve.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -643,6 +648,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "bendBias",
         "label": "Bias",
+        "description": "Offsets the bend toward the start or end of the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -653,6 +659,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "bendKnee",
         "label": "Knee",
+        "description": "Shapes the transition point between the flatter and steeper bend regions.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -671,6 +678,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "syncRatio",
         "label": "Ratio",
+        "description": "Sets how many internal sync resets occur within one cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -681,6 +689,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "syncPhase",
         "label": "Phase",
+        "description": "Offsets where the sync restart begins inside the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -691,6 +700,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "syncCurve",
         "label": "Curve",
+        "description": "Shapes the post-sync ramp after each internal reset.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -701,6 +711,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "syncWindow",
         "label": "Window",
+        "description": "Controls how strongly the sync-shaped phase replaces the original phase.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -719,6 +730,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "pinchFocus",
         "label": "Focus",
+        "description": "Moves the pinch center toward the start or end of the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -729,6 +741,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "pinchAsym",
         "label": "Asym",
+        "description": "Adds asymmetry so one side of the pinch shifts more than the other.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -739,6 +752,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "pinchCurve",
         "label": "Curve",
+        "description": "Changes the curvature of the pinched center region.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -749,6 +763,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "pinchDrive",
         "label": "Drive",
+        "description": "Pushes the pinch harder for a tighter, more exaggerated distortion.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -767,6 +782,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "foldStages",
         "label": "Stages",
+        "description": "Sets how many fold passes are applied across the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -777,6 +793,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "foldTilt",
         "label": "Tilt",
+        "description": "Moves the fold pivot toward the start or end of the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -787,6 +804,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "foldSymmetry",
         "label": "Symmetry",
+        "description": "Offsets fold balance to make one side of the cycle fold harder than the other.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -797,6 +815,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "foldSoftness",
         "label": "Softness",
+        "description": "Softens each fold pass so the phase wraps less abruptly.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -815,6 +834,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "skewBias",
         "label": "Bias",
+        "description": "Moves the breakpoint where the skewed ramp changes slope.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -825,6 +845,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "skewCurve",
         "label": "Curve",
+        "description": "Adjusts the curvature on both sides of the skew breakpoint.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -835,6 +856,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "skewSpread",
         "label": "Spread",
+        "description": "Redistributes how much of the cycle is assigned to each side of the skew.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -845,6 +867,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "skewTilt",
         "label": "Tilt",
+        "description": "Tilts the skewed ramp so one side becomes steeper than the other.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -863,6 +886,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "twistHarmonics",
         "label": "Harm",
+        "description": "Sets the internal modulation harmonic used to twist the phase.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -873,6 +897,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "twistDepth",
         "label": "Depth",
+        "description": "Controls how far the phase is displaced by the twist modulator.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -883,6 +908,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "twistPhase",
         "label": "Phase",
+        "description": "Offsets the phase of the internal twist modulation signal.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -893,6 +919,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "twistShape",
         "label": "Shape",
+        "description": "Changes the contour of the twist modulation from smooth to sharp.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -911,6 +938,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "clipDrive",
         "label": "Drive",
+        "description": "Increases the gain before clipping for a stronger flattened peak.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -921,6 +949,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "clipShape",
         "label": "Shape",
+        "description": "Sets the clip threshold width from narrow to wide.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -931,6 +960,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "clipBias",
         "label": "Bias",
+        "description": "Offsets the clipped region toward the start or end of the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -941,6 +971,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "clipSoft",
         "label": "Soft",
+        "description": "Blends from hard clipping into a softer rounded saturation.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -959,6 +990,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "rippleFreq",
         "label": "Freq",
+        "description": "Sets how many ripple oscillations appear across the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -969,6 +1001,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "rippleDepth",
         "label": "Depth",
+        "description": "Controls the amplitude of the ripple imposed on the phase.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -979,6 +1012,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "ripplePhase",
         "label": "Phase",
+        "description": "Offsets where the ripple pattern begins inside the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -989,6 +1023,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "rippleShape",
         "label": "Shape",
+        "description": "Changes the ripple from a smooth sine to a sharper contour.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1007,6 +1042,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "mirrorCenter",
         "label": "Center",
+        "description": "Chooses the pivot around which the phase is mirrored.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1017,6 +1053,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "mirrorBlend",
         "label": "Blend",
+        "description": "Controls how strongly the mirrored phase replaces the original phase.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1027,6 +1064,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "mirrorClip",
         "label": "Clip",
+        "description": "Clamps the mirrored excursion for a tighter folded reflection.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1037,6 +1075,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "mirrorSkew",
         "label": "Skew",
+        "description": "Skews the mirrored side so reflection distance changes across the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1055,6 +1094,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "karpunkDamp",
         "label": "Damp",
+        "description": "Controls how quickly high-frequency energy is damped in the string model.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1065,6 +1105,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "karpunkBright",
         "label": "Bright",
+        "description": "Adjusts the brightness of the feedback filter inside the string loop.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1075,6 +1116,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "karpunkDecay",
         "label": "Decay",
+        "description": "Sets how long the plucked string sustains before fading out.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1085,6 +1127,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "karpunkExcite",
         "label": "Excite",
+        "description": "Injects fresh noise into the delay line for a noisier or raspier pluck.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1103,6 +1146,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "fofRatio",
         "label": "Ratio",
+        "description": "Sets the internal carrier multiplier used for the formant-like repetition.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1113,6 +1157,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "fofTightness",
         "label": "Tight",
+        "description": "Narrows or widens the Gaussian-like formant window.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1123,6 +1168,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "fofOffset",
         "label": "Offset",
+        "description": "Offsets the repeated carrier phase before the formant window is applied.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,
@@ -1133,6 +1179,7 @@ export const ALGO_DEFINITIONS_V1 = [
       {
         "id": "fofSkew",
         "label": "Skew",
+        "description": "Moves the center of the formant window toward the start or end of the cycle.",
         "kind": "number",
         "min": 0.0,
         "max": 1.0,

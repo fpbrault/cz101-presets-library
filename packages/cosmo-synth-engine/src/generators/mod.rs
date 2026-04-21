@@ -136,6 +136,7 @@ pub struct AlgoControlOptionV1 {
 pub struct AlgoControlV1 {
 	pub id: &'static str,
 	pub label: &'static str,
+	pub description: &'static str,
 	pub kind: AlgoControlKindV1,
 	pub min: Option<f32>,
 	pub max: Option<f32>,
@@ -174,6 +175,7 @@ pub const NO_CONTROL_OPTIONS: [AlgoControlOptionV1; 0] = [];
 pub const WARP_AMOUNT_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "warpAmount",
 	label: "Warp Amount",
+	description: "Sets the overall phase distortion amount for the current algorithm.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(0.0),
 	max: Some(1.0),
@@ -184,6 +186,7 @@ pub const WARP_AMOUNT_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 pub const DCW_COMP_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "dcwComp",
 	label: "DCW Comp",
+	description: "Compensates output level as the distortion envelope opens and closes.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(0.0),
 	max: Some(1.0),
@@ -194,6 +197,7 @@ pub const DCW_COMP_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 pub const LEVEL_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "level",
 	label: "Level",
+	description: "Sets the base output level for this line.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(0.0),
 	max: Some(1.0),
@@ -204,6 +208,7 @@ pub const LEVEL_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 pub const OCTAVE_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "octave",
 	label: "Octave",
+	description: "Offsets oscillator pitch by whole octaves.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(-2.0),
 	max: Some(2.0),
@@ -214,6 +219,7 @@ pub const OCTAVE_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 pub const FINE_DETUNE_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "fineDetune",
 	label: "Fine",
+	description: "Applies a fine pitch offset in cents.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(-50.0),
 	max: Some(50.0),
@@ -224,6 +230,7 @@ pub const FINE_DETUNE_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 pub const DCO_DEPTH_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "dcoDepth",
 	label: "DCO Range",
+	description: "Sets the pitch-envelope range or oscillator excursion in semitones.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(0.0),
 	max: Some(24.0),
@@ -234,6 +241,7 @@ pub const DCO_DEPTH_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 pub const KEY_FOLLOW_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "keyFollow",
 	label: "Key Follow",
+	description: "Adjusts how strongly keyboard pitch affects this parameter.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(0.0),
 	max: Some(9.0),
@@ -244,6 +252,7 @@ pub const KEY_FOLLOW_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 pub const ALGO_BLEND_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
 	id: "algoBlend",
 	label: "Algo Blend",
+	description: "Blends between the primary and secondary algorithm outputs.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(0.0),
 	max: Some(1.0),
@@ -255,6 +264,7 @@ pub const WARP_AMOUNT_CONTROL: [AlgoControlV1; 1] = [WARP_AMOUNT_NUMBER_CONTROL]
 pub const DCW_CONTROL: [AlgoControlV1; 1] = [AlgoControlV1 {
 	id: "dcw",
 	label: "DCW",
+	description: "Controls distortion depth for algorithms that expose direct DCW mapping.",
 	kind: AlgoControlKindV1::Number,
 	min: Some(0.0),
 	max: Some(1.0),

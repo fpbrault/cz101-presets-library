@@ -5,6 +5,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "clipDrive",
 		label: "Drive",
+		description: "Increases the gain before clipping for a stronger flattened peak.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -15,6 +16,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "clipShape",
 		label: "Shape",
+		description: "Sets the clip threshold width from narrow to wide.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -25,6 +27,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "clipBias",
 		label: "Bias",
+		description: "Offsets the clipped region toward the start or end of the cycle.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -35,6 +38,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "clipSoft",
 		label: "Soft",
+		description: "Blends from hard clipping into a softer rounded saturation.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),

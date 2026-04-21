@@ -6,6 +6,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "twistHarmonics",
 		label: "Harm",
+		description: "Sets the internal modulation harmonic used to twist the phase.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -16,6 +17,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "twistDepth",
 		label: "Depth",
+		description: "Controls how far the phase is displaced by the twist modulator.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -26,6 +28,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "twistPhase",
 		label: "Phase",
+		description: "Offsets the phase of the internal twist modulation signal.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -36,6 +39,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "twistShape",
 		label: "Shape",
+		description: "Changes the contour of the twist modulation from smooth to sharp.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),

@@ -6,6 +6,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "rippleFreq",
 		label: "Freq",
+		description: "Sets how many ripple oscillations appear across the cycle.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -16,6 +17,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "rippleDepth",
 		label: "Depth",
+		description: "Controls the amplitude of the ripple imposed on the phase.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -26,6 +28,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "ripplePhase",
 		label: "Phase",
+		description: "Offsets where the ripple pattern begins inside the cycle.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -36,6 +39,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "rippleShape",
 		label: "Shape",
+		description: "Changes the ripple from a smooth sine to a sharper contour.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),

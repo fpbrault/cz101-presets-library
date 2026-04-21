@@ -5,6 +5,7 @@ const CONTROLS: [AlgoControlV1; 3] = [
 	AlgoControlV1 {
 		id: "quantizeAmount",
 		label: "Amount",
+		description: "Sets how strongly the phase snaps to quantized steps.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -15,6 +16,7 @@ const CONTROLS: [AlgoControlV1; 3] = [
 	AlgoControlV1 {
 		id: "quantizeSteps",
 		label: "Steps",
+		description: "Controls how many discrete phase levels are available.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -25,6 +27,7 @@ const CONTROLS: [AlgoControlV1; 3] = [
 	AlgoControlV1 {
 		id: "quantizeSkew",
 		label: "Skew",
+		description: "Biases the phase before quantization for uneven step spacing.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),

@@ -69,6 +69,7 @@ type AlgoControlOptionRuntime = {
 type AlgoControlRuntime = {
 	id: string;
 	label: string;
+	description?: string | null;
 	kind?: "number" | "select" | "toggle";
 	min?: number | null;
 	max?: number | null;
@@ -86,6 +87,27 @@ type AlgoControlBinding = {
 	getToggle?: () => boolean;
 	setToggle?: (value: boolean) => void;
 };
+
+function AlgoControlTooltip({ description }: { description?: string | null }) {
+	if (!description) {
+		return null;
+	}
+
+	return (
+		<div
+			className="tooltip tooltip-right z-50 [&:before]:bg-cz-body [&:before]:text-left [&:before]:text-xs normal-case [&:before]:leading-tight	"
+			data-tip={description}
+		>
+			<button
+				type="button"
+				className="btn btn-ghost btn-circle btn-xs h-4 min-h-4 w-4 border border-cz-border p-0 text-2xs font-semibold leading-none text-cz-cream/70 hover:border-cz-light-blue hover:text-cz-light-blue"
+				aria-label="Show control description"
+			>
+				?
+			</button>
+		</div>
+	);
+}
 
 export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	label,
@@ -318,7 +340,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	return (
 		<div className="min-w-0 min-h-0 flex-1 flex flex-col">
 			<div className="flex flex-1 min-h-0 items-stretch">
-				<div className="min-h-0 min-w-0 h-full flex-1 flex flex-col overflow-hidden">
+				<div className="min-h-0 min-w-0 h-full flex-1 flex flex-col overflow-visible">
 					{activeSection === "algos" ? (
 						<div className="flex-1 min-h-0 flex flex-col p-3">
 							<div className="flex-1 min-h-0 grid gap-4 md:grid-cols-3 md:grid-rows-[auto_minmax(0,1fr)]">
@@ -481,7 +503,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										Algo Controls
 									</div>
 									{algoDefinitionControls.length > 0 ? (
-										<div className="flex-1 min-h-0 space-y-3 overflow-y-auto">
+										<div className="flex-1 min-h-0 space-y-3 overflow-visible">
 											{algoDefinitionControls.map((control) => {
 												const controlKind = control.kind ?? "number";
 												const binding = controlBindings[control.id];
@@ -490,8 +512,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													const activeOption = getActiveSelectOption(control);
 													return (
 														<div key={control.id} className="space-y-1.5">
-															<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
-																{control.label}
+															<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
+																<span>{control.label}</span>
+																<AlgoControlTooltip description={control.description} />
 															</div>
 															<div className="grid grid-cols-4 gap-1">
 																{options.map((option, index) => (
@@ -527,9 +550,12 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 														binding?.getNumber?.() ??
 														getAlgoControlValue(control.id, control.default ?? min);
 													return (
-														<div key={control.id} className="space-y-1.5">
-															<div className="flex items-center justify-between text-4xs uppercase tracking-[0.18em] text-cz-cream">
+																<div key={control.id} className="space-y-1.5">
+																	<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
+																		<div className="flex items-center gap-2">
 																<span>{control.label}</span>
+																			<AlgoControlTooltip description={control.description} />
+																		</div>
 																<span>{value.toFixed(2)}</span>
 															</div>
 															<input
@@ -555,10 +581,13 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 												const toggleValue = binding?.getToggle?.() ?? control.defaultToggle ?? false;
 												return (
-													<div key={control.id} className="flex items-center justify-between rounded-md bg-cz-inset/70 px-2 py-1.5">
-														<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
-															{control.label}
-														</span>
+															<div key={control.id} className="flex items-center justify-between rounded-md bg-cz-inset/70 px-2 py-1.5">
+																<div className="flex items-center gap-2">
+																	<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
+																		{control.label}
+																	</span>
+																	<AlgoControlTooltip description={control.description} />
+																</div>
 														<input
 															type="checkbox"
 															checked={toggleValue}

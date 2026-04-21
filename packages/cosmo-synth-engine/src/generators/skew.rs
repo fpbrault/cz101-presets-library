@@ -5,6 +5,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "skewBias",
 		label: "Bias",
+		description: "Moves the breakpoint where the skewed ramp changes slope.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -15,6 +16,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "skewCurve",
 		label: "Curve",
+		description: "Adjusts the curvature on both sides of the skew breakpoint.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -25,6 +27,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "skewSpread",
 		label: "Spread",
+		description: "Redistributes how much of the cycle is assigned to each side of the skew.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -35,6 +38,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "skewTilt",
 		label: "Tilt",
+		description: "Tilts the skewed ramp so one side becomes steeper than the other.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),

@@ -243,6 +243,7 @@ const CZ_CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "preset",
 		label: "Preset",
+		description: "Loads a predefined CZ waveform and window combination.",
 		kind: AlgoControlKindV1::Select,
 		min: None,
 		max: None,
@@ -253,6 +254,7 @@ const CZ_CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "waveform1",
 		label: "Waveform 1",
+		description: "Selects the first CZ waveform slot used by the line.",
 		kind: AlgoControlKindV1::Select,
 		min: Some(0.0),
 		max: Some(7.0),
@@ -263,6 +265,7 @@ const CZ_CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "waveform2",
 		label: "Waveform 2",
+		description: "Selects the second CZ waveform slot used by the line.",
 		kind: AlgoControlKindV1::Select,
 		min: Some(0.0),
 		max: Some(7.0),
@@ -273,6 +276,7 @@ const CZ_CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "windowFunction",
 		label: "Window Function",
+		description: "Chooses the CZ windowing shape applied to the oscillator cycle.",
 		kind: AlgoControlKindV1::Select,
 		min: Some(0.0),
 		max: Some(5.0),

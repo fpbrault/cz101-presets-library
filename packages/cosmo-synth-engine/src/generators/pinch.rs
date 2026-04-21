@@ -5,6 +5,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "pinchFocus",
 		label: "Focus",
+		description: "Moves the pinch center toward the start or end of the cycle.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -15,6 +16,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "pinchAsym",
 		label: "Asym",
+		description: "Adds asymmetry so one side of the pinch shifts more than the other.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -25,6 +27,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "pinchCurve",
 		label: "Curve",
+		description: "Changes the curvature of the pinched center region.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
@@ -35,6 +38,7 @@ const CONTROLS: [AlgoControlV1; 4] = [
 	AlgoControlV1 {
 		id: "pinchDrive",
 		label: "Drive",
+		description: "Pushes the pinch harder for a tighter, more exaggerated distortion.",
 		kind: AlgoControlKindV1::Number,
 		min: Some(0.0),
 		max: Some(1.0),
