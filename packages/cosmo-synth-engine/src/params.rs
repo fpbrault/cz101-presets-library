@@ -681,6 +681,15 @@ pub enum ModDestination {
     Line1DcwComp,
     Line1Detune,
     Line1Octave,
+    // Line 1 algo control slots (DSP stub – amount = 0.0)
+    Line1AlgoParam1,
+    Line1AlgoParam2,
+    Line1AlgoParam3,
+    Line1AlgoParam4,
+    Line1AlgoParam5,
+    Line1AlgoParam6,
+    Line1AlgoParam7,
+    Line1AlgoParam8,
     // Line 2
     Line2DcwBase,
     Line2DcaBase,
@@ -689,6 +698,15 @@ pub enum ModDestination {
     Line2DcwComp,
     Line2Detune,
     Line2Octave,
+    // Line 2 algo control slots (DSP stub – amount = 0.0)
+    Line2AlgoParam1,
+    Line2AlgoParam2,
+    Line2AlgoParam3,
+    Line2AlgoParam4,
+    Line2AlgoParam5,
+    Line2AlgoParam6,
+    Line2AlgoParam7,
+    Line2AlgoParam8,
     // Filter
     FilterCutoff,
     FilterResonance,

@@ -251,6 +251,18 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	);
 	const algoDefinitionControls = activeAlgoDefinition?.controls ?? [];
 
+	// Map each "number"-kind control to a 1-based slot index for ModDestination
+	// (line1AlgoParam1…8 / line2AlgoParam1…8). Max 8 slots per line.
+	const algoParamSlotIndex: Record<string, number> = {};
+	let slotCounter = 1;
+	for (const ctrl of algoDefinitionControls) {
+		if ((ctrl.kind ?? "number") === "number") {
+			if (slotCounter <= 8) {
+				algoParamSlotIndex[ctrl.id] = slotCounter++;
+			}
+		}
+	}
+
 	const controlBindings: Record<string, AlgoControlBinding> = {
 		waveform1: {
 			getNumber: () => czWaveforms.indexOf(czSlotAWaveform),
@@ -417,7 +429,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													color: color,
 													fmt: (v: number) => v.toFixed(2),
 													onChange: setWarpAmount,
-													modDest: (lineIndex === 1 ? "line1DcwBase" : "line2DcwBase") as ModDestination,
+													modDest: (lineIndex === 1
+														? "line1DcwBase"
+														: "line2DcwBase") as ModDestination,
 												},
 												{
 													label: "DCW Comp",
@@ -428,7 +442,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													color: "#7f9de4",
 													fmt: (v: number) => `${Math.round(v * 100)}%`,
 													onChange: setDcwComp,
-													modDest: (lineIndex === 1 ? "line1DcwComp" : "line2DcwComp") as ModDestination,
+													modDest: (lineIndex === 1
+														? "line1DcwComp"
+														: "line2DcwComp") as ModDestination,
 												},
 												{
 													label: "Level",
@@ -439,7 +455,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													color: "#9cb937",
 													fmt: (v: number) => `${Math.round(v * 100)}%`,
 													onChange: setLevel,
-													modDest: (lineIndex === 1 ? "line1DcaBase" : "line2DcaBase") as ModDestination,
+													modDest: (lineIndex === 1
+														? "line1DcaBase"
+														: "line2DcaBase") as ModDestination,
 												},
 												{
 													label: "Oct",
@@ -451,7 +469,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													fmt: (v: number) =>
 														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
 													onChange: (v: number) => setOctave(Math.round(v)),
-													modDest: (lineIndex === 1 ? "line1Octave" : "line2Octave") as ModDestination,
+													modDest: (lineIndex === 1
+														? "line1Octave"
+														: "line2Octave") as ModDestination,
 												},
 												{
 													label: "Fine",
@@ -463,7 +483,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													fmt: (v: number) =>
 														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
 													onChange: (v: number) => setFineDetune(Math.round(v)),
-													modDest: (lineIndex === 1 ? "line1Detune" : "line2Detune") as ModDestination,
+													modDest: (lineIndex === 1
+														? "line1Detune"
+														: "line2Detune") as ModDestination,
 												},
 												{
 													label: "DCO Rng",
@@ -474,7 +496,9 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 													color: "#9cb937",
 													fmt: (v: number) => `${Math.round(v)} st`,
 													onChange: (v: number) => setDcoDepth(Math.round(v)),
-													modDest: (lineIndex === 1 ? "line1DcoDepth" : "line2DcoDepth") as ModDestination,
+													modDest: (lineIndex === 1
+														? "line1DcoDepth"
+														: "line2DcoDepth") as ModDestination,
 												},
 											] as const
 										).map(
@@ -572,6 +596,13 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 															control.id,
 															control.default ?? min,
 														);
+													const slotIdx = algoParamSlotIndex[control.id];
+													const linePrefix =
+														lineIndex === 2 ? "line2" : "line1";
+													// TODO: DSP application for algo param slots is stubbed (returns 0.0). Wire once algo params are addressable in voice.rs.
+													const algoParamDest = slotIdx
+														? (`${linePrefix}AlgoParam${slotIdx}` as import("@/lib/synth/bindings/synth").ModDestination)
+														: undefined;
 													return (
 														<div key={control.id} className="space-y-1.5">
 															<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
@@ -588,6 +619,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 																max={max}
 																step={0.01}
 																value={value}
+																modDestination={algoParamDest}
 																onChange={(newVal) =>
 																	binding?.setNumber
 																		? binding.setNumber(newVal)
