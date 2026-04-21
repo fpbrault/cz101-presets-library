@@ -3,9 +3,17 @@ import {
 	type ReactNode,
 	useCallback,
 	useContext,
+	useEffect,
 	useMemo,
+	useState,
 } from "react";
+import { useOptionalModMatrix } from "@/context/ModMatrixContext";
 import type { UseSynthStateResult } from "@/features/synth/useSynthState";
+import type { ModDestination, ModSource } from "@/lib/synth/bindings/synth";
+import {
+	type ModTarget,
+	resolveModDestination,
+} from "@/lib/synth/modDestination";
 
 const SYNTH_PARAM_SETTERS = {
 	lineSelect: "setLineSelect",
@@ -91,12 +99,31 @@ export type SynthParamKey = keyof typeof SYNTH_PARAM_SETTERS;
 
 type ReadoutValue = string | number | boolean;
 
+type LiveModSources = Readonly<{
+	lfo1: number;
+	lfo2: number;
+	velocity: number;
+	modWheel: number;
+	aftertouch: number;
+}>;
+
 type SynthParamController = {
 	getParam: <K extends SynthParamKey>(key: K) => UseSynthStateResult[K];
 	setParam: <K extends SynthParamKey>(
 		key: K,
 		value: UseSynthStateResult[K],
 	) => void;
+	resolveDestination: (
+		target: ModTarget | undefined,
+		options?: { lineIndex?: 1 | 2 },
+	) => ModDestination | undefined;
+	getRouteCount: (destination: ModDestination | undefined) => number;
+	hasActiveRoutes: (destination: ModDestination | undefined) => boolean;
+	getLiveSources: () => LiveModSources;
+	getModulatedValue: (params: {
+		destination: ModDestination | undefined;
+		baseValue: number;
+	}) => number | undefined;
 };
 
 const SynthParamControllerContext = createContext<SynthParamController | null>(
@@ -114,6 +141,14 @@ export function SynthParamControllerProvider({
 	synthState,
 	onControlReadout,
 }: SynthParamControllerProviderProps) {
+	const maybeModMatrix = useOptionalModMatrix();
+	const [velocityValue, setVelocityValue] = useState(0);
+	const [modWheelValue, setModWheelValue] = useState(0);
+	const [aftertouchValue, setAftertouchValue] = useState(0);
+	const [animTimeSec, setAnimTimeSec] = useState(() =>
+		typeof performance !== "undefined" ? performance.now() / 1000 : 0,
+	);
+
 	const getParam = useCallback(
 		<K extends SynthParamKey>(key: K): UseSynthStateResult[K] => {
 			return synthState[key];
@@ -140,9 +175,165 @@ export function SynthParamControllerProvider({
 		[synthState, onControlReadout],
 	);
 
+	const hasAnyLfo1Routes = useMemo(() => {
+		if (!maybeModMatrix) {
+			return false;
+		}
+		return maybeModMatrix.modMatrix.routes.some(
+			(route) => route.enabled && route.source === "lfo1",
+		);
+	}, [maybeModMatrix]);
+
+	useEffect(() => {
+		if (
+			!(hasAnyLfo1Routes && synthState.lfoEnabled && synthState.lfoRate > 0)
+		) {
+			return;
+		}
+
+		let rafId = 0;
+		const animate = (ts: number) => {
+			setAnimTimeSec(ts / 1000);
+			rafId = window.requestAnimationFrame(animate);
+		};
+		rafId = window.requestAnimationFrame(animate);
+		return () => {
+			window.cancelAnimationFrame(rafId);
+		};
+	}, [hasAnyLfo1Routes, synthState.lfoEnabled, synthState.lfoRate]);
+
+	useEffect(() => {
+		const onModSource = (event: Event) => {
+			const detail = (
+				event as CustomEvent<{ source?: ModSource; value?: number }>
+			).detail;
+			if (detail?.source == null || detail.value == null) {
+				return;
+			}
+
+			const clamped = Math.max(0, Math.min(1, detail.value));
+			switch (detail.source) {
+				case "velocity":
+					setVelocityValue(clamped);
+					break;
+				case "modWheel":
+					setModWheelValue(clamped);
+					break;
+				case "aftertouch":
+					setAftertouchValue(clamped);
+					break;
+				default:
+					break;
+			}
+		};
+
+		window.addEventListener("cz-mod-source", onModSource);
+		return () => {
+			window.removeEventListener("cz-mod-source", onModSource);
+		};
+	}, []);
+
+	const lfoPhase = (((animTimeSec * synthState.lfoRate) % 1) + 1) % 1;
+	const liveLfo1Value = (() => {
+		if (!synthState.lfoEnabled) {
+			return 0;
+		}
+		switch (synthState.lfoWaveform) {
+			case "triangle":
+				return lfoPhase < 0.5 ? 4 * lfoPhase - 1 : 3 - 4 * lfoPhase;
+			case "square":
+				return lfoPhase < 0.5 ? 1 : -1;
+			case "saw":
+				return lfoPhase * 2 - 1;
+			default:
+				return Math.sin(Math.PI * 2 * lfoPhase);
+		}
+	})();
+
+	const liveSources = useMemo<LiveModSources>(
+		() => ({
+			lfo1: liveLfo1Value,
+			lfo2: 0,
+			velocity: velocityValue,
+			modWheel: modWheelValue,
+			aftertouch: aftertouchValue,
+		}),
+		[liveLfo1Value, velocityValue, modWheelValue, aftertouchValue],
+	);
+
+	const resolveDestination = useCallback(
+		(target: ModTarget | undefined, options?: { lineIndex?: 1 | 2 }) =>
+			resolveModDestination(target, options),
+		[],
+	);
+
+	const getRouteCount = useCallback(
+		(destination: ModDestination | undefined) => {
+			if (!destination || !maybeModMatrix) {
+				return 0;
+			}
+			return maybeModMatrix.modMatrix.routes.filter(
+				(route) => route.enabled && route.destination === destination,
+			).length;
+		},
+		[maybeModMatrix],
+	);
+
+	const hasActiveRoutes = useCallback(
+		(destination: ModDestination | undefined) => getRouteCount(destination) > 0,
+		[getRouteCount],
+	);
+
+	const getModulatedValue = useCallback(
+		({
+			destination,
+			baseValue,
+		}: {
+			destination: ModDestination | undefined;
+			baseValue: number;
+		}): number | undefined => {
+			if (!destination || !maybeModMatrix) {
+				return undefined;
+			}
+
+			const activeRoutes = maybeModMatrix.modMatrix.routes.filter(
+				(route) => route.enabled && route.destination === destination,
+			);
+			if (activeRoutes.length === 0) {
+				return undefined;
+			}
+
+			let liveModDelta = 0;
+			for (const route of activeRoutes) {
+				const sourceValue = liveSources[route.source] ?? 0;
+				liveModDelta += route.amount * sourceValue;
+			}
+
+			const clampedLiveModDelta = Math.max(-2, Math.min(2, liveModDelta));
+			return baseValue + clampedLiveModDelta;
+		},
+		[liveSources, maybeModMatrix],
+	);
+
 	const controller = useMemo(
-		() => ({ getParam, setParam }),
-		[getParam, setParam],
+		() => ({
+			getParam,
+			setParam,
+			resolveDestination,
+			getRouteCount,
+			hasActiveRoutes,
+			getLiveSources: () => liveSources,
+			getModulatedValue,
+		}),
+		[
+			getParam,
+			setParam,
+			resolveDestination,
+			getRouteCount,
+			hasActiveRoutes,
+			liveSources,
+			getModulatedValue,
+		],
 	);
 
 	return (
@@ -169,4 +360,15 @@ export function useSynthParam<K extends SynthParamKey>(
 		value: controller.getParam(key),
 		setValue: (value) => controller.setParam(key, value),
 	};
+}
+
+export function useOptionalSynthParam<K extends SynthParamKey>(
+	key: K,
+): UseSynthStateResult[K] | undefined {
+	const controller = useContext(SynthParamControllerContext);
+	return controller?.getParam(key);
+}
+
+export function useOptionalSynthController() {
+	return useContext(SynthParamControllerContext);
 }

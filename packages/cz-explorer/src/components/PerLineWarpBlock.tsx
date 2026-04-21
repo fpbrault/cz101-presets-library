@@ -7,9 +7,14 @@ import type {
 	WindowType,
 } from "@/lib/synth/bindings/synth";
 import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
-import { algoParamTargetFromSlot } from "@/lib/synth/modDestination";
+import AlgoControlsGroup from "./AlgoControlsGroup";
 import AlgoIconGrid from "./AlgoIconGrid";
-import ControlKnob from "./ControlKnob";
+import type {
+	AlgoControlBinding,
+	AlgoControlOptionRuntime,
+	AlgoControlRuntime,
+	LineIndex,
+} from "./algoControlTypes";
 import type { PdAlgo } from "./pdAlgorithms";
 import { getPdAlgoDef, PD_ALGOS } from "./pdAlgorithms";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
@@ -55,63 +60,16 @@ interface PerLineWarpBlockProps {
 	algoControls: AlgoControlValueV1[];
 	setAlgoControls: (value: AlgoControlValueV1[]) => void;
 	/** 1 or 2, used to resolve mod-matrix destinations. Defaults to 1. */
-	lineIndex?: 1 | 2;
+	lineIndex?: LineIndex;
 	activeSection?: SectionTab;
 }
 
 type EnvTab = "dco" | "dcw" | "dca";
 type SectionTab = "algos" | "envelopes";
-type AlgoControlAssignmentRuntime = {
-	controlId: string;
-	value: number;
-};
-type AlgoControlOptionRuntime = {
-	value: string;
-	label: string;
-	set: AlgoControlAssignmentRuntime[];
-};
-type AlgoControlRuntime = {
-	id: string;
-	label: string;
-	description?: string | null;
-	kind?: "number" | "select" | "toggle";
-	min?: number | null;
-	max?: number | null;
-	default?: number | null;
-	defaultToggle?: boolean | null;
-	options?: AlgoControlOptionRuntime[];
-};
 type AlgoDefinitionRuntime = {
 	id: PdAlgo;
 	controls: AlgoControlRuntime[];
 };
-type AlgoControlBinding = {
-	getNumber?: () => number;
-	setNumber?: (value: number) => void;
-	getToggle?: () => boolean;
-	setToggle?: (value: boolean) => void;
-};
-
-function AlgoControlTooltip({ description }: { description?: string | null }) {
-	if (!description) {
-		return null;
-	}
-
-	return (
-		<div
-			className="tooltip tooltip-right z-50 [&:before]:bg-cz-body [&:before]:text-left [&:before]:text-xs normal-case [&:before]:leading-tight	"
-			data-tip={description}
-		>
-			<button
-				type="button"
-				className="btn btn-ghost btn-circle btn-xs h-4 min-h-4 w-4 border border-cz-border p-0 text-2xs font-semibold leading-none text-cz-cream/70 hover:border-cz-light-blue hover:text-cz-light-blue"
-				aria-label="Show control description"
-			>
-				?
-			</button>
-		</div>
-	);
-}
 
 export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	label,
@@ -516,8 +474,8 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 															step={step}
 															color={c}
 															onChange={onChange}
-																			modulatable={modDest}
-																			lineIndex={lineIndex}
+															modulatable={modDest}
+															lineIndex={lineIndex}
 														/>
 													</div>
 												</div>
@@ -526,139 +484,16 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									</div>
 								</Card>
 
-								<Card
-									variant="subtle"
-									className="p-3 min-h-0 flex flex-col col-span-2"
-								>
-									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-										Algo Controls
-									</div>
-									{algoDefinitionControls.length > 0 ? (
-										<div className="flex-1 min-h-0 space-y-3 overflow-visible">
-											{algoDefinitionControls.map((control) => {
-												const controlKind = control.kind ?? "number";
-												const binding = controlBindings[control.id];
-												if (controlKind === "select") {
-													const options = control.options ?? [];
-													const activeOption = getActiveSelectOption(control);
-													return (
-														<div key={control.id} className="space-y-1.5">
-															<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
-																<span>{control.label}</span>
-																<AlgoControlTooltip
-																	description={control.description}
-																/>
-															</div>
-															<div className="grid grid-cols-4 gap-1">
-																{options.map((option, index) => (
-																	<button
-																		key={option.value}
-																		type="button"
-																		onClick={() => {
-																			if (option.set.length > 0) {
-																				applyOptionAssignments(option);
-																				return;
-																			}
-																			binding?.setNumber?.(index);
-																		}}
-																		className={[
-																			"px-2 py-1 text-4xs uppercase tracking-[0.18em] border transition-colors focus:outline-none",
-																			activeOption?.value === option.value
-																				? "border-cz-light-blue bg-cz-inset text-white"
-																				: "border-cz-border bg-cz-surface text-cz-cream hover:border-cz-light-blue hover:text-white",
-																		].join(" ")}
-																	>
-																		{option.label}
-																	</button>
-																))}
-															</div>
-														</div>
-													);
-												}
-
-												if (controlKind === "number") {
-													const min = control.min ?? 0;
-													const max = control.max ?? 1;
-													const value =
-														binding?.getNumber?.() ??
-														getAlgoControlValue(
-															control.id,
-															control.default ?? min,
-														);
-													const slotIdx = algoParamSlotIndex[control.id];
-													const algoParamTarget = slotIdx
-														? algoParamTargetFromSlot(slotIdx)
-														: undefined;
-													return (
-														<div
-															key={control.id}
-															className="space-y-1.5 flex flex-col items-center"
-														>
-															<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
-																<div className="flex items-center gap-2">
-																	<span>{control.label}</span>
-																	<AlgoControlTooltip
-																		description={control.description}
-																	/>
-																</div>
-																<span>{value.toFixed(2)}</span>
-															</div>
-															<ControlKnob
-																label={control.label}
-																min={min}
-																max={max}
-																value={value}
-																size={38}
-																color="#67c7ff"
-																modulatable={algoParamTarget}
-																lineIndex={lineIndex}
-																onChange={(newVal) =>
-																	binding?.setNumber
-																		? binding.setNumber(newVal)
-																		: setAlgoControlValue(control.id, newVal)
-																}
-																valueFormatter={(v) => v.toFixed(2)}
-															/>
-														</div>
-													);
-												}
-
-												const toggleValue =
-													binding?.getToggle?.() ??
-													control.defaultToggle ??
-													false;
-												return (
-													<div
-														key={control.id}
-														className="flex items-center justify-between rounded-md bg-cz-inset/70 px-2 py-1.5"
-													>
-														<div className="flex items-center gap-2">
-															<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
-																{control.label}
-															</span>
-															<AlgoControlTooltip
-																description={control.description}
-															/>
-														</div>
-														<input
-															type="checkbox"
-															checked={toggleValue}
-															onChange={(event) =>
-																binding?.setToggle?.(event.target.checked)
-															}
-															disabled={!binding?.setToggle}
-															className="checkbox checkbox-xs"
-														/>
-													</div>
-												);
-											})}
-										</div>
-									) : (
-										<div className="text-3xs text-cz-cream/70 uppercase tracking-[0.2em]">
-											No controls for this algo
-										</div>
-									)}
-								</Card>
+								<AlgoControlsGroup
+									controls={algoDefinitionControls}
+									controlBindings={controlBindings}
+									lineIndex={lineIndex}
+									algoParamSlotIndex={algoParamSlotIndex}
+									getAlgoControlValue={getAlgoControlValue}
+									setAlgoControlValue={setAlgoControlValue}
+									getActiveSelectOption={getActiveSelectOption}
+									applyOptionAssignments={applyOptionAssignments}
+								/>
 							</div>
 						</div>
 					) : (

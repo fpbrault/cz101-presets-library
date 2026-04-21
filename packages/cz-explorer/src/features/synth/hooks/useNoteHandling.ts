@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { noteToFreq, PC_KEY_TO_NOTE } from "@/components/pdAlgorithms";
+import type { ModSource } from "@/lib/synth/bindings/synth";
 
 type UseNoteHandlingParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
@@ -20,6 +21,17 @@ export function useNoteHandling({
 	workletNodeRef,
 	velocityTarget,
 }: UseNoteHandlingParams): NoteHandlingApi {
+	const emitModSourceValue = useCallback((source: ModSource, value: number) => {
+		window.dispatchEvent(
+			new CustomEvent("cz-mod-source", {
+				detail: {
+					source,
+					value: Math.max(0, Math.min(1, value)),
+				},
+			}),
+		);
+	}, []);
+
 	void velocityTarget;
 	const activeNotesRef = useRef<Set<number>>(new Set());
 	const sustainedButReleasedRef = useRef<Set<number>>(new Set());
@@ -39,8 +51,9 @@ export function useNoteHandling({
 				// regardless of legacy velocityTarget routing.
 				velocity: velocity / 127,
 			});
+			emitModSourceValue("velocity", velocity / 127);
 		},
-		[workletNodeRef],
+		[workletNodeRef, emitModSourceValue],
 	);
 
 	const sendNoteOff = useCallback(
@@ -82,15 +95,17 @@ export function useNoteHandling({
 	const sendModWheel = useCallback(
 		(value: number) => {
 			workletNodeRef.current?.port.postMessage({ type: "modWheel", value });
+			emitModSourceValue("modWheel", value);
 		},
-		[workletNodeRef],
+		[workletNodeRef, emitModSourceValue],
 	);
 
 	const sendAftertouch = useCallback(
 		(value: number) => {
 			workletNodeRef.current?.port.postMessage({ type: "aftertouch", value });
+			emitModSourceValue("aftertouch", value);
 		},
-		[workletNodeRef],
+		[workletNodeRef, emitModSourceValue],
 	);
 
 	// Keyboard input
