@@ -157,8 +157,8 @@ const ModulatableControl = memo(function ModulatableControl({
 							<div className="flex items-center gap-1">
 								<input
 									type="range"
-									min={-2}
-									max={2}
+									min={-1}
+									max={1}
 									step={0.01}
 									value={route.amount}
 									onChange={(e) =>

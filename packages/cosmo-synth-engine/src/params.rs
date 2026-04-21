@@ -728,7 +728,7 @@ pub enum ModDestination {
 pub struct ModRoute {
     pub source: ModSource,
     pub destination: ModDestination,
-    /// Modulation amount in range [-2.0, 2.0]
+    /// Modulation amount in range [-1.0, 1.0]
     pub amount: f32,
     pub enabled: bool,
 }
