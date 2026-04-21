@@ -197,7 +197,12 @@ impl CosmoProcessor {
     }
 
     /// Handle mono legato note-on without retriggering envelopes.
-    fn try_handle_mono_legato_note_on(&mut self, note: u8, frequency: f32) -> bool {
+    fn try_handle_mono_legato_note_on(
+        &mut self,
+        note: u8,
+        frequency: f32,
+        velocity: f32,
+    ) -> bool {
         let voice = &mut self.voices[0];
         if !self.params.legato
             || voice.is_releasing
@@ -225,6 +230,7 @@ impl CosmoProcessor {
 
         voice.note = Some(note);
         voice.frequency = frequency;
+        voice.velocity = velocity;
         voice.is_releasing = false;
 
         self.replace_active_note_entry(0, note);
@@ -267,7 +273,7 @@ impl CosmoProcessor {
 
     /// Route a note-on through mono mode rules, including legato and stack restore.
     fn handle_mono_note_on(&mut self, note: u8, frequency: f32, velocity: f32) {
-        if self.try_handle_mono_legato_note_on(note, frequency) {
+        if self.try_handle_mono_legato_note_on(note, frequency, velocity) {
             return;
         }
 
