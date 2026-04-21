@@ -13,6 +13,7 @@ import { getPdAlgoDef, PD_ALGOS } from "./pdAlgorithms";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
 import Card from "./ui/Card";
 import CzButton from "./ui/CzButton";
+import CzHorizontalSlider from "./ui/CzHorizontalSlider";
 import CzVerticalSlider from "./ui/CzVerticalSlider";
 
 interface PerLineWarpBlockProps {
@@ -558,22 +559,16 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 																		</div>
 																<span>{value.toFixed(2)}</span>
 															</div>
-															<input
-																type="range"
+															<CzHorizontalSlider
 																min={min}
 																max={max}
 																step={0.01}
 																value={value}
-																onChange={(event) =>
+																onChange={(newVal) =>
 																	binding?.setNumber
-																		? binding.setNumber(Number(event.target.value))
-																		: setAlgoControlValue(
-																			control.id,
-																			Number(event.target.value),
-																		)
+																		? binding.setNumber(newVal)
+																		: setAlgoControlValue(control.id, newVal)
 																}
-																className="range range-xs w-full"
-																disabled={false}
 															/>
 														</div>
 													);
