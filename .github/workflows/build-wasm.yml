@@ -4,8 +4,9 @@ permissions:
   contents: write
 
 on:
+  workflow_dispatch: # TODO: re-enable push trigger when ready
   push:
-    branches: ["**"]
+    branches: []
     paths:
       - 'packages/cosmo-synth-engine/**'
       - 'Cargo.lock'
