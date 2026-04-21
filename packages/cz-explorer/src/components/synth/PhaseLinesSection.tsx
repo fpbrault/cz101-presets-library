@@ -3,7 +3,7 @@ import { PerLineWarpBlock } from "@/components/PerLineWarpBlock";
 import Card, { joinClasses } from "@/components/ui/Card";
 import CzTabButton from "@/components/ui/CzTabButton";
 import { useSynthParam } from "@/features/synth/SynthParamController";
-import type { AlgoRefV1, StepEnvData } from "@/lib/synth/bindings/synth";
+import type { Algo, StepEnvData } from "@/lib/synth/bindings/synth";
 
 export type LineSelect = "L1" | "L2" | "L1+L2" | "L1+L1'" | "L1+L2'";
 
@@ -80,6 +80,8 @@ export default function PhaseLinesSection({
 		useSynthParam("line1CzSlotBWaveform");
 	const { value: line1CzWindow, setValue: setLine1CzWindow } =
 		useSynthParam("line1CzWindow");
+	const { value: line1AlgoControls, setValue: setLine1AlgoControls } =
+		useSynthParam("line1AlgoControls");
 	const { value: line2DcoEnv, setValue: setLine2DcoEnv } =
 		useSynthParam("line2DcoEnv");
 	const { value: line2DcwEnv, setValue: setLine2DcwEnv } =
@@ -92,6 +94,8 @@ export default function PhaseLinesSection({
 		useSynthParam("line2CzSlotBWaveform");
 	const { value: line2CzWindow, setValue: setLine2CzWindow } =
 		useSynthParam("line2CzWindow");
+	const { value: line2AlgoControls, setValue: setLine2AlgoControls } =
+		useSynthParam("line2AlgoControls");
 	const { value: line1DcwKeyFollow, setValue: setLine1DcwKeyFollow } =
 		useSynthParam("line1DcwKeyFollow");
 	const { value: line2DcwKeyFollow, setValue: setLine2DcwKeyFollow } =
@@ -101,9 +105,9 @@ export default function PhaseLinesSection({
 		warpAmount: warpAAmount,
 		setWarpAmount: setWarpAAmount,
 		algo: warpAAlgo,
-		setAlgo: setWarpAAlgo as (value: AlgoRefV1) => void,
+		setAlgo: setWarpAAlgo as (value: Algo) => void,
 		algo2: algo2A,
-		setAlgo2: setAlgo2A as (value: AlgoRefV1 | null) => void,
+		setAlgo2: setAlgo2A as (value: Algo | null) => void,
 		algoBlend: algoBlendA,
 		setAlgoBlend: setAlgoBlendA,
 		dcwComp: line1DcwComp,
@@ -128,6 +132,8 @@ export default function PhaseLinesSection({
 		setCzSlotBWaveform: setLine1CzSlotBWaveform,
 		czWindow: line1CzWindow,
 		setCzWindow: setLine1CzWindow,
+		algoControls: line1AlgoControls,
+		setAlgoControls: setLine1AlgoControls,
 		keyFollow: line1DcwKeyFollow,
 		setKeyFollow: setLine1DcwKeyFollow,
 	};
@@ -136,9 +142,9 @@ export default function PhaseLinesSection({
 		warpAmount: warpBAmount,
 		setWarpAmount: setWarpBAmount,
 		algo: warpBAlgo,
-		setAlgo: setWarpBAlgo as (value: AlgoRefV1) => void,
+		setAlgo: setWarpBAlgo as (value: Algo) => void,
 		algo2: algo2B,
-		setAlgo2: setAlgo2B as (value: AlgoRefV1 | null) => void,
+		setAlgo2: setAlgo2B as (value: Algo | null) => void,
 		algoBlend: algoBlendB,
 		setAlgoBlend: setAlgoBlendB,
 		dcwComp: line2DcwComp,
@@ -163,6 +169,8 @@ export default function PhaseLinesSection({
 		setCzSlotBWaveform: setLine2CzSlotBWaveform,
 		czWindow: line2CzWindow,
 		setCzWindow: setLine2CzWindow,
+		algoControls: line2AlgoControls,
+		setAlgoControls: setLine2AlgoControls,
 		keyFollow: line2DcwKeyFollow,
 		setKeyFollow: setLine2DcwKeyFollow,
 	};
@@ -277,6 +285,8 @@ export default function PhaseLinesSection({
 						setCzSlotBWaveform={activeLineConfig.setCzSlotBWaveform}
 						czWindow={activeLineConfig.czWindow}
 						setCzWindow={activeLineConfig.setCzWindow}
+						algoControls={activeLineConfig.algoControls}
+						setAlgoControls={activeLineConfig.setAlgoControls}
 						keyFollow={activeLineConfig.keyFollow}
 						setKeyFollow={activeLineConfig.setKeyFollow}
 						activeSection={activeSection}

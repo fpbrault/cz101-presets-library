@@ -1,13 +1,16 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Preset } from "@/lib/presets/presetManager";
-import type { SynthPresetData } from "@/lib/synth/presetStorage";
+import type { SynthPresetV1 } from "@/lib/synth/bindings/synth";
 import { useSynthPresetManager } from "./useSynthPresetManager";
 
-const storedPresets = new Map<string, SynthPresetData>();
+const storedPresets = new Map<string, SynthPresetV1>();
 
 vi.mock("@/lib/synth/presetStorage", () => {
-	const defaultPreset = { volume: 1, warpAAmount: 1 } as SynthPresetData;
+	const defaultPreset = {
+		schemaVersion: 1,
+		params: { volume: 1 },
+	} as SynthPresetV1;
 
 	return {
 		DEFAULT_PRESET: defaultPreset,
@@ -29,7 +32,7 @@ vi.mock("@/lib/synth/presetStorage", () => {
 			return true;
 		}),
 		saveCurrentState: vi.fn(),
-		savePreset: vi.fn((name: string, data: SynthPresetData) => {
+		savePreset: vi.fn((name: string, data: SynthPresetV1) => {
 			storedPresets.set(name, data);
 		}),
 	};
@@ -52,7 +55,11 @@ describe("useSynthPresetManager", () => {
 		const { result } = renderHook(() =>
 			useSynthPresetManager({
 				builtinPresets: {},
-				gatherState: () => ({ volume: 1, warpAAmount: 1 } as SynthPresetData),
+				gatherState: () =>
+					({
+						schemaVersion: 1,
+						params: { volume: 1 },
+					} as SynthPresetV1),
 				applyPreset,
 				libraryPresets,
 				onLoadLibraryPreset,

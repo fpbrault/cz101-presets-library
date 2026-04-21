@@ -5,7 +5,7 @@ import {
 	resolveAlgoRef,
 } from "@/lib/synth/algoRef";
 import type {
-	AlgoRefV1,
+	Algo,
 	CzWaveform,
 	StepEnvData,
 	WindowType,
@@ -15,7 +15,7 @@ import { ALGO_UI_CATALOG_V1 } from "@/lib/synth/bindings/synth";
 const N = 1024;
 const TAU = Math.PI * 2;
 
-export type PdAlgo = AlgoRefV1;
+export type PdAlgo = Algo;
 
 type PdAlgoDef = {
 	value: PdAlgo;
@@ -361,6 +361,12 @@ export function computeWaveform(params: {
 	windowType: WindowType;
 	line1Level: number;
 	line2Level: number;
+	line1CzSlotAWaveform?: CzWaveform;
+	line1CzSlotBWaveform?: CzWaveform;
+	line1CzWindow?: WindowType;
+	line2CzSlotAWaveform?: CzWaveform;
+	line2CzSlotBWaveform?: CzWaveform;
+	line2CzWindow?: WindowType;
 }): WaveformData {
 	const phasor = new Float32Array(N);
 	for (let i = 0; i < N; ++i) phasor[i] = i / N;
@@ -378,10 +384,33 @@ export function computeWaveform(params: {
 
 	const algoA = resolveAlgoRef(params.warpAAlgo);
 	const algoB = resolveAlgoRef(params.warpBAlgo);
-	const algo2A = params.algo2A ? resolveAlgoRef(params.algo2A) : null;
-	const algo2B = params.algo2B ? resolveAlgoRef(params.algo2B) : null;
-	const line1Window = algoA.windowType ?? params.windowType;
-	const line2Window = algoB.windowType ?? params.windowType;
+	const algo2AResolved = params.algo2A ? resolveAlgoRef(params.algo2A) : null;
+	const algo2BResolved = params.algo2B ? resolveAlgoRef(params.algo2B) : null;
+
+	// Use explicit CZ waveform params when available (from CzLineParams)
+	const algoAWaveform: CzWaveform = (algoA.warpAlgo === "cz101" && params.line1CzSlotAWaveform)
+		? params.line1CzSlotAWaveform
+		: algoA.waveform;
+	const algo2AWaveform: CzWaveform = (algo2AResolved?.warpAlgo === "cz101" && params.line1CzSlotBWaveform)
+		? params.line1CzSlotBWaveform
+		: algo2AResolved?.waveform ?? "saw";
+	const algoBWaveform: CzWaveform = (algoB.warpAlgo === "cz101" && params.line2CzSlotAWaveform)
+		? params.line2CzSlotAWaveform
+		: algoB.waveform;
+	const algo2BWaveform: CzWaveform = (algo2BResolved?.warpAlgo === "cz101" && params.line2CzSlotBWaveform)
+		? params.line2CzSlotBWaveform
+		: algo2BResolved?.waveform ?? "saw";
+
+	const line1Window = (algoA.warpAlgo === "cz101" && params.line1CzWindow && params.line1CzWindow !== "off")
+		? params.line1CzWindow
+		: algoA.windowType ?? params.windowType;
+	const line2Window = (algoB.warpAlgo === "cz101" && params.line2CzWindow && params.line2CzWindow !== "off")
+		? params.line2CzWindow
+		: algoB.windowType ?? params.windowType;
+
+	// Aliases for backward compat within this function
+	const algo2A = algo2AResolved;
+	const algo2B = algo2BResolved;
 
 	if (!params.pmPre) {
 		for (let i = 0; i < N; ++i) phasor[i] = (phasor[i] + pm[i]) % 1;
@@ -396,13 +425,13 @@ export function computeWaveform(params: {
 			phasor[i],
 			params.warpAAmount,
 			params.warpAAlgo,
-			algoA.waveform,
+			algoAWaveform,
 		);
 		phaseB[i] = applyPdAlgo(
 			phasor[i],
 			params.warpBAmount,
 			params.warpBAlgo,
-			algoB.waveform,
+			algoBWaveform,
 		);
 	}
 
@@ -413,11 +442,11 @@ export function computeWaveform(params: {
 		if (algo2A && algoA.warpAlgo === "cz101" && algo2A.warpAlgo === "cz101") {
 			const cyclePhase = (phasor[i] * 2) % 1;
 			const useSecondary = phasor[i] >= 0.5;
-			const active = useSecondary ? algo2A : algoA;
+			const activeWaveform = useSecondary ? algo2AWaveform : algoAWaveform;
 			out1[i] =
 				lerp(
 					Math.sin(TAU * cyclePhase),
-					czWaveform(active.waveform, cyclePhase),
+					czWaveform(activeWaveform, cyclePhase),
 					params.warpAAmount,
 				) *
 				w1 *
@@ -430,7 +459,7 @@ export function computeWaveform(params: {
 				algoA.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algoA.waveform, phasor[i]),
+							czWaveform(algoAWaveform, phasor[i]),
 							dcw1eff,
 						)
 					: Math.sin(TAU * phaseA[i]);
@@ -438,13 +467,13 @@ export function computeWaveform(params: {
 				phasor[i],
 				dcw2A,
 				params.algo2A as PdAlgo,
-				algo2A.waveform,
+				algo2AWaveform,
 			);
 			const sigA2 =
 				algo2A.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algo2A.waveform, phasor[i]),
+							czWaveform(algo2AWaveform, phasor[i]),
 							dcw2A,
 						)
 					: Math.sin(TAU * phaseA2);
@@ -453,7 +482,7 @@ export function computeWaveform(params: {
 			out1[i] =
 				lerp(
 					Math.sin(TAU * phasor[i]),
-					czWaveform(algoA.waveform, phasor[i]),
+					czWaveform(algoAWaveform, phasor[i]),
 					params.warpAAmount,
 				) *
 				w1 *
@@ -465,11 +494,11 @@ export function computeWaveform(params: {
 		if (algo2B && algoB.warpAlgo === "cz101" && algo2B.warpAlgo === "cz101") {
 			const cyclePhase = (phasor[i] * 2) % 1;
 			const useSecondary = phasor[i] >= 0.5;
-			const active = useSecondary ? algo2B : algoB;
+			const activeWaveform = useSecondary ? algo2BWaveform : algoBWaveform;
 			out2[i] =
 				lerp(
 					Math.sin(TAU * cyclePhase),
-					czWaveform(active.waveform, cyclePhase),
+					czWaveform(activeWaveform, cyclePhase),
 					params.warpBAmount,
 				) *
 				w2 *
@@ -482,7 +511,7 @@ export function computeWaveform(params: {
 				algoB.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algoB.waveform, phasor[i]),
+							czWaveform(algoBWaveform, phasor[i]),
 							dcw1effB,
 						)
 					: Math.sin(TAU * phaseB[i]);
@@ -490,13 +519,13 @@ export function computeWaveform(params: {
 				phasor[i],
 				dcw2B,
 				params.algo2B as PdAlgo,
-				algo2B.waveform,
+				algo2BWaveform,
 			);
 			const sigB2 =
 				algo2B.warpAlgo === "cz101"
 					? lerp(
 							Math.sin(TAU * phasor[i]),
-							czWaveform(algo2B.waveform, phasor[i]),
+							czWaveform(algo2BWaveform, phasor[i]),
 							dcw2B,
 						)
 					: Math.sin(TAU * phaseB2);
@@ -505,7 +534,7 @@ export function computeWaveform(params: {
 			out2[i] =
 				lerp(
 					Math.sin(TAU * phasor[i]),
-					czWaveform(algoB.waveform, phasor[i]),
+					czWaveform(algoBWaveform, phasor[i]),
 					params.warpBAmount,
 				) *
 				w2 *

@@ -4,9 +4,15 @@ import {
 	DEFAULT_DCO_ENV,
 	DEFAULT_DCW_ENV,
 } from "@/components/pdAlgorithms";
-import { DEFAULT_ALGO_REF, toAlgoRefV1 } from "@/lib/synth/algoRef";
+import {
+	DEFAULT_ALGO_REF,
+	legacyCzAlgoToWaveform,
+	normalizeWaveformId,
+	toAlgoRefV1,
+} from "@/lib/synth/algoRef";
 import type {
-	AlgoRefV1,
+	Algo,
+	AlgoControlValueV1,
 	CzWaveform,
 	FilterType,
 	LfoTarget,
@@ -16,234 +22,85 @@ import type {
 	PolyMode,
 	PortamentoMode,
 	StepEnvData,
+	SynthPresetV1,
 	VelocityTarget,
 	WindowType,
 } from "@/lib/synth/bindings/synth";
-import type { SynthPresetData } from "@/lib/synth/presetStorage";
+import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
 
 export type { PolyMode, VelocityTarget };
-export type UseSynthStateResult = {
-	// Line 1 warping
-	warpAAmount: number;
-	setWarpAAmount: (v: number) => void;
-	warpAAlgo: AlgoRefV1;
-	setWarpAAlgo: (v: AlgoRefV1) => void;
-	algo2A: AlgoRefV1 | null;
-	setAlgo2A: (v: AlgoRefV1 | null) => void;
-	algoBlendA: number;
-	setAlgoBlendA: (v: number) => void;
 
-	// Line 2 warping
-	warpBAmount: number;
-	setWarpBAmount: (v: number) => void;
-	warpBAlgo: AlgoRefV1;
-	setWarpBAlgo: (v: AlgoRefV1) => void;
-	algo2B: AlgoRefV1 | null;
-	setAlgo2B: (v: AlgoRefV1 | null) => void;
-	algoBlendB: number;
-	setAlgoBlendB: (v: number) => void;
-
-	// Phase mod
-	intPmAmount: number;
-	setIntPmAmount: (v: number) => void;
-	intPmRatio: number;
-	setIntPmRatio: (v: number) => void;
-	pmPre: boolean;
-	setPmPre: (v: boolean) => void;
-	phaseModEnabled: boolean;
-	setPhaseModEnabled: (v: boolean) => void;
-
-	// Window
-	windowType: WindowType;
-	setWindowType: (v: WindowType) => void;
-
-	// Master volume
-	volume: number;
-	setVolume: (v: number) => void;
-
-	// Line 1
-	line1Level: number;
-	setLine1Level: (v: number) => void;
-	line1Octave: number;
-	setLine1Octave: (v: number) => void;
-	line1Detune: number;
-	setLine1Detune: (v: number) => void;
-	line1DcoDepth: number;
-	setLine1DcoDepth: (v: number) => void;
-	line1DcwComp: number;
-	setLine1DcwComp: (v: number) => void;
-	line1DcwKeyFollow: number;
-	setLine1DcwKeyFollow: (v: number) => void;
-	line1DcaKeyFollow: number;
-	setLine1DcaKeyFollow: (v: number) => void;
-	line1DcoEnv: StepEnvData;
-	setLine1DcoEnv: (v: StepEnvData) => void;
-	line1DcwEnv: StepEnvData;
-	setLine1DcwEnv: (v: StepEnvData) => void;
-	line1DcaEnv: StepEnvData;
-	setLine1DcaEnv: (v: StepEnvData) => void;
-	line1CzSlotAWaveform: CzWaveform;
-	setLine1CzSlotAWaveform: (v: CzWaveform) => void;
-	line1CzSlotBWaveform: CzWaveform;
-	setLine1CzSlotBWaveform: (v: CzWaveform) => void;
-	line1CzWindow: WindowType;
-	setLine1CzWindow: (v: WindowType) => void;
-
-	// Line 2
-	line2Level: number;
-	setLine2Level: (v: number) => void;
-	line2Octave: number;
-	setLine2Octave: (v: number) => void;
-	line2Detune: number;
-	setLine2Detune: (v: number) => void;
-	line2DcoDepth: number;
-	setLine2DcoDepth: (v: number) => void;
-	line2DcwComp: number;
-	setLine2DcwComp: (v: number) => void;
-	line2DcwKeyFollow: number;
-	setLine2DcwKeyFollow: (v: number) => void;
-	line2DcaKeyFollow: number;
-	setLine2DcaKeyFollow: (v: number) => void;
-	line2DcoEnv: StepEnvData;
-	setLine2DcoEnv: (v: StepEnvData) => void;
-	line2DcwEnv: StepEnvData;
-	setLine2DcwEnv: (v: StepEnvData) => void;
-	line2DcaEnv: StepEnvData;
-	setLine2DcaEnv: (v: StepEnvData) => void;
-	line2CzSlotAWaveform: CzWaveform;
-	setLine2CzSlotAWaveform: (v: CzWaveform) => void;
-	line2CzSlotBWaveform: CzWaveform;
-	setLine2CzSlotBWaveform: (v: CzWaveform) => void;
-	line2CzWindow: WindowType;
-	setLine2CzWindow: (v: WindowType) => void;
-
-	// Modulation
-	lineSelect: LineSelect;
-	setLineSelect: (v: LineSelect) => void;
-	modMode: ModMode;
-	setModMode: (v: ModMode) => void;
-
-	// Poly
-	polyMode: PolyMode;
-	setPolyMode: (v: PolyMode) => void;
-	legato: boolean;
-	setLegato: (v: boolean) => void;
-	velocityTarget: VelocityTarget;
-	setVelocityTarget: (v: VelocityTarget) => void;
-
-	// Chorus
-	chorusEnabled: boolean;
-	setChorusEnabled: (v: boolean) => void;
-	chorusRate: number;
-	setChorusRate: (v: number) => void;
-	chorusDepth: number;
-	setChorusDepth: (v: number) => void;
-	chorusMix: number;
-	setChorusMix: (v: number) => void;
-
-	// Delay
-	delayEnabled: boolean;
-	setDelayEnabled: (v: boolean) => void;
-	delayTime: number;
-	setDelayTime: (v: number) => void;
-	delayFeedback: number;
-	setDelayFeedback: (v: number) => void;
-	delayMix: number;
-	setDelayMix: (v: number) => void;
-
-	// Reverb
-	reverbEnabled: boolean;
-	setReverbEnabled: (v: boolean) => void;
-	reverbSize: number;
-	setReverbSize: (v: number) => void;
-	reverbMix: number;
-	setReverbMix: (v: number) => void;
-
-	// Vibrato
-	vibratoEnabled: boolean;
-	setVibratoEnabled: (v: boolean) => void;
-	vibratoWave: number;
-	setVibratoWave: (v: number) => void;
-	vibratoRate: number;
-	setVibratoRate: (v: number) => void;
-	vibratoDepth: number;
-	setVibratoDepth: (v: number) => void;
-	vibratoDelay: number;
-	setVibratoDelay: (v: number) => void;
-
-	// Portamento
-	portamentoEnabled: boolean;
-	setPortamentoEnabled: (v: boolean) => void;
-	portamentoMode: PortamentoMode;
-	setPortamentoMode: (v: PortamentoMode) => void;
-	portamentoRate: number;
-	setPortamentoRate: (v: number) => void;
-	portamentoTime: number;
-	setPortamentoTime: (v: number) => void;
-
-	// LFO
-	lfoEnabled: boolean;
-	setLfoEnabled: (v: boolean) => void;
-	lfoWaveform: LfoWaveform;
-	setLfoWaveform: (v: LfoWaveform) => void;
-	lfoRate: number;
-	setLfoRate: (v: number) => void;
-	lfoDepth: number;
-	setLfoDepth: (v: number) => void;
-	lfoOffset: number;
-	setLfoOffset: (v: number) => void;
-	lfoTarget: LfoTarget;
-	setLfoTarget: (v: LfoTarget) => void;
-
-	// Filter
-	filterEnabled: boolean;
-	setFilterEnabled: (v: boolean) => void;
-	filterType: FilterType;
-	setFilterType: (v: FilterType) => void;
-	filterCutoff: number;
-	setFilterCutoff: (v: number) => void;
-	filterResonance: number;
-	setFilterResonance: (v: number) => void;
-	filterEnvAmount: number;
-	setFilterEnvAmount: (v: number) => void;
-
-	// Pitch bend & mod wheel
-	pitchBendRange: number;
-	setPitchBendRange: (v: number) => void;
-	modWheelVibratoDepth: number;
-	setModWheelVibratoDepth: (v: number) => void;
-
-	// Operations
-	gatherState: () => SynthPresetData;
-	applyPreset: (data: SynthPresetData) => void;
+type AlgoControlRuntime = {
+	id: string;
+	kind?: "number" | "select" | "toggle";
+	default?: number | null;
+	min?: number | null;
 };
 
-export function useSynthState(): UseSynthStateResult {
-	// Line 1 warping
+type AlgoDefinitionRuntime = {
+	id: Algo;
+	controls: AlgoControlRuntime[];
+};
+
+function normalizeAlgoControls(
+	algo: Algo,
+	values: AlgoControlValueV1[] | null | undefined,
+): AlgoControlValueV1[] {
+	const definitions = ALGO_DEFINITIONS_V1 as unknown as AlgoDefinitionRuntime[];
+	const definition = definitions.find((entry) => entry.id === algo);
+	if (!definition) {
+		return [];
+	}
+
+	const incoming = new Map((values ?? []).map((entry) => [entry.id, entry.value]));
+	return definition.controls
+		.filter((control) => (control.kind ?? "number") === "number")
+		.map((control) => ({
+			id: control.id,
+			value: incoming.get(control.id) ?? control.default ?? control.min ?? 0,
+		}));
+}
+
+function inferCzWaveform(
+	algoValue: unknown,
+	explicitWaveform: unknown,
+	fallback: CzWaveform,
+): CzWaveform {
+	if (typeof explicitWaveform === "string") {
+		return normalizeWaveformId(explicitWaveform);
+	}
+
+	if (typeof algoValue === "string") {
+		const legacyWaveform = legacyCzAlgoToWaveform(algoValue);
+		if (legacyWaveform) {
+			return legacyWaveform;
+		}
+		return normalizeWaveformId(algoValue);
+	}
+
+	return fallback;
+}
+
+export function useSynthState() {
 	const [warpAAmount, setWarpAAmount] = useState(0);
-	const [warpAAlgo, setWarpAAlgo] = useState<AlgoRefV1>(DEFAULT_ALGO_REF);
-	const [algo2A, setAlgo2A] = useState<AlgoRefV1 | null>(null);
+	const [warpAAlgo, setWarpAAlgo] = useState<Algo>(DEFAULT_ALGO_REF);
+	const [algo2A, setAlgo2A] = useState<Algo | null>(null);
 	const [algoBlendA, setAlgoBlendA] = useState(0);
 
-	// Line 2 warping
 	const [warpBAmount, setWarpBAmount] = useState(0);
-	const [warpBAlgo, setWarpBAlgo] = useState<AlgoRefV1>(DEFAULT_ALGO_REF);
-	const [algo2B, setAlgo2B] = useState<AlgoRefV1 | null>(null);
+	const [warpBAlgo, setWarpBAlgo] = useState<Algo>(DEFAULT_ALGO_REF);
+	const [algo2B, setAlgo2B] = useState<Algo | null>(null);
 	const [algoBlendB, setAlgoBlendB] = useState(0);
 
-	// Phase mod
 	const [intPmAmount, setIntPmAmount] = useState(0);
 	const [intPmRatio, setIntPmRatio] = useState(1);
 	const [pmPre, setPmPre] = useState(true);
 	const [phaseModEnabled, setPhaseModEnabled] = useState(false);
 
-	// Window
 	const [windowType, setWindowType] = useState<WindowType>("off");
 
-	// Master volume
 	const [volume, setVolume] = useState(1);
 
-	// Line 1
 	const [line1Level, setLine1Level] = useState(1);
 	const [line1Octave, setLine1Octave] = useState(0);
 	const [line1Detune, setLine1Detune] = useState(0);
@@ -259,8 +116,10 @@ export function useSynthState(): UseSynthStateResult {
 	const [line1CzSlotBWaveform, setLine1CzSlotBWaveform] =
 		useState<CzWaveform>("saw");
 	const [line1CzWindow, setLine1CzWindow] = useState<WindowType>("off");
+	const [line1AlgoControls, setLine1AlgoControls] = useState<
+		AlgoControlValueV1[]
+	>([]);
 
-	// Line 2
 	const [line2Level, setLine2Level] = useState(1);
 	const [line2Octave, setLine2Octave] = useState(0);
 	const [line2Detune, setLine2Detune] = useState(0);
@@ -276,47 +135,42 @@ export function useSynthState(): UseSynthStateResult {
 	const [line2CzSlotBWaveform, setLine2CzSlotBWaveform] =
 		useState<CzWaveform>("saw");
 	const [line2CzWindow, setLine2CzWindow] = useState<WindowType>("off");
+	const [line2AlgoControls, setLine2AlgoControls] = useState<
+		AlgoControlValueV1[]
+	>([]);
 
-	// Modulation
 	const [lineSelect, setLineSelect] = useState<LineSelect>("L1+L2");
 	const [modMode, setModMode] = useState<ModMode>("normal");
 
-	// Poly
 	const [polyMode, setPolyMode] = useState<PolyMode>("poly8");
 	const [legato, setLegato] = useState(false);
 	const [velocityTarget, setVelocityTarget] = useState<VelocityTarget>("amp");
 
-	// Chorus
 	const [chorusEnabled, setChorusEnabled] = useState(false);
 	const [chorusRate, setChorusRate] = useState(0.8);
 	const [chorusDepth, setChorusDepth] = useState(3);
 	const [chorusMix, setChorusMix] = useState(0);
 
-	// Delay
 	const [delayEnabled, setDelayEnabled] = useState(false);
 	const [delayTime, setDelayTime] = useState(0.3);
 	const [delayFeedback, setDelayFeedback] = useState(0.35);
 	const [delayMix, setDelayMix] = useState(0);
 
-	// Reverb
 	const [reverbEnabled, setReverbEnabled] = useState(false);
 	const [reverbSize, setReverbSize] = useState(0.5);
 	const [reverbMix, setReverbMix] = useState(0);
 
-	// Vibrato
 	const [vibratoEnabled, setVibratoEnabled] = useState(false);
 	const [vibratoWave, setVibratoWave] = useState(1);
 	const [vibratoRate, setVibratoRate] = useState(30);
 	const [vibratoDepth, setVibratoDepth] = useState(30);
 	const [vibratoDelay, setVibratoDelay] = useState(0);
 
-	// Portamento
 	const [portamentoEnabled, setPortamentoEnabled] = useState(false);
 	const [portamentoMode, setPortamentoMode] = useState<PortamentoMode>("rate");
 	const [portamentoRate, setPortamentoRate] = useState(50);
 	const [portamentoTime, setPortamentoTime] = useState(0.5);
 
-	// LFO
 	const [lfoEnabled, setLfoEnabled] = useState(false);
 	const [lfoWaveform, setLfoWaveform] = useState<LfoWaveform>("sine");
 	const [lfoRate, setLfoRate] = useState(5);
@@ -324,261 +178,350 @@ export function useSynthState(): UseSynthStateResult {
 	const [lfoOffset, setLfoOffset] = useState(0);
 	const [lfoTarget, setLfoTarget] = useState<LfoTarget>("pitch");
 
-	// Filter
 	const [filterEnabled, setFilterEnabled] = useState(false);
 	const [filterType, setFilterType] = useState<FilterType>("lp");
 	const [filterCutoff, setFilterCutoff] = useState(5000);
 	const [filterResonance, setFilterResonance] = useState(0);
 	const [filterEnvAmount, setFilterEnvAmount] = useState(0);
 
-	// Pitch bend & mod wheel
 	const [pitchBendRange, setPitchBendRange] = useState(2);
 	const [modWheelVibratoDepth, setModWheelVibratoDepth] = useState(0);
 
-	const gatherState = useCallback((): SynthPresetData => {
-		return {
-			warpAAmount,
-			warpBAmount,
+	const gatherState = useCallback((): SynthPresetV1 => {
+		const line1NormalizedAlgoControls = normalizeAlgoControls(
 			warpAAlgo,
+			line1AlgoControls,
+		);
+		const line2NormalizedAlgoControls = normalizeAlgoControls(
 			warpBAlgo,
-			algo2A: algo2A ?? null,
-			algo2B: algo2B ?? null,
-			algoBlendA,
-			algoBlendB,
-			intPmAmount: phaseModEnabled ? intPmAmount : 0,
-			intPmRatio,
-			phaseModEnabled,
-			pmPre,
-			windowType,
-			volume,
-			line1Level,
-			line2Level,
-			line1Octave,
-			line2Octave,
-			line1Detune,
-			line2Detune,
-			line1DcoDepth,
-			line2DcoDepth,
-			line1DcwComp,
-			line2DcwComp,
-			line1DcoEnv,
-			line1DcwEnv,
-			line1DcaEnv,
-			line1CzSlotAWaveform,
-			line1CzSlotBWaveform,
-			line1CzWindow,
-			line2DcoEnv,
-			line2DcwEnv,
-			line2DcaEnv,
-			line2CzSlotAWaveform,
-			line2CzSlotBWaveform,
-			line2CzWindow,
-			polyMode,
-			legato,
-			velocityTarget,
-			chorusRate,
-			chorusDepth,
-			chorusEnabled,
-			chorusMix,
-			delayTime,
-			delayFeedback,
-			delayEnabled,
-			delayMix,
-			reverbSize,
-			reverbEnabled,
-			reverbMix,
-			lineSelect,
-			modMode,
-			line1DcwKeyFollow,
-			line1DcaKeyFollow,
-			line2DcwKeyFollow,
-			line2DcaKeyFollow,
-			vibratoEnabled,
-			vibratoWave,
-			vibratoRate,
-			vibratoDepth,
-			vibratoDelay,
-			portamentoEnabled,
-			portamentoMode,
-			portamentoRate,
-			portamentoTime,
-			lfoEnabled,
-			lfoWaveform,
-			lfoRate,
-			lfoDepth,
-			lfoOffset,
-			lfoTarget,
-			filterEnabled,
-			filterType,
-			filterCutoff,
-			filterResonance,
-			filterEnvAmount,
-			pitchBendRange,
-			modWheelVibratoDepth,
+			line2AlgoControls,
+		);
+
+		return {
+			schemaVersion: 1,
+			params: {
+				lineSelect,
+				modMode,
+				octave: 0,
+				line1: {
+					algo: warpAAlgo,
+					algo2: algo2A,
+					algoBlend: algoBlendA,
+					dcwComp: line1DcwComp,
+					window: windowType,
+					dcaBase: line1Level,
+					dcwBase: warpAAmount,
+					dcoDepth: line1DcoDepth,
+					modulation: 0,
+					detuneCents: line1Detune,
+					octave: line1Octave,
+					dcoEnv: line1DcoEnv,
+					dcwEnv: line1DcwEnv,
+					dcaEnv: line1DcaEnv,
+					keyFollow: line1DcwKeyFollow,
+					cz: {
+						slotAWaveform: line1CzSlotAWaveform,
+						slotBWaveform: line1CzSlotBWaveform,
+						window: line1CzWindow,
+					},
+					algoControls: line1NormalizedAlgoControls,
+				},
+				line2: {
+					algo: warpBAlgo,
+					algo2: algo2B,
+					algoBlend: algoBlendB,
+					dcwComp: line2DcwComp,
+					window: windowType,
+					dcaBase: line2Level,
+					dcwBase: warpBAmount,
+					dcoDepth: line2DcoDepth,
+					modulation: 0,
+					detuneCents: line2Detune,
+					octave: line2Octave,
+					dcoEnv: line2DcoEnv,
+					dcwEnv: line2DcwEnv,
+					dcaEnv: line2DcaEnv,
+					keyFollow: line2DcwKeyFollow,
+					cz: {
+						slotAWaveform: line2CzSlotAWaveform,
+						slotBWaveform: line2CzSlotBWaveform,
+						window: line2CzWindow,
+					},
+					algoControls: line2NormalizedAlgoControls,
+				},
+				intPmAmount: phaseModEnabled ? intPmAmount : 0,
+				intPmRatio,
+				extPmAmount: 0,
+				pmPre,
+				frequency: 440,
+				volume,
+				polyMode,
+				legato,
+				velocityTarget,
+				chorus: {
+					rate: chorusRate,
+					depth: chorusDepth,
+					mix: chorusEnabled ? chorusMix : 0,
+				},
+				delay: {
+					time: delayTime,
+					feedback: delayFeedback,
+					mix: delayEnabled ? delayMix : 0,
+				},
+				reverb: {
+					size: reverbSize,
+					mix: reverbEnabled ? reverbMix : 0,
+				},
+				vibrato: {
+					enabled: vibratoEnabled,
+					waveform: vibratoWave,
+					rate: vibratoRate,
+					depth: vibratoDepth,
+					delay: vibratoDelay,
+				},
+				portamento: {
+					enabled: portamentoEnabled,
+					mode: portamentoMode,
+					rate: portamentoRate,
+					time: portamentoTime,
+				},
+				lfo: {
+					enabled: lfoEnabled,
+					waveform: lfoWaveform,
+					rate: lfoRate,
+					depth: lfoDepth,
+					offset: lfoOffset,
+					target: lfoTarget,
+				},
+				filter: {
+					enabled: filterEnabled,
+					type: filterType,
+					cutoff: filterCutoff,
+					resonance: filterResonance,
+					envAmount: filterEnvAmount,
+				},
+				pitchBendRange,
+				modWheelVibratoDepth,
+			},
 		};
 	}, [
-		warpAAmount,
-		warpBAmount,
-		warpAAlgo,
-		warpBAlgo,
 		algo2A,
 		algo2B,
 		algoBlendA,
 		algoBlendB,
-		intPmAmount,
-		intPmRatio,
-		phaseModEnabled,
-		pmPre,
-		windowType,
-		volume,
-		line1Level,
-		line2Level,
-		line1Octave,
-		line2Octave,
-		line1Detune,
-		line2Detune,
-		line1DcoDepth,
-		line2DcoDepth,
-		line1DcwComp,
-		line2DcwComp,
-		line1DcoEnv,
-		line1DcwEnv,
-		line1DcaEnv,
-		line1CzSlotAWaveform,
-		line1CzSlotBWaveform,
-		line1CzWindow,
-		line2DcoEnv,
-		line2DcwEnv,
-		line2DcaEnv,
-		line2CzSlotAWaveform,
-		line2CzSlotBWaveform,
-		line2CzWindow,
-		polyMode,
-		legato,
-		velocityTarget,
-		chorusRate,
 		chorusDepth,
 		chorusEnabled,
 		chorusMix,
-		delayTime,
-		delayFeedback,
+		chorusRate,
 		delayEnabled,
+		delayFeedback,
 		delayMix,
-		reverbSize,
-		reverbEnabled,
-		reverbMix,
+		delayTime,
+		filterCutoff,
+		filterEnabled,
+		filterEnvAmount,
+		filterResonance,
+		filterType,
+		intPmAmount,
+		intPmRatio,
+		legato,
+		lfoDepth,
+		lfoEnabled,
+		lfoOffset,
+		lfoRate,
+		lfoTarget,
+		lfoWaveform,
+		line1CzSlotAWaveform,
+		line1CzSlotBWaveform,
+		line1CzWindow,
+		line1AlgoControls,
+		line1DcaEnv,
+		line1DcoDepth,
+		line1DcoEnv,
+		line1DcwComp,
+		line1DcwEnv,
+		line1DcwKeyFollow,
+		line1Detune,
+		line1Level,
+		line1Octave,
+		line2CzSlotAWaveform,
+		line2CzSlotBWaveform,
+		line2CzWindow,
+		line2AlgoControls,
+		line2DcaEnv,
+		line2DcoDepth,
+		line2DcoEnv,
+		line2DcwComp,
+		line2DcwEnv,
+		line2DcwKeyFollow,
+		line2Detune,
+		line2Level,
+		line2Octave,
 		lineSelect,
 		modMode,
-		line1DcwKeyFollow,
-		line1DcaKeyFollow,
-		line2DcwKeyFollow,
-		line2DcaKeyFollow,
-		vibratoEnabled,
-		vibratoWave,
-		vibratoRate,
-		vibratoDepth,
-		vibratoDelay,
+		modWheelVibratoDepth,
+		phaseModEnabled,
+		pitchBendRange,
+		pmPre,
+		polyMode,
 		portamentoEnabled,
 		portamentoMode,
 		portamentoRate,
 		portamentoTime,
-		lfoEnabled,
-		lfoWaveform,
-		lfoRate,
-		lfoDepth,
-		lfoOffset,
-		lfoTarget,
-		filterEnabled,
-		filterType,
-		filterCutoff,
-		filterResonance,
-		filterEnvAmount,
-		pitchBendRange,
-		modWheelVibratoDepth,
+		reverbEnabled,
+		reverbMix,
+		reverbSize,
+		velocityTarget,
+		vibratoDelay,
+		vibratoDepth,
+		vibratoEnabled,
+		vibratoRate,
+		vibratoWave,
+		volume,
+		warpAAlgo,
+		warpAAmount,
+		warpBAlgo,
+		warpBAmount,
+		windowType,
 	]);
 
-	const applyPreset = useCallback((data: SynthPresetData) => {
+	const applyPreset = useCallback((preset: SynthPresetV1) => {
+		if (
+			typeof preset !== "object" ||
+			preset === null ||
+			typeof preset.params !== "object" ||
+			preset.params === null ||
+			typeof preset.params.line1 !== "object" ||
+			preset.params.line1 === null ||
+			typeof preset.params.line2 !== "object" ||
+			preset.params.line2 === null
+		) {
+			return;
+		}
+		const p = preset.params;
 		const safe = (v: unknown, fallback: number) =>
 			typeof v === "number" && !Number.isNaN(v) ? v : fallback;
+		const line1PrimaryAlgo = toAlgoRefV1(
+			p.line1?.algo ?? DEFAULT_ALGO_REF,
+			DEFAULT_ALGO_REF,
+		);
+		const line2PrimaryAlgo = toAlgoRefV1(
+			p.line2?.algo ?? DEFAULT_ALGO_REF,
+			DEFAULT_ALGO_REF,
+		);
+		const line1SecondaryAlgo =
+			p.line1?.algo2 == null
+				? null
+				: toAlgoRefV1(p.line1.algo2, DEFAULT_ALGO_REF);
+		const line2SecondaryAlgo =
+			p.line2?.algo2 == null
+				? null
+				: toAlgoRefV1(p.line2.algo2, DEFAULT_ALGO_REF);
+		const line1SlotAWaveform = inferCzWaveform(
+			p.line1?.algo,
+			p.line1?.cz?.slotAWaveform,
+			"saw",
+		);
+		const line1SlotBWaveform = inferCzWaveform(
+			p.line1?.algo2,
+			p.line1?.cz?.slotBWaveform,
+			"saw",
+		);
+		const line2SlotAWaveform = inferCzWaveform(
+			p.line2?.algo,
+			p.line2?.cz?.slotAWaveform,
+			"saw",
+		);
+		const line2SlotBWaveform = inferCzWaveform(
+			p.line2?.algo2,
+			p.line2?.cz?.slotBWaveform,
+			"saw",
+		);
 
-		setWarpAAmount(safe(data.warpAAmount, 0));
-		setWarpBAmount(safe(data.warpBAmount, 0));
-		setWarpAAlgo(toAlgoRefV1(data.warpAAlgo, DEFAULT_ALGO_REF));
-		setWarpBAlgo(toAlgoRefV1(data.warpBAlgo, DEFAULT_ALGO_REF));
-		setAlgo2A(data.algo2A != null ? toAlgoRefV1(data.algo2A) : null);
-		setAlgo2B(data.algo2B != null ? toAlgoRefV1(data.algo2B) : null);
-		setAlgoBlendA(safe(data.algoBlendA, 0));
-		setAlgoBlendB(safe(data.algoBlendB, 0));
-		setIntPmAmount(safe(data.intPmAmount, 0));
-		setIntPmRatio(safe(data.intPmRatio, 1));
-		setPhaseModEnabled(data.phaseModEnabled ?? false);
-		setPmPre(data.pmPre ?? true);
-		setWindowType((data.windowType as WindowType) ?? "off");
-		setVolume(safe(data.volume, 1));
-		setLine1Level(safe(data.line1Level, 1));
-		setLine2Level(safe(data.line2Level, 1));
-		setLine1Octave(safe(data.line1Octave, 0));
-		setLine2Octave(safe(data.line2Octave, 0));
-		setLine1Detune(safe(data.line1Detune, 0));
-		setLine2Detune(safe(data.line2Detune, 0));
-		setLine1DcoDepth(safe(data.line1DcoDepth, 0));
-		setLine2DcoDepth(safe(data.line2DcoDepth, 0));
-		setLine1DcwComp(safe(data.line1DcwComp, 0));
-		setLine2DcwComp(safe(data.line2DcwComp, 0));
-		setLine1DcoEnv(data.line1DcoEnv);
-		setLine1DcwEnv(data.line1DcwEnv);
-		setLine1DcaEnv(data.line1DcaEnv);
-		setLine1CzSlotAWaveform(data.line1CzSlotAWaveform ?? "saw");
-		setLine1CzSlotBWaveform(data.line1CzSlotBWaveform ?? "saw");
-		setLine1CzWindow((data.line1CzWindow as WindowType) ?? "off");
-		setLine2DcoEnv(data.line2DcoEnv);
-		setLine2DcwEnv(data.line2DcwEnv);
-		setLine2DcaEnv(data.line2DcaEnv);
-		setLine2CzSlotAWaveform(data.line2CzSlotAWaveform ?? "saw");
-		setLine2CzSlotBWaveform(data.line2CzSlotBWaveform ?? "saw");
-		setLine2CzWindow((data.line2CzWindow as WindowType) ?? "off");
-		setPolyMode((data.polyMode as PolyMode) ?? "poly8");
-		setLegato(data.legato ?? false);
-		setVelocityTarget((data.velocityTarget as VelocityTarget) ?? "amp");
-		setChorusRate(safe(data.chorusRate, 0.8));
-		setChorusDepth(safe(data.chorusDepth, 3));
-		setChorusEnabled(data.chorusEnabled ?? false);
-		setChorusMix(safe(data.chorusMix, 0));
-		setDelayTime(safe(data.delayTime, 0.3));
-		setDelayFeedback(safe(data.delayFeedback, 0.35));
-		setDelayEnabled(data.delayEnabled ?? false);
-		setDelayMix(safe(data.delayMix, 0));
-		setReverbSize(safe(data.reverbSize, 0.5));
-		setReverbEnabled(data.reverbEnabled ?? false);
-		setReverbMix(safe(data.reverbMix, 0));
-		setLineSelect(data.lineSelect ?? "L1+L2");
-		setModMode((data.modMode as ModMode) ?? "normal");
-		setLine1DcwKeyFollow(safe(data.line1DcwKeyFollow, 0));
-		setLine1DcaKeyFollow(safe(data.line1DcaKeyFollow, 0));
-		setLine2DcwKeyFollow(safe(data.line2DcwKeyFollow, 0));
-		setLine2DcaKeyFollow(safe(data.line2DcaKeyFollow, 0));
-		setVibratoEnabled(data.vibratoEnabled ?? false);
-		setVibratoWave(safe(data.vibratoWave, 1) as number);
-		setVibratoRate(safe(data.vibratoRate, 30));
-		setVibratoDepth(safe(data.vibratoDepth, 30));
-		setVibratoDelay(safe(data.vibratoDelay, 0));
-		setPortamentoEnabled(data.portamentoEnabled ?? false);
-		setPortamentoMode((data.portamentoMode as PortamentoMode) ?? "rate");
-		setPortamentoRate(safe(data.portamentoRate, 50));
-		setPortamentoTime(safe(data.portamentoTime, 0.5));
-		setLfoEnabled(data.lfoEnabled ?? false);
-		setLfoWaveform((data.lfoWaveform as LfoWaveform) ?? "sine");
-		setLfoRate(safe(data.lfoRate, 5));
-		setLfoDepth(safe(data.lfoDepth, 0));
-		setLfoOffset(safe(data.lfoOffset, 0));
-		setLfoTarget((data.lfoTarget as LfoTarget) ?? "pitch");
-		setFilterEnabled(data.filterEnabled ?? false);
-		setFilterType((data.filterType as FilterType) ?? "lp");
-		setFilterCutoff(safe(data.filterCutoff, 5000));
-		setFilterResonance(safe(data.filterResonance, 0));
-		setFilterEnvAmount(safe(data.filterEnvAmount, 0));
-		setPitchBendRange(safe(data.pitchBendRange, 2));
-		setModWheelVibratoDepth(safe(data.modWheelVibratoDepth, 0));
+		setWarpAAmount(safe(p.line1?.dcwBase, 0));
+		setWarpBAmount(safe(p.line2?.dcwBase, 0));
+		setWarpAAlgo(line1PrimaryAlgo);
+		setWarpBAlgo(line2PrimaryAlgo);
+		setAlgo2A(line1SecondaryAlgo);
+		setAlgo2B(line2SecondaryAlgo);
+		setAlgoBlendA(safe(p.line1?.algoBlend, 0));
+		setAlgoBlendB(safe(p.line2?.algoBlend, 0));
+		setIntPmAmount(safe(p.intPmAmount, 0));
+		setIntPmRatio(safe(p.intPmRatio, 1));
+		setPhaseModEnabled(safe(p.intPmAmount, 0) > 0);
+		setPmPre(p.pmPre ?? true);
+		setWindowType((p.line1?.window as WindowType) ?? "off");
+		setVolume(safe(p.volume, 1));
+		setLine1Level(safe(p.line1?.dcaBase, 1));
+		setLine2Level(safe(p.line2?.dcaBase, 1));
+		setLine1Octave(safe(p.line1?.octave, 0));
+		setLine2Octave(safe(p.line2?.octave, 0));
+		setLine1Detune(safe(p.line1?.detuneCents, 0));
+		setLine2Detune(safe(p.line2?.detuneCents, 0));
+		setLine1DcoDepth(safe(p.line1?.dcoDepth, 0));
+		setLine2DcoDepth(safe(p.line2?.dcoDepth, 0));
+		setLine1DcwComp(safe(p.line1?.dcwComp, 0));
+		setLine2DcwComp(safe(p.line2?.dcwComp, 0));
+		setLine1DcoEnv(p.line1?.dcoEnv ?? DEFAULT_DCO_ENV);
+		setLine1DcwEnv(p.line1?.dcwEnv ?? DEFAULT_DCW_ENV);
+		setLine1DcaEnv(p.line1?.dcaEnv ?? DEFAULT_DCA_ENV);
+		setLine1CzSlotAWaveform(line1SlotAWaveform);
+		setLine1CzSlotBWaveform(line1SlotBWaveform);
+		setLine1CzWindow((p.line1?.cz?.window as WindowType) ?? "off");
+		setLine1AlgoControls(
+			normalizeAlgoControls(line1PrimaryAlgo, p.line1?.algoControls ?? []),
+		);
+		setLine2DcoEnv(p.line2?.dcoEnv ?? DEFAULT_DCO_ENV);
+		setLine2DcwEnv(p.line2?.dcwEnv ?? DEFAULT_DCW_ENV);
+		setLine2DcaEnv(p.line2?.dcaEnv ?? DEFAULT_DCA_ENV);
+		setLine2CzSlotAWaveform(line2SlotAWaveform);
+		setLine2CzSlotBWaveform(line2SlotBWaveform);
+		setLine2CzWindow((p.line2?.cz?.window as WindowType) ?? "off");
+		setLine2AlgoControls(
+			normalizeAlgoControls(line2PrimaryAlgo, p.line2?.algoControls ?? []),
+		);
+		setPolyMode((p.polyMode as PolyMode) ?? "poly8");
+		setLegato(p.legato ?? false);
+		setVelocityTarget((p.velocityTarget as VelocityTarget) ?? "amp");
+		setChorusRate(safe(p.chorus?.rate, 0.8));
+		setChorusDepth(safe(p.chorus?.depth, 3));
+		setChorusMix(safe(p.chorus?.mix, 0));
+		setChorusEnabled(safe(p.chorus?.mix, 0) > 0);
+		setDelayTime(safe(p.delay?.time, 0.3));
+		setDelayFeedback(safe(p.delay?.feedback, 0.35));
+		setDelayMix(safe(p.delay?.mix, 0));
+		setDelayEnabled(safe(p.delay?.mix, 0) > 0);
+		setReverbSize(safe(p.reverb?.size, 0.5));
+		setReverbMix(safe(p.reverb?.mix, 0));
+		setReverbEnabled(safe(p.reverb?.mix, 0) > 0);
+		setLineSelect((p.lineSelect as LineSelect) ?? "L1+L2");
+		setModMode((p.modMode as ModMode) ?? "normal");
+		setLine1DcwKeyFollow(safe(p.line1?.keyFollow, 0));
+		setLine1DcaKeyFollow(0);
+		setLine2DcwKeyFollow(safe(p.line2?.keyFollow, 0));
+		setLine2DcaKeyFollow(0);
+		setVibratoEnabled(p.vibrato?.enabled ?? false);
+		setVibratoWave(safe(p.vibrato?.waveform, 1));
+		setVibratoRate(safe(p.vibrato?.rate, 30));
+		setVibratoDepth(safe(p.vibrato?.depth, 30));
+		setVibratoDelay(safe(p.vibrato?.delay, 0));
+		setPortamentoEnabled(p.portamento?.enabled ?? false);
+		setPortamentoMode((p.portamento?.mode as PortamentoMode) ?? "rate");
+		setPortamentoRate(safe(p.portamento?.rate, 50));
+		setPortamentoTime(safe(p.portamento?.time, 0.5));
+		setLfoEnabled(p.lfo?.enabled ?? false);
+		setLfoWaveform((p.lfo?.waveform as LfoWaveform) ?? "sine");
+		setLfoRate(safe(p.lfo?.rate, 5));
+		setLfoDepth(safe(p.lfo?.depth, 0));
+		setLfoOffset(safe(p.lfo?.offset, 0));
+		setLfoTarget((p.lfo?.target as LfoTarget) ?? "pitch");
+		setFilterEnabled(p.filter?.enabled ?? false);
+		setFilterType((p.filter?.type as FilterType) ?? "lp");
+		setFilterCutoff(safe(p.filter?.cutoff, 5000));
+		setFilterResonance(safe(p.filter?.resonance, 0));
+		setFilterEnvAmount(safe(p.filter?.envAmount, 0));
+		setPitchBendRange(safe(p.pitchBendRange, 2));
+		setModWheelVibratoDepth(safe(p.modWheelVibratoDepth, 0));
 	}, []);
 
 	return {
@@ -636,6 +579,8 @@ export function useSynthState(): UseSynthStateResult {
 		setLine1CzSlotBWaveform,
 		line1CzWindow,
 		setLine1CzWindow,
+		line1AlgoControls,
+		setLine1AlgoControls,
 		line2Level,
 		setLine2Level,
 		line2Octave,
@@ -662,6 +607,8 @@ export function useSynthState(): UseSynthStateResult {
 		setLine2CzSlotBWaveform,
 		line2CzWindow,
 		setLine2CzWindow,
+		line2AlgoControls,
+		setLine2AlgoControls,
 		lineSelect,
 		setLineSelect,
 		modMode,
@@ -742,3 +689,5 @@ export function useSynthState(): UseSynthStateResult {
 		applyPreset,
 	};
 }
+
+export type UseSynthStateResult = ReturnType<typeof useSynthState>;

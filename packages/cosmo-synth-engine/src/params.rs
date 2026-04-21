@@ -381,6 +381,15 @@ impl Default for CzLineParams {
     }
 }
 
+/// One algorithm-specific control value persisted on a line.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub struct AlgoControlValueV1 {
+    pub id: String,
+    pub value: f32,
+}
+
 /// Per-line parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -403,6 +412,8 @@ pub struct LineParams {
     pub key_follow: f32,
 	#[serde(default)]
 	pub cz: CzLineParams,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub algo_controls: Option<Vec<AlgoControlValueV1>>,
 }
 
 impl Default for LineParams {
@@ -424,6 +435,7 @@ impl Default for LineParams {
             dca_env: StepEnvData::default(),
             key_follow: 0.0,
 			cz: CzLineParams::default(),
+            algo_controls: None,
         }
     }
 }

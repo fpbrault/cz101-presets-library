@@ -1,10 +1,12 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import { getCzPresetDefaults, isCzAlgo } from "@/lib/synth/algoRef";
+import { getCzPresetDefaults } from "@/lib/synth/algoRef";
 import type {
+	AlgoControlValueV1,
 	CzWaveform,
 	StepEnvData,
 	WindowType,
 } from "@/lib/synth/bindings/synth";
+import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
 import AlgoIconGrid from "./AlgoIconGrid";
 import type { PdAlgo } from "./pdAlgorithms";
 import { getPdAlgoDef, PD_ALGOS } from "./pdAlgorithms";
@@ -48,11 +50,42 @@ interface PerLineWarpBlockProps {
 	setCzWindow: (v: WindowType) => void;
 	keyFollow: number;
 	setKeyFollow: (v: number) => void;
+	algoControls: AlgoControlValueV1[];
+	setAlgoControls: (value: AlgoControlValueV1[]) => void;
 	activeSection?: SectionTab;
 }
 
 type EnvTab = "dco" | "dcw" | "dca";
 type SectionTab = "algos" | "envelopes";
+type AlgoControlAssignmentRuntime = {
+	controlId: string;
+	value: number;
+};
+type AlgoControlOptionRuntime = {
+	value: string;
+	label: string;
+	set: AlgoControlAssignmentRuntime[];
+};
+type AlgoControlRuntime = {
+	id: string;
+	label: string;
+	kind?: "number" | "select" | "toggle";
+	min?: number | null;
+	max?: number | null;
+	default?: number | null;
+	defaultToggle?: boolean | null;
+	options?: AlgoControlOptionRuntime[];
+};
+type AlgoDefinitionRuntime = {
+	id: PdAlgo;
+	controls: AlgoControlRuntime[];
+};
+type AlgoControlBinding = {
+	getNumber?: () => number;
+	setNumber?: (value: number) => void;
+	getToggle?: () => boolean;
+	setToggle?: (value: boolean) => void;
+};
 
 export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	label,
@@ -89,6 +122,8 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setCzWindow,
 	keyFollow,
 	setKeyFollow,
+	algoControls = [],
+	setAlgoControls = () => {},
 	activeSection: activeSectionProp,
 }: PerLineWarpBlockProps) {
 	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
@@ -131,11 +166,20 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	};
 
 	const activeEnv = envMap[activeEnvTab];
-	const showCzControls = isCzAlgo(algo);
 
 	const handleAlgoChange = useCallback(
 		(nextAlgo: PdAlgo) => {
 			setAlgo(nextAlgo);
+			const definitions =
+				ALGO_DEFINITIONS_V1 as unknown as AlgoDefinitionRuntime[];
+			const nextDefinition = definitions.find((entry) => entry.id === nextAlgo);
+			const nextDefaults = (nextDefinition?.controls ?? [])
+				.filter((control) => (control.kind ?? "number") === "number")
+				.map((control) => ({
+					id: control.id,
+					value: control.default ?? control.min ?? 0,
+				}));
+			setAlgoControls(nextDefaults);
 			const defaults = getCzPresetDefaults(nextAlgo);
 			if (!defaults) {
 				return;
@@ -145,7 +189,13 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 			setCzSlotBWaveform(defaults.waveform2);
 			setCzWindow(defaults.windowFunction);
 		},
-		[setAlgo, setCzSlotAWaveform, setCzSlotBWaveform, setCzWindow],
+		[
+			setAlgo,
+			setAlgoControls,
+			setCzSlotAWaveform,
+			setCzSlotBWaveform,
+			setCzWindow,
+		],
 	);
 	const czWaveforms: CzWaveform[] = [
 		"saw",
@@ -157,6 +207,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 		"multiSine",
 		"pulse2",
 	];
+
 	const czWindows: WindowType[] = [
 		"off",
 		"saw",
@@ -165,6 +216,104 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 		"pulse",
 		"doubleSaw",
 	];
+
+	const algoDefinitions = ALGO_DEFINITIONS_V1 as unknown as AlgoDefinitionRuntime[];
+	const activeAlgoDefinition = algoDefinitions.find((entry) => entry.id === algo);
+	const algoDefinitionControls = activeAlgoDefinition?.controls ?? [];
+
+	const controlBindings: Record<string, AlgoControlBinding> = {
+		waveform1: {
+			getNumber: () => czWaveforms.indexOf(czSlotAWaveform),
+			setNumber: (value: number) => {
+				const waveform = czWaveforms[Math.round(value)];
+				if (waveform) {
+					setCzSlotAWaveform(waveform);
+				}
+			},
+		},
+		waveform2: {
+			getNumber: () => czWaveforms.indexOf(czSlotBWaveform),
+			setNumber: (value: number) => {
+				const waveform = czWaveforms[Math.round(value)];
+				if (waveform) {
+					setCzSlotBWaveform(waveform);
+				}
+			},
+		},
+		windowFunction: {
+			getNumber: () => czWindows.indexOf(czWindow),
+			setNumber: (value: number) => {
+				const window = czWindows[Math.round(value)];
+				if (window) {
+					setCzWindow(window);
+				}
+			},
+		},
+	};
+
+	const getAlgoControlValue = (id: string, fallback: number) => {
+		const existing = algoControls.find((entry) => entry.id === id);
+		return existing ? existing.value : fallback;
+	};
+
+	const setAlgoControlValue = (id: string, value: number) => {
+		const nextValue = Number.isFinite(value) ? value : 0;
+		const index = algoControls.findIndex((entry) => entry.id === id);
+		if (index >= 0) {
+			const next = [...algoControls];
+			next[index] = { ...next[index], value: nextValue };
+			setAlgoControls(next);
+			return;
+		}
+		setAlgoControls([...algoControls, { id, value: nextValue }]);
+	};
+
+	const applyOptionAssignments = (option: AlgoControlOptionRuntime) => {
+		for (const assignment of option.set) {
+			const binding = controlBindings[assignment.controlId];
+			if (binding?.setNumber) {
+				binding.setNumber(assignment.value);
+				continue;
+			}
+			setAlgoControlValue(assignment.controlId, assignment.value);
+		}
+	};
+
+	const getActiveSelectOption = (control: AlgoControlRuntime) => {
+		const options = control.options ?? [];
+		const binding = controlBindings[control.id];
+		if (!binding) {
+			return null;
+		}
+
+		if (options.some((option) => option.set.length > 0)) {
+			return (
+				options.find((option) =>
+					option.set.every((assignment) => {
+						const currentValue =
+							controlBindings[assignment.controlId]?.getNumber?.() ??
+							getAlgoControlValue(assignment.controlId, Number.NaN);
+						if (!Number.isFinite(currentValue)) {
+							return false;
+						}
+						return Math.round(currentValue) === Math.round(assignment.value);
+					}),
+				) ?? null
+			);
+		}
+
+		const currentIndex = binding.getNumber?.();
+		const dynamicValue = getAlgoControlValue(
+			control.id,
+			control.default ?? 0,
+		);
+		const selectedIndex = currentIndex ?? dynamicValue;
+		if (selectedIndex === undefined) {
+			return null;
+		}
+
+		return options[Math.round(selectedIndex)] ?? null;
+	};
 
 	return (
 		<div className="min-w-0 min-h-0 flex-1 flex flex-col">
@@ -224,7 +373,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 								<Card
 									variant="subtle"
-									className="p-3 md:col-span-2 min-h-0 flex flex-col"
+									className="p-3 md:col-span-1 min-h-0 flex flex-col"
 								>
 									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 										Parameters
@@ -327,74 +476,103 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									</div>
 								</Card>
 
-								<Card variant="subtle" className="p-3 min-h-0 flex flex-col">
+								<Card variant="subtle" className="p-3 min-h-0 flex flex-col col-span-2">
 									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 										Algo Controls
 									</div>
-									{showCzControls ? (
+									{algoDefinitionControls.length > 0 ? (
 										<div className="flex-1 min-h-0 space-y-3 overflow-y-auto">
-											<div className="space-y-1.5">
-												<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
-													Window
-												</div>
-												<select
-													value={czWindow}
-													onChange={(e) =>
-														setCzWindow(e.target.value as WindowType)
-													}
-													className="select select-xs w-full bg-cz-inset border-cz-border text-cz-cream"
-												>
-													{czWindows.map((w) => (
-														<option key={w} value={w}>
-															{w}
-														</option>
-													))}
-												</select>
-											</div>
+											{algoDefinitionControls.map((control) => {
+												const controlKind = control.kind ?? "number";
+												const binding = controlBindings[control.id];
+												if (controlKind === "select") {
+													const options = control.options ?? [];
+													const activeOption = getActiveSelectOption(control);
+													return (
+														<div key={control.id} className="space-y-1.5">
+															<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
+																{control.label}
+															</div>
+															<div className="grid grid-cols-4 gap-1">
+																{options.map((option, index) => (
+																	<button
+																		key={option.value}
+																		type="button"
+																		onClick={() => {
+																			if (option.set.length > 0) {
+																				applyOptionAssignments(option);
+																				return;
+																			}
+																			binding?.setNumber?.(index);
+																		}}
+																		className={[
+																			"px-2 py-1 text-4xs uppercase tracking-[0.18em] border transition-colors focus:outline-none",
+																			activeOption?.value === option.value
+																				? "border-cz-light-blue bg-cz-inset text-white"
+																				: "border-cz-border bg-cz-surface text-cz-cream hover:border-cz-light-blue hover:text-white",
+																		].join(" ")}
+																	>
+																		{option.label}
+																	</button>
+																))}
+															</div>
+														</div>
+													);
+												}
 
-											<div className="grid grid-cols-1 gap-2">
-												<div className="rounded-md bg-cz-inset/70 p-2 space-y-1.5">
-													<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
-														Slot 1 Waveform
-													</div>
-													<select
-														value={czSlotAWaveform}
-														onChange={(e) =>
-															setCzSlotAWaveform(e.target.value as CzWaveform)
-														}
-														className="select select-xs w-full bg-cz-inset border-cz-border text-cz-cream"
-													>
-														{czWaveforms.map((w) => (
-															<option key={w} value={w}>
-																{w}
-															</option>
-														))}
-													</select>
-												</div>
+												if (controlKind === "number") {
+													const min = control.min ?? 0;
+													const max = control.max ?? 1;
+													const value =
+														binding?.getNumber?.() ??
+														getAlgoControlValue(control.id, control.default ?? min);
+													return (
+														<div key={control.id} className="space-y-1.5">
+															<div className="flex items-center justify-between text-4xs uppercase tracking-[0.18em] text-cz-cream">
+																<span>{control.label}</span>
+																<span>{value.toFixed(2)}</span>
+															</div>
+															<input
+																type="range"
+																min={min}
+																max={max}
+																step={0.01}
+																value={value}
+																onChange={(event) =>
+																	binding?.setNumber
+																		? binding.setNumber(Number(event.target.value))
+																		: setAlgoControlValue(
+																			control.id,
+																			Number(event.target.value),
+																		)
+																}
+																className="range range-xs w-full"
+																disabled={false}
+															/>
+														</div>
+													);
+												}
 
-												<div className="rounded-md bg-cz-inset/70 p-2 space-y-1.5">
-													<div className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
-														Slot 2 Waveform
+												const toggleValue = binding?.getToggle?.() ?? control.defaultToggle ?? false;
+												return (
+													<div key={control.id} className="flex items-center justify-between rounded-md bg-cz-inset/70 px-2 py-1.5">
+														<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
+															{control.label}
+														</span>
+														<input
+															type="checkbox"
+															checked={toggleValue}
+															onChange={(event) => binding?.setToggle?.(event.target.checked)}
+															disabled={!binding?.setToggle}
+															className="checkbox checkbox-xs"
+														/>
 													</div>
-													<select
-														value={czSlotBWaveform}
-														onChange={(e) =>
-															setCzSlotBWaveform(e.target.value as CzWaveform)
-														}
-														className="select select-xs w-full bg-cz-inset border-cz-border text-cz-cream"
-													>
-														{czWaveforms.map((w) => (
-															<option key={w} value={w}>
-																{w}
-															</option>
-														))}
-													</select>
-												</div>
-											</div>
+												);
+											})}
 										</div>
 									) : (
 										<div className="text-3xs text-cz-cream/70 uppercase tracking-[0.2em]">
-											No algo-specific controls
+											No controls for this algo
 										</div>
 									)}
 								</Card>

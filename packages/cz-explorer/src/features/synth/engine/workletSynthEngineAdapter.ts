@@ -1,7 +1,7 @@
 import type { SynthEngineAdapter } from "@/features/synth/engine/synthEngineAdapter";
 import type { SynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import type { EngineParams } from "@/features/synth/hooks/useAudioEngine";
-import { resolveAlgoRef, toAlgoRefV1 } from "@/lib/synth/algoRef";
+import { resolveAlgoRef } from "@/lib/synth/algoRef";
 
 type CreateWorkletSynthEngineAdapterParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
@@ -14,10 +14,10 @@ export function createWorkletSynthEngineAdapter({
 }: CreateWorkletSynthEngineAdapterParams): SynthEngineAdapter {
 	return {
 		sync(snapshot: SynthEngineSnapshot) {
-			const algoA = toAlgoRefV1(snapshot.warpAAlgo);
-			const algoB = toAlgoRefV1(snapshot.warpBAlgo);
-			const algo2A = snapshot.algo2A ? toAlgoRefV1(snapshot.algo2A) : null;
-			const algo2B = snapshot.algo2B ? toAlgoRefV1(snapshot.algo2B) : null;
+			const algoA = snapshot.warpAAlgo;
+			const algoB = snapshot.warpBAlgo;
+			const algo2A = snapshot.algo2A ?? null;
+			const algo2B = snapshot.algo2B ?? null;
 			const resolvedAlgoA = resolveAlgoRef(algoA);
 			const resolvedAlgoB = resolveAlgoRef(algoB);
 			const line1Window = resolvedAlgoA.windowType ?? snapshot.windowType;
@@ -37,6 +37,7 @@ export function createWorkletSynthEngineAdapter({
 						slotBWaveform: snapshot.line1CzSlotBWaveform,
 						window: snapshot.line1CzWindow,
 					},
+					algoControls: snapshot.line1AlgoControls,
 					dcaBase: snapshot.line1Level,
 					dcwBase: snapshot.warpAAmount,
 					dcoDepth: snapshot.line1DcoDepth,
@@ -59,6 +60,7 @@ export function createWorkletSynthEngineAdapter({
 						slotBWaveform: snapshot.line2CzSlotBWaveform,
 						window: snapshot.line2CzWindow,
 					},
+					algoControls: snapshot.line2AlgoControls,
 					dcaBase: snapshot.line2Level,
 					dcwBase: snapshot.warpBAmount,
 					dcoDepth: snapshot.line2DcoDepth,

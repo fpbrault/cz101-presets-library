@@ -85,8 +85,22 @@ export function useNoteHandling({
 	// Keyboard input
 	useEffect(() => {
 		const isTypingTarget = (e: KeyboardEvent) => {
-			const tag = (e.target as HTMLElement | null)?.tagName;
-			return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+			const target = e.target as HTMLElement | null;
+			if (!target) return false;
+			if (target.tagName === "TEXTAREA" || target.tagName === "SELECT") {
+				return true;
+			}
+			if (target.tagName !== "INPUT") {
+				return false;
+			}
+			const input = target as HTMLInputElement;
+			// Keep note-entry active while focused on sliders and non-text controls.
+			return !(
+				input.type === "range" ||
+				input.type === "checkbox" ||
+				input.type === "radio" ||
+				input.type === "button"
+			);
 		};
 
 		const keyDown = (event: KeyboardEvent) => {

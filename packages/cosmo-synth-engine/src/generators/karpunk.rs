@@ -3,16 +3,63 @@ extern crate alloc;
 use alloc::vec;
 use alloc::vec::Vec;
 
+use crate::params::AlgoControlValueV1;
 use crate::params::Algo;
 
-use super::{AlgoDefinitionV1, AlgoRefV1, LineRenderConfig, NO_CONTROLS};
+use super::{
+	AlgoControlKindV1, AlgoControlV1, AlgoDefinitionV1, NO_CONTROL_OPTIONS,
+	LineRenderConfig,
+};
+
+const CONTROLS: [AlgoControlV1; 4] = [
+	AlgoControlV1 {
+		id: "karpunkDamp",
+		label: "Damp",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.5),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+	AlgoControlV1 {
+		id: "karpunkBright",
+		label: "Bright",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.5),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+	AlgoControlV1 {
+		id: "karpunkDecay",
+		label: "Decay",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.5),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+	AlgoControlV1 {
+		id: "karpunkExcite",
+		label: "Excite",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.0),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+];
 
 pub const DEFINITION: AlgoDefinitionV1 = AlgoDefinitionV1 {
-	id: AlgoRefV1::Karpunk,
+	id: Algo::Karpunk,
 	name: "Karpunk",
 	icon_path: "M4,16 C8,2 12,22 16,8 L20,12",
 	visible: true,
-	controls: &NO_CONTROLS,
+	controls: &CONTROLS,
 };
 
 pub const KS_BUFFER_SIZE: usize = 2048;
@@ -41,12 +88,12 @@ impl KarpunkPair {
 	}
 
 	/// Render line 1 using the first Karpunk state buffer when needed.
-	pub fn render_line1(&mut self, config: LineRenderConfig) -> (f32, Option<f32>) {
+	pub fn render_line1(&mut self, config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 		render_line(&mut self.line1, config)
 	}
 
 	/// Render line 2 using the second Karpunk state buffer when needed.
-	pub fn render_line2(&mut self, config: LineRenderConfig) -> (f32, Option<f32>) {
+	pub fn render_line2(&mut self, config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 		render_line(&mut self.line2, config)
 	}
 }
@@ -85,7 +132,16 @@ impl KarpunkState {
 		self.last_sample = 0.0;
 	}
 
-	pub fn advance(&mut self, effective_freq: f32, sample_rate: f32, dcw: f32) -> f32 {
+	pub fn advance(
+		&mut self,
+		effective_freq: f32,
+		sample_rate: f32,
+		dcw: f32,
+		damp_control: f32,
+		bright_control: f32,
+		decay_control: f32,
+		excite_control: f32,
+	) -> f32 {
 		let safe_freq = if effective_freq > 0.0 {
 			effective_freq
 		} else {
@@ -94,11 +150,14 @@ impl KarpunkState {
 		let ks_size = (libm::roundf(sample_rate / safe_freq) as usize).clamp(2, KS_BUFFER_SIZE - 1);
 		let read_pos = (self.write_pos + KS_BUFFER_SIZE - ks_size) % KS_BUFFER_SIZE;
 		let out = self.buffer[read_pos];
-		let damp = 0.4 + dcw * 0.58;
-		let filtered = damp * out + (1.0 - damp) * self.last_sample;
+		let damp = (0.2 + dcw * 0.45 + damp_control.clamp(0.0, 1.0) * 0.35).clamp(0.0, 1.0);
+		let bright = bright_control.clamp(0.0, 1.0);
+		let filtered = damp * out + (1.0 - damp) * (bright * out + (1.0 - bright) * self.last_sample);
+		let decay = 0.96 + decay_control.clamp(0.0, 1.0) * 0.039;
+		let excite = excite_control.clamp(0.0, 1.0) * 0.03;
 
 		self.last_sample = filtered;
-		self.buffer[self.write_pos] = filtered * 0.995;
+		self.buffer[self.write_pos] = filtered * decay + excite * lcg_rand(&mut self.prng);
 		self.write_pos = (self.write_pos + 1) % KS_BUFFER_SIZE;
 
 		filtered
@@ -111,12 +170,25 @@ impl Default for KarpunkState {
 	}
 }
 
-fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig) -> (f32, Option<f32>) {
+fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
+	let control_value = |id: &str, default: f32| {
+		if let Some(entries) = config.algo_controls {
+			if let Some(entry) = entries.iter().find(|entry: &&AlgoControlValueV1| entry.id == id) {
+				return entry.value;
+			}
+		}
+		default
+	};
+
 	let ks_raw = if requires_state_tick(config.primary_algo, config.secondary_algo) {
 		Some(ks_state.advance(
 			config.effective_freq,
 			config.sample_rate,
 			config.final_dcw,
+			control_value("karpunkDamp", 0.5),
+			control_value("karpunkBright", 0.5),
+			control_value("karpunkDecay", 0.5),
+			control_value("karpunkExcite", 0.0),
 		))
 	} else {
 		None
@@ -129,12 +201,14 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig) -> (f32, O
 			config.primary_algo,
 			config.phase,
 			primary_dcw,
+			config.algo_controls,
 			ks_raw,
 		);
 		let secondary = super::render_algo_sample(
 			secondary_algo,
 			config.phase,
 			secondary_dcw,
+			config.algo_controls,
 			ks_raw,
 		);
 		blend(config.primary_algo, primary, secondary, config.blend)
@@ -143,6 +217,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig) -> (f32, O
 			config.primary_algo,
 			config.phase,
 			config.final_dcw,
+			config.algo_controls,
 			ks_raw,
 		)
 	};

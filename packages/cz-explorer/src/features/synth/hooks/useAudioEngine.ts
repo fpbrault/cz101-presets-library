@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
 import type {
-	AlgoRefV1,
+	Algo,
+	AlgoControlValueV1,
 	CzWaveform,
 	StepEnvData,
 	WindowType,
@@ -67,8 +68,8 @@ export type EngineParams = {
 };
 
 export type LineParams = {
-	algo: AlgoRefV1;
-	algo2: AlgoRefV1 | null;
+	algo: Algo;
+	algo2: Algo | null;
 	algoBlend: number;
 	window: string;
 	cz: {
@@ -87,10 +88,11 @@ export type LineParams = {
 	dcwEnv: StepEnvData;
 	dcaEnv: StepEnvData;
 	keyFollow: number;
+	algoControls?: AlgoControlValueV1[];
 };
 
 const DEFAULT_LINE_PARAMS: LineParams = {
-	algo: "czSaw",
+	algo: "cz101",
 	algo2: null,
 	algoBlend: 0,
 	window: "off",
@@ -125,6 +127,7 @@ const DEFAULT_LINE_PARAMS: LineParams = {
 		loop: false,
 	},
 	keyFollow: 0,
+	algoControls: [],
 };
 
 export function useAudioEngine({

@@ -10,12 +10,15 @@ use cosmo_synth_engine::params::{
     ChorusParams, DelayParams, EnvStep, FilterParams, FilterType, LfoParams, LfoTarget,
     LfoWaveform, LineParams, LineSelect, ModMode, PolyMode, PortamentoMode, PortamentoParams,
     ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType, CzAlgo,
-    CzLineParams, CzWaveform,
+    CzLineParams, CzWaveform, AlgoControlValueV1,
     Algo,
 };
-use cosmo_synth_engine::generators::{AlgoControlV1, AlgoDefinitionV1, AlgoRefV1, AlgoUiEntryV1};
+use cosmo_synth_engine::generators::{
+    AlgoControlAssignmentV1, AlgoControlKindV1, AlgoControlOptionV1, AlgoControlV1,
+    AlgoDefinitionV1, AlgoUiEntryV1, CzPresetV1,
+};
 use cosmo_synth_engine::preset_wire::{
-    algo_definitions_v1, algo_ui_catalog_v1, SynthPresetFlatV1, SynthPresetV1,
+    algo_definitions_v1, algo_ui_catalog_v1, cz_presets, SynthPresetV1,
 };
 use specta_typescript::{export, Typescript};
 
@@ -80,9 +83,15 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(&export::<FilterParams>(&config).expect("Failed to export FilterParams"));
     out.push_str("\n\n");
+    out.push_str(&export::<AlgoControlValueV1>(&config).expect("Failed to export AlgoControlValueV1"));
+    out.push_str("\n\n");
     out.push_str(&export::<LineParams>(&config).expect("Failed to export LineParams"));
     out.push_str("\n\n");
-    out.push_str(&export::<AlgoRefV1>(&config).expect("Failed to export AlgoRefV1"));
+    out.push_str(&export::<AlgoControlKindV1>(&config).expect("Failed to export AlgoControlKindV1"));
+    out.push_str("\n\n");
+    out.push_str(&export::<AlgoControlAssignmentV1>(&config).expect("Failed to export AlgoControlAssignmentV1"));
+    out.push_str("\n\n");
+    out.push_str(&export::<AlgoControlOptionV1>(&config).expect("Failed to export AlgoControlOptionV1"));
     out.push_str("\n\n");
     out.push_str(&export::<AlgoControlV1>(&config).expect("Failed to export AlgoControlV1"));
     out.push_str("\n\n");
@@ -94,8 +103,8 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(&export::<SynthPresetV1>(&config).expect("Failed to export SynthPresetV1"));
     out.push_str("\n\n");
-    out.push_str(&export::<SynthPresetFlatV1>(&config).expect("Failed to export SynthPresetFlatV1"));
-
+    out.push_str(&export::<CzPresetV1>(&config).expect("Failed to export CzPresetV1"));
+    out.push_str("\n\n");
     let catalog_json = serde_json::to_string_pretty(algo_ui_catalog_v1())
         .expect("Failed to serialize ALGO_UI_CATALOG_V1");
     let definitions_json = serde_json::to_string_pretty(algo_definitions_v1())
@@ -109,6 +118,13 @@ fn main() {
     out.push_str("/** Rust-owned algorithm definitions and control defaults. */\n");
     out.push_str("export const ALGO_DEFINITIONS_V1 = ");
     out.push_str(&definitions_json);
+    out.push_str(";\n");
+    out.push_str("\n");
+    let cz_presets_json = serde_json::to_string_pretty(cz_presets())
+        .expect("Failed to serialize CZ_PRESETS");
+    out.push_str("/** Rust-owned CZ waveform combination presets. */\n");
+    out.push_str("export const CZ_PRESETS: CzPresetV1[] = ");
+    out.push_str(&cz_presets_json);
     out.push_str(";\n");
 
     std::fs::write(&ts_path, out)

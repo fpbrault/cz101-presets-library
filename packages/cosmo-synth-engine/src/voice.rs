@@ -6,11 +6,11 @@ extern crate alloc;
 
 use libm::{cosf, sinf};
 
-use crate::dsp_utils::{apply_window, lfo_output, wrap01};
+use crate::dsp_utils::{lfo_output, wrap01};
 use crate::envelope::EnvGen;
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
-    Algo, FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModMode, PortamentoMode,
+    FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModMode, PortamentoMode,
     SynthParams, VelocityTarget,
 };
 
@@ -193,36 +193,29 @@ pub fn render_voice(
     );
 
     let phase = build_phase_frame(voice, p, sr, base_freq);
-    let line1_primary_algo = resolve_primary_algo(l1, voice.cycle_count1);
-    let line2_primary_algo = resolve_primary_algo(l2, voice.cycle_count2);
-    let window1 = apply_window(phase.phi1, line_window(l1));
-    let window2 = apply_window(phase.phi2, line_window(l2));
-
     let (s1, ks_raw1) = voice.algo_runtime.render_line1(
-        LineRenderConfig {
-            primary_algo: line1_primary_algo,
-            secondary_algo: l1.algo2,
-            blend: l1.algo_blend,
-            phase: phase.phase_a_post,
-            window_gain: window1,
-            final_dcw: signal.final_dcw1,
-            final_dca: signal.final_dca1,
-            effective_freq: signal.effective_freq1,
-            sample_rate: sr,
-        },
+        LineRenderConfig::from_line(
+            l1,
+            voice.cycle_count1,
+            phase.phi1,
+            phase.phase_a_post,
+            signal.final_dcw1,
+            signal.final_dca1,
+            signal.effective_freq1,
+            sr,
+        ),
     );
     let (s2, ks_raw2) = voice.algo_runtime.render_line2(
-        LineRenderConfig {
-            primary_algo: line2_primary_algo,
-            secondary_algo: l2.algo2,
-            blend: l2.algo_blend,
-            phase: phase.phase_b_post,
-            window_gain: window2,
-            final_dcw: signal.final_dcw2,
-            final_dca: signal.final_dca2,
-            effective_freq: signal.effective_freq2,
-            sample_rate: sr,
-        },
+        LineRenderConfig::from_line(
+            l2,
+            voice.cycle_count2,
+            phase.phi2,
+            phase.phase_b_post,
+            signal.final_dcw2,
+            signal.final_dca2,
+            signal.effective_freq2,
+            sr,
+        ),
     );
 
     let sample = mix_line_outputs(
@@ -232,6 +225,8 @@ pub fn render_voice(
         s2,
         l1,
         l2,
+        voice.cycle_count1,
+        voice.cycle_count2,
         ks_raw1,
         ks_raw2,
         signal.final_dca1,
@@ -528,27 +523,6 @@ fn build_phase_frame(voice: &Voice, p: &SynthParams, sr: f32, base_freq: f32) ->
     }
 }
 
-fn resolve_primary_algo(line: &LineParams, cycle_count: u32) -> Algo {
-    if !line.algo.is_cz_waveform() {
-        return line.algo;
-    }
-
-    let slot = if cycle_count & 1 == 0 {
-        line.cz.slot_a_waveform
-    } else {
-        line.cz.slot_b_waveform
-    };
-    Algo::from_cz_waveform(slot)
-}
-
-fn line_window(line: &LineParams) -> crate::params::WindowType {
-    if line.algo.is_cz_waveform() {
-        line.cz.window
-    } else {
-        line.window
-    }
-}
-
 fn mix_line_outputs(
     p: &SynthParams,
     phi1: f32,
@@ -556,13 +530,26 @@ fn mix_line_outputs(
     s2: f32,
     l1: &LineParams,
     l2: &LineParams,
+    cycle_count1: u32,
+    cycle_count2: u32,
     ks_raw1: Option<f32>,
     ks_raw2: Option<f32>,
     final_dca1: f32,
     final_dca2: f32,
 ) -> f32 {
     let (mix_a, mix_b) = select_line_sources(
-        p, phi1, s1, s2, l1, l2, ks_raw1, ks_raw2, final_dca1, final_dca2,
+        p,
+        phi1,
+        s1,
+        s2,
+        l1,
+        l2,
+        cycle_count1,
+        cycle_count2,
+        ks_raw1,
+        ks_raw2,
+        final_dca1,
+        final_dca2,
     );
 
     match p.mod_mode {
@@ -592,6 +579,8 @@ fn select_line_sources(
     s2: f32,
     l1: &LineParams,
     l2: &LineParams,
+    cycle_count1: u32,
+    cycle_count2: u32,
     ks_raw1: Option<f32>,
     ks_raw2: Option<f32>,
     final_dca1: f32,
@@ -599,15 +588,17 @@ fn select_line_sources(
 ) -> (f32, f32) {
     match p.line_select {
         LineSelect::L1PlusL1Prime => {
-            let algo_prime = l1.algo2.unwrap_or(l1.algo);
+            let cfg = LineRenderConfig::from_line(l1, cycle_count1, phi1, phi1, 0.0, final_dca1, 0.0, 1.0);
+            let algo_prime = cfg.secondary_algo.unwrap_or(cfg.primary_algo);
             let s1_prime =
-                generators::render_algo_sample(algo_prime, phi1, 0.0, ks_raw1) * final_dca1;
+                generators::render_algo_sample(algo_prime, phi1, 0.0, cfg.algo_controls, ks_raw1) * final_dca1;
             (s1, s1_prime)
         }
         LineSelect::L1PlusL2Prime => {
-            let algo_prime = l2.algo2.unwrap_or(l2.algo);
+            let cfg = LineRenderConfig::from_line(l2, cycle_count2, phi1, phi1, 0.0, final_dca2, 0.0, 1.0);
+            let algo_prime = cfg.secondary_algo.unwrap_or(cfg.primary_algo);
             let s2_prime =
-                generators::render_algo_sample(algo_prime, phi1, 0.0, ks_raw2) * final_dca2;
+                generators::render_algo_sample(algo_prime, phi1, 0.0, cfg.algo_controls, ks_raw2) * final_dca2;
             (s1, s2_prime)
         }
         _ => (s1, s2),

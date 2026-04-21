@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PresetEntry } from "@/components/synth/PresetNavigator";
 import type { Preset } from "@/lib/presets/presetManager";
+import type { SynthPresetV1 } from "@/lib/synth/bindings/synth";
 import {
 	DEFAULT_PRESET,
 	deletePreset,
@@ -10,15 +11,14 @@ import {
 	loadCurrentState,
 	loadPreset,
 	renamePreset,
-	type SynthPresetData,
 	saveCurrentState,
 	savePreset,
 } from "@/lib/synth/presetStorage";
 
 type UseSynthPresetManagerOptions = {
-	builtinPresets: Record<string, SynthPresetData>;
-	gatherState: () => SynthPresetData;
-	applyPreset: (data: SynthPresetData) => void;
+	builtinPresets: Record<string, SynthPresetV1>;
+	gatherState: () => SynthPresetV1;
+	applyPreset: (data: SynthPresetV1) => void;
 	libraryPresets?: Preset[];
 	onLoadLibraryPreset?: (preset: Preset) => void;
 	shouldLoadCurrentState?: () => boolean;

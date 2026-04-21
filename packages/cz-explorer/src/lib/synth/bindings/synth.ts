@@ -173,32 +173,46 @@ offset?: number }
 export type FilterParams = { enabled: boolean; type: FilterType; cutoff: number; resonance: number; envAmount: number }
 
 /**
- * Per-line parameters
+ * One algorithm-specific control value persisted on a line.
  */
-export type LineParams = { algo: Algo; algo2: Algo | null; algoBlend: number; dcwComp: number; window: WindowType; dcaBase: number; dcwBase: number; dcoDepth: number; modulation: number; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number; cz?: CzLineParams }
+export type AlgoControlValueV1 = { id: string; value: number }
 
 /**
- * Flat algorithm selection unifying waveforms and warp variants.
- * Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
+ * Per-line parameters
  */
-export type AlgoRefV1 = "czSaw" | "czSquare" | "czPulse" | "czDoubleSine" | "czSawPulse" | "czReso1" | "czReso2" | "czReso3" | "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" | "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
+export type LineParams = { algo: Algo; algo2: Algo | null; algoBlend: number; dcwComp: number; window: WindowType; dcaBase: number; dcwBase: number; dcoDepth: number; modulation: number; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number; cz?: CzLineParams; algoControls?: AlgoControlValueV1[] | null }
 
 /**
  * Describes one control surfaced by an algorithm package.
  */
-export type AlgoControlV1 = { id: string; label: string; min: number; max: number; default: number }
+export type AlgoControlKindV1 = "number" | "select" | "toggle"
+
+/**
+ * Assignment emitted by a select option to update one or more numeric controls.
+ */
+export type AlgoControlAssignmentV1 = { controlId: string; value: number }
+
+/**
+ * One selectable option for list-based controls.
+ */
+export type AlgoControlOptionV1 = { value: string; label: string; set: AlgoControlAssignmentV1 }
+
+/**
+ * Describes one control surfaced by an algorithm package.
+ */
+export type AlgoControlV1 = { id: string; label: string; kind: AlgoControlKindV1; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1 }
 
 /**
  * Complete algorithm package definition.
  */
-export type AlgoDefinitionV1 = { id: AlgoRefV1; name: string; iconPath: string; visible: boolean; controls: AlgoControlV1 }
+export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visible: boolean; controls: AlgoControlV1 }
 
 /**
  * UI catalog entry for algorithm pickers.
  * 
  * This is exported to TypeScript so frontend option labels/icons are Rust-owned.
  */
-export type AlgoUiEntryV1 = { id: AlgoRefV1; label: string; iconPath: string; visible: boolean }
+export type AlgoUiEntryV1 = { id: Algo; label: string; iconPath: string; visible: boolean }
 
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
@@ -220,59 +234,18 @@ modWheelVibratoDepth?: number }
 export type SynthPresetV1 = { schemaVersion?: number; params: SynthParams }
 
 /**
- * TODO: Remove this compatibility shape after all preset reads/writes migrate to `SynthPresetV1`.
- * Temporary compatibility shape matching current flat TS preset storage.
+ * A named CZ waveform combination preset (slot A waveform, slot B waveform, window function).
  */
-export type SynthPresetFlatV1 = { schemaVersion?: number; warpAAmount: number; warpBAmount: number; warpAAlgo: AlgoRefV1; warpBAlgo: AlgoRefV1; algo2A: AlgoRefV1 | null; algo2B: AlgoRefV1 | null; algoBlendA: number; algoBlendB: number; intPmAmount: number; intPmRatio: number; phaseModEnabled?: boolean; pmPre: boolean; windowType: WindowType; volume: number; line1Level: number; line2Level: number; line1Octave: number; line2Octave: number; line1Detune: number; line2Detune: number; line1DcoDepth: number; line2DcoDepth: number; line1DcwComp: number; line2DcwComp: number; line1DcoEnv: StepEnvData; line1DcwEnv: StepEnvData; line1DcaEnv: StepEnvData; line2DcoEnv: StepEnvData; line2DcwEnv: StepEnvData; line2DcaEnv: StepEnvData; line1CzSlotAWaveform?: CzWaveform | null; line1CzSlotBWaveform?: CzWaveform | null; line1CzWindow?: WindowType | null; line2CzSlotAWaveform?: CzWaveform | null; line2CzSlotBWaveform?: CzWaveform | null; line2CzWindow?: WindowType | null; lineSelect: LineSelect; modMode: ModMode; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorusEnabled: boolean; chorusRate: number; chorusDepth: number; chorusMix: number; delayEnabled: boolean; delayTime: number; delayFeedback: number; delayMix: number; reverbEnabled: boolean; reverbSize: number; reverbMix: number; line1DcwKeyFollow: number; line1DcaKeyFollow?: number; line2DcwKeyFollow: number; line2DcaKeyFollow?: number; vibratoEnabled: boolean; vibratoWave: number; vibratoRate: number; vibratoDepth: number; vibratoDelay: number; portamentoEnabled: boolean; portamentoMode: PortamentoMode; portamentoRate: number; portamentoTime: number; lfoEnabled: boolean; lfoWaveform: LfoWaveform; lfoRate: number; lfoDepth: number; lfoOffset: number; lfoTarget: LfoTarget; filterEnabled: boolean; filterType: FilterType; filterCutoff: number; filterResonance: number; filterEnvAmount: number; pitchBendRange?: number; modWheelVibratoDepth?: number }
+export type CzPresetV1 = { id: string; label: string; waveform1: CzWaveform; waveform2: CzWaveform; windowFunction: WindowType }
+
+
 
 /** Rust-owned algorithm UI catalog. */
 export const ALGO_UI_CATALOG_V1: AlgoUiEntryV1[] = [
   {
-    "id": "czSaw",
-    "label": "CZ Saw",
-    "iconPath": "M4,4 L20,20",
-    "visible": true
-  },
-  {
-    "id": "czSquare",
-    "label": "CZ Square",
-    "iconPath": "M4,4 L12,4 L12,20 L20,20",
-    "visible": true
-  },
-  {
-    "id": "czPulse",
-    "label": "CZ Pulse",
-    "iconPath": "M4,20 L8,20 L8,4 L16,4 L16,20 L20,20",
-    "visible": true
-  },
-  {
-    "id": "czDoubleSine",
-    "label": "CZ DoubleSine",
-    "iconPath": "M4,12 C6,4 10,4 12,12 C14,20 18,20 20,12",
-    "visible": true
-  },
-  {
-    "id": "czSawPulse",
-    "label": "CZ SawPulse",
-    "iconPath": "M4,20 L7,4 L9,20 L12,4 L14,20 L17,4 L20,20",
-    "visible": true
-  },
-  {
-    "id": "czReso1",
-    "label": "CZ Reso1",
-    "iconPath": "M4,18 C7,6 9,6 12,18 C15,6 17,6 20,18",
-    "visible": true
-  },
-  {
-    "id": "czReso2",
-    "label": "CZ Reso2",
-    "iconPath": "M4,18 C6,4 10,4 12,12 C14,20 18,20 20,6",
-    "visible": true
-  },
-  {
-    "id": "czReso3",
-    "label": "CZ Reso3",
-    "iconPath": "M4,12 L8,4 L12,20 L16,4 L20,12",
+    "id": "cz101",
+    "label": "CZ101",
+    "iconPath": "M4,12 L20,12",
     "visible": true
   },
   {
@@ -340,246 +313,314 @@ export const ALGO_UI_CATALOG_V1: AlgoUiEntryV1[] = [
     "label": "FOF",
     "iconPath": "M4,16 C8,4 10,4 12,16 C14,4 16,4 20,16",
     "visible": true
-  },
-  {
-    "id": "cz101",
-    "label": "CZ101",
-    "iconPath": "M4,12 L20,12",
-    "visible": false
   }
 ];
 
 /** Rust-owned algorithm definitions and control defaults. */
 export const ALGO_DEFINITIONS_V1 = [
   {
-    "id": "czSaw",
-    "name": "CZ Saw",
-    "iconPath": "M4,4 L20,20",
+    "id": "cz101",
+    "name": "CZ101",
+    "iconPath": "M4,12 L20,12",
     "visible": true,
     "controls": [
       {
+        "id": "preset",
+        "label": "Preset",
+        "kind": "select",
+        "min": null,
+        "max": null,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "czSaw",
+            "label": "CZ Saw",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 0.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 0.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czSquare",
+            "label": "CZ Square",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 1.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 1.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czPulse",
+            "label": "CZ Pulse",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 2.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 2.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czDoubleSine",
+            "label": "CZ Double Sine",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 4.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 4.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czSawPulse",
+            "label": "CZ Saw Pulse",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 5.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 5.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czReso1",
+            "label": "CZ Reso 1",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 6.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 6.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 1.0
+              }
+            ]
+          },
+          {
+            "value": "czReso2",
+            "label": "CZ Reso 2",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 6.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 6.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 2.0
+              }
+            ]
+          },
+          {
+            "value": "czReso3",
+            "label": "CZ Reso 3",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 6.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 6.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 3.0
+              }
+            ]
+          }
+        ]
+      },
+      {
         "id": "waveform1",
         "label": "Waveform 1",
+        "kind": "select",
         "min": 0.0,
         "max": 7.0,
-        "default": 0.0
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "saw",
+            "label": "Saw",
+            "set": []
+          },
+          {
+            "value": "square",
+            "label": "Square",
+            "set": []
+          },
+          {
+            "value": "pulse",
+            "label": "Pulse",
+            "set": []
+          },
+          {
+            "value": "null",
+            "label": "Null",
+            "set": []
+          },
+          {
+            "value": "sinePulse",
+            "label": "Sine Pulse",
+            "set": []
+          },
+          {
+            "value": "sawPulse",
+            "label": "Saw Pulse",
+            "set": []
+          },
+          {
+            "value": "multiSine",
+            "label": "Multi Sine",
+            "set": []
+          },
+          {
+            "value": "pulse2",
+            "label": "Pulse 2",
+            "set": []
+          }
+        ]
       },
       {
         "id": "waveform2",
         "label": "Waveform 2",
+        "kind": "select",
         "min": 0.0,
         "max": 7.0,
-        "default": 0.0
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "saw",
+            "label": "Saw",
+            "set": []
+          },
+          {
+            "value": "square",
+            "label": "Square",
+            "set": []
+          },
+          {
+            "value": "pulse",
+            "label": "Pulse",
+            "set": []
+          },
+          {
+            "value": "null",
+            "label": "Null",
+            "set": []
+          },
+          {
+            "value": "sinePulse",
+            "label": "Sine Pulse",
+            "set": []
+          },
+          {
+            "value": "sawPulse",
+            "label": "Saw Pulse",
+            "set": []
+          },
+          {
+            "value": "multiSine",
+            "label": "Multi Sine",
+            "set": []
+          },
+          {
+            "value": "pulse2",
+            "label": "Pulse 2",
+            "set": []
+          }
+        ]
       },
       {
         "id": "windowFunction",
         "label": "Window Function",
+        "kind": "select",
         "min": 0.0,
         "max": 5.0,
-        "default": 0.0
-      }
-    ]
-  },
-  {
-    "id": "czSquare",
-    "name": "CZ Square",
-    "iconPath": "M4,4 L12,4 L12,20 L20,20",
-    "visible": true,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 1.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 1.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 0.0
-      }
-    ]
-  },
-  {
-    "id": "czPulse",
-    "name": "CZ Pulse",
-    "iconPath": "M4,20 L8,20 L8,4 L16,4 L16,20 L20,20",
-    "visible": true,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 2.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 2.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 0.0
-      }
-    ]
-  },
-  {
-    "id": "czDoubleSine",
-    "name": "CZ DoubleSine",
-    "iconPath": "M4,12 C6,4 10,4 12,12 C14,20 18,20 20,12",
-    "visible": true,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 4.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 4.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 0.0
-      }
-    ]
-  },
-  {
-    "id": "czSawPulse",
-    "name": "CZ SawPulse",
-    "iconPath": "M4,20 L7,4 L9,20 L12,4 L14,20 L17,4 L20,20",
-    "visible": true,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 5.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 5.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 0.0
-      }
-    ]
-  },
-  {
-    "id": "czReso1",
-    "name": "CZ Reso1",
-    "iconPath": "M4,18 C7,6 9,6 12,18 C15,6 17,6 20,18",
-    "visible": true,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 6.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 6.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 1.0
-      }
-    ]
-  },
-  {
-    "id": "czReso2",
-    "name": "CZ Reso2",
-    "iconPath": "M4,18 C6,4 10,4 12,12 C14,20 18,20 20,6",
-    "visible": true,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 6.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 6.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 2.0
-      }
-    ]
-  },
-  {
-    "id": "czReso3",
-    "name": "CZ Reso3",
-    "iconPath": "M4,12 L8,4 L12,20 L16,4 L20,12",
-    "visible": true,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 6.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 6.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 3.0
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "off",
+            "label": "Off",
+            "set": []
+          },
+          {
+            "value": "saw",
+            "label": "Saw",
+            "set": []
+          },
+          {
+            "value": "triangle",
+            "label": "Triangle",
+            "set": []
+          },
+          {
+            "value": "trapezoid",
+            "label": "Trapezoid",
+            "set": []
+          },
+          {
+            "value": "pulse",
+            "label": "Pulse",
+            "set": []
+          },
+          {
+            "value": "doubleSaw",
+            "label": "Double Saw",
+            "set": []
+          }
+        ]
       }
     ]
   },
@@ -590,11 +631,34 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "bendCurve",
+        "label": "Curve",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "bendBias",
+        "label": "Bias",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "bendKnee",
+        "label": "Knee",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -605,11 +669,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "syncRatio",
+        "label": "Ratio",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "syncPhase",
+        "label": "Phase",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "syncCurve",
+        "label": "Curve",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "syncWindow",
+        "label": "Window",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -620,11 +717,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "pinchFocus",
+        "label": "Focus",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "pinchAsym",
+        "label": "Asym",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "pinchCurve",
+        "label": "Curve",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "pinchDrive",
+        "label": "Drive",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -635,11 +765,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "foldStages",
+        "label": "Stages",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "foldTilt",
+        "label": "Tilt",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "foldSymmetry",
+        "label": "Symmetry",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "foldSoftness",
+        "label": "Softness",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -650,11 +813,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "skewBias",
+        "label": "Bias",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.2,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "skewCurve",
+        "label": "Curve",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "skewSpread",
+        "label": "Spread",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "skewTilt",
+        "label": "Tilt",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -665,11 +861,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "twistHarmonics",
+        "label": "Harm",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "twistDepth",
+        "label": "Depth",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "twistPhase",
+        "label": "Phase",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "twistShape",
+        "label": "Shape",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -680,11 +909,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "clipDrive",
+        "label": "Drive",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "clipShape",
+        "label": "Shape",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "clipBias",
+        "label": "Bias",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "clipSoft",
+        "label": "Soft",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -695,11 +957,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "rippleFreq",
+        "label": "Freq",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "rippleDepth",
+        "label": "Depth",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "ripplePhase",
+        "label": "Phase",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "rippleShape",
+        "label": "Shape",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -710,11 +1005,44 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "mirrorCenter",
+        "label": "Center",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "mirrorBlend",
+        "label": "Blend",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "mirrorClip",
+        "label": "Clip",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "mirrorSkew",
+        "label": "Skew",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
   },
@@ -723,7 +1051,48 @@ export const ALGO_DEFINITIONS_V1 = [
     "name": "Karpunk",
     "iconPath": "M4,16 C8,2 12,22 16,8 L20,12",
     "visible": true,
-    "controls": []
+    "controls": [
+      {
+        "id": "karpunkDamp",
+        "label": "Damp",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "karpunkBright",
+        "label": "Bright",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "karpunkDecay",
+        "label": "Decay",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "karpunkExcite",
+        "label": "Excite",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
   },
   {
     "id": "fof",
@@ -732,41 +1101,105 @@ export const ALGO_DEFINITIONS_V1 = [
     "visible": true,
     "controls": [
       {
-        "id": "warpAmount",
-        "label": "Warp Amount",
+        "id": "fofRatio",
+        "label": "Ratio",
+        "kind": "number",
         "min": 0.0,
         "max": 1.0,
-        "default": 0.0
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "fofTightness",
+        "label": "Tight",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "fofOffset",
+        "label": "Offset",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "fofSkew",
+        "label": "Skew",
+        "kind": "number",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
       }
     ]
+  }
+];
+
+/** Rust-owned CZ waveform combination presets. */
+export const CZ_PRESETS: CzPresetV1[] = [
+  {
+    "id": "czSaw",
+    "label": "CZ Saw",
+    "waveform1": "saw",
+    "waveform2": "saw",
+    "windowFunction": "off"
   },
   {
-    "id": "cz101",
-    "name": "CZ101",
-    "iconPath": "M4,12 L20,12",
-    "visible": false,
-    "controls": [
-      {
-        "id": "waveform1",
-        "label": "Waveform 1",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 0.0
-      },
-      {
-        "id": "waveform2",
-        "label": "Waveform 2",
-        "min": 0.0,
-        "max": 7.0,
-        "default": 0.0
-      },
-      {
-        "id": "windowFunction",
-        "label": "Window Function",
-        "min": 0.0,
-        "max": 5.0,
-        "default": 0.0
-      }
-    ]
+    "id": "czSquare",
+    "label": "CZ Square",
+    "waveform1": "square",
+    "waveform2": "square",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czPulse",
+    "label": "CZ Pulse",
+    "waveform1": "pulse",
+    "waveform2": "pulse",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czDoubleSine",
+    "label": "CZ Double Sine",
+    "waveform1": "sinePulse",
+    "waveform2": "sinePulse",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czSawPulse",
+    "label": "CZ Saw Pulse",
+    "waveform1": "sawPulse",
+    "waveform2": "sawPulse",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czReso1",
+    "label": "CZ Reso 1",
+    "waveform1": "multiSine",
+    "waveform2": "multiSine",
+    "windowFunction": "saw"
+  },
+  {
+    "id": "czReso2",
+    "label": "CZ Reso 2",
+    "waveform1": "multiSine",
+    "waveform2": "multiSine",
+    "windowFunction": "triangle"
+  },
+  {
+    "id": "czReso3",
+    "label": "CZ Reso 3",
+    "waveform1": "multiSine",
+    "waveform2": "multiSine",
+    "windowFunction": "trapezoid"
   }
 ];

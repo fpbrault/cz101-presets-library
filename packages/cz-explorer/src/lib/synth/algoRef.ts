@@ -1,21 +1,9 @@
 import {
 	ALGO_DEFINITIONS_V1,
-	type AlgoRefV1,
+	type Algo,
 	type CzWaveform,
 	type WindowType,
 } from "@/lib/synth/bindings/synth";
-
-const CZ_FRONT_PANEL_ALGOS = [
-	"czSaw",
-	"czSquare",
-	"czPulse",
-	"czDoubleSine",
-	"czSawPulse",
-	"czReso1",
-	"czReso2",
-	"czReso3",
-] as const;
-type CzAlgo = (typeof CZ_FRONT_PANEL_ALGOS)[number];
 
 const WARP_ALGOS = [
 	"cz101",
@@ -47,7 +35,8 @@ const WAVEFORMS = [
 ] as const;
 type WaveformId = (typeof WAVEFORMS)[number];
 
-const CZ_ALGO_TO_WAVEFORM: Record<CzAlgo, WaveformId> = {
+// Maps legacy CZ preset alias names (from old AlgoRefV1) to the waveform they implied
+const LEGACY_CZ_ALGO_TO_WAVEFORM: Record<string, WaveformId> = {
 	czSaw: "saw",
 	czSquare: "square",
 	czPulse: "pulse",
@@ -56,17 +45,6 @@ const CZ_ALGO_TO_WAVEFORM: Record<CzAlgo, WaveformId> = {
 	czReso1: "multiSine",
 	czReso2: "multiSine",
 	czReso3: "multiSine",
-};
-
-const CZ_ALGO_TO_WINDOW: Record<CzAlgo, WindowType> = {
-	czSaw: "off",
-	czSquare: "off",
-	czPulse: "off",
-	czDoubleSine: "off",
-	czSawPulse: "off",
-	czReso1: "saw",
-	czReso2: "triangle",
-	czReso3: "trapezoid",
 };
 
 const WAVEFORM_NAME_TO_LEGACY: Record<WaveformId, number> = {
@@ -102,25 +80,28 @@ const WINDOW_ORDER: WindowType[] = [
 
 type AlgoControlRuntime = {
 	id: string;
-	default: number;
+	kind?: "number" | "select" | "toggle";
+	default?: number | null;
 };
 
 type AlgoDefinitionRuntime = {
-	id: AlgoRefV1;
+	id: Algo;
 	controls: AlgoControlRuntime[];
 };
 
 const ALGO_DEFINITIONS = ALGO_DEFINITIONS_V1 as AlgoDefinitionRuntime[];
 
-export type LegacyPdAlgo = AlgoRefV1;
+export type LegacyPdAlgo = Algo;
 
-export const DEFAULT_ALGO_REF: AlgoRefV1 = "czSaw";
+export const DEFAULT_ALGO_REF: Algo = "cz101";
 
-export function isCzAlgo(value: unknown): value is CzAlgo {
-	return (
-		typeof value === "string" &&
-		(CZ_FRONT_PANEL_ALGOS as readonly string[]).includes(value)
-	);
+export function isCzAlgo(value: unknown): value is "cz101" {
+	return value === "cz101";
+}
+
+/** Returns the waveform implied by a legacy CZ preset alias (e.g. "czSaw" → "saw"), or null. */
+export function legacyCzAlgoToWaveform(algo: string): WaveformId | null {
+	return LEGACY_CZ_ALGO_TO_WAVEFORM[algo] ?? null;
 }
 
 export function isWarpAlgo(value: unknown): value is WarpAlgo {
@@ -146,26 +127,39 @@ export function normalizeWaveformId(value: unknown): WaveformId {
 	return "saw";
 }
 
+const ALL_ALGO_VALUES = [
+	"saw", "square", "pulse", "null", "sinePulse", "sawPulse", "multiSine", "pulse2",
+	"cz101", "bend", "sync", "pinch", "fold", "skew", "quantize", "twist", "clip",
+	"ripple", "mirror", "fof", "karpunk", "sine",
+] as const;
+
+export function isAlgo(value: unknown): value is Algo {
+	return typeof value === "string" && (ALL_ALGO_VALUES as readonly string[]).includes(value);
+}
+
 export function toAlgoRefV1(
 	value: unknown,
-	fallback: AlgoRefV1 = DEFAULT_ALGO_REF,
-): AlgoRefV1 {
-	if (isCzAlgo(value)) {
-		return value;
-	}
-
+	fallback: Algo = DEFAULT_ALGO_REF,
+): Algo {
+	// Legacy payloads may encode a CZ waveform directly in algo fields.
+	// Coerce these to the canonical cz101 warp algo.
 	if (isWaveformId(value)) {
-		return value;
+		return "cz101";
 	}
 
-	if (isWarpAlgo(value)) {
+	// Handle legacy CZ preset alias names → map to cz101
+	if (typeof value === "string" && value in LEGACY_CZ_ALGO_TO_WAVEFORM) {
+		return "cz101";
+	}
+
+	if (isAlgo(value)) {
 		return value;
 	}
 
 	return fallback;
 }
 
-export function algoRefKey(algo: AlgoRefV1): string {
+export function algoRefKey(algo: Algo): string {
 	return algo;
 }
 
@@ -174,8 +168,8 @@ export function waveformIdToLegacyNumber(waveform: WaveformId): number {
 }
 
 export function isAlgoRefEqual(
-	a: AlgoRefV1 | null,
-	b: AlgoRefV1 | null,
+	a: Algo | null,
+	b: Algo | null,
 ): boolean {
 	if (a === null || b === null) {
 		return a === b;
@@ -183,25 +177,27 @@ export function isAlgoRefEqual(
 	return a === b;
 }
 
-export function resolveAlgoRef(algo: AlgoRefV1): {
+export function resolveAlgoRef(algo: Algo): {
 	waveform: WaveformId;
-	warpAlgo: WarpAlgo;
+	warpAlgo: Algo;
 	windowType: WindowType | null;
 	isFrontPanelCzAlgo: boolean;
 } {
-	if (isCzAlgo(algo)) {
+	// For cz101, waveform comes from CzLineParams (not from algo).
+	// Return "saw" as a fallback — callers should use line.cz.slotAWaveform.
+	if (algo === "cz101") {
 		return {
-			waveform: CZ_ALGO_TO_WAVEFORM[algo],
+			waveform: "saw",
 			warpAlgo: "cz101",
-			windowType: CZ_ALGO_TO_WINDOW[algo],
-			isFrontPanelCzAlgo: true,
+			windowType: null,
+			isFrontPanelCzAlgo: false,
 		};
 	}
 
 	if (isWaveformId(algo)) {
 		return {
 			waveform: algo,
-			warpAlgo: "cz101",
+			warpAlgo: algo,
 			windowType: null,
 			isFrontPanelCzAlgo: false,
 		};
@@ -214,7 +210,7 @@ export function resolveAlgoRef(algo: AlgoRefV1): {
 	};
 }
 
-export function getCzPresetDefaults(algo: AlgoRefV1): {
+export function getCzPresetDefaults(algo: Algo): {
 	waveform1: CzWaveform;
 	waveform2: CzWaveform;
 	windowFunction: WindowType;
@@ -238,9 +234,9 @@ export function getCzPresetDefaults(algo: AlgoRefV1): {
 		return null;
 	}
 
-	const waveform1Index = Math.round(waveform1Control.default);
-	const waveform2Index = Math.round(waveform2Control.default);
-	const windowIndex = Math.round(windowControl.default);
+	const waveform1Index = Math.round(waveform1Control.default ?? 0);
+	const waveform2Index = Math.round(waveform2Control.default ?? 0);
+	const windowIndex = Math.round(windowControl.default ?? 0);
 
 	return {
 		waveform1: WAVEFORM_ORDER[waveform1Index] ?? "saw",

@@ -1,14 +1,66 @@
-use super::{AlgoDefinitionV1, AlgoRefV1, WARP_AMOUNT_CONTROL};
+use crate::params::Algo;
+use super::{AlgoControlKindV1, AlgoControlV1, AlgoDefinitionV1, NO_CONTROL_OPTIONS};
+
+const CONTROLS: [AlgoControlV1; 4] = [
+	AlgoControlV1 {
+		id: "mirrorCenter",
+		label: "Center",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.5),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+	AlgoControlV1 {
+		id: "mirrorBlend",
+		label: "Blend",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.5),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+	AlgoControlV1 {
+		id: "mirrorClip",
+		label: "Clip",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.0),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+	AlgoControlV1 {
+		id: "mirrorSkew",
+		label: "Skew",
+		kind: AlgoControlKindV1::Number,
+		min: Some(0.0),
+		max: Some(1.0),
+		default: Some(0.5),
+		default_toggle: None,
+		options: &NO_CONTROL_OPTIONS,
+	},
+];
 
 pub const DEFINITION: AlgoDefinitionV1 = AlgoDefinitionV1 {
-	id: AlgoRefV1::Mirror,
+  id: Algo::Mirror,
 	name: "Mirror",
 	icon_path: "M4,20 L12,4 L20,20",
 	visible: true,
-	controls: &WARP_AMOUNT_CONTROL,
+	controls: &CONTROLS,
 };
 
 /// Mirror algorithm phase warp.
-pub fn warp_phase(phase: f32, amt: f32) -> f32 {
-	phase + (1.0 - phase - phase) * amt
+pub fn warp_phase(phase: f32, amt: f32, center: f32, blend: f32, clip: f32, skew: f32) -> f32 {
+	let pivot = center.clamp(0.01, 0.99);
+	let mirrored = (pivot + (pivot - phase) * (0.5 + skew)).clamp(0.0, 1.0);
+	let clipped = if clip > 0.0 {
+		let clip_amt = 0.5 - clip * 0.45;
+		((mirrored - 0.5).clamp(-clip_amt, clip_amt) / (clip_amt * 2.0)) + 0.5
+	} else {
+		mirrored
+	};
+	phase + (clipped - phase) * (amt * (0.2 + blend * 0.8))
 }
