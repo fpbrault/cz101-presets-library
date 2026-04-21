@@ -1,6 +1,14 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": ["config:recommended"],
+	"enabledManagers": ["bun", "cargo", "github-actions"],
+	"ignorePaths": [
+		"**/dist/**",
+		"vendor/**",
+		"public/cosmo-synth-engine-wasm/**",
+		"packages/cz-explorer/public/cosmo-synth-engine-wasm/**",
+		".opencode/**"
+	],
 	"schedule": ["before 5am on Monday"],
 	"timezone": "America/Montreal",
 	"labels": ["dependencies"],
@@ -12,11 +20,11 @@
 			"automerge": true
 		},
 		{
-			"description": "Group all non-major npm updates into a single PR",
-			"matchManagers": ["npm"],
+			"description": "Group all non-major Bun updates into a single PR",
+			"matchManagers": ["bun"],
 			"matchUpdateTypes": ["minor", "patch"],
-			"groupName": "npm non-major dependencies",
-			"groupSlug": "npm-non-major"
+			"groupName": "bun non-major dependencies",
+			"groupSlug": "bun-non-major"
 		},
 		{
 			"description": "Group all non-major Cargo updates into a single PR",
