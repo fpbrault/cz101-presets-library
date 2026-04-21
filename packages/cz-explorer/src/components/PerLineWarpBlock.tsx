@@ -9,12 +9,12 @@ import type {
 import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
 import { algoParamTargetFromSlot } from "@/lib/synth/modDestination";
 import AlgoIconGrid from "./AlgoIconGrid";
+import ControlKnob from "./ControlKnob";
 import type { PdAlgo } from "./pdAlgorithms";
 import { getPdAlgoDef, PD_ALGOS } from "./pdAlgorithms";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
 import Card from "./ui/Card";
 import CzButton from "./ui/CzButton";
-import CzHorizontalSlider from "./ui/CzHorizontalSlider";
 import CzVerticalSlider from "./ui/CzVerticalSlider";
 
 interface PerLineWarpBlockProps {
@@ -516,8 +516,8 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 															step={step}
 															color={c}
 															onChange={onChange}
-																																				modulatable={modDest}
-																																				lineIndex={lineIndex}
+																			modulatable={modDest}
+																			lineIndex={lineIndex}
 														/>
 													</div>
 												</div>
@@ -590,7 +590,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 														? algoParamTargetFromSlot(slotIdx)
 														: undefined;
 													return (
-														<div key={control.id} className="space-y-1.5">
+														<div
+															key={control.id}
+															className="space-y-1.5 flex flex-col items-center"
+														>
 															<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
 																<div className="flex items-center gap-2">
 																	<span>{control.label}</span>
@@ -600,11 +603,13 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 																</div>
 																<span>{value.toFixed(2)}</span>
 															</div>
-															<CzHorizontalSlider
+															<ControlKnob
+																label={control.label}
 																min={min}
 																max={max}
-																step={0.01}
 																value={value}
+																size={38}
+																color="#67c7ff"
 																modulatable={algoParamTarget}
 																lineIndex={lineIndex}
 																onChange={(newVal) =>
@@ -612,6 +617,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 																		? binding.setNumber(newVal)
 																		: setAlgoControlValue(control.id, newVal)
 																}
+																valueFormatter={(v) => v.toFixed(2)}
 															/>
 														</div>
 													);

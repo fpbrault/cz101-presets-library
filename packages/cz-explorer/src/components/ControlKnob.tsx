@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useOptionalModMatrix } from "@/context/ModMatrixContext";
 import ModulatableControl from "@/components/ui/ModulatableControl";
-import type { ModDestination } from "@/lib/synth/bindings/synth";
+import type { ModDestination, ModSource } from "@/lib/synth/bindings/synth";
 import {
 	type ModTarget,
 	resolveModDestination,
@@ -53,6 +54,7 @@ export function ControlKnob({
 	const displayValue = valueFormatter
 		? valueFormatter(value)
 		: value.toFixed(2);
+	const maybeModMatrix = useOptionalModMatrix();
 
 	const normalizedValue = (value - min) / (max - min);
 	const angle = -230 + normalizedValue * 280;
@@ -68,6 +70,63 @@ export function ControlKnob({
 		normalizedValue > 0
 			? `M ${startX} ${startY} A 17 17 0 ${largeArcFlag} 1 ${endX} ${endY}`
 			: "";
+
+	const resolvedDestination =
+		modDestination ?? resolveModDestination(modulatable, { lineIndex });
+
+	const routeSourceRange = (source: ModSource): [number, number] => {
+		switch (source) {
+			case "lfo1":
+			case "lfo2":
+				return [-1, 1];
+			case "velocity":
+			case "modWheel":
+			case "aftertouch":
+				return [0, 1];
+			default:
+				return [0, 0];
+		}
+	};
+
+	const activeRoutes =
+		resolvedDestination && maybeModMatrix
+			? maybeModMatrix.modMatrix.routes.filter(
+					(route) => route.enabled && route.destination === resolvedDestination,
+				)
+			: [];
+
+	let modDeltaMin = 0;
+	let modDeltaMax = 0;
+	for (const route of activeRoutes) {
+		const [sourceMin, sourceMax] = routeSourceRange(route.source);
+		const a = route.amount;
+		if (a >= 0) {
+			modDeltaMin += a * sourceMin;
+			modDeltaMax += a * sourceMax;
+		} else {
+			modDeltaMin += a * sourceMax;
+			modDeltaMax += a * sourceMin;
+		}
+	}
+
+	const moddedMin = Math.max(min, Math.min(max, value + modDeltaMin));
+	const moddedMax = Math.max(min, Math.min(max, value + modDeltaMax));
+	const modRangeStartNorm = (moddedMin - min) / (max - min || 1);
+	const modRangeEndNorm = (moddedMax - min) / (max - min || 1);
+	const modRangeStartAngle = -230 + modRangeStartNorm * 280;
+	const modRangeEndAngle = -230 + modRangeEndNorm * 280;
+	const modStartRad = (modRangeStartAngle * Math.PI) / 180;
+	const modEndRad = (modRangeEndAngle * Math.PI) / 180;
+	const modStartX = 28 + Math.cos(modStartRad) * 19.5;
+	const modStartY = 28 + Math.sin(modStartRad) * 19.5;
+	const modEndX = 28 + Math.cos(modEndRad) * 19.5;
+	const modEndY = 28 + Math.sin(modEndRad) * 19.5;
+	const modSweep = Math.max(0, modRangeEndNorm - modRangeStartNorm) * 280;
+	const modLargeArcFlag = modSweep >= 180 ? 1 : 0;
+	const hasModRange = activeRoutes.length > 0 && moddedMax > moddedMin;
+	const modRangePath = hasModRange
+		? `M ${modStartX} ${modStartY} A 19.5 19.5 0 ${modLargeArcFlag} 1 ${modEndX} ${modEndY}`
+		: "";
 
 	const handlePointerDown = (event: React.PointerEvent) => {
 		if (disabled) return;
@@ -192,6 +251,16 @@ export function ControlKnob({
 						strokeWidth="4"
 						strokeLinecap="round"
 					/>
+					{hasModRange && (
+						<path
+							d={modRangePath}
+							fill="none"
+							stroke="#67c7ff"
+							strokeOpacity="0.9"
+							strokeWidth="2"
+							strokeLinecap="round"
+						/>
+					)}
 					<line
 						x1="28"
 						y1="28"
@@ -235,9 +304,6 @@ export function ControlKnob({
 			)}
 		</div>
 	);
-
-	const resolvedDestination =
-		modDestination ?? resolveModDestination(modulatable, { lineIndex });
 
 	if (resolvedDestination) {
 		return (

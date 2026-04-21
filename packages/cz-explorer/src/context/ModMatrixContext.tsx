@@ -33,3 +33,5 @@ export const useModMatrix = () => {
 	}
 	return context;
 };
+
+export const useOptionalModMatrix = () => useContext(ModMatrixContext);

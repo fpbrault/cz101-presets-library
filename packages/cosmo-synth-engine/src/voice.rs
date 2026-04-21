@@ -56,7 +56,7 @@ impl ModSources {
     }
 }
 
-/// Sum all enabled routes targeting `dest`, clamping the total to [-1, 1].
+/// Sum all enabled routes targeting `dest`, clamping the total to [-2, 2].
 fn mod_value_for(dest: ModDestination, matrix: &ModMatrix, sources: &ModSources) -> f32 {
     let mut total = 0.0_f32;
     for route in &matrix.routes {
@@ -64,7 +64,7 @@ fn mod_value_for(dest: ModDestination, matrix: &ModMatrix, sources: &ModSources)
             total += route.amount * sources.source_value(route.source);
         }
     }
-    total.clamp(-1.0, 1.0)
+    total.clamp(-2.0, 2.0)
 }
 
 fn algo_param_slot_mods_for_line(
