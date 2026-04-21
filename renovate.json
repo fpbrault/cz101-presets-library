@@ -1,11 +1,13 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": ["config:recommended"],
-	"enabledManagers": ["bun", "cargo", "github-actions"],
+	"enabledManagers": ["bun", "cargo", "git-submodules", "github-actions"],
+	"cloneSubmodules": true,
+	"cloneSubmodulesFilter": ["vendor/beamer"],
 	"ignorePaths": [
 		"**/dist/**",
 		"vendor/**",
-		"public/cosmo-synth-engine-wasm/**",
+		"public/**",
 		"packages/cz-explorer/public/cosmo-synth-engine-wasm/**",
 		".opencode/**"
 	],
@@ -38,6 +40,11 @@
 			"matchUpdateTypes": ["major"],
 			"automerge": false,
 			"labels": ["dependencies", "major-update"]
+		},
+		{
+			"description": "Enable git submodule updates",
+			"matchManagers": ["git-submodules"],
+			"enabled": true
 		},
 		{
 			"description": "Group Tauri plugins and core together",
