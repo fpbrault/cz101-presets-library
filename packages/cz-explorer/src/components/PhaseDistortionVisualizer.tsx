@@ -129,6 +129,7 @@ export function SharedPhaseDistortionVisualizer({
 		filterEnvAmount,
 		pitchBendRange,
 		modWheelVibratoDepth,
+		modMatrix,
 		gatherState,
 		applyPreset,
 	} = synthState;
@@ -239,6 +240,7 @@ export function SharedPhaseDistortionVisualizer({
 		filterEnvAmount,
 		pitchBendRange,
 		modWheelVibratoDepth,
+		modMatrix,
 	});
 
 	const handleLoadLibraryPreset = useCallback(

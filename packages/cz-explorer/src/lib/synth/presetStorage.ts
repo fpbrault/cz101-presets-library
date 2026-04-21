@@ -135,6 +135,7 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 		},
 		pitchBendRange: 2,
 		modWheelVibratoDepth: 0,
+		modMatrix: { routes: [] },
 	},
 };
 
