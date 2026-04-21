@@ -11,6 +11,7 @@ import type {
 	LfoTarget,
 	LfoWaveform,
 	LineSelect,
+	ModMatrix,
 	ModMode,
 	PortamentoMode,
 	StepEnvData,
@@ -101,6 +102,7 @@ type UseSynthParamsToWorkletParams = {
 	filterEnvAmount: number;
 	pitchBendRange: number;
 	modWheelVibratoDepth: number;
+	modMatrix: ModMatrix;
 };
 
 export function useSynthParamsToWorklet({
@@ -186,6 +188,7 @@ export function useSynthParamsToWorklet({
 	filterEnvAmount,
 	pitchBendRange,
 	modWheelVibratoDepth,
+	modMatrix,
 }: UseSynthParamsToWorkletParams) {
 	const adapter = useMemo(
 		() =>
@@ -279,6 +282,7 @@ export function useSynthParamsToWorklet({
 				filterEnvAmount,
 				pitchBendRange,
 				modWheelVibratoDepth,
+				modMatrix,
 			}),
 		[
 			effectivePitchHz,
@@ -361,6 +365,7 @@ export function useSynthParamsToWorklet({
 			filterEnvAmount,
 			pitchBendRange,
 			modWheelVibratoDepth,
+			modMatrix,
 		],
 	);
 

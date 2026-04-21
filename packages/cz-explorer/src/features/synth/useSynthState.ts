@@ -18,6 +18,7 @@ import type {
 	LfoTarget,
 	LfoWaveform,
 	LineSelect,
+	ModMatrix,
 	ModMode,
 	PolyMode,
 	PortamentoMode,
@@ -186,6 +187,7 @@ export function useSynthState() {
 
 	const [pitchBendRange, setPitchBendRange] = useState(2);
 	const [modWheelVibratoDepth, setModWheelVibratoDepth] = useState(0);
+	const [modMatrix, setModMatrix] = useState<ModMatrix>({ routes: [] });
 
 	const gatherState = useCallback((): SynthPresetV1 => {
 		const line1NormalizedAlgoControls = normalizeAlgoControls(
@@ -302,6 +304,7 @@ export function useSynthState() {
 				},
 				pitchBendRange,
 				modWheelVibratoDepth,
+				modMatrix,
 			},
 		};
 	}, [
@@ -360,6 +363,7 @@ export function useSynthState() {
 		lineSelect,
 		modMode,
 		modWheelVibratoDepth,
+		modMatrix,
 		phaseModEnabled,
 		pitchBendRange,
 		pmPre,
@@ -522,6 +526,11 @@ export function useSynthState() {
 		setFilterEnvAmount(safe(p.filter?.envAmount, 0));
 		setPitchBendRange(safe(p.pitchBendRange, 2));
 		setModWheelVibratoDepth(safe(p.modWheelVibratoDepth, 0));
+		setModMatrix(
+			p.modMatrix && typeof p.modMatrix === "object"
+				? (p.modMatrix as ModMatrix)
+				: { routes: [] },
+		);
 	}, []);
 
 	return {
@@ -685,6 +694,8 @@ export function useSynthState() {
 		setPitchBendRange,
 		modWheelVibratoDepth,
 		setModWheelVibratoDepth,
+		modMatrix,
+		setModMatrix,
 		gatherState,
 		applyPreset,
 	};
