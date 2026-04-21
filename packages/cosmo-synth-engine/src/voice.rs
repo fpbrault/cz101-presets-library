@@ -10,14 +10,63 @@ use crate::dsp_utils::{lfo_output, wrap01};
 use crate::envelope::EnvGen;
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
-    FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModMode, PortamentoMode,
-    SynthParams, VelocityTarget,
+    FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModDestination, ModMatrix,
+    ModMode, ModSource, PortamentoMode, SynthParams, VelocityTarget,
 };
 
 // TWO_PI for f32
 const TWO_PI: f32 = core::f32::consts::PI * 2.0;
 const DEFAULT_BASE_FREQ: f32 = 220.0;
 const SILENCE_THRESHOLD: f32 = 0.001;
+
+// ---------------------------------------------------------------------------
+// Modulation helpers
+// ---------------------------------------------------------------------------
+
+/// Pre-computed modulation source values for one render call.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ModSources {
+    pub lfo1: f32,
+    /// LFO2 — stub, always 0.0 this phase.
+    pub lfo2: f32,
+    pub velocity: f32,
+    pub mod_wheel: f32,
+    /// Aftertouch — stub, always 0.0 this phase.
+    pub aftertouch: f32,
+}
+
+impl ModSources {
+    fn new(lfo1: f32, velocity: f32, mod_wheel: f32) -> Self {
+        Self {
+            lfo1,
+            lfo2: 0.0,
+            velocity,
+            mod_wheel,
+            aftertouch: 0.0,
+        }
+    }
+
+    fn source_value(&self, source: ModSource) -> f32 {
+        match source {
+            ModSource::Lfo1 => self.lfo1,
+            ModSource::Lfo2 => self.lfo2,
+            ModSource::Velocity => self.velocity,
+            ModSource::ModWheel => self.mod_wheel,
+            ModSource::Aftertouch => self.aftertouch,
+        }
+    }
+}
+
+/// Sum all enabled routes targeting `dest`, clamping the total to [-1, 1].
+fn mod_value_for(dest: ModDestination, matrix: &ModMatrix, sources: &ModSources) -> f32 {
+    let mut total = 0.0_f32;
+    for route in &matrix.routes {
+        if route.enabled && route.destination == dest {
+            total += route.amount * sources.source_value(route.source);
+        }
+    }
+    total.clamp(-1.0, 1.0)
+}
 
 // ---------------------------------------------------------------------------
 // LineEnvs — per-line group of three envelope generators
@@ -180,7 +229,8 @@ pub fn render_voice(
         return 0.0;
     }
 
-    let mut signal = build_signal_state(voice, p, &env, base_freq);
+    let mod_sources = ModSources::new(lfo_mod_val, voice.velocity, mod_wheel);
+    let mut signal = build_signal_state(voice, p, &env, base_freq, &mod_sources);
     apply_pitch_and_lfo_modulation(
         voice,
         p,
@@ -189,10 +239,11 @@ pub fn render_voice(
         lfo_mod_val,
         pitch_bend_semitones,
         mod_wheel,
+        &mod_sources,
         &mut signal,
     );
 
-    let phase = build_phase_frame(voice, p, sr, base_freq);
+    let phase = build_phase_frame(voice, p, sr, base_freq, &mod_sources);
     let (s1, ks_raw1) = voice.algo_runtime.render_line1(
         LineRenderConfig::from_line(
             l1,
@@ -232,7 +283,11 @@ pub fn render_voice(
         signal.final_dca1,
         signal.final_dca2,
     );
-    let sample = apply_filter(sample, voice, p, lfo_mod_val, sr, env.dcw1);
+    let sample = apply_filter(sample, voice, p, lfo_mod_val, sr, env.dcw1, &mod_sources);
+
+    // Apply volume modulation from mod matrix
+    let volume_mod = mod_value_for(ModDestination::Volume, &p.mod_matrix, &mod_sources);
+    let sample = sample * (1.0 + volume_mod);
 
     advance_voice_phase(
         voice,
@@ -328,9 +383,11 @@ fn build_signal_state(
     p: &SynthParams,
     env: &EnvelopeSnapshot,
     base_freq: f32,
+    sources: &ModSources,
 ) -> SignalState {
     let l1 = &p.line1;
     let l2 = &p.line2;
+    let matrix = &p.mod_matrix;
     let compensated_dca1 = compensated_dca_level(l1, env.dca1, env.dcw1_env);
     let compensated_dca2 = compensated_dca_level(l2, env.dca2, env.dcw2_env);
     let vel = voice.velocity;
@@ -343,13 +400,19 @@ fn build_signal_state(
         _ => 1.0,
     };
 
+    // Mod matrix offsets for DCW/DCA
+    let dcw1_mod = mod_value_for(ModDestination::Line1DcwBase, matrix, sources);
+    let dcw2_mod = mod_value_for(ModDestination::Line2DcwBase, matrix, sources);
+    let dca1_mod = mod_value_for(ModDestination::Line1DcaBase, matrix, sources);
+    let dca2_mod = mod_value_for(ModDestination::Line2DcaBase, matrix, sources);
+
     SignalState {
         effective_freq1: line_frequency(base_freq, l1, env.dco1_env),
         effective_freq2: line_frequency(base_freq, l2, env.dco2_env),
-        final_dcw1: env.dcw1 * vel_dcw,
-        final_dcw2: env.dcw2 * vel_dcw,
-        final_dca1: compensated_dca1 * vel_amp,
-        final_dca2: compensated_dca2 * vel_amp,
+        final_dcw1: (env.dcw1 * vel_dcw + dcw1_mod).clamp(0.0, 1.0),
+        final_dcw2: (env.dcw2 * vel_dcw + dcw2_mod).clamp(0.0, 1.0),
+        final_dca1: (compensated_dca1 * vel_amp + dca1_mod).max(0.0),
+        final_dca2: (compensated_dca2 * vel_amp + dca2_mod).max(0.0),
     }
 }
 
@@ -372,12 +435,20 @@ fn apply_pitch_and_lfo_modulation(
     lfo_mod_val: f32,
     pitch_bend_semitones: f32,
     mod_wheel: f32,
+    sources: &ModSources,
     signal: &mut SignalState,
 ) {
     apply_portamento(voice, &p.portamento, sr, base_freq, signal);
     apply_pitch_bend(pitch_bend_semitones, signal);
     apply_vibrato(voice, p, sr, mod_wheel, signal);
     apply_global_lfo(p, lfo_mod_val, signal);
+    // Pitch modulation from mod matrix (additive semitone offset via ratio)
+    let pitch_mod = mod_value_for(ModDestination::Pitch, &p.mod_matrix, sources);
+    if pitch_mod != 0.0 {
+        let ratio = libm::powf(2.0, pitch_mod * 2.0 / 12.0); // ±2 semitones max
+        signal.effective_freq1 *= ratio;
+        signal.effective_freq2 *= ratio;
+    }
 }
 
 fn apply_portamento(
@@ -488,12 +559,14 @@ fn apply_global_lfo(p: &SynthParams, lfo_mod_val: f32, signal: &mut SignalState)
     }
 }
 
-fn build_phase_frame(voice: &Voice, p: &SynthParams, sr: f32, base_freq: f32) -> PhaseFrame {
+fn build_phase_frame(voice: &Voice, p: &SynthParams, sr: f32, base_freq: f32, sources: &ModSources) -> PhaseFrame {
+    let int_pm_mod = mod_value_for(ModDestination::IntPmAmount, &p.mod_matrix, sources);
+    let int_pm_amount = (p.int_pm_amount + int_pm_mod).clamp(-1.0, 1.0);
     let pm_delta = (base_freq * p.int_pm_ratio) / sr;
     let phi1 = wrap01(voice.phi1);
     let phi2 = wrap01(voice.phi2);
     let pm_phi = wrap01(voice.pm_phi);
-    let pm_mod = p.int_pm_amount * 10.0 * sinf(TWO_PI * pm_phi);
+    let pm_mod = int_pm_amount * 10.0 * sinf(TWO_PI * pm_phi);
 
     let phase_a_input = if p.pm_pre {
         wrap01(phi1 + pm_mod)
@@ -612,6 +685,7 @@ fn apply_filter(
     lfo_mod_val: f32,
     sr: f32,
     dcw1: f32,
+    sources: &ModSources,
 ) -> f32 {
     if !p.filter.enabled {
         return sample;
@@ -623,9 +697,16 @@ fn apply_filter(
     } else {
         0.0
     };
-    let cutoff = (filter.cutoff * (1.0 + filter.env_amount * dcw1) * (1.0 + lfo_filter_mod))
+    let cutoff_mod = mod_value_for(ModDestination::FilterCutoff, &p.mod_matrix, sources);
+    let resonance_mod = mod_value_for(ModDestination::FilterResonance, &p.mod_matrix, sources);
+    let env_amount_mod = mod_value_for(ModDestination::FilterEnvAmount, &p.mod_matrix, sources);
+    let effective_env_amount = (filter.env_amount + env_amount_mod).clamp(-1.0, 1.0);
+    let cutoff = (filter.cutoff
+        * libm::powf(2.0, cutoff_mod * 4.0) // ±4 octaves max for cutoff mod
+        * (1.0 + effective_env_amount * dcw1)
+        * (1.0 + lfo_filter_mod))
         .clamp(20.0, sr * 0.49);
-    let resonance = filter.resonance.max(0.001);
+    let resonance = (filter.resonance + resonance_mod).max(0.001);
     let w0 = TWO_PI * cutoff / sr;
     let cos_w0 = cosf(w0);
     let sin_w0 = sinf(w0);
