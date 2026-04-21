@@ -616,6 +616,8 @@ impl Default for FilterParams {
 pub struct SynthParams {
     pub line_select: LineSelect,
     pub mod_mode: ModMode,
+    #[serde(default = "default_ring_gain")]
+    pub ring_gain: f32,
     pub octave: f32,
     pub line1: LineParams,
     pub line2: LineParams,
@@ -648,11 +650,16 @@ pub(crate) fn default_pitch_bend_range() -> f32 {
     2.0
 }
 
+pub(crate) fn default_ring_gain() -> f32 {
+    2.0
+}
+
 impl Default for SynthParams {
     fn default() -> Self {
         Self {
             line_select: LineSelect::default(),
             mod_mode: ModMode::default(),
+            ring_gain: default_ring_gain(),
             octave: 0.0,
             line1: LineParams::default(),
             line2: LineParams::default(),

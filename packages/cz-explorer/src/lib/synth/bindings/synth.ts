@@ -195,17 +195,17 @@ export type AlgoControlAssignmentV1 = { controlId: string; value: number }
 /**
  * One selectable option for list-based controls.
  */
-export type AlgoControlOptionV1 = { value: string; label: string; set: AlgoControlAssignmentV1 }
+export type AlgoControlOptionV1 = { value: string; label: string; set: AlgoControlAssignmentV1[] }
 
 /**
  * Describes one control surfaced by an algorithm package.
  */
-export type AlgoControlV1 = { id: string; label: string; description: string; kind: AlgoControlKindV1; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1 }
+export type AlgoControlV1 = { id: string; label: string; description: string; kind: AlgoControlKindV1; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1[] }
 
 /**
  * Complete algorithm package definition.
  */
-export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visible: boolean; controls: AlgoControlV1 }
+export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visible: boolean; controls: AlgoControlV1[] }
 
 /**
  * UI catalog entry for algorithm pickers.
@@ -217,7 +217,7 @@ export type AlgoUiEntryV1 = { id: Algo; label: string; iconPath: string; visible
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
-export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; octave: number; line1: LineParams; line2: LineParams; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; filter: FilterParams; 
+export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; filter: FilterParams; 
 /**
  * Pitch bend wheel range in semitones (1-24). Default 2.
  */
