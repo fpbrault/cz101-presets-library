@@ -68,6 +68,42 @@ fn mod_value_for(dest: ModDestination, matrix: &ModMatrix, sources: &ModSources)
     total.clamp(-1.0, 1.0)
 }
 
+fn algo_param_slot_mods_for_line(
+    line_index: u8,
+    matrix: &ModMatrix,
+    sources: &ModSources,
+) -> [f32; 8] {
+    let destinations = if line_index == 2 {
+        [
+            ModDestination::Line2AlgoParam1,
+            ModDestination::Line2AlgoParam2,
+            ModDestination::Line2AlgoParam3,
+            ModDestination::Line2AlgoParam4,
+            ModDestination::Line2AlgoParam5,
+            ModDestination::Line2AlgoParam6,
+            ModDestination::Line2AlgoParam7,
+            ModDestination::Line2AlgoParam8,
+        ]
+    } else {
+        [
+            ModDestination::Line1AlgoParam1,
+            ModDestination::Line1AlgoParam2,
+            ModDestination::Line1AlgoParam3,
+            ModDestination::Line1AlgoParam4,
+            ModDestination::Line1AlgoParam5,
+            ModDestination::Line1AlgoParam6,
+            ModDestination::Line1AlgoParam7,
+            ModDestination::Line1AlgoParam8,
+        ]
+    };
+
+    let mut out = [0.0_f32; 8];
+    for (idx, dest) in destinations.iter().enumerate() {
+        out[idx] = mod_value_for(*dest, matrix, sources);
+    }
+    out
+}
+
 // ---------------------------------------------------------------------------
 // LineEnvs — per-line group of three envelope generators
 // ---------------------------------------------------------------------------
@@ -230,6 +266,8 @@ pub fn render_voice(
     }
 
     let mod_sources = ModSources::new(lfo_mod_val, voice.velocity, mod_wheel);
+    let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
+    let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
     let mut signal = build_signal_state(voice, p, &env, base_freq, &mod_sources);
     apply_pitch_and_lfo_modulation(
         voice,
@@ -254,6 +292,7 @@ pub fn render_voice(
             signal.final_dca1,
             signal.effective_freq1,
             sr,
+            line1_algo_param_mods,
         ),
     );
     let (s2, ks_raw2) = voice.algo_runtime.render_line2(
@@ -266,6 +305,7 @@ pub fn render_voice(
             signal.final_dca2,
             signal.effective_freq2,
             sr,
+            line2_algo_param_mods,
         ),
     );
 
@@ -282,6 +322,8 @@ pub fn render_voice(
         ks_raw2,
         signal.final_dca1,
         signal.final_dca2,
+        line1_algo_param_mods,
+        line2_algo_param_mods,
     );
     let sample = apply_filter(sample, voice, p, lfo_mod_val, sr, env.dcw1, &mod_sources);
 
@@ -609,6 +651,8 @@ fn mix_line_outputs(
     ks_raw2: Option<f32>,
     final_dca1: f32,
     final_dca2: f32,
+    line1_algo_param_mods: [f32; 8],
+    line2_algo_param_mods: [f32; 8],
 ) -> f32 {
     let (mix_a, mix_b) = select_line_sources(
         p,
@@ -623,6 +667,8 @@ fn mix_line_outputs(
         ks_raw2,
         final_dca1,
         final_dca2,
+        line1_algo_param_mods,
+        line2_algo_param_mods,
     );
 
     match p.mod_mode {
@@ -658,20 +704,54 @@ fn select_line_sources(
     ks_raw2: Option<f32>,
     final_dca1: f32,
     final_dca2: f32,
+    line1_algo_param_mods: [f32; 8],
+    line2_algo_param_mods: [f32; 8],
 ) -> (f32, f32) {
     match p.line_select {
         LineSelect::L1PlusL1Prime => {
-            let cfg = LineRenderConfig::from_line(l1, cycle_count1, phi1, phi1, 0.0, final_dca1, 0.0, 1.0);
+            let cfg = LineRenderConfig::from_line(
+                l1,
+                cycle_count1,
+                phi1,
+                phi1,
+                0.0,
+                final_dca1,
+                0.0,
+                1.0,
+                line1_algo_param_mods,
+            );
             let algo_prime = cfg.secondary_algo.unwrap_or(cfg.primary_algo);
-            let s1_prime =
-                generators::render_algo_sample(algo_prime, phi1, 0.0, cfg.algo_controls, ks_raw1) * final_dca1;
+            let s1_prime = generators::render_algo_sample(
+                algo_prime,
+                phi1,
+                0.0,
+                cfg.algo_controls,
+                cfg.algo_param_mods,
+                ks_raw1,
+            ) * final_dca1;
             (s1, s1_prime)
         }
         LineSelect::L1PlusL2Prime => {
-            let cfg = LineRenderConfig::from_line(l2, cycle_count2, phi1, phi1, 0.0, final_dca2, 0.0, 1.0);
+            let cfg = LineRenderConfig::from_line(
+                l2,
+                cycle_count2,
+                phi1,
+                phi1,
+                0.0,
+                final_dca2,
+                0.0,
+                1.0,
+                line2_algo_param_mods,
+            );
             let algo_prime = cfg.secondary_algo.unwrap_or(cfg.primary_algo);
-            let s2_prime =
-                generators::render_algo_sample(algo_prime, phi1, 0.0, cfg.algo_controls, ks_raw2) * final_dca2;
+            let s2_prime = generators::render_algo_sample(
+                algo_prime,
+                phi1,
+                0.0,
+                cfg.algo_controls,
+                cfg.algo_param_mods,
+                ks_raw2,
+            ) * final_dca2;
             (s1, s2_prime)
         }
         _ => (s1, s2),

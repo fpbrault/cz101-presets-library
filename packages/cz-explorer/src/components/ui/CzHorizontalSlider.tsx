@@ -1,5 +1,9 @@
 import ModulatableControl from "@/components/ui/ModulatableControl";
 import type { ModDestination } from "@/lib/synth/bindings/synth";
+import {
+	type ModTarget,
+	resolveModDestination,
+} from "@/lib/synth/modDestination";
 
 interface CzHorizontalSliderProps {
 	value: number;
@@ -9,6 +13,10 @@ interface CzHorizontalSliderProps {
 	onChange: (v: number) => void;
 	disabled?: boolean;
 	className?: string;
+	/** Simple modulation opt-in with auto destination resolution. */
+	modulatable?: ModTarget;
+	/** Line context for line-scoped targets (defaults to line 1). */
+	lineIndex?: 1 | 2;
 	/** When provided, wraps the slider in a ModulatableControl for this destination. */
 	modDestination?: ModDestination;
 }
@@ -26,6 +34,8 @@ export default function CzHorizontalSlider({
 	onChange,
 	disabled = false,
 	className = "",
+	modulatable,
+	lineIndex = 1,
 	modDestination,
 }: CzHorizontalSliderProps) {
 	const input = (
@@ -41,9 +51,12 @@ export default function CzHorizontalSlider({
 		/>
 	);
 
-	if (modDestination) {
+	const resolvedDestination =
+		modDestination ?? resolveModDestination(modulatable, { lineIndex });
+
+	if (resolvedDestination) {
 		return (
-			<ModulatableControl destinationId={modDestination}>
+			<ModulatableControl destinationId={resolvedDestination}>
 				{input}
 			</ModulatableControl>
 		);

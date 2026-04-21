@@ -1,6 +1,10 @@
 import { useCallback, useRef } from "react";
 import ModulatableControl from "@/components/ui/ModulatableControl";
 import type { ModDestination } from "@/lib/synth/bindings/synth";
+import {
+	type ModTarget,
+	resolveModDestination,
+} from "@/lib/synth/modDestination";
 
 interface CzVerticalSliderProps {
 	value: number;
@@ -11,6 +15,10 @@ interface CzVerticalSliderProps {
 	color?: string;
 	/** Optional fixed height for the slider in px. When omitted, it fills parent height. */
 	trackHeight?: number;
+	/** Simple modulation opt-in with auto destination resolution. */
+	modulatable?: ModTarget;
+	/** Line context for line-scoped targets (defaults to line 1). */
+	lineIndex?: 1 | 2;
 	/** When provided, wraps the slider in a ModulatableControl for this destination. */
 	modDestination?: ModDestination;
 }
@@ -27,6 +35,8 @@ export default function CzVerticalSlider({
 	onChange,
 	color = "#9cb937",
 	trackHeight,
+	modulatable,
+	lineIndex = 1,
 	modDestination,
 }: CzVerticalSliderProps) {
 	const trackRef = useRef<HTMLDivElement>(null);
@@ -224,9 +234,12 @@ export default function CzVerticalSlider({
 		</div>
 	);
 
-	if (modDestination) {
+	const resolvedDestination =
+		modDestination ?? resolveModDestination(modulatable, { lineIndex });
+
+	if (resolvedDestination) {
 		return (
-			<ModulatableControl destinationId={modDestination}>
+			<ModulatableControl destinationId={resolvedDestination}>
 				{inner}
 			</ModulatableControl>
 		);

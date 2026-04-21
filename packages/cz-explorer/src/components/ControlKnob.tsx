@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import ModulatableControl from "@/components/ui/ModulatableControl";
 import type { ModDestination } from "@/lib/synth/bindings/synth";
+import {
+	type ModTarget,
+	resolveModDestination,
+} from "@/lib/synth/modDestination";
 
 interface ControlKnobProps {
 	value: number;
@@ -13,6 +17,14 @@ interface ControlKnobProps {
 	size?: number;
 	valueFormatter?: (value: number) => string;
 	defaultValue?: number;
+	/**
+	 * Simple modulation opt-in: set this to a target key (for example "volume" or
+	 * line-scoped values like "dcwBase") and the destination is resolved
+	 * automatically.
+	 */
+	modulatable?: ModTarget;
+	/** Line context for line-scoped targets (defaults to line 1). */
+	lineIndex?: 1 | 2;
 	/** When provided, wraps the knob in a ModulatableControl for this destination. */
 	modDestination?: ModDestination;
 }
@@ -28,6 +40,8 @@ export function ControlKnob({
 	size = 32,
 	valueFormatter,
 	defaultValue,
+	modulatable,
+	lineIndex = 1,
 	modDestination,
 }: ControlKnobProps) {
 	const [dragging, setDragging] = useState(false);
@@ -222,9 +236,12 @@ export function ControlKnob({
 		</div>
 	);
 
-	if (modDestination) {
+	const resolvedDestination =
+		modDestination ?? resolveModDestination(modulatable, { lineIndex });
+
+	if (resolvedDestination) {
 		return (
-			<ModulatableControl destinationId={modDestination} label={label}>
+			<ModulatableControl destinationId={resolvedDestination} label={label}>
 				{inner}
 			</ModulatableControl>
 		);

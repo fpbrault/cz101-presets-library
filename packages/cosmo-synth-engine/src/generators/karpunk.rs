@@ -3,7 +3,6 @@ extern crate alloc;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::params::AlgoControlValueV1;
 use crate::params::Algo;
 
 use super::{
@@ -176,12 +175,13 @@ impl Default for KarpunkState {
 
 fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 	let control_value = |id: &str, default: f32| {
-		if let Some(entries) = config.algo_controls {
-			if let Some(entry) = entries.iter().find(|entry: &&AlgoControlValueV1| entry.id == id) {
-				return entry.value;
-			}
-		}
-		default
+		super::resolve_algo_control_value(
+			config.primary_algo,
+			config.algo_controls,
+			id,
+			default,
+			&config.algo_param_mods,
+		)
 	};
 
 	let ks_raw = if requires_state_tick(config.primary_algo, config.secondary_algo) {
@@ -206,6 +206,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
 			config.phase,
 			primary_dcw,
 			config.algo_controls,
+			config.algo_param_mods,
 			ks_raw,
 		);
 		let secondary = super::render_algo_sample(
@@ -213,6 +214,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
 			config.phase,
 			secondary_dcw,
 			config.algo_controls,
+			config.algo_param_mods,
 			ks_raw,
 		);
 		blend(config.primary_algo, primary, secondary, config.blend)
@@ -222,6 +224,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
 			config.phase,
 			config.final_dcw,
 			config.algo_controls,
+			config.algo_param_mods,
 			ks_raw,
 		)
 	};
