@@ -27,6 +27,7 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 						color="#9cb937"
 						label="Volume"
 						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+						modDestination="volume"
 					/>
 				</div>
 				<div className="space-y-2">

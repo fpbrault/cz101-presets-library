@@ -106,6 +106,7 @@ const LfoPanel: AsidePanelComponent<"lfo"> = Object.assign(
 						color="#7f9de4"
 						label="Rate"
 						valueFormatter={(v) => `${v.toFixed(1)}Hz`}
+						modDestination="lfoRate"
 					/>
 					<ControlKnob
 						value={lfoDepth}
@@ -116,6 +117,7 @@ const LfoPanel: AsidePanelComponent<"lfo"> = Object.assign(
 						color="#7f9de4"
 						label="Depth"
 						valueFormatter={(v) => `${Math.round(v * 100)}%`}
+						modDestination="lfoDepth"
 					/>
 					<ControlKnob
 						value={lfoOffset}

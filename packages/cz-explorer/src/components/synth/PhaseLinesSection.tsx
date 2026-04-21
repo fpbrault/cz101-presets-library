@@ -255,6 +255,7 @@ export default function PhaseLinesSection({
 						key={activeLineLabel}
 						label={activeLineLabel}
 						color="#9cb937"
+						lineIndex={activeLine === "line1" ? 1 : 2}
 						algo={activeLineConfig.algo}
 						setAlgo={activeLineConfig.setAlgo}
 						algo2={activeLineConfig.algo2}

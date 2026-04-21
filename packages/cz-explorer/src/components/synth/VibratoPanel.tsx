@@ -53,6 +53,7 @@ const VibratoPanel: AsidePanelComponent<"vibrato"> = Object.assign(
 						color="#7f9de4"
 						label="Depth"
 						valueFormatter={(v) => `${Math.round(v)}`}
+						modDestination="vibratoDepth"
 					/>
 					<ControlKnob
 						value={vibratoDelay}

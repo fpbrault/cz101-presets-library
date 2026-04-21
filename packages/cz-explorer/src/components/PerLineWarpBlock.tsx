@@ -3,6 +3,7 @@ import { getCzPresetDefaults } from "@/lib/synth/algoRef";
 import type {
 	AlgoControlValueV1,
 	CzWaveform,
+	ModDestination,
 	StepEnvData,
 	WindowType,
 } from "@/lib/synth/bindings/synth";
@@ -53,6 +54,8 @@ interface PerLineWarpBlockProps {
 	setKeyFollow: (v: number) => void;
 	algoControls: AlgoControlValueV1[];
 	setAlgoControls: (value: AlgoControlValueV1[]) => void;
+	/** 1 or 2, used to resolve mod-matrix destinations. Defaults to 1. */
+	lineIndex?: 1 | 2;
 	activeSection?: SectionTab;
 }
 
@@ -147,6 +150,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setKeyFollow,
 	algoControls = [],
 	setAlgoControls = () => {},
+	lineIndex = 1,
 	activeSection: activeSectionProp,
 }: PerLineWarpBlockProps) {
 	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
@@ -402,70 +406,78 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										Parameters
 									</div>
 									<div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 items-stretch">
-										{[
-											{
-												label: "DCW Amt",
-												value: warpAmount,
-												min: 0,
-												max: 1,
-												step: 0.01,
-												color: color,
-												fmt: (v: number) => v.toFixed(2),
-												onChange: setWarpAmount,
-											},
-											{
-												label: "DCW Comp",
-												value: dcwComp,
-												min: 0,
-												max: 1,
-												step: 0.01,
-												color: "#7f9de4",
-												fmt: (v: number) => `${Math.round(v * 100)}%`,
-												onChange: setDcwComp,
-											},
-											{
-												label: "Level",
-												value: level,
-												min: 0,
-												max: 1,
-												step: 0.01,
-												color: "#9cb937",
-												fmt: (v: number) => `${Math.round(v * 100)}%`,
-												onChange: setLevel,
-											},
-											{
-												label: "Oct",
-												value: octave,
-												min: -2,
-												max: 2,
-												step: 1,
-												color: "#7f9de4",
-												fmt: (v: number) =>
-													`${v >= 0 ? "+" : ""}${Math.round(v)}`,
-												onChange: (v: number) => setOctave(Math.round(v)),
-											},
-											{
-												label: "Fine",
-												value: fineDetune,
-												min: -50,
-												max: 50,
-												step: 1,
-												color: "#9cb937",
-												fmt: (v: number) =>
-													`${v >= 0 ? "+" : ""}${Math.round(v)}`,
-												onChange: (v: number) => setFineDetune(Math.round(v)),
-											},
-											{
-												label: "DCO Rng",
-												value: dcoDepth,
-												min: 0,
-												max: 24,
-												step: 1,
-												color: "#9cb937",
-												fmt: (v: number) => `${Math.round(v)} st`,
-												onChange: (v: number) => setDcoDepth(Math.round(v)),
-											},
-										].map(
+										{(
+											[
+												{
+													label: "DCW Amt",
+													value: warpAmount,
+													min: 0,
+													max: 1,
+													step: 0.01,
+													color: color,
+													fmt: (v: number) => v.toFixed(2),
+													onChange: setWarpAmount,
+													modDest: (lineIndex === 1 ? "line1DcwBase" : "line2DcwBase") as ModDestination,
+												},
+												{
+													label: "DCW Comp",
+													value: dcwComp,
+													min: 0,
+													max: 1,
+													step: 0.01,
+													color: "#7f9de4",
+													fmt: (v: number) => `${Math.round(v * 100)}%`,
+													onChange: setDcwComp,
+													modDest: (lineIndex === 1 ? "line1DcwComp" : "line2DcwComp") as ModDestination,
+												},
+												{
+													label: "Level",
+													value: level,
+													min: 0,
+													max: 1,
+													step: 0.01,
+													color: "#9cb937",
+													fmt: (v: number) => `${Math.round(v * 100)}%`,
+													onChange: setLevel,
+													modDest: (lineIndex === 1 ? "line1DcaBase" : "line2DcaBase") as ModDestination,
+												},
+												{
+													label: "Oct",
+													value: octave,
+													min: -2,
+													max: 2,
+													step: 1,
+													color: "#7f9de4",
+													fmt: (v: number) =>
+														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
+													onChange: (v: number) => setOctave(Math.round(v)),
+													modDest: (lineIndex === 1 ? "line1Octave" : "line2Octave") as ModDestination,
+												},
+												{
+													label: "Fine",
+													value: fineDetune,
+													min: -50,
+													max: 50,
+													step: 1,
+													color: "#9cb937",
+													fmt: (v: number) =>
+														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
+													onChange: (v: number) => setFineDetune(Math.round(v)),
+													modDest: (lineIndex === 1 ? "line1Detune" : "line2Detune") as ModDestination,
+												},
+												{
+													label: "DCO Rng",
+													value: dcoDepth,
+													min: 0,
+													max: 24,
+													step: 1,
+													color: "#9cb937",
+													fmt: (v: number) => `${Math.round(v)} st`,
+													onChange: (v: number) => setDcoDepth(Math.round(v)),
+													modDest: (lineIndex === 1 ? "line1DcoDepth" : "line2DcoDepth") as ModDestination,
+												},
+											] as const
+										).map(
 											({
 												label,
 												value,
@@ -475,6 +487,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 												color: c,
 												fmt,
 												onChange,
+												modDest,
 											}) => (
 												<div
 													key={label}
@@ -491,6 +504,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 															step={step}
 															color={c}
 															onChange={onChange}
+															modDestination={modDest}
 														/>
 													</div>
 												</div>
