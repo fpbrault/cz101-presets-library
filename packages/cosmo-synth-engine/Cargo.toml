@@ -16,7 +16,7 @@ required-features = ["specta-bindings"]
 [features]
 default = ["std"]
 std = ["serde/std", "serde_json"]
-wasm = ["wasm-bindgen", "web-sys", "getrandom/js", "serde_json"]
+wasm = ["wasm-bindgen", "web-sys", "getrandom/wasm_js", "serde_json"]
 specta-bindings = [
 	"dep:specta",
 	"dep:specta-serde",
