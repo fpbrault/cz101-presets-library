@@ -7,27 +7,41 @@ description = "Cosmo PD-101 Phase Distortion synthesizer DSP core"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-# UniFFI bindgen CLI — run with: cargo run --features uniffi --bin uniffi-bindgen
+# Specta bindings generator — run with: cargo run --features specta-bindings --bin export-specta-bindings
 [[bin]]
-name = "uniffi-bindgen"
-path = "uniffi-bindgen.rs"
-required-features = ["uniffi"]
+name = "export-specta-bindings"
+path = "export_specta_bindings.rs"
+required-features = ["specta-bindings"]
 
 [features]
 default = ["std"]
 std = ["serde/std", "serde_json"]
 wasm = ["wasm-bindgen", "web-sys", "getrandom/js", "serde_json"]
-uniffi = ["dep:uniffi", "serde_json", "std"]
+specta-bindings = [
+	"dep:specta",
+	"dep:specta-serde",
+	"dep:specta-typescript",
+	"serde_json",
+	"std",
+]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], default-features = false }
 serde_json = { version = "1", optional = true }
 libm = "0.2"
 
-[dependencies.uniffi]
-version = "0.31"
+[dependencies.specta]
+version = "=2.0.0-rc.20"
 optional = true
-features = ["cli"]
+features = ["derive"]
+
+[dependencies.specta-serde]
+version = "=0.0.7"
+optional = true
+
+[dependencies.specta-typescript]
+version = "=0.0.7"
+optional = true
 
 [dependencies.wasm-bindgen]
 version = "0.2"

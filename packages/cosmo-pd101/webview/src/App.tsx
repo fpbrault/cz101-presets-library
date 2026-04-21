@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import PluginPage from "@/features/plugin/PluginPage";
+import PluginPage from "./PluginPage";
 import "@/App.css";
 import { ensureBeamerLegacyBridge } from "./beamerLegacyBridge";
 import {
@@ -40,22 +40,27 @@ export default function App() {
 
 	return (
 		<>
-			<PluginPage />
-			<div className="fixed bottom-3 right-3 z-9500 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-xs text-slate-200 shadow-xl backdrop-blur">
-				<span className="font-mono">Build {__CZ_BUILD_LABEL__}</span>
-				<button
-					type="button"
-					onClick={handleManualCheck}
-					className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-100 hover:bg-slate-800"
-				>
-					Check updates
-				</button>
-			</div>
-			{manualStatus && (
-				<div className="fixed bottom-14 right-3 z-9600 rounded-md border border-slate-700 bg-slate-900/95 px-3 py-2 text-xs text-slate-200 shadow-lg">
-					{manualStatus}
-				</div>
-			)}
+			<PluginPage
+				headerExtra={
+					<div className="flex items-center gap-2 px-8 -mt-2">
+						<span className="text-3xs font-mono uppercase tracking-[0.2em] text-base-content/50">
+							Build {__CZ_BUILD_LABEL__}
+						</span>
+						<button
+							type="button"
+							onClick={handleManualCheck}
+							className="btn btn-xs font-mono btn-ghost opacity-70"
+						>
+							Check updates
+						</button>
+						{manualStatus ? (
+							<span className="text-3xs font-mono text-base-content/70">
+								{manualStatus}
+							</span>
+						) : null}
+					</div>
+				}
+			/>
 			{updateInfo && (
 				<div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/65 p-4">
 					<div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 text-slate-100 shadow-2xl">

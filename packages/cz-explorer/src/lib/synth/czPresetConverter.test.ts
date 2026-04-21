@@ -57,10 +57,12 @@ describe("convertDecodedPatchToSynthPreset", () => {
 	it("maps CZ waveforms onto the visualizer algorithms", () => {
 		const preset = convertDecodedPatchToSynthPreset(basePatch);
 
-		expect(preset.warpAAlgo).toBe(6);
-		expect(preset.algo2A).toBe(2);
-		expect(preset.modMode).toBe("ring");
-		expect(preset.warpBAlgo).toBe(1);
+		expect(preset.params.line1.algo).toBe("cz101");
+		expect(preset.params.line1.algo2).toBe("cz101");
+		expect(preset.params.line1.cz?.slotAWaveform).toBe("sawPulse");
+		expect(preset.params.line1.cz?.slotBWaveform).toBe("square");
+		expect(preset.params.modMode).toBe("ring");
+		expect(preset.params.line2.cz?.slotAWaveform).toBe("pulse2");
 	});
 
 	it("maps dual-line CZ modes into visualizer line modes and preserves line 2", () => {
@@ -69,14 +71,15 @@ describe("convertDecodedPatchToSynthPreset", () => {
 			lineSelect: "L1+2'",
 		});
 
-		expect(preset.lineSelect).toBe("L1+L2'");
-		expect(preset.warpAAlgo).toBe(6);
-		expect(preset.warpBAlgo).toBe(8);
-		expect(preset.algo2B).toBe(3);
-		expect(preset.modMode).toBe("ring"); // global modMode set from dco1 (line 1 takes precedence)
-		expect(preset.line2Detune).toBe(1720);
-		expect(preset.line2Octave).toBe(1);
-		expect(preset.line2DcaKeyFollow).toBe(3);
-		expect(preset.line2DcwKeyFollow).toBe(4);
+		expect(preset.params.lineSelect).toBe("L1+L2'");
+		expect(preset.params.line1.algo).toBe("cz101");
+		expect(preset.params.line2.algo).toBe("cz101");
+		expect(preset.params.line2.algo2).toBe("cz101");
+		expect(preset.params.line2.cz?.slotAWaveform).toBe("pulse2");
+		expect(preset.params.line2.cz?.slotBWaveform).toBe("pulse");
+		expect(preset.params.modMode).toBe("ring");
+		expect(preset.params.line2.detuneCents).toBe(1720);
+		expect(preset.params.line2.octave).toBe(1);
+		expect(preset.params.line2.keyFollow).toBe(4);
 	});
 });

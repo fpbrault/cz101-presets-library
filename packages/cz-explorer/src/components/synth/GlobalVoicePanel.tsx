@@ -1,71 +1,55 @@
 import ControlKnob from "@/components/ControlKnob";
 import CzButton from "@/components/ui/CzButton";
+import { useSynthParam } from "@/features/synth/SynthParamController";
+import type { AsidePanelComponent } from "./AsidePanelSwitcher";
 import SynthPanelContainer from "./SynthPanelContainer";
 
-type PolyMode = "poly8" | "mono";
-type VelocityTarget = "amp" | "dcw" | "both" | "off";
-
-type GlobalVoicePanelProps = {
-	volume: number;
-	setVolume: (v: number) => void;
-	polyMode: PolyMode;
-	setPolyMode: (v: PolyMode) => void;
-	velocityTarget: VelocityTarget;
-	setVelocityTarget: (v: VelocityTarget) => void;
-	pitchBendRange: number;
-	setPitchBendRange: (v: number) => void;
-	modWheelVibratoDepth: number;
-	setModWheelVibratoDepth: (v: number) => void;
-};
-
-export default function GlobalVoicePanel({
-	volume,
-	setVolume,
-	polyMode,
-	setPolyMode,
-	velocityTarget,
-	setVelocityTarget,
-	pitchBendRange,
-	setPitchBendRange,
-	modWheelVibratoDepth,
-	setModWheelVibratoDepth,
-}: GlobalVoicePanelProps) {
-	return (
-		<SynthPanelContainer>
-			<div className="mb-3 flex justify-center">
-				<ControlKnob
-					value={volume}
-					onChange={setVolume}
-					min={0}
-					max={1}
-					size={32}
-					color="#9cb937"
-					label="Volume"
-					valueFormatter={(value) => `${Math.round(value * 100)}%`}
-				/>
-			</div>
-			<div className="space-y-2">
-				<div className="flex w-full gap-1">
-					<CzButton
-						active={polyMode === "poly8"}
-						onClick={() => setPolyMode("poly8")}
-						className="flex-1"
-					>
-						Poly 8
-					</CzButton>
-					<CzButton
-						active={polyMode === "mono"}
-						onClick={() => setPolyMode("mono")}
-						className="flex-1"
-					>
-						Mono
-					</CzButton>
+const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
+	function GlobalVoicePanel() {
+		const { value: volume, setValue: setVolume } = useSynthParam("volume");
+		const { value: polyMode, setValue: setPolyMode } =
+			useSynthParam("polyMode");
+		const { value: velocityTarget, setValue: setVelocityTarget } =
+			useSynthParam("velocityTarget");
+		const { value: pitchBendRange, setValue: setPitchBendRange } =
+			useSynthParam("pitchBendRange");
+		const { value: modWheelVibratoDepth, setValue: setModWheelVibratoDepth } =
+			useSynthParam("modWheelVibratoDepth");
+		return (
+			<SynthPanelContainer>
+				<div className="mb-3 flex justify-center">
+					<ControlKnob
+						value={volume}
+						onChange={setVolume}
+						min={0}
+						max={1}
+						size={32}
+						color="#9cb937"
+						label="Volume"
+						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
 				</div>
-				<div>
-					<div className="mb-2 cz-light-blue">Velocity</div>
-					<div className="flex flex-wrap gap-1 justify-center">
-						{(["amp", "dcw", "both", "off"] as VelocityTarget[]).map(
-							(target) => (
+				<div className="space-y-2">
+					<div className="flex w-full gap-1">
+						<CzButton
+							active={polyMode === "poly8"}
+							onClick={() => setPolyMode("poly8")}
+							className="flex-1"
+						>
+							Poly 8
+						</CzButton>
+						<CzButton
+							active={polyMode === "mono"}
+							onClick={() => setPolyMode("mono")}
+							className="flex-1"
+						>
+							Mono
+						</CzButton>
+					</div>
+					<div>
+						<div className="mb-2 cz-light-blue">Velocity</div>
+						<div className="flex flex-wrap gap-1 justify-center">
+							{(["amp", "dcw", "both", "off"] as const).map((target) => (
 								<CzButton
 									key={target}
 									active={velocityTarget === target}
@@ -79,33 +63,39 @@ export default function GlobalVoicePanel({
 												? "Both"
 												: "Off"}
 								</CzButton>
-							),
-						)}
+							))}
+						</div>
+					</div>
+					<div className="flex justify-around pt-1">
+						<ControlKnob
+							value={pitchBendRange}
+							onChange={setPitchBendRange}
+							min={1}
+							max={24}
+							size={28}
+							color="#5bc8d4"
+							label="Bend"
+							valueFormatter={(v) => `${Math.round(v)} st`}
+						/>
+						<ControlKnob
+							value={modWheelVibratoDepth}
+							onChange={setModWheelVibratoDepth}
+							min={0}
+							max={99}
+							size={28}
+							color="#5bc8d4"
+							label="Mod→Vib"
+							valueFormatter={(v) => `${Math.round(v)}`}
+						/>
 					</div>
 				</div>
-				<div className="flex justify-around pt-1">
-					<ControlKnob
-						value={pitchBendRange}
-						onChange={setPitchBendRange}
-						min={1}
-						max={24}
-						size={28}
-						color="#5bc8d4"
-						label="Bend"
-						valueFormatter={(v) => `${Math.round(v)} st`}
-					/>
-					<ControlKnob
-						value={modWheelVibratoDepth}
-						onChange={setModWheelVibratoDepth}
-						min={0}
-						max={99}
-						size={28}
-						color="#5bc8d4"
-						label="Mod→Vib"
-						valueFormatter={(v) => `${Math.round(v)}`}
-					/>
-				</div>
-			</div>
-		</SynthPanelContainer>
-	);
-}
+			</SynthPanelContainer>
+		);
+	},
+	{
+		panelId: "global" as const,
+		panelTab: { topLabel: "Global", bottomLabel: "" },
+	},
+);
+
+export default GlobalVoicePanel;
