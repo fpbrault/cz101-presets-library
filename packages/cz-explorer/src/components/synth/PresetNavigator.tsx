@@ -259,7 +259,7 @@ export default function PresetNavigator({
 												key={entry.id}
 												type="button"
 												className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${
-														entry.id === activeEntryId
+													entry.id === activeEntryId
 														? "bg-cz-gold text-white"
 														: "text-cz-cream hover:bg-cz-surface"
 												}`}
@@ -413,7 +413,7 @@ export default function PresetNavigator({
 												key={entry.id}
 												type="button"
 												className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left ${
-														entry.id === activeEntryId
+													entry.id === activeEntryId
 														? "bg-cz-gold text-white"
 														: "text-cz-cream hover:bg-cz-surface"
 												}`}

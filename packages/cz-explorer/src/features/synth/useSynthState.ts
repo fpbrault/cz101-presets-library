@@ -53,7 +53,9 @@ function normalizeAlgoControls(
 		return [];
 	}
 
-	const incoming = new Map((values ?? []).map((entry) => [entry.id, entry.value]));
+	const incoming = new Map(
+		(values ?? []).map((entry) => [entry.id, entry.value]),
+	);
 	return definition.controls
 		.filter((control) => (control.kind ?? "number") === "number")
 		.map((control) => ({

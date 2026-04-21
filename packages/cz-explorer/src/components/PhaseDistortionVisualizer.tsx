@@ -10,6 +10,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { AsidePanelTab } from "@/components/synth/AsidePanelSwitcher";
 import SynthRenderer from "@/components/synth/SynthRenderer";
+import { ModMatrixProvider } from "@/context/ModMatrixContext";
 import { useAudioEngine } from "@/features/synth/hooks/useAudioEngine";
 import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
 import { useNoteHandling } from "@/features/synth/hooks/useNoteHandling";
@@ -130,6 +131,7 @@ export function SharedPhaseDistortionVisualizer({
 		pitchBendRange,
 		modWheelVibratoDepth,
 		modMatrix,
+		setModMatrix,
 		gatherState,
 		applyPreset,
 	} = synthState;
@@ -358,45 +360,47 @@ export function SharedPhaseDistortionVisualizer({
 	}, [lineSelect, polyMode, filterEnabled, t]);
 
 	return (
-		<SynthRenderer
-			synthState={synthState}
-			headerProps={{
-				allEntries: allPresetEntries,
-				activeEntryId: activePresetId,
-				activePresetName,
-				onLoadLocal: handleLoadLocal,
-				onLoadLibrary: handleLoadLibrary,
-				onLoadBuiltin: handleLoadBuiltin,
-				onStepPreset: handleStepPreset,
-				onSavePreset: handleSavePreset,
-				onDeletePreset: handleDeletePreset,
-				onRenamePreset: handleRenamePreset,
-				onInitPreset: handleInitPreset,
-				onExportPreset: handleExportPreset,
-				onExportCurrentState: handleExportCurrentState,
-				onImportPreset: handleImportPreset,
-			}}
-			frameClassName="h-full min-h-0 min-w-0 bg-cz-panel flex flex-col overflow-hidden w-full"
-			frameStyle={frameStyle}
-			headerExtra={headerExtra}
-			lcdPrimaryText={lcdPrimaryText}
-			lcdSecondaryText={lcdSecondaryText}
-			lcdTransientReadout={lcdControlReadout}
-			effectivePitchHz={effectivePitchHz}
-			analyserNodeRef={analyserNodeRef}
-			audioCtxRef={audioCtxRef}
-			activeAsidePanel={activeAsidePanel}
-			onAsidePanelChange={setActiveAsidePanel}
-			onControlReadout={pushLcdControlReadout}
-			envOverrideHandlers={{
-				onLine1DcoEnvChange: handleLine1DcoEnvChange,
-				onLine1DcwEnvChange: handleLine1DcwEnvChange,
-				onLine1DcaEnvChange: handleLine1DcaEnvChange,
-				onLine2DcoEnvChange: handleLine2DcoEnvChange,
-				onLine2DcwEnvChange: handleLine2DcwEnvChange,
-				onLine2DcaEnvChange: handleLine2DcaEnvChange,
-			}}
-		/>
+		<ModMatrixProvider modMatrix={modMatrix} setModMatrix={setModMatrix}>
+			<SynthRenderer
+				synthState={synthState}
+				headerProps={{
+					allEntries: allPresetEntries,
+					activeEntryId: activePresetId,
+					activePresetName,
+					onLoadLocal: handleLoadLocal,
+					onLoadLibrary: handleLoadLibrary,
+					onLoadBuiltin: handleLoadBuiltin,
+					onStepPreset: handleStepPreset,
+					onSavePreset: handleSavePreset,
+					onDeletePreset: handleDeletePreset,
+					onRenamePreset: handleRenamePreset,
+					onInitPreset: handleInitPreset,
+					onExportPreset: handleExportPreset,
+					onExportCurrentState: handleExportCurrentState,
+					onImportPreset: handleImportPreset,
+				}}
+				frameClassName="h-full min-h-0 min-w-0 bg-cz-panel flex flex-col overflow-hidden w-full"
+				frameStyle={frameStyle}
+				headerExtra={headerExtra}
+				lcdPrimaryText={lcdPrimaryText}
+				lcdSecondaryText={lcdSecondaryText}
+				lcdTransientReadout={lcdControlReadout}
+				effectivePitchHz={effectivePitchHz}
+				analyserNodeRef={analyserNodeRef}
+				audioCtxRef={audioCtxRef}
+				activeAsidePanel={activeAsidePanel}
+				onAsidePanelChange={setActiveAsidePanel}
+				onControlReadout={pushLcdControlReadout}
+				envOverrideHandlers={{
+					onLine1DcoEnvChange: handleLine1DcoEnvChange,
+					onLine1DcwEnvChange: handleLine1DcwEnvChange,
+					onLine1DcaEnvChange: handleLine1DcaEnvChange,
+					onLine2DcoEnvChange: handleLine2DcoEnvChange,
+					onLine2DcwEnvChange: handleLine2DcwEnvChange,
+					onLine2DcaEnvChange: handleLine2DcaEnvChange,
+				}}
+			/>
+		</ModMatrixProvider>
 	);
 }
 

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import ModulatableControl from "@/components/ui/ModulatableControl";
+import type { ModDestination } from "@/lib/synth/bindings/synth";
 
 interface ControlKnobProps {
 	value: number;
@@ -11,6 +13,8 @@ interface ControlKnobProps {
 	size?: number;
 	valueFormatter?: (value: number) => string;
 	defaultValue?: number;
+	/** When provided, wraps the knob in a ModulatableControl for this destination. */
+	modDestination?: ModDestination;
 }
 
 export function ControlKnob({
@@ -24,6 +28,7 @@ export function ControlKnob({
 	size = 32,
 	valueFormatter,
 	defaultValue,
+	modDestination,
 }: ControlKnobProps) {
 	const [dragging, setDragging] = useState(false);
 	const [editing, setEditing] = useState(false);
@@ -118,7 +123,7 @@ export function ControlKnob({
 		};
 	}, [disabled, dragging, max, min, onChange, size]);
 
-	return (
+	const inner = (
 		<div className="flex flex-col items-center gap-1 text-center">
 			{label && (
 				<div className="space-y-0.5">
@@ -216,6 +221,16 @@ export function ControlKnob({
 			)}
 		</div>
 	);
+
+	if (modDestination) {
+		return (
+			<ModulatableControl destinationId={modDestination} label={label}>
+				{inner}
+			</ModulatableControl>
+		);
+	}
+
+	return inner;
 }
 
 export default ControlKnob;

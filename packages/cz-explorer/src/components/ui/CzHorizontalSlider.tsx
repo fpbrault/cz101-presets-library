@@ -1,3 +1,6 @@
+import ModulatableControl from "@/components/ui/ModulatableControl";
+import type { ModDestination } from "@/lib/synth/bindings/synth";
+
 interface CzHorizontalSliderProps {
 	value: number;
 	min: number;
@@ -6,6 +9,8 @@ interface CzHorizontalSliderProps {
 	onChange: (v: number) => void;
 	disabled?: boolean;
 	className?: string;
+	/** When provided, wraps the slider in a ModulatableControl for this destination. */
+	modDestination?: ModDestination;
 }
 
 /**
@@ -21,8 +26,9 @@ export default function CzHorizontalSlider({
 	onChange,
 	disabled = false,
 	className = "",
+	modDestination,
 }: CzHorizontalSliderProps) {
-	return (
+	const input = (
 		<input
 			type="range"
 			min={min}
@@ -34,4 +40,14 @@ export default function CzHorizontalSlider({
 			disabled={disabled}
 		/>
 	);
+
+	if (modDestination) {
+		return (
+			<ModulatableControl destinationId={modDestination}>
+				{input}
+			</ModulatableControl>
+		);
+	}
+
+	return input;
 }

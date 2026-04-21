@@ -184,7 +184,8 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 			this.smoothedTriggerLevel = frameCenter;
 		} else {
 			const alpha = 0.18;
-			this.smoothedTriggerLevel += alpha * (frameCenter - this.smoothedTriggerLevel);
+			this.smoothedTriggerLevel +=
+				alpha * (frameCenter - this.smoothedTriggerLevel);
 		}
 		return this.applyTriggerBias(this.smoothedTriggerLevel);
 	}

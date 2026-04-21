@@ -59,11 +59,11 @@ describe("useSynthPresetManager", () => {
 					({
 						schemaVersion: 1,
 						params: { volume: 1 },
-					} as SynthPresetV1),
+					}) as SynthPresetV1,
 				applyPreset,
 				libraryPresets,
 				onLoadLibraryPreset,
-			})
+			}),
 		);
 
 		act(() => {

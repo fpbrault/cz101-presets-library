@@ -21,10 +21,16 @@ function isSynthPresetV1(value: unknown): value is SynthPresetV1 {
 		return false;
 	}
 	if (typeof candidate.params.volume !== "number") return false;
-	if (typeof candidate.params.line1 !== "object" || candidate.params.line1 === null) {
+	if (
+		typeof candidate.params.line1 !== "object" ||
+		candidate.params.line1 === null
+	) {
 		return false;
 	}
-	if (typeof candidate.params.line2 !== "object" || candidate.params.line2 === null) {
+	if (
+		typeof candidate.params.line2 !== "object" ||
+		candidate.params.line2 === null
+	) {
 		return false;
 	}
 	return true;

@@ -128,13 +128,35 @@ export function normalizeWaveformId(value: unknown): WaveformId {
 }
 
 const ALL_ALGO_VALUES = [
-	"saw", "square", "pulse", "null", "sinePulse", "sawPulse", "multiSine", "pulse2",
-	"cz101", "bend", "sync", "pinch", "fold", "skew", "quantize", "twist", "clip",
-	"ripple", "mirror", "fof", "karpunk", "sine",
+	"saw",
+	"square",
+	"pulse",
+	"null",
+	"sinePulse",
+	"sawPulse",
+	"multiSine",
+	"pulse2",
+	"cz101",
+	"bend",
+	"sync",
+	"pinch",
+	"fold",
+	"skew",
+	"quantize",
+	"twist",
+	"clip",
+	"ripple",
+	"mirror",
+	"fof",
+	"karpunk",
+	"sine",
 ] as const;
 
 export function isAlgo(value: unknown): value is Algo {
-	return typeof value === "string" && (ALL_ALGO_VALUES as readonly string[]).includes(value);
+	return (
+		typeof value === "string" &&
+		(ALL_ALGO_VALUES as readonly string[]).includes(value)
+	);
 }
 
 export function toAlgoRefV1(
@@ -167,10 +189,7 @@ export function waveformIdToLegacyNumber(waveform: WaveformId): number {
 	return WAVEFORM_NAME_TO_LEGACY[waveform];
 }
 
-export function isAlgoRefEqual(
-	a: Algo | null,
-	b: Algo | null,
-): boolean {
+export function isAlgoRefEqual(a: Algo | null, b: Algo | null): boolean {
 	if (a === null || b === null) {
 		return a === b;
 	}

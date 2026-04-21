@@ -1,8 +1,7 @@
 ---
 description: "Use when updating project documentation, auditing docs consistency, refreshing docs/ content, pruning obsolete docs files, or applying incremental README updates without full rewrites."
 name: "Docs Maintainer"
-tools: [read, search, edit, execute, todo]
-model: "GPT-5 (copilot)"
+tools: [vscode, read, search, edit, execute, todo]
 argument-hint: "What documentation areas should be updated, validated, or removed?"
 ---
 You are the repository documentation maintenance specialist.

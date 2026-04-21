@@ -59,7 +59,10 @@ export function drawOscilloscope(
 		typeof config.fixedWindowSamples === "number"
 			? Math.round(config.fixedWindowSamples)
 			: Math.round(samplesPerCycle * config.cycles);
-	const viewSamples = Math.max(8, Math.min(samples.length - 2, requestedViewSamples));
+	const viewSamples = Math.max(
+		8,
+		Math.min(samples.length - 2, requestedViewSamples),
+	);
 	if (viewSamples <= 1) {
 		ctx.fillStyle = "#051005";
 		ctx.fillRect(0, 0, drawWidth, drawHeight);
@@ -70,7 +73,10 @@ export function drawOscilloscope(
 	// Find trigger point
 	let start =
 		typeof config.startIndex === "number"
-			? Math.max(1, Math.min(samples.length - viewSamples - 1, config.startIndex))
+			? Math.max(
+					1,
+					Math.min(samples.length - viewSamples - 1, config.startIndex),
+				)
 			: Math.max(1, Math.floor((samples.length - viewSamples) / 2));
 	if (triggerMode !== "off") {
 		const endLimit = samples.length - viewSamples - 1;
