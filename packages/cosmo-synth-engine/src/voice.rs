@@ -31,18 +31,17 @@ pub(crate) struct ModSources {
     pub lfo2: f32,
     pub velocity: f32,
     pub mod_wheel: f32,
-    /// Aftertouch — stub, always 0.0 this phase.
     pub aftertouch: f32,
 }
 
 impl ModSources {
-    fn new(lfo1: f32, velocity: f32, mod_wheel: f32) -> Self {
+    fn new(lfo1: f32, velocity: f32, mod_wheel: f32, aftertouch: f32) -> Self {
         Self {
             lfo1,
             lfo2: 0.0,
             velocity,
             mod_wheel,
-            aftertouch: 0.0,
+            aftertouch,
         }
     }
 
@@ -250,6 +249,7 @@ pub fn render_voice(
     sr: f32,
     pitch_bend_semitones: f32,
     mod_wheel: f32,
+    aftertouch: f32,
 ) -> f32 {
     let l1 = &p.line1;
     let l2 = &p.line2;
@@ -265,7 +265,7 @@ pub fn render_voice(
         return 0.0;
     }
 
-    let mod_sources = ModSources::new(lfo_mod_val, voice.velocity, mod_wheel);
+    let mod_sources = ModSources::new(lfo_mod_val, voice.velocity, mod_wheel, aftertouch);
     let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
     let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
     let mut signal = build_signal_state(voice, p, &env, base_freq, &mod_sources);

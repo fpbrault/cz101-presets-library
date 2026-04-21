@@ -145,6 +145,9 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 			case "modWheel":
 				synth.setModWheel(d.value);
 				break;
+			case "aftertouch":
+				synth.setAftertouch(d.value);
+				break;
 		}
 	}
 
