@@ -23,6 +23,6 @@ tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-fs = "2"
-tauri-plugin-midi = "0.1.1"
+tauri-plugin-midi = "0.1.5"
 tauri-plugin-dialog = "2"
 cosmo-synth-engine = { path = "../cosmo-synth-engine" }

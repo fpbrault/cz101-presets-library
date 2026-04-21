@@ -195,17 +195,17 @@ export type AlgoControlAssignmentV1 = { controlId: string; value: number }
 /**
  * One selectable option for list-based controls.
  */
-export type AlgoControlOptionV1 = { value: string; label: string; set: AlgoControlAssignmentV1 }
+export type AlgoControlOptionV1 = { value: string; label: string; set: AlgoControlAssignmentV1[] }
 
 /**
  * Describes one control surfaced by an algorithm package.
  */
-export type AlgoControlV1 = { id: string; label: string; description: string; kind: AlgoControlKindV1; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1 }
+export type AlgoControlV1 = { id: string; label: string; description: string; kind: AlgoControlKindV1; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1[] }
 
 /**
  * Complete algorithm package definition.
  */
-export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visible: boolean; controls: AlgoControlV1 }
+export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visible: boolean; controls: AlgoControlV1[] }
 
 /**
  * UI catalog entry for algorithm pickers.
@@ -213,6 +213,34 @@ export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visib
  * This is exported to TypeScript so frontend option labels/icons are Rust-owned.
  */
 export type AlgoUiEntryV1 = { id: Algo; label: string; iconPath: string; visible: boolean }
+
+/**
+ * Modulation source identifier
+ */
+export type ModSource = "lfo1" | 
+/**
+ * LFO2 – UI/types stub only; DSP contribution is always 0.0 this phase
+ */
+"lfo2" | "velocity" | "modWheel" | "aftertouch"
+
+/**
+ * Modulation destination – covers the full synth parameter surface
+ */
+export type ModDestination = "volume" | "pitch" | "intPmAmount" | "line1DcwBase" | "line1DcaBase" | "line1DcoDepth" | "line1AlgoBlend" | "line1DcwComp" | "line1Detune" | "line1Octave" | "line2DcwBase" | "line2DcaBase" | "line2DcoDepth" | "line2AlgoBlend" | "line2DcwComp" | "line2Detune" | "line2Octave" | "filterCutoff" | "filterResonance" | "filterEnvAmount" | "chorusMix" | "delayMix" | "reverbMix" | "vibratoDepth" | "lfoDepth" | "lfoRate"
+
+/**
+ * A single modulation routing assignment
+ */
+export type ModRoute = { source: ModSource; destination: ModDestination; 
+/**
+ * Modulation amount in range [-1.0, 1.0]
+ */
+amount: number; enabled: boolean }
+
+/**
+ * The full modulation matrix (list of routes)
+ */
+export type ModMatrix = { routes: ModRoute[] }
 
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
@@ -226,7 +254,11 @@ pitchBendRange?: number;
  * How much the mod wheel adds to vibrato depth (0-99 UI units).
  * When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
  */
-modWheelVibratoDepth?: number }
+modWheelVibratoDepth?: number; 
+/**
+ * Modulation matrix – routes from sources to destinations with amounts.
+ */
+modMatrix?: ModMatrix }
 
 /**
  * Canonical, versioned synth preset wire contract.
