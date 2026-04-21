@@ -651,7 +651,7 @@ pub(crate) fn default_pitch_bend_range() -> f32 {
 }
 
 pub(crate) fn default_ring_gain() -> f32 {
-    2.0
+    4.0
 }
 
 impl Default for SynthParams {

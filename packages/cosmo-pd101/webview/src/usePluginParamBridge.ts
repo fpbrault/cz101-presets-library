@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
-	PD_ALGOS,
-	type PdAlgo,
-	type StepEnvData,
-} from "@/components/pdAlgorithms";
-import {
 	type SynthEngineAdapter,
 	useSynthEngineController,
 } from "@/features/synth/engine/synthEngineAdapter";
 import { buildSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { useSynthState } from "@/features/synth/useSynthState";
+import { isWaveformId } from "@/lib/synth/algoRef";
 import type {
+	Algo,
+	CzWaveform,
 	FilterType,
 	LfoTarget,
 	LfoWaveform,
@@ -18,6 +16,7 @@ import type {
 	ModMode,
 	PolyMode,
 	PortamentoMode,
+	StepEnvData,
 	VelocityTarget,
 } from "@/lib/synth/bindings/synth";
 import {
@@ -117,6 +116,34 @@ function sendParam(parameterId: number, value: number) {
 	}
 }
 
+// Maps CzWaveform strings to Rust Waveform enum 0-based indices.
+// The Rust enum includes DoubleSine=5 (no CzWaveform counterpart), so
+// sawPulse, multiSine, and pulse2 are at indices 6, 7, 8 respectively.
+const CZ_WAVEFORM_IDX: Readonly<Record<CzWaveform, number>> = {
+	saw: 0,
+	square: 1,
+	pulse: 2,
+	null: 3,
+	sinePulse: 4,
+	sawPulse: 6,
+	multiSine: 7,
+	pulse2: 8,
+};
+
+// Reverse mapping for incoming param updates from Rust (index → CzWaveform).
+// DoubleSine (5) maps to multiSine since that's how Rust's map_waveform handles it.
+const IDX_TO_CZ_WAVEFORM: Record<number, CzWaveform> = {
+	0: "saw",
+	1: "square",
+	2: "pulse",
+	3: "null",
+	4: "sinePulse",
+	5: "multiSine",
+	6: "sawPulse",
+	7: "multiSine",
+	8: "pulse2",
+};
+
 export function usePluginParamBridge() {
 	const synthState = useSynthState();
 	const {
@@ -172,12 +199,24 @@ export function usePluginParamBridge() {
 		setLine1DcwEnv,
 		line1DcaEnv,
 		setLine1DcaEnv,
+		line1CzSlotAWaveform,
+		setLine1CzSlotAWaveform,
+		line1CzSlotBWaveform,
+		setLine1CzSlotBWaveform,
+		line1CzWindow,
+		line1AlgoControls,
 		line2DcoEnv,
 		setLine2DcoEnv,
 		line2DcwEnv,
 		setLine2DcwEnv,
 		line2DcaEnv,
 		setLine2DcaEnv,
+		line2CzSlotAWaveform,
+		setLine2CzSlotAWaveform,
+		line2CzSlotBWaveform,
+		setLine2CzSlotBWaveform,
+		line2CzWindow,
+		line2AlgoControls,
 		polyMode,
 		setPolyMode,
 		legato,
@@ -272,19 +311,20 @@ export function usePluginParamBridge() {
 		}
 	}, []);
 
-	const algoKeyToId = useCallback((key: PdAlgo | string | null): number => {
-		if (key === null) return 0;
-		const algoStr = String(key);
-		const found = PD_ALGOS.find((a) => String(a.value) === algoStr);
-		const warpName = found?.algo ?? algoStr;
-		return WARP_ALGO_IDS[warpName as keyof typeof WARP_ALGO_IDS] ?? 0;
+	const algoKeyToId = useCallback((key: Algo | null): number => {
+		if (key === null || isWaveformId(key)) return 0; // CZ waveform algos → cz101 (index 0)
+		return WARP_ALGO_IDS[key as keyof typeof WARP_ALGO_IDS] ?? 0;
 	}, []);
 
 	const algoKeyToWaveform = useCallback(
-		(key: PdAlgo | string | null): number => {
-			if (key === null) return 1;
-			const found = PD_ALGOS.find((a) => String(a.value) === String(key));
-			return found?.waveform ?? 1;
+		(key: Algo | null, slotWaveform: CzWaveform): number => {
+			if (key === null) return CZ_WAVEFORM_IDX.saw;
+			// CZ waveform algos: the algo string IS the waveform
+			if (isWaveformId(key)) return CZ_WAVEFORM_IDX[key as CzWaveform] ?? 0;
+			// cz101 warp: waveform comes from the explicit slot setting
+			if (key === "cz101") return CZ_WAVEFORM_IDX[slotWaveform] ?? 0;
+			// other warp algos use a sine carrier; waveform param is irrelevant
+			return 0;
 		},
 		[],
 	);
@@ -305,7 +345,7 @@ export function usePluginParamBridge() {
 				queueParam(P_INT_PM_AMOUNT, snapshot.intPmAmount);
 				queueParam(P_INT_PM_RATIO, snapshot.intPmRatio);
 				queueParam(P_PM_PRE, snapshot.pmPre ? 1 : 0);
-				queueParam(P_L1_WAVEFORM, algoKeyToWaveform(snapshot.warpAAlgo));
+				queueParam(P_L1_WAVEFORM, algoKeyToWaveform(snapshot.warpAAlgo, snapshot.line1CzSlotAWaveform));
 				queueParam(P_L1_WARP_ALGO, algoKeyToId(snapshot.warpAAlgo));
 				queueParam(P_L1_DCW_BASE, snapshot.warpAAmount);
 				queueParam(P_L1_DCA_BASE, snapshot.line1Level);
@@ -319,7 +359,7 @@ export function usePluginParamBridge() {
 					P_L1_WARP_ALGO2,
 					snapshot.algo2A === null ? -1 : algoKeyToId(snapshot.algo2A),
 				);
-				queueParam(P_L2_WAVEFORM, algoKeyToWaveform(snapshot.warpBAlgo));
+				queueParam(P_L2_WAVEFORM, algoKeyToWaveform(snapshot.warpBAlgo, snapshot.line2CzSlotAWaveform));
 				queueParam(P_L2_WARP_ALGO, algoKeyToId(snapshot.warpBAlgo));
 				queueParam(P_L2_DCW_BASE, snapshot.warpBAmount);
 				queueParam(P_L2_DCA_BASE, snapshot.line2Level);
@@ -397,8 +437,8 @@ export function usePluginParamBridge() {
 				line2DcoDepth,
 				line1DcwComp,
 				line2DcwComp,
-				warpAAlgo: String(warpAAlgo),
-				warpBAlgo: String(warpBAlgo),
+				warpAAlgo,
+				warpBAlgo,
 				intPmAmount,
 				intPmRatio,
 				phaseModEnabled,
@@ -412,9 +452,17 @@ export function usePluginParamBridge() {
 				line1DcoEnv,
 				line1DcwEnv,
 				line1DcaEnv,
+				line1CzSlotAWaveform,
+				line1CzSlotBWaveform,
+				line1CzWindow,
+				line1AlgoControls,
 				line2DcoEnv,
 				line2DcwEnv,
 				line2DcaEnv,
+				line2CzSlotAWaveform,
+				line2CzSlotBWaveform,
+				line2CzWindow,
+				line2AlgoControls,
 				polyMode,
 				legato,
 				velocityTarget,
@@ -429,8 +477,8 @@ export function usePluginParamBridge() {
 				reverbSize,
 				reverbEnabled,
 				reverbMix,
-				algo2A: algo2A != null ? String(algo2A) : null,
-				algo2B: algo2B != null ? String(algo2B) : null,
+				algo2A,
+				algo2B,
 				algoBlendA,
 				algoBlendB,
 				line1DcwKeyFollow,
@@ -484,9 +532,17 @@ export function usePluginParamBridge() {
 			line1DcoEnv,
 			line1DcwEnv,
 			line1DcaEnv,
+			line1CzSlotAWaveform,
+			line1CzSlotBWaveform,
+			line1CzWindow,
+			line1AlgoControls,
 			line2DcoEnv,
 			line2DcwEnv,
 			line2DcaEnv,
+			line2CzSlotAWaveform,
+			line2CzSlotBWaveform,
+			line2CzWindow,
+			line2AlgoControls,
 			polyMode,
 			legato,
 			velocityTarget,
@@ -572,10 +628,17 @@ export function usePluginParamBridge() {
 						case P_PM_PRE:
 							setPmPre(value >= 0.5);
 							break;
+						case P_L1_WAVEFORM: {
+							const waveform = IDX_TO_CZ_WAVEFORM[Math.round(value)];
+							if (waveform) {
+								setLine1CzSlotAWaveform(waveform);
+								setLine1CzSlotBWaveform(waveform);
+							}
+							break;
+						}
 						case P_L1_WARP_ALGO: {
-							const algoName = WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
-							const entry = PD_ALGOS.find((a) => a.algo === algoName);
-							if (entry) setWarpAAlgo(entry.value as PdAlgo);
+							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+							setWarpAAlgo(algoName);
 							break;
 						}
 						case P_L1_DCW_BASE:
@@ -606,17 +669,22 @@ export function usePluginParamBridge() {
 							if (value < 0) {
 								setAlgo2A(null);
 							} else {
-								const algoName =
-									WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
-								const entry = PD_ALGOS.find((a) => a.algo === algoName);
-								if (entry) setAlgo2A(entry.value as PdAlgo);
+								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+								setAlgo2A(algoName);
+							}
+							break;
+						}
+						case P_L2_WAVEFORM: {
+							const waveform = IDX_TO_CZ_WAVEFORM[Math.round(value)];
+							if (waveform) {
+								setLine2CzSlotAWaveform(waveform);
+								setLine2CzSlotBWaveform(waveform);
 							}
 							break;
 						}
 						case P_L2_WARP_ALGO: {
-							const algoName = WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
-							const entry = PD_ALGOS.find((a) => a.algo === algoName);
-							if (entry) setWarpBAlgo(entry.value as PdAlgo);
+							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+							setWarpBAlgo(algoName);
 							break;
 						}
 						case P_L2_DCW_BASE:
@@ -647,10 +715,8 @@ export function usePluginParamBridge() {
 							if (value < 0) {
 								setAlgo2B(null);
 							} else {
-								const algoName =
-									WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101";
-								const entry = PD_ALGOS.find((a) => a.algo === algoName);
-								if (entry) setAlgo2B(entry.value as PdAlgo);
+								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+								setAlgo2B(algoName);
 							}
 							break;
 						}
@@ -806,6 +872,10 @@ export function usePluginParamBridge() {
 		setPortamentoEnabled,
 		setPortamentoMode,
 		setPortamentoTime,
+		setLine1CzSlotAWaveform,
+		setLine1CzSlotBWaveform,
+		setLine2CzSlotAWaveform,
+		setLine2CzSlotBWaveform,
 	]);
 
 	useEffect(() => {

@@ -7,8 +7,23 @@ import type {
 	PolyMode,
 	PortamentoMode,
 	VelocityTarget,
-	WarpAlgo,
 } from "@/lib/synth/bindings/synth";
+
+type WarpAlgoKey =
+	| "cz101"
+	| "bend"
+	| "sync"
+	| "pinch"
+	| "fold"
+	| "skew"
+	| "quantize"
+	| "twist"
+	| "clip"
+	| "ripple"
+	| "mirror"
+	| "fof"
+	| "karpunk"
+	| "sine";
 
 export type EnvelopeId =
 	| "l1_dco"
@@ -123,7 +138,7 @@ export const VEL_TARGET_IDS: EnumToIdMap<VelocityTarget> = {
 };
 export const VEL_TARGET_FROM_ID = invertMap(VEL_TARGET_IDS);
 
-export const WARP_ALGO_IDS: EnumToIdMap<WarpAlgo> = {
+export const WARP_ALGO_IDS: EnumToIdMap<WarpAlgoKey> = {
 	cz101: 0,
 	bend: 1,
 	sync: 2,

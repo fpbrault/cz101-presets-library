@@ -14,10 +14,27 @@ export default function App() {
 	const [updateInfo, setUpdateInfo] = useState<PluginUpdateInfo | null>(null);
 	const [manualStatus, setManualStatus] = useState<string | null>(null);
 
-	if (!bridgeReadyRef.current) {
-		ensureBeamerLegacyBridge();
-		bridgeReadyRef.current = true;
-	}
+	useEffect(() => {
+		if (bridgeReadyRef.current) {
+			return;
+		}
+
+		if (ensureBeamerLegacyBridge()) {
+			bridgeReadyRef.current = true;
+			return;
+		}
+
+		const intervalId = window.setInterval(() => {
+			if (ensureBeamerLegacyBridge()) {
+				bridgeReadyRef.current = true;
+				window.clearInterval(intervalId);
+			}
+		}, 50);
+
+		return () => {
+			window.clearInterval(intervalId);
+		};
+	}, []);
 
 	useEffect(() => {
 		void (async () => {
