@@ -5,13 +5,13 @@ permissions:
 
 on:
   workflow_dispatch: # TODO: re-enable push trigger when ready
-  push:
-    branches: []
-    paths:
-      - 'packages/cosmo-synth-engine/**'
-      - 'Cargo.lock'
-      - 'Cargo.toml'
-      - '.github/workflows/build-wasm.yml'
+  # push:
+  #   branches: []
+  #   paths:
+  #     - 'packages/cosmo-synth-engine/**'
+  #     - 'Cargo.lock'
+  #     - 'Cargo.toml'
+  #     - '.github/workflows/build-wasm.yml'
 
 jobs:
   build-wasm:
