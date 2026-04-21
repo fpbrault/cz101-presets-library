@@ -8,9 +8,14 @@ use alloc::vec::Vec;
 use core::array;
 
 use crate::fx::FxChain;
+use crate::generators::PER_LINE_HEADROOM;
 use crate::dsp_utils::lfo_output;
 use crate::params::{PolyMode, SynthParams, NUM_VOICES};
 use crate::voice::{render_voice, Voice};
+
+const SOFT_CLIP_DRIVE: f32 = 1.0;
+const SOFT_CLIP_THRESHOLD: f32 = 0.9;
+const REFERENCE_LINE_HEADROOM: f32 = 0.75;
 
 // ---------------------------------------------------------------------------
 // NoteEntry — maps a MIDI note to a voice index
@@ -401,7 +406,9 @@ impl CosmoProcessor {
         let lfo_rate = p.lfo.rate;
         let lfo_waveform = p.lfo.waveform;
         let sr = self.sample_rate;
-        let norm = volume / libm::sqrtf(NUM_VOICES as f32);
+        let headroom_makeup =
+            libm::sqrtf(REFERENCE_LINE_HEADROOM / PER_LINE_HEADROOM.max(0.01)).clamp(1.0, 2.0);
+        let norm = volume * headroom_makeup / libm::sqrtf(NUM_VOICES as f32);
 
         for sample_out in output.iter_mut() {
             let lfo_mod_val = if lfo_enabled {
@@ -436,7 +443,8 @@ impl CosmoProcessor {
             mixed *= norm;
 
             let fx_out = self.fx.process(mixed);
-            *sample_out = fx_out.clamp(-1.0, 1.0);
+            let soft_limited = soft_clip_tanh(fx_out, SOFT_CLIP_DRIVE);
+            *sample_out = soft_limited.clamp(-1.0, 1.0);
         }
     }
 
@@ -457,4 +465,25 @@ impl CosmoProcessor {
 #[inline]
 pub fn midi_note_to_freq(note: u8) -> f32 {
     440.0 * libm::powf(2.0, (note as f32 - 69.0) / 12.0)
+}
+
+#[inline]
+fn soft_clip_tanh(sample: f32, drive: f32) -> f32 {
+    if drive <= 0.0 {
+        return sample;
+    }
+
+    let abs_sample = libm::fabsf(sample);
+    if abs_sample <= SOFT_CLIP_THRESHOLD {
+        return sample;
+    }
+
+    let norm = libm::tanhf(drive);
+    if norm <= 0.0 {
+        return sample;
+    }
+
+    let clipped = libm::tanhf(sample * drive) / norm;
+    let blend = ((abs_sample - SOFT_CLIP_THRESHOLD) / (1.0 - SOFT_CLIP_THRESHOLD)).clamp(0.0, 1.0);
+    sample + (clipped - sample) * blend
 }

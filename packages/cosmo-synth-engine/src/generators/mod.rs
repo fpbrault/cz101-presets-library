@@ -5,6 +5,7 @@ use serde::Serialize;
 use specta::Type;
 
 const TWO_PI: f32 = core::f32::consts::TAU;
+pub const PER_LINE_HEADROOM: f32 = 0.25;
 
 pub mod bend;
 pub mod clip;
@@ -90,12 +91,65 @@ impl AlgoRuntimeState {
 
 	/// Render line 1, applying any stateful algorithm behavior as needed.
 	pub fn render_line1(&mut self, config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
-		self.karpunk.render_line1(config)
+		if karpunk::requires_state_tick(config.primary_algo, config.secondary_algo) {
+			self.karpunk.render_line1(config)
+		} else {
+			render_line_stateless(config)
+		}
 	}
 
 	/// Render line 2, applying any stateful algorithm behavior as needed.
 	pub fn render_line2(&mut self, config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
-		self.karpunk.render_line2(config)
+		if karpunk::requires_state_tick(config.primary_algo, config.secondary_algo) {
+			self.karpunk.render_line2(config)
+		} else {
+			render_line_stateless(config)
+		}
+	}
+}
+
+#[inline(always)]
+fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
+	let sample = if let Some(secondary_algo) = config.secondary_algo {
+		let secondary_dcw = config.final_dcw * config.blend;
+		let primary_dcw = config.final_dcw * (1.0 - config.blend);
+		let primary = render_algo_sample(
+			config.primary_algo,
+			config.phase,
+			primary_dcw,
+			config.algo_controls,
+			None,
+		);
+		let secondary = render_algo_sample(
+			secondary_algo,
+			config.phase,
+			secondary_dcw,
+			config.algo_controls,
+			None,
+		);
+		blend_line_samples(config.primary_algo, primary, secondary, config.blend)
+	} else {
+		render_algo_sample(
+			config.primary_algo,
+			config.phase,
+			config.final_dcw,
+			config.algo_controls,
+			None,
+		)
+	};
+
+	(
+		sample * config.window_gain * config.final_dca * PER_LINE_HEADROOM,
+		None,
+	)
+}
+
+#[inline(always)]
+fn blend_line_samples(primary_algo: Algo, primary: f32, secondary: f32, blend: f32) -> f32 {
+	if primary_algo == Algo::Karpunk {
+		primary + (primary * secondary * 2.0 - primary) * blend
+	} else {
+		primary + (secondary - primary) * blend
 	}
 }
 

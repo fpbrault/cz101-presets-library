@@ -553,7 +553,7 @@ fn mix_line_outputs(
     );
 
     match p.mod_mode {
-        ModMode::Ring => mix_a * mix_b * 4.0,
+        ModMode::Ring => mix_a * mix_b * p.ring_gain.max(0.0),
         ModMode::Noise => {
             // Placeholder noise remains deterministic so renders stay repeatable.
             let noise = sinf(phi1 * 12_345.679) * 2.0 - 1.0;
