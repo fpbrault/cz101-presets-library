@@ -16,7 +16,7 @@ required-features = ["specta-bindings"]
 [features]
 default = ["std"]
 std = ["serde/std", "serde_json"]
-wasm = ["wasm-bindgen", "web-sys", "getrandom/js", "serde_json"]
+wasm = ["wasm-bindgen", "web-sys", "getrandom/wasm_js", "serde_json"]
 specta-bindings = [
 	"dep:specta",
 	"dep:specta-serde",
@@ -31,16 +31,16 @@ serde_json = { version = "1", optional = true }
 libm = "0.2"
 
 [dependencies.specta]
-version = "=2.0.0-rc.20"
+version = "=2.0.0-rc.24"
 optional = true
 features = ["derive"]
 
 [dependencies.specta-serde]
-version = "=0.0.7"
+version = "=0.0.11"
 optional = true
 
 [dependencies.specta-typescript]
-version = "=0.0.7"
+version = "=0.0.11"
 optional = true
 
 [dependencies.wasm-bindgen]
@@ -53,7 +53,7 @@ optional = true
 features = ["console"]
 
 [dependencies.getrandom]
-version = "0.2"
+version = "0.4"
 optional = true
 
 [package.metadata.wasm-pack.profile.release]
