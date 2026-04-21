@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 interface ControlKnobProps {
 	value: number;
 	onChange: (value: number) => void;
+	disabled?: boolean;
 	min?: number;
 	max?: number;
 	label?: string;
@@ -15,6 +16,7 @@ interface ControlKnobProps {
 export function ControlKnob({
 	value,
 	onChange,
+	disabled = false,
 	min = 0,
 	max = 1,
 	label,
@@ -49,6 +51,7 @@ export function ControlKnob({
 			: "";
 
 	const handlePointerDown = (event: React.PointerEvent) => {
+		if (disabled) return;
 		event.preventDefault();
 		setDragging(true);
 		startYRef.current = event.clientY;
@@ -56,12 +59,14 @@ export function ControlKnob({
 	};
 
 	const handleDoubleClick = () => {
+		if (disabled) return;
 		if (defaultValue !== undefined) {
 			onChange(defaultValue);
 		}
 	};
 
 	const handleDisplayClick = () => {
+		if (disabled) return;
 		setEditing(true);
 		setEditValue(displayValue);
 	};
@@ -90,7 +95,7 @@ export function ControlKnob({
 	}, [editing]);
 
 	useEffect(() => {
-		if (!dragging) return;
+		if (!dragging || disabled) return;
 
 		const handlePointerMove = (event: PointerEvent) => {
 			const deltaY = startYRef.current - event.clientY;
@@ -111,7 +116,7 @@ export function ControlKnob({
 			window.removeEventListener("pointermove", handlePointerMove);
 			window.removeEventListener("pointerup", handlePointerUp);
 		};
-	}, [dragging, max, min, onChange, size]);
+	}, [disabled, dragging, max, min, onChange, size]);
 
 	return (
 		<div className="flex flex-col items-center gap-1 text-center">
@@ -124,8 +129,11 @@ export function ControlKnob({
 			)}
 			<button
 				type="button"
-				className="rounded-full border border-base-300/80 bg-base-300/40 p-0 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm touch-none"
+				className={`rounded-full border border-base-300/80 bg-base-300/40 p-0 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm touch-none ${
+					disabled ? "cursor-not-allowed opacity-60" : ""
+				}`}
 				aria-label={label ?? "knob"}
+				disabled={disabled}
 				onPointerDown={handlePointerDown}
 				onDoubleClick={handleDoubleClick}
 				style={{ width: size, height: size }}
@@ -193,7 +201,12 @@ export function ControlKnob({
 					) : (
 						<button
 							type="button"
-							className="text-2xs font-semibold text-base-content/80 hover:text-base-content cursor-pointer"
+							className={`text-2xs font-semibold ${
+								disabled
+									? "cursor-not-allowed text-base-content/55"
+									: "cursor-pointer text-base-content/80 hover:text-base-content"
+							}`}
+							disabled={disabled}
 							onClick={handleDisplayClick}
 						>
 							{displayValue}

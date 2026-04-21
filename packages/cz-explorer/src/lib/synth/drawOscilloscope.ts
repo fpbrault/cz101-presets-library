@@ -3,6 +3,8 @@ export type OscilloscopeConfig = {
 	verticalZoom: number;
 	triggerLevel: number; // 0-255 for Uint8Array, -1 to 1 for Float32Array
 	triggerMode?: "off" | "rise" | "fall";
+	fixedWindowSamples?: number;
+	startIndex?: number;
 	color?: string;
 	gridColor?: string;
 };
@@ -53,13 +55,23 @@ export function drawOscilloscope(
 	// Calculate view samples based on pitch and cycles
 	const hz = Math.max(1, pitchHz);
 	const samplesPerCycle = Math.max(8, Math.round(sampleRate / hz));
-	const viewSamples = Math.max(
-		32,
-		Math.min(samples.length - 2, Math.round(samplesPerCycle * config.cycles)),
-	);
+	const requestedViewSamples =
+		typeof config.fixedWindowSamples === "number"
+			? Math.round(config.fixedWindowSamples)
+			: Math.round(samplesPerCycle * config.cycles);
+	const viewSamples = Math.max(8, Math.min(samples.length - 2, requestedViewSamples));
+	if (viewSamples <= 1) {
+		ctx.fillStyle = "#051005";
+		ctx.fillRect(0, 0, drawWidth, drawHeight);
+		drawGrid(ctx, drawWidth, drawHeight, gridColor);
+		return;
+	}
 
 	// Find trigger point
-	let start = Math.max(1, Math.floor((samples.length - viewSamples) / 2));
+	let start =
+		typeof config.startIndex === "number"
+			? Math.max(1, Math.min(samples.length - viewSamples - 1, config.startIndex))
+			: Math.max(1, Math.floor((samples.length - viewSamples) / 2));
 	if (triggerMode !== "off") {
 		const endLimit = samples.length - viewSamples - 1;
 		for (let i = 1; i < endLimit; i++) {

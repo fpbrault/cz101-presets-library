@@ -71,6 +71,7 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 	private rafId = 0;
 	private readonly canvasRef = createRef<HTMLCanvasElement>();
 	private unsubscribeScopeFrames: (() => void) | null = null;
+	private smoothedTriggerLevel: number | null = null;
 
 	constructor(props: ScopePanelProps) {
 		super(props);
@@ -132,6 +133,11 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 			const canvas = this.canvasRef.current;
 			if (!canvas) return;
 
+			// When an external frame stream is wired, avoid a second RAF-based draw path.
+			if (this.unsubscribeScopeFrames) {
+				return;
+			}
+
 			const analyser = this.props.analyserNodeRef?.current;
 			if (!analyser) {
 				drawScopeBackdrop(canvas);
@@ -154,18 +160,62 @@ class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
 		hz: number,
 		sampleRate: number,
 	) {
+		const triggerLevel = this.getSmoothedAnalogTriggerLevel(samples);
+
 		drawOscilloscope(
 			canvas,
 			samples,
 			{
 				cycles: this.state.scopeCycles,
 				verticalZoom: this.state.scopeVerticalZoom,
-				triggerLevel: this.state.scopeTriggerLevel,
+				triggerLevel,
 				triggerMode: this.scopeTriggerMode,
 			},
 			hz,
 			sampleRate,
 		);
+	}
+
+	private getSmoothedAnalogTriggerLevel(
+		samples: Uint8Array | Float32Array,
+	): number {
+		const frameCenter = this.calculateFrameMean(samples);
+		if (this.smoothedTriggerLevel == null) {
+			this.smoothedTriggerLevel = frameCenter;
+		} else {
+			const alpha = 0.18;
+			this.smoothedTriggerLevel += alpha * (frameCenter - this.smoothedTriggerLevel);
+		}
+		return this.applyTriggerBias(this.smoothedTriggerLevel);
+	}
+
+	private applyTriggerBias(center: number): number {
+		const bias = this.state.scopeTriggerLevel - 128;
+		return Math.max(0, Math.min(255, center + bias));
+	}
+
+	private calculateFrameMean(samples: Uint8Array | Float32Array): number {
+		if (samples.length === 0) {
+			return 128;
+		}
+
+		let sum = 0;
+		if (samples instanceof Uint8Array) {
+			for (let i = 0; i < samples.length; i++) {
+				sum += samples[i];
+			}
+			return sum / samples.length;
+		}
+
+		for (let i = 0; i < samples.length; i++) {
+			sum += samples[i];
+		}
+		const meanFloat = sum / samples.length;
+		return this.floatToTriggerLevel(meanFloat);
+	}
+
+	private floatToTriggerLevel(value: number): number {
+		return Math.max(0, Math.min(255, value * 128 + 128));
 	}
 
 	render(): ReactElement {
