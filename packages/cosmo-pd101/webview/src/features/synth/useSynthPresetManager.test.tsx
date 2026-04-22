@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Preset } from "@/lib/presets/presetManager";
+import type { LibraryPreset } from "@/features/synth/types/libraryPreset";
 import type { SynthPresetV1 } from "@/lib/synth/bindings/synth";
 import { useSynthPresetManager } from "./useSynthPresetManager";
 
@@ -50,7 +50,7 @@ describe("useSynthPresetManager", () => {
 			{ id: "preset-1", name: "Same Name" },
 			{ id: "preset-2", name: "Same Name" },
 			{ id: "preset-3", name: "Different Name" },
-		] as Preset[];
+		] as LibraryPreset[];
 
 		const { result } = renderHook(() =>
 			useSynthPresetManager({
@@ -67,7 +67,7 @@ describe("useSynthPresetManager", () => {
 		);
 
 		act(() => {
-			result.current.handleLoadLibrary(libraryPresets[0] as Preset);
+			result.current.handleLoadLibrary(libraryPresets[0]);
 		});
 
 		expect(result.current.activePresetId).toBe("library:preset-1");

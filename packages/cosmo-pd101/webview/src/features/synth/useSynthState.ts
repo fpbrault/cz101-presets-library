@@ -1,10 +1,5 @@
 import { useCallback, useState } from "react";
 import {
-	DEFAULT_DCA_ENV,
-	DEFAULT_DCO_ENV,
-	DEFAULT_DCW_ENV,
-} from "@/components/pdAlgorithms";
-import {
 	DEFAULT_ALGO_REF,
 	legacyCzAlgoToWaveform,
 	normalizeWaveformId,
@@ -28,6 +23,11 @@ import type {
 	WindowType,
 } from "@/lib/synth/bindings/synth";
 import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
+import {
+	DEFAULT_DCA_ENV,
+	DEFAULT_DCO_ENV,
+	DEFAULT_DCW_ENV,
+} from "@/lib/synth/pdAlgorithms";
 
 export type { PolyMode, VelocityTarget };
 

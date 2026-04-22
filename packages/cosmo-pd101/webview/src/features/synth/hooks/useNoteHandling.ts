@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { noteToFreq, PC_KEY_TO_NOTE } from "@/components/pdAlgorithms";
 import type { ModSource } from "@/lib/synth/bindings/synth";
+import { noteToFreq, PC_KEY_TO_NOTE } from "@/lib/synth/pdAlgorithms";
 
 type UseNoteHandlingParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
@@ -249,7 +249,14 @@ export function useNoteHandling({
 				fn();
 			}
 		};
-	}, [sendModWheel, sendPitchBend, sendAftertouch, sendNoteOn, sendNoteOff, setSustain]);
+	}, [
+		sendModWheel,
+		sendPitchBend,
+		sendAftertouch,
+		sendNoteOn,
+		sendNoteOff,
+		setSustain,
+	]);
 
 	return {
 		activeNotes,

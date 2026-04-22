@@ -177,9 +177,7 @@ export function SynthParamControllerProvider({
 	);
 
 	const hasAnyLfo1Routes = useMemo(() => {
-		return modRoutes.some(
-			(route) => route.enabled && route.source === "lfo1",
-		);
+		return modRoutes.some((route) => route.enabled && route.source === "lfo1");
 	}, [modRoutes]);
 
 	useEffect(() => {

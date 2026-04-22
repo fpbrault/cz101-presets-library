@@ -1,7 +1,8 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: array keys used in stable maps */
+
+import type { EnvelopeStep } from "@cosmo/cosmo-pd101";
 import type React from "react";
 import { memo } from "react";
-import type { EnvelopeStep } from "@/lib/midi/czSysexDecoder";
 
 interface EnvelopeChartProps {
 	steps: EnvelopeStep[];

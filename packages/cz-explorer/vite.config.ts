@@ -57,7 +57,7 @@ function wasmDevPlugin() {
 }
 
 const spectaTsBindingsOutFile = fileURLToPath(
-	new URL("./src/lib/synth/bindings/synth.ts", import.meta.url),
+	new URL("../cosmo-pd101/webview/src/lib/synth/bindings/synth.ts", import.meta.url),
 );
 const cosmoSynthEngineDir = fileURLToPath(
 	new URL("../cosmo-synth-engine", import.meta.url),
@@ -113,75 +113,6 @@ function spectaBindingsDevPlugin() {
 
 const _host = process.env.TAURI_DEV_HOST;
 
-const cosmoPd101Src = fileURLToPath(
-	new URL("../cosmo-pd101/webview/src", import.meta.url),
-);
-const cosmoPresetCoreSrc = fileURLToPath(
-	new URL("../cosmo-preset-core/src", import.meta.url),
-);
-
-// Synth UI/state/engine components moved to cosmo-pd101.
-// These aliases redirect the moved paths so cz-explorer's visualizer still works.
-const synthAliases = [
-	"@/components/synth",
-	"@/features/synth",
-].map((prefix) => ({
-	find: new RegExp(`^${prefix.replace("/", "\\/").replace("@", "@")}(/|$)`),
-	replacement: `${cosmoPd101Src}/${prefix.slice(2)}/`,
-}));
-
-const synthFileAliases: { find: string; replacement: string }[] = [
-	"context/ModMatrixContext",
-	"components/pdAlgorithms",
-	"components/SingleCycleDisplay",
-	"components/ControlKnob",
-	"components/BaseFxSection",
-	"components/ChorusSection",
-	"components/DelaySection",
-	"components/ReverbSection",
-	"components/StepEnvelopeEditor",
-	"components/PerLineWarpBlock",
-	"components/AlgoControlsGroup",
-	"components/AlgoControlItem",
-	"components/AlgoControlNumber",
-	"components/AlgoControlSelect",
-	"components/AlgoControlToggle",
-	"components/AlgoControlTooltip",
-	"components/algoControlTypes",
-	"components/AlgoIconGrid",
-	"components/ui/ModulatableControl",
-	"components/ui/ModulationMenu",
-	"components/ui/ModulationIconButton",
-	"components/ui/CzHorizontalSlider",
-	"components/ui/CzVerticalSlider",
-	"components/ui/Card",
-	"components/ui/CzButton",
-	"components/ui/CzTabButton",
-].map((relPath) => ({
-	find: `@/${relPath}`,
-	replacement: `${cosmoPd101Src}/${relPath}`,
-}));
-
-// lib/synth files now owned by cosmo-pd101 (except bindings which stay in cz-explorer)
-const synthLibAliases: { find: string | RegExp; replacement: string }[] = [
-	"lib/synth/algoRef",
-	"lib/synth/modDestination",
-	"lib/synth/defaultPresets",
-	"lib/synth/pdVisualizerWorkletUrl",
-	"lib/synth/drawOscilloscope",
-	"lib/synth/pdOscillator",
-	"lib/synth/windowFunction",
-].map((relPath) => ({
-	find: `@/${relPath}`,
-	replacement: `${cosmoPd101Src}/${relPath}`,
-}));
-
-// preset-core files now in cosmo-preset-core
-const presetCoreAliases: { find: string; replacement: string }[] = [
-	{ find: "@/lib/synth/presetStorage", replacement: `${cosmoPresetCoreSrc}/presetStorage` },
-	{ find: "@/lib/synth/czPresetConverter", replacement: `${cosmoPresetCoreSrc}/czPresetConverter` },
-];
-
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
 	publicDir: "public",
@@ -191,10 +122,12 @@ export default defineConfig(async () => ({
 	envPrefix: ["VITE_", "TAURI_ENV_"],
 	resolve: {
 		alias: [
-			...synthAliases,
-			...synthFileAliases,
-			...synthLibAliases,
-			...presetCoreAliases,
+			{
+				find: "@cosmo/cosmo-pd101",
+				replacement: fileURLToPath(
+					new URL("../cosmo-pd101/webview/dist/index.mjs", import.meta.url),
+				),
+			},
 			{
 				find: "@",
 				replacement: fileURLToPath(new URL("./src", import.meta.url)),

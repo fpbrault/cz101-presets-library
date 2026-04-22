@@ -1,7 +1,7 @@
+import type { WaveformConfig } from "@cosmo/cosmo-pd101";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import WaveformDisplay from "@/components/charts/WaveformDisplay";
-import type { WaveformConfig } from "@/lib/midi/czSysexDecoder";
 import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 

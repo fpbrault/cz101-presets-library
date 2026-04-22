@@ -6,14 +6,14 @@ import {
 	useRef,
 	useState,
 } from "react";
-import type { AsidePanelTab } from "@/components/synth/AsidePanelSwitcher";
-import SynthRenderer from "@/components/synth/SynthRenderer";
+import type { AsidePanelTab } from "@/components/layout/AsidePanelSwitcher";
+import SynthRenderer from "@/components/renderer/SynthRenderer";
 import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
 import { getSynthRuntimeCapabilities } from "@/features/synth/runtimeCapabilities";
 import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
 import { useSynthState } from "@/features/synth/useSynthState";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
-import { usePluginParamBridge } from "./usePluginParamBridge";
+import { usePluginParamBridge } from "./hooks/usePluginParamBridge";
 
 const UI_SCALE_KEY = "cz-plugin-ui-scale";
 const PLUGIN_RUNTIME_CAPABILITIES = getSynthRuntimeCapabilities("plugin");

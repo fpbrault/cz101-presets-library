@@ -1,11 +1,11 @@
-import type React from "react";
-import { memo, type ReactNode } from "react";
 import {
 	type ModulationType,
 	type WaveformConfig,
 	type WaveformId,
 	WF_NAMES,
-} from "@/lib/midi/czSysexDecoder";
+} from "@cosmo/cosmo-pd101";
+import type React from "react";
+import { memo, type ReactNode } from "react";
 
 // ---------------------------------------------------------------------------
 // Mini SVG waveform icons

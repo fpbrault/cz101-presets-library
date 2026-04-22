@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { PresetEntry } from "@/components/synth/PresetNavigator";
-import type { Preset } from "@/lib/presets/presetManager";
+import type { LibraryPreset } from "@/features/synth/types/libraryPreset";
+import type { PresetEntry } from "@/features/synth/types/presetEntry";
 import type { SynthPresetV1 } from "@/lib/synth/bindings/synth";
 import {
 	DEFAULT_PRESET,
@@ -19,8 +19,8 @@ type UseSynthPresetManagerOptions = {
 	builtinPresets: Record<string, SynthPresetV1>;
 	gatherState: () => SynthPresetV1;
 	applyPreset: (data: SynthPresetV1) => void;
-	libraryPresets?: Preset[];
-	onLoadLibraryPreset?: (preset: Preset) => void;
+	libraryPresets?: LibraryPreset[];
+	onLoadLibraryPreset?: (preset: LibraryPreset) => void;
 	shouldLoadCurrentState?: () => boolean;
 };
 
@@ -30,7 +30,7 @@ type UseSynthPresetManagerResult = {
 	activePresetName: string;
 	handleLoadLocal: (name: string) => void;
 	handleLoadBuiltin: (name: string) => void;
-	handleLoadLibrary: (preset: Preset) => void;
+	handleLoadLibrary: (preset: LibraryPreset) => void;
 	handleStepPreset: (direction: -1 | 1) => void;
 	handleSavePreset: (name: string) => void;
 	handleDeletePreset: (name: string) => void;
@@ -80,7 +80,7 @@ export function useSynthPresetManager({
 	);
 
 	const handleLoadLibrary = useCallback(
-		(preset: Preset) => {
+		(preset: LibraryPreset) => {
 			if (!onLoadLibraryPreset) return;
 			onLoadLibraryPreset(preset);
 			setActivePresetId(getLibraryPresetEntryId(preset.id));

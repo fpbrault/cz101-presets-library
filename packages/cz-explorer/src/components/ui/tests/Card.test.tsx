@@ -1,8 +1,9 @@
+
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import Card from "@/components/ui/Card";
 import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
+import Card from "../Card";
 
 describe("Card", () => {
 	it("renders children", () => {

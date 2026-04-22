@@ -1,8 +1,8 @@
+import { type DecodedPatch, decodeCzPatch } from "@cosmo/cosmo-pd101";
 import type React from "react";
 import { memo, type ReactNode } from "react";
 import EnvelopeChart from "@/components/charts/EnvelopeChart";
 import WaveformDisplay from "@/components/charts/WaveformDisplay";
-import { type DecodedPatch, decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 
 interface PatchParameterViewerProps {
 	sysexData: Uint8Array;
@@ -60,7 +60,7 @@ const ValueBar: React.FC<{
 }> = ({ value, max = 99, className = "progress-primary" }) => {
 	const clamped = Math.max(0, Math.min(max, value));
 	return (
-		<div className="flex items-center justify-end gap-2 min-w-[120px]">
+		<div className="flex items-center justify-end gap-2 min-w-30">
 			<progress
 				className={`progress w-20 h-1.5 ${className}`}
 				value={clamped}

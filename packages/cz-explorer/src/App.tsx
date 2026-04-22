@@ -49,9 +49,8 @@ function AppInner() {
 			if (onboardingStatus === "needs-confirmation") {
 				setShowOnboardingModal(true);
 			}
-
 		})();
-	}, [notifyInfo]);
+	}, []);
 
 	const handleAcceptOnboarding = () => {
 		setShowOnboardingModal(false);
