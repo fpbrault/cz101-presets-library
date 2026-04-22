@@ -3,7 +3,16 @@
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
+	"exports": {
+		".": {
+			"types": "./webview/dist/index.d.mts",
+			"import": "./webview/dist/index.mjs"
+		}
+	},
+	"main": "./webview/dist/index.mjs",
+	"types": "./webview/dist/index.d.mts",
 	"scripts": {
+		"build:lib": "bun --cwd webview run build:lib",
 		"bundle:debug": "cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 --vst3 --auv2",
 		"bundle:release": "cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 --vst3 --auv2 --release",
 		"bundle:release:universal": "ARCH=universal bash ../../scripts/build-plugin.sh --release",
