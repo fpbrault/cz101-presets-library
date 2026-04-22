@@ -476,6 +476,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 															onChange={onChange}
 															modulatable={modDest}
 															lineIndex={lineIndex}
+															ariaLabel={`Line ${lineIndex} ${label}`}
 														/>
 													</div>
 												</div>
