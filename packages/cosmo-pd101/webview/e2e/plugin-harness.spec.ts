@@ -14,11 +14,14 @@ test.describe("Harness shell", () => {
 		const toggle = page.getByTestId("debug-panel-toggle");
 		const panel = page.getByTestId("debug-panel");
 
+		// Panel starts closed (VITE_DEBUG_PANEL=0)
+		await expect(panel).not.toBeVisible();
+		// Click toggle to open
+		await toggle.click();
 		await expect(panel).toBeVisible();
+		// Click toggle to close
 		await toggle.click();
 		await expect(panel).not.toBeVisible();
-		await toggle.click();
-		await expect(panel).toBeVisible();
 	});
 
 	test("debug panel push controls send an inbound update", async ({ page }) => {

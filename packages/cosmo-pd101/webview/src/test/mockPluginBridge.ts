@@ -239,6 +239,7 @@ export function installMockPluginBridge(): void {
 	const messageListeners: Array<(msg: MockBridgeMessage) => void> = [];
 	let pendingInvokeResolve: ((result: unknown) => void) | null = null;
 	let pendingInvokeReject: ((error: string) => void) | null = null;
+	let virtualModMatrix: { routes: unknown[] } = { routes: [] };
 
 	// Virtual param state: Beamer numeric ID → normalized value
 	const virtualParamState: Record<number, number> = {};
@@ -332,6 +333,18 @@ export function installMockPluginBridge(): void {
 				}
 				if (method === "getAlgoControls") {
 					resolve({ line1: [], line2: [] });
+					return;
+				}
+				if (method === "setModMatrix") {
+					const next = (args[0] ?? { routes: [] }) as {
+						routes?: unknown[];
+					};
+					virtualModMatrix = { routes: [...(next.routes ?? [])] };
+					resolve(null);
+					return;
+				}
+				if (method === "getModMatrix") {
+					resolve({ routes: [...virtualModMatrix.routes] });
 					return;
 				}
 				if (method === "getScopeData") {

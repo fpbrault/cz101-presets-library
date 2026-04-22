@@ -8,7 +8,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use beamer::prelude::*;
-use cosmo_synth_engine::params::{AlgoControlValueV1, PolyMode, StepEnvData, SynthParams};
+use cosmo_synth_engine::params::{
+    AlgoControlValueV1, ModMatrix, PolyMode, StepEnvData, SynthParams,
+};
 use cosmo_synth_engine::processor::{midi_note_to_freq, CosmoProcessor};
 
 const PLUGIN_LOG_PATH: &str = "/tmp/cosmo-plugin.log";
@@ -871,9 +873,29 @@ impl AlgoControlsState {
     }
 }
 
+#[derive(Clone, Default)]
+struct ModMatrixState {
+    matrix: ModMatrix,
+}
+
+impl ModMatrixState {
+    fn apply_to(&self, params: &mut SynthParams) {
+        params.mod_matrix = self.matrix.clone();
+    }
+
+    fn set(&mut self, matrix: ModMatrix) {
+        self.matrix = matrix;
+    }
+
+    fn to_json(&self) -> serde_json::Value {
+        serde_json::to_value(&self.matrix).unwrap_or_else(|_| serde_json::json!({ "routes": [] }))
+    }
+}
+
 struct CzWebViewHandler {
     envelopes: Arc<RwLock<EnvelopeState>>,
     algo_controls: Arc<RwLock<AlgoControlsState>>,
+    mod_matrix: Arc<RwLock<ModMatrixState>>,
     scope_buffer: ScopeBuffer,
 }
 
@@ -939,6 +961,33 @@ impl CzWebViewHandler {
             .map_err(|error| format!("invalid algo controls payload: {error}"))?;
         Ok((line, controls))
     }
+
+    fn parse_set_mod_matrix_args(args: &[serde_json::Value]) -> Result<ModMatrix, String> {
+        if args.len() == 1 {
+            let payload = args
+                .first()
+                .ok_or_else(|| "setModMatrix expects at least one argument".to_string())?;
+            let matrix_value = payload
+                .get("mod_matrix")
+                .or_else(|| payload.get("modMatrix"))
+                .cloned()
+                .unwrap_or_else(|| payload.clone());
+            return serde_json::from_value(matrix_value)
+                .map_err(|error| format!("invalid mod matrix payload: {error}"));
+        }
+
+        let payload = args
+            .first()
+            .ok_or_else(|| "setModMatrix expects at least one argument".to_string())?;
+        let matrix_value = payload
+            .get("mod_matrix")
+            .or_else(|| payload.get("modMatrix"))
+            .cloned()
+            .ok_or_else(|| "setModMatrix payload is missing mod_matrix".to_string())?;
+
+        serde_json::from_value(matrix_value)
+            .map_err(|error| format!("invalid mod matrix payload: {error}"))
+    }
 }
 
 impl WebViewHandler for CzWebViewHandler {
@@ -970,6 +1019,16 @@ impl WebViewHandler for CzWebViewHandler {
                 append_log(&format!("setAlgoControls line={line}"));
                 Ok(serde_json::Value::Null)
             }
+            "setModMatrix" => {
+                let matrix = Self::parse_set_mod_matrix_args(args)?;
+                let mut mod_matrix = self
+                    .mod_matrix
+                    .write()
+                    .map_err(|_| "mod matrix store is poisoned".to_string())?;
+                mod_matrix.set(matrix);
+                append_log("setModMatrix");
+                Ok(serde_json::Value::Null)
+            }
             "getEnvelopes" => {
                 let envelopes = self
                     .envelopes
@@ -985,6 +1044,14 @@ impl WebViewHandler for CzWebViewHandler {
                     .map_err(|_| "algo controls store is poisoned".to_string())?;
                 append_log("getAlgoControls");
                 Ok(algo_controls.to_json())
+            }
+            "getModMatrix" => {
+                let mod_matrix = self
+                    .mod_matrix
+                    .read()
+                    .map_err(|_| "mod matrix store is poisoned".to_string())?;
+                append_log("getModMatrix");
+                Ok(mod_matrix.to_json())
             }
             "getScopeData" => {
                 let scope = self
@@ -1030,6 +1097,7 @@ pub struct CzDescriptor {
     pub parameters: CzParameters,
     envelopes: Arc<RwLock<EnvelopeState>>,
     algo_controls: Arc<RwLock<AlgoControlsState>>,
+    mod_matrix: Arc<RwLock<ModMatrixState>>,
     scope_buffer: ScopeBuffer,
 }
 
@@ -1062,6 +1130,7 @@ impl Descriptor for CzDescriptor {
         Some(Arc::new(CzWebViewHandler {
             envelopes: self.envelopes.clone(),
             algo_controls: self.algo_controls.clone(),
+            mod_matrix: self.mod_matrix.clone(),
             scope_buffer: self.scope_buffer.clone(),
         }))
     }
@@ -1084,8 +1153,14 @@ impl Descriptor for CzDescriptor {
             .read()
             .map(|algo_controls| algo_controls.clone())
             .unwrap_or_default();
+        let cached_mod_matrix = self
+            .mod_matrix
+            .read()
+            .map(|mod_matrix| mod_matrix.clone())
+            .unwrap_or_default();
         cached_envelopes.apply_to(&mut synth_params);
         cached_algo_controls.apply_to(&mut synth_params);
+        cached_mod_matrix.apply_to(&mut synth_params);
         processor.set_params(synth_params);
         CzProcessor {
             parameters: self.parameters,
@@ -1094,6 +1169,8 @@ impl Descriptor for CzDescriptor {
             cached_envelopes,
             algo_controls: self.algo_controls,
             cached_algo_controls,
+            mod_matrix: self.mod_matrix,
+            cached_mod_matrix,
             scope_buffer: self.scope_buffer,
         }
     }
@@ -1112,6 +1189,8 @@ pub struct CzProcessor {
     cached_envelopes: EnvelopeState,
     algo_controls: Arc<RwLock<AlgoControlsState>>,
     cached_algo_controls: AlgoControlsState,
+    mod_matrix: Arc<RwLock<ModMatrixState>>,
+    cached_mod_matrix: ModMatrixState,
     scope_buffer: ScopeBuffer,
 }
 
@@ -1131,10 +1210,14 @@ impl Processor for CzProcessor {
         if let Ok(algo_controls) = self.algo_controls.try_read() {
             self.cached_algo_controls = algo_controls.clone();
         }
+        if let Ok(mod_matrix) = self.mod_matrix.try_read() {
+            self.cached_mod_matrix = mod_matrix.clone();
+        }
 
         let mut synth_params = self.parameters.to_synth_params();
         self.cached_envelopes.apply_to(&mut synth_params);
         self.cached_algo_controls.apply_to(&mut synth_params);
+        self.cached_mod_matrix.apply_to(&mut synth_params);
         self.processor.set_params(synth_params);
 
         let num_samples = buffer.num_samples();

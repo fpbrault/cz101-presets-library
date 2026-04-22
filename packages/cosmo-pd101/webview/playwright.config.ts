@@ -35,7 +35,7 @@ export default defineConfig({
 		reuseExistingServer: !process.env.CI,
 		env: {
 			VITE_TEST_HARNESS: "1",
-			VITE_DEBUG_PANEL: "1",
+			VITE_DEBUG_PANEL: "0",
 		},
 	},
 });

@@ -122,7 +122,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			primary_dcw,
 			config.algo_controls,
-			[0.0; 8],
+			config.algo_param_mods,
 			None,
 		);
 		let secondary = render_algo_sample(
@@ -130,7 +130,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			secondary_dcw,
 			config.algo_controls,
-			[0.0; 8],
+			config.algo_param_mods,
 			None,
 		);
 		blend_line_samples(config.primary_algo, primary, secondary, config.blend)
@@ -140,7 +140,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			config.final_dcw,
 			config.algo_controls,
-			[0.0; 8],
+			config.algo_param_mods,
 			None,
 		)
 	};
@@ -624,4 +624,36 @@ pub fn render_algo_sample(
 	}
 	let warped = warp_phase(algo, phase, dcw, algo_controls, &algo_param_mods);
 	-libm::cosf(TWO_PI * warped)
+}
+
+#[cfg(test)]
+mod tests {
+	use super::{render_line_stateless, LineRenderConfig};
+	use crate::params::Algo;
+
+	#[test]
+	fn stateless_render_applies_algo_param_mods() {
+		let base = LineRenderConfig {
+			primary_algo: Algo::Bend,
+			secondary_algo: None,
+			blend: 0.0,
+			phase: 0.37,
+			window_gain: 1.0,
+			final_dcw: 1.0,
+			final_dca: 1.0,
+			effective_freq: 220.0,
+			sample_rate: 44100.0,
+			algo_controls: None,
+			algo_param_mods: [0.0; 8],
+		};
+
+		let modded = LineRenderConfig {
+			algo_param_mods: [0.75, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+			..base
+		};
+
+		let (base_sample, _) = render_line_stateless(base);
+		let (modded_sample, _) = render_line_stateless(modded);
+		assert_ne!(base_sample, modded_sample);
+	}
 }
