@@ -142,6 +142,7 @@ export function SynthParamControllerProvider({
 	onControlReadout,
 }: SynthParamControllerProviderProps) {
 	const maybeModMatrix = useOptionalModMatrix();
+	const modRoutes = maybeModMatrix?.modMatrix.routes ?? [];
 	const [velocityValue, setVelocityValue] = useState(0);
 	const [modWheelValue, setModWheelValue] = useState(0);
 	const [aftertouchValue, setAftertouchValue] = useState(0);
@@ -176,13 +177,10 @@ export function SynthParamControllerProvider({
 	);
 
 	const hasAnyLfo1Routes = useMemo(() => {
-		if (!maybeModMatrix) {
-			return false;
-		}
-		return maybeModMatrix.modMatrix.routes.some(
+		return modRoutes.some(
 			(route) => route.enabled && route.source === "lfo1",
 		);
-	}, [maybeModMatrix]);
+	}, [modRoutes]);
 
 	useEffect(() => {
 		if (
@@ -269,14 +267,14 @@ export function SynthParamControllerProvider({
 
 	const getRouteCount = useCallback(
 		(destination: ModDestination | undefined) => {
-			if (!destination || !maybeModMatrix) {
+			if (!destination) {
 				return 0;
 			}
-			return maybeModMatrix.modMatrix.routes.filter(
+			return modRoutes.filter(
 				(route) => route.enabled && route.destination === destination,
 			).length;
 		},
-		[maybeModMatrix],
+		[modRoutes],
 	);
 
 	const hasActiveRoutes = useCallback(
@@ -292,11 +290,11 @@ export function SynthParamControllerProvider({
 			destination: ModDestination | undefined;
 			baseValue: number;
 		}): number | undefined => {
-			if (!destination || !maybeModMatrix) {
+			if (!destination) {
 				return undefined;
 			}
 
-			const activeRoutes = maybeModMatrix.modMatrix.routes.filter(
+			const activeRoutes = modRoutes.filter(
 				(route) => route.enabled && route.destination === destination,
 			);
 			if (activeRoutes.length === 0) {
@@ -312,7 +310,7 @@ export function SynthParamControllerProvider({
 			const clampedLiveModDelta = Math.max(-2, Math.min(2, liveModDelta));
 			return baseValue + clampedLiveModDelta;
 		},
-		[liveSources, maybeModMatrix],
+		[liveSources, modRoutes],
 	);
 
 	const controller = useMemo(

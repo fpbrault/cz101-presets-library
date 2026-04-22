@@ -32,10 +32,11 @@ const ModulatableControl = memo(function ModulatableControl({
 }: ModulatableControlProps) {
 	const { modMatrix, setModMatrix } = useModMatrix();
 	const [popoverOpen, setPopoverOpen] = useState(false);
+	const routes = modMatrix.routes ?? [];
 
 	const activeRoutes = useMemo(
-		() => modMatrix.routes.filter((r) => r.destination === destinationId),
-		[modMatrix.routes, destinationId],
+		() => routes.filter((r) => r.destination === destinationId),
+		[routes, destinationId],
 	);
 
 	const handleAddRoute = useCallback(
@@ -46,32 +47,33 @@ const ModulatableControl = memo(function ModulatableControl({
 				amount: 0.5,
 				enabled: true,
 			};
-			setModMatrix({ routes: [...modMatrix.routes, newRoute] });
+			setModMatrix({ routes: [...routes, newRoute] });
 		},
-		[modMatrix.routes, destinationId, setModMatrix],
+		[routes, destinationId, setModMatrix],
 	);
 
 	const handleRemoveRoute = useCallback(
 		(index: number) => {
-			const globalIndex = modMatrix.routes.findIndex(
-				(r) =>
-					r.destination === destinationId &&
-					modMatrix.routes
-						.filter((r2) => r2.destination === destinationId)
-						.indexOf(r) === index,
-			);
+			let destinationIndex = -1;
+			const globalIndex = routes.findIndex((r) => {
+				if (r.destination !== destinationId) {
+					return false;
+				}
+				destinationIndex += 1;
+				return destinationIndex === index;
+			});
 			if (globalIndex < 0) return;
-			const next = [...modMatrix.routes];
+			const next = [...routes];
 			next.splice(globalIndex, 1);
 			setModMatrix({ routes: next });
 		},
-		[modMatrix.routes, destinationId, setModMatrix],
+		[routes, destinationId, setModMatrix],
 	);
 
 	const handleAmountChange = useCallback(
 		(index: number, amount: number) => {
 			let destIdx = -1;
-			const next = modMatrix.routes.map((r) => {
+			const next = routes.map((r) => {
 				if (r.destination === destinationId) {
 					destIdx++;
 					if (destIdx === index) return { ...r, amount };
@@ -80,13 +82,13 @@ const ModulatableControl = memo(function ModulatableControl({
 			});
 			setModMatrix({ routes: next });
 		},
-		[modMatrix.routes, destinationId, setModMatrix],
+		[routes, destinationId, setModMatrix],
 	);
 
 	const handleToggleEnabled = useCallback(
 		(index: number) => {
 			let destIdx = -1;
-			const next = modMatrix.routes.map((r) => {
+			const next = routes.map((r) => {
 				if (r.destination === destinationId) {
 					destIdx++;
 					if (destIdx === index) return { ...r, enabled: !r.enabled };
@@ -95,7 +97,7 @@ const ModulatableControl = memo(function ModulatableControl({
 			});
 			setModMatrix({ routes: next });
 		},
-		[modMatrix.routes, destinationId, setModMatrix],
+		[routes, destinationId, setModMatrix],
 	);
 
 	const hasActiveRoutes = activeRoutes.length > 0;

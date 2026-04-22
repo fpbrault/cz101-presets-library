@@ -129,7 +129,7 @@ export function createWorkletSynthEngineAdapter({
 				},
 				pitchBendRange: snapshot.pitchBendRange,
 				modWheelVibratoDepth: snapshot.modWheelVibratoDepth,
-				modMatrix: snapshot.modMatrix,
+				modMatrix: { routes: snapshot.modMatrix.routes ?? [] },
 			};
 			paramsRef.current = params;
 			if (!workletNodeRef.current) return;

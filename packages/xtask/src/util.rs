@@ -145,7 +145,7 @@ pub fn package_target_dir(workspace_root: &Path, package: &str) -> PathBuf {
 ///
 /// Example: <workspace>/packages/cosmo-pd101/target/release
 #[must_use]
-pub fn package_profile_target_dir(workspace_root: &Path, package: &str, profile: &str) -> PathBuf {
+pub fn _package_profile_target_dir(workspace_root: &Path, package: &str, profile: &str) -> PathBuf {
     package_target_dir(workspace_root, package).join(profile)
 }
 
