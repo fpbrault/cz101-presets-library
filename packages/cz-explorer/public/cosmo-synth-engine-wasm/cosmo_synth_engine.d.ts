@@ -36,6 +36,10 @@ declare namespace wasm_bindgen {
          */
         process(output: Float32Array): void;
         /**
+         * Set aftertouch/channel pressure value. `value` is normalised [0.0, 1.0].
+         */
+        setAftertouch(value: number): void;
+        /**
          * Set mod wheel value. `value` is normalised [0.0, 1.0] (CC1 / 127).
          */
         setModWheel(value: number): void;
@@ -67,6 +71,7 @@ declare interface InitOutput {
     readonly czsynthprocessor_noteOff: (a: number, b: number) => void;
     readonly czsynthprocessor_noteOn: (a: number, b: number, c: number, d: number) => void;
     readonly czsynthprocessor_process: (a: number, b: number, c: number, d: number) => void;
+    readonly czsynthprocessor_setAftertouch: (a: number, b: number) => void;
     readonly czsynthprocessor_setModWheel: (a: number, b: number) => void;
     readonly czsynthprocessor_setParams: (a: number, b: number, c: number) => void;
     readonly czsynthprocessor_setPitchBend: (a: number, b: number) => void;

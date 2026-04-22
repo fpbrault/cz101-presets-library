@@ -112,6 +112,7 @@ const SynthFilterPanel: AsidePanelComponent<"filter"> = Object.assign(
 						color="#3dff3d"
 						label="Cutoff"
 						valueFormatter={(v) => `${Math.round(v)}Hz`}
+						modDestination="filterCutoff"
 					/>
 					<ControlKnob
 						value={filterResonance}
@@ -122,6 +123,7 @@ const SynthFilterPanel: AsidePanelComponent<"filter"> = Object.assign(
 						color="#3dff3d"
 						label="Res"
 						valueFormatter={(v) => `${Math.round(v * 100)}%`}
+						modDestination="filterResonance"
 					/>
 					<ControlKnob
 						value={filterEnvAmount}
@@ -132,6 +134,7 @@ const SynthFilterPanel: AsidePanelComponent<"filter"> = Object.assign(
 						color="#3dff3d"
 						label="Env"
 						valueFormatter={(v) => `${Math.round(v * 100)}%`}
+						modDestination="filterEnvAmount"
 					/>
 				</div>
 			</SynthPanelContainer>

@@ -4,12 +4,17 @@ import {
 	DEFAULT_DCW_ENV,
 } from "@/components/pdAlgorithms";
 import type { DecodedPatch, EnvelopeStep } from "@/lib/midi/czSysexDecoder";
-import type { EnvStep, StepEnvData, SynthPresetV1 } from "@/lib/synth/bindings/synth";
+import type {
+	EnvStep,
+	StepEnvData,
+	SynthPresetV1,
+} from "@/lib/synth/bindings/synth";
 import { DEFAULT_PRESET } from "@/lib/synth/presetStorage";
 
-function convertEnvelope(
-	env: { steps: EnvelopeStep[]; endStep: number },
-): StepEnvData {
+function convertEnvelope(env: {
+	steps: EnvelopeStep[];
+	endStep: number;
+}): StepEnvData {
 	const czSteps = env.steps.slice(0, env.endStep);
 	const steps: EnvStep[] = czSteps.map((step) => ({
 		level: step.level / 99,
@@ -33,7 +38,15 @@ function convertEnvelope(
 
 function waveformToCzWaveform(
 	waveform: DecodedPatch["dco1"]["firstWaveform"],
-): "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" {
+):
+	| "saw"
+	| "square"
+	| "pulse"
+	| "null"
+	| "sinePulse"
+	| "sawPulse"
+	| "multiSine"
+	| "pulse2" {
 	if (waveform === 1) return "saw";
 	if (waveform === 2) return "square";
 	if (waveform === 3) return "pulse";

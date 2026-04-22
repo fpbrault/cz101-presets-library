@@ -7,7 +7,14 @@ import type {
 	WindowType,
 } from "@/lib/synth/bindings/synth";
 import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
+import AlgoControlsGroup from "./AlgoControlsGroup";
 import AlgoIconGrid from "./AlgoIconGrid";
+import type {
+	AlgoControlBinding,
+	AlgoControlOptionRuntime,
+	AlgoControlRuntime,
+	LineIndex,
+} from "./algoControlTypes";
 import type { PdAlgo } from "./pdAlgorithms";
 import { getPdAlgoDef, PD_ALGOS } from "./pdAlgorithms";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
@@ -52,62 +59,17 @@ interface PerLineWarpBlockProps {
 	setKeyFollow: (v: number) => void;
 	algoControls: AlgoControlValueV1[];
 	setAlgoControls: (value: AlgoControlValueV1[]) => void;
+	/** 1 or 2, used to resolve mod-matrix destinations. Defaults to 1. */
+	lineIndex?: LineIndex;
 	activeSection?: SectionTab;
 }
 
 type EnvTab = "dco" | "dcw" | "dca";
 type SectionTab = "algos" | "envelopes";
-type AlgoControlAssignmentRuntime = {
-	controlId: string;
-	value: number;
-};
-type AlgoControlOptionRuntime = {
-	value: string;
-	label: string;
-	set: AlgoControlAssignmentRuntime[];
-};
-type AlgoControlRuntime = {
-	id: string;
-	label: string;
-	description?: string | null;
-	kind?: "number" | "select" | "toggle";
-	min?: number | null;
-	max?: number | null;
-	default?: number | null;
-	defaultToggle?: boolean | null;
-	options?: AlgoControlOptionRuntime[];
-};
 type AlgoDefinitionRuntime = {
 	id: PdAlgo;
 	controls: AlgoControlRuntime[];
 };
-type AlgoControlBinding = {
-	getNumber?: () => number;
-	setNumber?: (value: number) => void;
-	getToggle?: () => boolean;
-	setToggle?: (value: boolean) => void;
-};
-
-function AlgoControlTooltip({ description }: { description?: string | null }) {
-	if (!description) {
-		return null;
-	}
-
-	return (
-		<div
-			className="tooltip tooltip-right z-50 [&:before]:bg-cz-body [&:before]:text-left [&:before]:text-xs normal-case [&:before]:leading-tight	"
-			data-tip={description}
-		>
-			<button
-				type="button"
-				className="btn btn-ghost btn-circle btn-xs h-4 min-h-4 w-4 border border-cz-border p-0 text-2xs font-semibold leading-none text-cz-cream/70 hover:border-cz-light-blue hover:text-cz-light-blue"
-				aria-label="Show control description"
-			>
-				?
-			</button>
-		</div>
-	);
-}
 
 export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	label,
@@ -146,6 +108,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setKeyFollow,
 	algoControls = [],
 	setAlgoControls = () => {},
+	lineIndex = 1,
 	activeSection: activeSectionProp,
 }: PerLineWarpBlockProps) {
 	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
@@ -245,6 +208,18 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 		(entry) => entry.id === algo,
 	);
 	const algoDefinitionControls = activeAlgoDefinition?.controls ?? [];
+
+	// Map each "number"-kind control to a 1-based slot index for ModDestination
+	// (line1AlgoParam1…8 / line2AlgoParam1…8). Max 8 slots per line.
+	const algoParamSlotIndex: Record<string, number> = {};
+	let slotCounter = 1;
+	for (const ctrl of algoDefinitionControls) {
+		if ((ctrl.kind ?? "number") === "number") {
+			if (slotCounter <= 8) {
+				algoParamSlotIndex[ctrl.id] = slotCounter++;
+			}
+		}
+	}
 
 	const controlBindings: Record<string, AlgoControlBinding> = {
 		waveform1: {
@@ -401,72 +376,80 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										Parameters
 									</div>
 									<div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 items-stretch">
-										{[
-											{
-												label: "DCW Amt",
-												value: warpAmount,
-												min: 0,
-												max: 1,
-												step: 0.01,
-												color: color,
-												fmt: (v: number) => v.toFixed(2),
-												onChange: setWarpAmount,
-											},
-											{
-												label: "DCW Comp",
-												value: dcwComp,
-												min: 0,
-												max: 1,
-												step: 0.01,
-												color: "#7f9de4",
-												fmt: (v: number) => `${Math.round(v * 100)}%`,
-												onChange: setDcwComp,
-											},
-											{
-												label: "Level",
-												value: level,
-												min: 0,
-												max: 1,
-												step: 0.01,
-												color: "#9cb937",
-												fmt: (v: number) => `${Math.round(v * 100)}%`,
-												onChange: setLevel,
-											},
-											{
-												label: "Oct",
-												value: octave,
-												min: -2,
-												max: 2,
-												step: 1,
-												color: "#7f9de4",
-												fmt: (v: number) =>
-													`${v >= 0 ? "+" : ""}${Math.round(v)}`,
-												onChange: (v: number) => setOctave(Math.round(v)),
-											},
-											{
-												label: "Fine",
-												value: fineDetune,
-												min: -50,
-												max: 50,
-												step: 1,
-												color: "#9cb937",
-												fmt: (v: number) =>
-													`${v >= 0 ? "+" : ""}${Math.round(v)}`,
-												onChange: (v: number) => setFineDetune(Math.round(v)),
-											},
-											{
-												label: "DCO Rng",
-												value: dcoDepth,
-												min: 0,
-												max: 24,
-												step: 1,
-												color: "#9cb937",
-												fmt: (v: number) => `${Math.round(v)} st`,
-												onChange: (v: number) => setDcoDepth(Math.round(v)),
-											},
-										].map(
+										{(
+											[
+												{
+													label: "DCW Amt",
+													value: warpAmount,
+													min: 0,
+													max: 1,
+													step: 0.01,
+													color: color,
+													fmt: (v: number) => v.toFixed(2),
+													onChange: setWarpAmount,
+													modDest: "dcwBase",
+												},
+												{
+													label: "DCW Comp",
+													value: dcwComp,
+													min: 0,
+													max: 1,
+													step: 0.01,
+													color: "#7f9de4",
+													fmt: (v: number) => `${Math.round(v * 100)}%`,
+													onChange: setDcwComp,
+													modDest: "dcwComp",
+												},
+												{
+													label: "Level",
+													value: level,
+													min: 0,
+													max: 1,
+													step: 0.01,
+													color: "#9cb937",
+													fmt: (v: number) => `${Math.round(v * 100)}%`,
+													onChange: setLevel,
+													modDest: "dcaBase",
+												},
+												{
+													label: "Oct",
+													value: octave,
+													min: -2,
+													max: 2,
+													step: 1,
+													color: "#7f9de4",
+													fmt: (v: number) =>
+														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
+													onChange: (v: number) => setOctave(Math.round(v)),
+													modDest: "octave",
+												},
+												{
+													label: "Fine",
+													value: fineDetune,
+													min: -50,
+													max: 50,
+													step: 1,
+													color: "#9cb937",
+													fmt: (v: number) =>
+														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
+													onChange: (v: number) => setFineDetune(Math.round(v)),
+													modDest: "detune",
+												},
+												{
+													label: "DCO Rng",
+													value: dcoDepth,
+													min: 0,
+													max: 24,
+													step: 1,
+													color: "#9cb937",
+													fmt: (v: number) => `${Math.round(v)} st`,
+													onChange: (v: number) => setDcoDepth(Math.round(v)),
+													modDest: "dcoDepth",
+												},
+											] as const
+										).map(
 											({
-												label: paramLabel,
+												label,
 												value,
 												min,
 												max,
@@ -474,9 +457,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 												color: c,
 												fmt,
 												onChange,
+												modDest,
 											}) => (
 												<div
-													key={paramLabel}
+													key={label}
 													className="min-h-0 h-full flex flex-col items-center gap-1.5"
 												>
 													<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
@@ -489,8 +473,10 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 															max={max}
 															step={step}
 															color={c}
-															ariaLabel={`${label} ${paramLabel}`}
 															onChange={onChange}
+															modulatable={modDest}
+															lineIndex={lineIndex}
+															ariaLabel={`Line ${lineIndex} ${label}`}
 														/>
 													</div>
 												</div>
@@ -499,135 +485,16 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									</div>
 								</Card>
 
-								<Card
-									variant="subtle"
-									className="p-3 min-h-0 flex flex-col col-span-2"
-								>
-									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-										Algo Controls
-									</div>
-									{algoDefinitionControls.length > 0 ? (
-										<div className="flex-1 min-h-0 space-y-3 overflow-visible">
-											{algoDefinitionControls.map((control) => {
-												const controlKind = control.kind ?? "number";
-												const binding = controlBindings[control.id];
-												if (controlKind === "select") {
-													const options = control.options ?? [];
-													const activeOption = getActiveSelectOption(control);
-													return (
-														<div key={control.id} className="space-y-1.5">
-															<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
-																<span>{control.label}</span>
-																<AlgoControlTooltip
-																	description={control.description}
-																/>
-															</div>
-															<div className="grid grid-cols-4 gap-1">
-																{options.map((option, index) => (
-																	<button
-																		key={option.value}
-																		type="button"
-																		onClick={() => {
-																			if (option.set.length > 0) {
-																				applyOptionAssignments(option);
-																				return;
-																			}
-																			binding?.setNumber?.(index);
-																		}}
-																		className={[
-																			"px-2 py-1 text-4xs uppercase tracking-[0.18em] border transition-colors focus:outline-none",
-																			activeOption?.value === option.value
-																				? "border-cz-light-blue bg-cz-inset text-white"
-																				: "border-cz-border bg-cz-surface text-cz-cream hover:border-cz-light-blue hover:text-white",
-																		].join(" ")}
-																	>
-																		{option.label}
-																	</button>
-																))}
-															</div>
-														</div>
-													);
-												}
-
-												if (controlKind === "number") {
-													const min = control.min ?? 0;
-													const max = control.max ?? 1;
-													const value =
-														binding?.getNumber?.() ??
-														getAlgoControlValue(
-															control.id,
-															control.default ?? min,
-														);
-													return (
-														<div key={control.id} className="space-y-1.5">
-															<div className="flex items-center justify-between gap-2 text-4xs uppercase tracking-[0.18em] text-cz-cream">
-																<div className="flex items-center gap-2">
-																	<span>{control.label}</span>
-																	<AlgoControlTooltip
-																		description={control.description}
-																	/>
-																</div>
-																<span>{value.toFixed(2)}</span>
-															</div>
-															<input
-																type="range"
-																min={min}
-																max={max}
-																step={0.01}
-																value={value}
-																onChange={(event) =>
-																	binding?.setNumber
-																		? binding.setNumber(
-																				Number(event.target.value),
-																			)
-																		: setAlgoControlValue(
-																				control.id,
-																				Number(event.target.value),
-																			)
-																}
-																className="range range-xs w-full"
-																disabled={false}
-															/>
-														</div>
-													);
-												}
-
-												const toggleValue =
-													binding?.getToggle?.() ??
-													control.defaultToggle ??
-													false;
-												return (
-													<div
-														key={control.id}
-														className="flex items-center justify-between rounded-md bg-cz-inset/70 px-2 py-1.5"
-													>
-														<div className="flex items-center gap-2">
-															<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream">
-																{control.label}
-															</span>
-															<AlgoControlTooltip
-																description={control.description}
-															/>
-														</div>
-														<input
-															type="checkbox"
-															checked={toggleValue}
-															onChange={(event) =>
-																binding?.setToggle?.(event.target.checked)
-															}
-															disabled={!binding?.setToggle}
-															className="checkbox checkbox-xs"
-														/>
-													</div>
-												);
-											})}
-										</div>
-									) : (
-										<div className="text-3xs text-cz-cream/70 uppercase tracking-[0.2em]">
-											No controls for this algo
-										</div>
-									)}
-								</Card>
+								<AlgoControlsGroup
+									controls={algoDefinitionControls}
+									controlBindings={controlBindings}
+									lineIndex={lineIndex}
+									algoParamSlotIndex={algoParamSlotIndex}
+									getAlgoControlValue={getAlgoControlValue}
+									setAlgoControlValue={setAlgoControlValue}
+									getActiveSelectOption={getActiveSelectOption}
+									applyOptionAssignments={applyOptionAssignments}
+								/>
 							</div>
 						</div>
 					) : (

@@ -85,6 +85,12 @@ impl CzSynthProcessor {
         self.inner.set_mod_wheel(value);
     }
 
+    /// Set aftertouch/channel pressure value. `value` is normalised [0.0, 1.0].
+    #[wasm_bindgen(js_name = setAftertouch)]
+    pub fn set_aftertouch(&mut self, value: f32) {
+        self.inner.set_aftertouch(value);
+    }
+
     /// Fill `output` with mono samples rendered by the DSP engine.
     ///
     /// The caller passes a `Float32Array` slice backed by WASM linear memory.

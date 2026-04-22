@@ -65,6 +65,13 @@ let wasm_bindgen = (function(exports) {
             wasm.czsynthprocessor_process(this.__wbg_ptr, ptr0, len0, addHeapObject(output));
         }
         /**
+         * Set aftertouch/channel pressure value. `value` is normalised [0.0, 1.0].
+         * @param {number} value
+         */
+        setAftertouch(value) {
+            wasm.czsynthprocessor_setAftertouch(this.__wbg_ptr, value);
+        }
+        /**
          * Set mod wheel value. `value` is normalised [0.0, 1.0] (CC1 / 127).
          * @param {number} value
          */

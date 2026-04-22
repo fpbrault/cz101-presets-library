@@ -388,25 +388,35 @@ export function computeWaveform(params: {
 	const algo2BResolved = params.algo2B ? resolveAlgoRef(params.algo2B) : null;
 
 	// Use explicit CZ waveform params when available (from CzLineParams)
-	const algoAWaveform: CzWaveform = (algoA.warpAlgo === "cz101" && params.line1CzSlotAWaveform)
-		? params.line1CzSlotAWaveform
-		: algoA.waveform;
-	const algo2AWaveform: CzWaveform = (algo2AResolved?.warpAlgo === "cz101" && params.line1CzSlotBWaveform)
-		? params.line1CzSlotBWaveform
-		: algo2AResolved?.waveform ?? "saw";
-	const algoBWaveform: CzWaveform = (algoB.warpAlgo === "cz101" && params.line2CzSlotAWaveform)
-		? params.line2CzSlotAWaveform
-		: algoB.waveform;
-	const algo2BWaveform: CzWaveform = (algo2BResolved?.warpAlgo === "cz101" && params.line2CzSlotBWaveform)
-		? params.line2CzSlotBWaveform
-		: algo2BResolved?.waveform ?? "saw";
+	const algoAWaveform: CzWaveform =
+		algoA.warpAlgo === "cz101" && params.line1CzSlotAWaveform
+			? params.line1CzSlotAWaveform
+			: algoA.waveform;
+	const algo2AWaveform: CzWaveform =
+		algo2AResolved?.warpAlgo === "cz101" && params.line1CzSlotBWaveform
+			? params.line1CzSlotBWaveform
+			: (algo2AResolved?.waveform ?? "saw");
+	const algoBWaveform: CzWaveform =
+		algoB.warpAlgo === "cz101" && params.line2CzSlotAWaveform
+			? params.line2CzSlotAWaveform
+			: algoB.waveform;
+	const algo2BWaveform: CzWaveform =
+		algo2BResolved?.warpAlgo === "cz101" && params.line2CzSlotBWaveform
+			? params.line2CzSlotBWaveform
+			: (algo2BResolved?.waveform ?? "saw");
 
-	const line1Window = (algoA.warpAlgo === "cz101" && params.line1CzWindow && params.line1CzWindow !== "off")
-		? params.line1CzWindow
-		: algoA.windowType ?? params.windowType;
-	const line2Window = (algoB.warpAlgo === "cz101" && params.line2CzWindow && params.line2CzWindow !== "off")
-		? params.line2CzWindow
-		: algoB.windowType ?? params.windowType;
+	const line1Window =
+		algoA.warpAlgo === "cz101" &&
+		params.line1CzWindow &&
+		params.line1CzWindow !== "off"
+			? params.line1CzWindow
+			: (algoA.windowType ?? params.windowType);
+	const line2Window =
+		algoB.warpAlgo === "cz101" &&
+		params.line2CzWindow &&
+		params.line2CzWindow !== "off"
+			? params.line2CzWindow
+			: (algoB.windowType ?? params.windowType);
 
 	// Aliases for backward compat within this function
 	const algo2A = algo2AResolved;

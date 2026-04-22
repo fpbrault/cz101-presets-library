@@ -29,6 +29,7 @@ const PhaseModPanel: AsidePanelComponent<"phaseMod"> = Object.assign(
 						color="#7f9de4"
 						label="Amount"
 						valueFormatter={(value) => value.toFixed(2)}
+						modDestination="intPmAmount"
 					/>
 					<ControlKnob
 						value={intPmRatio}

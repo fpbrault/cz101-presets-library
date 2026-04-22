@@ -5,6 +5,7 @@ use serde::Serialize;
 use specta::Type;
 
 const TWO_PI: f32 = core::f32::consts::TAU;
+/// Reference per-line output headroom used by processor normalization.
 pub const PER_LINE_HEADROOM: f32 = 0.25;
 
 pub mod bend;
@@ -36,6 +37,7 @@ pub struct LineRenderConfig<'a> {
 	pub effective_freq: f32,
 	pub sample_rate: f32,
 	pub algo_controls: Option<&'a [AlgoControlValueV1]>,
+	pub algo_param_mods: [f32; 8],
 }
 
 impl<'a> LineRenderConfig<'a> {
@@ -50,6 +52,7 @@ impl<'a> LineRenderConfig<'a> {
 		final_dca: f32,
 		effective_freq: f32,
 		sample_rate: f32,
+		algo_param_mods: [f32; 8],
 	) -> Self {
 		let primary_algo = cz101::resolve_line_primary_algo(line, cycle_count);
 		let secondary_algo = cz101::resolve_line_secondary_algo(line, cycle_count);
@@ -65,6 +68,7 @@ impl<'a> LineRenderConfig<'a> {
 			effective_freq,
 			sample_rate,
 			algo_controls: line.algo_controls.as_deref(),
+			algo_param_mods,
 		}
 	}
 }
@@ -118,6 +122,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			primary_dcw,
 			config.algo_controls,
+			[0.0; 8],
 			None,
 		);
 		let secondary = render_algo_sample(
@@ -125,6 +130,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			secondary_dcw,
 			config.algo_controls,
+			[0.0; 8],
 			None,
 		);
 		blend_line_samples(config.primary_algo, primary, secondary, config.blend)
@@ -134,6 +140,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			config.final_dcw,
 			config.algo_controls,
+			[0.0; 8],
 			None,
 		)
 	};
@@ -155,7 +162,7 @@ fn blend_line_samples(primary_algo: Algo, primary: f32, secondary: f32, blend: f
 
 
 /// Describes one control surfaced by an algorithm package.
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
 pub enum AlgoControlKindV1 {
@@ -444,16 +451,49 @@ pub(crate) fn lerp(a: f32, b: f32, t: f32) -> f32 {
 }
 
 /// Unified algorithm phase warp dispatcher.
-fn algo_control_value(algo_controls: Option<&[AlgoControlValueV1]>, id: &str, fallback: f32) -> f32 {
-	if let Some(entries) = algo_controls {
-		if let Some(entry) = entries.iter().find(|entry| entry.id == id) {
-			return entry.value;
+fn algo_control_slot_index(algo: Algo, id: &str) -> Option<usize> {
+	let definition = ALGO_DEFINITIONS_V1.iter().find(|definition| definition.id == algo)?;
+	let mut slot_index = 0usize;
+	for control in definition.controls {
+		if control.kind == AlgoControlKindV1::Number {
+			if control.id == id {
+				return Some(slot_index);
+			}
+			slot_index += 1;
+			if slot_index >= 8 {
+				break;
+			}
 		}
 	}
-	fallback
+	None
 }
 
-pub fn warp_phase(algo: Algo, phase: f32, amt: f32, algo_controls: Option<&[AlgoControlValueV1]>) -> f32 {
+pub(crate) fn resolve_algo_control_value(
+	algo: Algo,
+	algo_controls: Option<&[AlgoControlValueV1]>,
+	id: &str,
+	fallback: f32,
+	algo_param_mods: &[f32; 8],
+) -> f32 {
+	let mut value = fallback;
+	if let Some(entries) = algo_controls {
+		if let Some(entry) = entries.iter().find(|entry| entry.id == id) {
+			value = entry.value;
+		}
+	}
+	if let Some(slot_index) = algo_control_slot_index(algo, id) {
+		value += algo_param_mods[slot_index];
+	}
+	value
+}
+
+pub fn warp_phase(
+	algo: Algo,
+	phase: f32,
+	amt: f32,
+	algo_controls: Option<&[AlgoControlValueV1]>,
+	algo_param_mods: &[f32; 8],
+) -> f32 {
 	if amt == 0.0 && !algo.is_cz_waveform() {
 		return phase;
 	}
@@ -481,87 +521,87 @@ pub fn warp_phase(algo: Algo, phase: f32, amt: f32, algo_controls: Option<&[Algo
 		Algo::Bend => bend::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "bendCurve", 0.5),
-			algo_control_value(algo_controls, "bendBias", 0.5),
-			algo_control_value(algo_controls, "bendKnee", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "bendCurve", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "bendBias", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "bendKnee", 0.5, algo_param_mods),
 		),
 		Algo::Sync => sync::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "syncRatio", 0.5),
-			algo_control_value(algo_controls, "syncPhase", 0.0),
-			algo_control_value(algo_controls, "syncCurve", 0.5),
-			algo_control_value(algo_controls, "syncWindow", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "syncRatio", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "syncPhase", 0.0, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "syncCurve", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "syncWindow", 0.5, algo_param_mods),
 		),
 		Algo::Pinch => pinch::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "pinchFocus", 0.5),
-			algo_control_value(algo_controls, "pinchAsym", 0.0),
-			algo_control_value(algo_controls, "pinchCurve", 0.5),
-			algo_control_value(algo_controls, "pinchDrive", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "pinchFocus", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "pinchAsym", 0.0, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "pinchCurve", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "pinchDrive", 0.5, algo_param_mods),
 		),
 		Algo::Fold => fold::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "foldStages", 0.5),
-			algo_control_value(algo_controls, "foldTilt", 0.5),
-			algo_control_value(algo_controls, "foldSymmetry", 0.5),
-			algo_control_value(algo_controls, "foldSoftness", 0.0),
+			resolve_algo_control_value(algo, algo_controls, "foldStages", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "foldTilt", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "foldSymmetry", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "foldSoftness", 0.0, algo_param_mods),
 		),
 		Algo::Skew => skew::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "skewBias", 0.2),
-			algo_control_value(algo_controls, "skewCurve", 0.5),
-			algo_control_value(algo_controls, "skewSpread", 0.5),
-			algo_control_value(algo_controls, "skewTilt", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "skewBias", 0.2, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "skewCurve", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "skewSpread", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "skewTilt", 0.5, algo_param_mods),
 		),
 		Algo::Quantize => quantize::warp_phase(
 			phase,
-			algo_control_value(algo_controls, "quantizeAmount", amt),
-			algo_control_value(algo_controls, "quantizeSteps", 0.5),
-			algo_control_value(algo_controls, "quantizeSkew", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "quantizeAmount", amt, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "quantizeSteps", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "quantizeSkew", 0.5, algo_param_mods),
 		),
 		Algo::Twist => twist::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "twistHarmonics", 0.5),
-			algo_control_value(algo_controls, "twistDepth", 0.5),
-			algo_control_value(algo_controls, "twistPhase", 0.0),
-			algo_control_value(algo_controls, "twistShape", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "twistHarmonics", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "twistDepth", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "twistPhase", 0.0, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "twistShape", 0.5, algo_param_mods),
 		),
 		Algo::Clip => clip::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "clipDrive", 0.5),
-			algo_control_value(algo_controls, "clipShape", 0.5),
-			algo_control_value(algo_controls, "clipBias", 0.5),
-			algo_control_value(algo_controls, "clipSoft", 0.0),
+			resolve_algo_control_value(algo, algo_controls, "clipDrive", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "clipShape", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "clipBias", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "clipSoft", 0.0, algo_param_mods),
 		),
 		Algo::Ripple => ripple::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "rippleFreq", 0.5),
-			algo_control_value(algo_controls, "rippleDepth", 0.5),
-			algo_control_value(algo_controls, "ripplePhase", 0.0),
-			algo_control_value(algo_controls, "rippleShape", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "rippleFreq", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "rippleDepth", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "ripplePhase", 0.0, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "rippleShape", 0.5, algo_param_mods),
 		),
 		Algo::Mirror => mirror::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "mirrorCenter", 0.5),
-			algo_control_value(algo_controls, "mirrorBlend", 0.5),
-			algo_control_value(algo_controls, "mirrorClip", 0.0),
-			algo_control_value(algo_controls, "mirrorSkew", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "mirrorCenter", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "mirrorBlend", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "mirrorClip", 0.0, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "mirrorSkew", 0.5, algo_param_mods),
 		),
 		Algo::Fof => fof::warp_phase(
 			phase,
 			amt,
-			algo_control_value(algo_controls, "fofRatio", 0.5),
-			algo_control_value(algo_controls, "fofTightness", 0.5),
-			algo_control_value(algo_controls, "fofOffset", 0.5),
-			algo_control_value(algo_controls, "fofSkew", 0.5),
+			resolve_algo_control_value(algo, algo_controls, "fofRatio", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "fofTightness", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "fofOffset", 0.5, algo_param_mods),
+			resolve_algo_control_value(algo, algo_controls, "fofSkew", 0.5, algo_param_mods),
 		),
 		Algo::Sine => sine::warp_phase(phase, amt),
 		Algo::Karpunk => phase,
@@ -576,11 +616,12 @@ pub fn render_algo_sample(
 	phase: f32,
 	dcw: f32,
 	algo_controls: Option<&[AlgoControlValueV1]>,
+	algo_param_mods: [f32; 8],
 	karpunk_sample: Option<f32>,
 ) -> f32 {
 	if algo == Algo::Karpunk {
 		return karpunk_sample.unwrap_or(0.0);
 	}
-	let warped = warp_phase(algo, phase, dcw, algo_controls);
+	let warped = warp_phase(algo, phase, dcw, algo_controls, &algo_param_mods);
 	-libm::cosf(TWO_PI * warped)
 }

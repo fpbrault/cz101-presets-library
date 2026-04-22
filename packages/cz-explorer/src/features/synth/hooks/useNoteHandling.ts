@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { noteToFreq, PC_KEY_TO_NOTE } from "@/components/pdAlgorithms";
+import type { ModSource } from "@/lib/synth/bindings/synth";
 
 type UseNoteHandlingParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
@@ -13,12 +14,25 @@ export type NoteHandlingApi = {
 	setSustain: (on: boolean) => void;
 	sendPitchBend: (value: number) => void;
 	sendModWheel: (value: number) => void;
+	sendAftertouch: (value: number) => void;
 };
 
 export function useNoteHandling({
 	workletNodeRef,
 	velocityTarget,
 }: UseNoteHandlingParams): NoteHandlingApi {
+	const emitModSourceValue = useCallback((source: ModSource, value: number) => {
+		window.dispatchEvent(
+			new CustomEvent("cz-mod-source", {
+				detail: {
+					source,
+					value: Math.max(0, Math.min(1, value)),
+				},
+			}),
+		);
+	}, []);
+
+	void velocityTarget;
 	const activeNotesRef = useRef<Set<number>>(new Set());
 	const sustainedButReleasedRef = useRef<Set<number>>(new Set());
 	const sustainRef = useRef(false);
@@ -33,10 +47,13 @@ export function useNoteHandling({
 				type: "noteOn",
 				note,
 				frequency: noteToFreq(note),
-				velocity: velocityTarget !== "off" ? velocity / 127 : 0,
+				// Always forward physical note velocity so ModSource::Velocity works
+				// regardless of legacy velocityTarget routing.
+				velocity: velocity / 127,
 			});
+			emitModSourceValue("velocity", velocity / 127);
 		},
-		[velocityTarget, workletNodeRef],
+		[workletNodeRef, emitModSourceValue],
 	);
 
 	const sendNoteOff = useCallback(
@@ -78,8 +95,17 @@ export function useNoteHandling({
 	const sendModWheel = useCallback(
 		(value: number) => {
 			workletNodeRef.current?.port.postMessage({ type: "modWheel", value });
+			emitModSourceValue("modWheel", value);
 		},
-		[workletNodeRef],
+		[workletNodeRef, emitModSourceValue],
+	);
+
+	const sendAftertouch = useCallback(
+		(value: number) => {
+			workletNodeRef.current?.port.postMessage({ type: "aftertouch", value });
+			emitModSourceValue("aftertouch", value);
+		},
+		[workletNodeRef, emitModSourceValue],
 	);
 
 	// Keyboard input
@@ -176,6 +202,18 @@ export function useNoteHandling({
 								return;
 							}
 
+							// Channel pressure / aftertouch (status 0xD0, value in data1)
+							if (status === 0xd0) {
+								sendAftertouch(data[1] / 127);
+								return;
+							}
+
+							// Poly pressure (status 0xA0, per-note pressure in data2)
+							if (status === 0xa0 && data.length >= 3) {
+								sendAftertouch(data[2] / 127);
+								return;
+							}
+
 							// Note on/off
 							if (status === 0x90 && data[2] > 0) {
 								sendNoteOn(data[1], data[2]);
@@ -211,7 +249,7 @@ export function useNoteHandling({
 				fn();
 			}
 		};
-	}, [sendModWheel, sendPitchBend, sendNoteOn, sendNoteOff, setSustain]);
+	}, [sendModWheel, sendPitchBend, sendAftertouch, sendNoteOn, sendNoteOff, setSustain]);
 
 	return {
 		activeNotes,
@@ -220,5 +258,6 @@ export function useNoteHandling({
 		setSustain,
 		sendPitchBend,
 		sendModWheel,
+		sendAftertouch,
 	};
 }

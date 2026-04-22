@@ -438,6 +438,7 @@ impl CosmoProcessor {
             let params_ptr: *const SynthParams = &self.params;
             let pitch_bend_semitones = self.pitch_bend * self.params.pitch_bend_range;
             let mod_wheel = self.mod_wheel;
+            let aftertouch = self.aftertouch;
             for v in 0..NUM_VOICES {
                 // SAFETY: params is read-only here and voices[v] is the only mutated field.
                 let p_ref: &SynthParams = unsafe { &*params_ptr };
@@ -448,6 +449,7 @@ impl CosmoProcessor {
                     sr,
                     pitch_bend_semitones,
                     mod_wheel,
+                    aftertouch,
                 );
             }
 
