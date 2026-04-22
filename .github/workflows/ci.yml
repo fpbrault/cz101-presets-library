@@ -52,6 +52,48 @@ jobs:
         run: bun --filter @cosmo/cz-explorer test:browser
         shell: bash
 
+  plugin-webview-unit-tests:
+    name: Plugin Webview Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Run plugin webview unit tests
+        run: bun --filter @cosmo/cosmo-pd101 webview:test:unit
+        shell: bash
+
+  plugin-webview-e2e-tests:
+    name: Plugin Webview E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install chromium chromium-headless-shell --with-deps
+        shell: bash
+
+      - name: Run plugin webview e2e tests
+        run: bun --filter @cosmo/cosmo-pd101 webview:test:e2e
+        shell: bash
+
   build-plugins:
     name: Build plugins (${{ matrix.platform }})
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -94,7 +136,15 @@ jobs:
 
   migrate:
     name: Database Migration
-    needs: [unit-tests, browser-tests, build-plugins, build-desktop]
+    needs:
+      [
+        unit-tests,
+        browser-tests,
+        plugin-webview-unit-tests,
+        plugin-webview-e2e-tests,
+        build-plugins,
+        build-desktop,
+      ]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
