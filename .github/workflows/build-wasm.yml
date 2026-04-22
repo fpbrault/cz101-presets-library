@@ -1,18 +1,10 @@
 name: Build Generated Artifacts
 
 permissions:
-  contents: write
+  contents: read
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/cosmo-synth-engine/**'
-      - 'Cargo.lock'
-      - 'Cargo.toml'
-      - '.github/workflows/build-wasm.yml'
   pull_request:
     paths:
       - 'packages/cosmo-synth-engine/**'
@@ -44,11 +36,11 @@ jobs:
           wasm-pack build . --target no-modules --out-dir ../cz-explorer/public/cosmo-synth-engine-wasm --features wasm
           rm -f ../cz-explorer/public/cosmo-synth-engine-wasm/.gitignore
 
-      - name: Commit WASM
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v4
         with:
-          commit_message: "build: compile WASM"
-          file_pattern: packages/cz-explorer/public/cosmo-synth-engine-wasm/**
+          name: cosmo-synth-engine-wasm
+          path: packages/cz-explorer/public/cosmo-synth-engine-wasm/
 
   build-bindings:
     runs-on: ubuntu-latest
@@ -64,8 +56,8 @@ jobs:
         working-directory: packages/cosmo-synth-engine
         run: cargo run --features specta-bindings --bin export-specta-bindings
 
-      - name: Commit bindings
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Upload bindings artifact
+        uses: actions/upload-artifact@v4
         with:
-          commit_message: "build: regenerate Specta TypeScript bindings"
-          file_pattern: packages/cz-explorer/src/lib/synth/bindings/synth.ts
+          name: specta-bindings
+          path: packages/cz-explorer/src/lib/synth/bindings/synth.ts

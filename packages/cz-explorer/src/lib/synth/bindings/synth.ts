@@ -215,32 +215,32 @@ export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visib
 export type AlgoUiEntryV1 = { id: Algo; label: string; iconPath: string; visible: boolean }
 
 /**
- * Modulation source identifier
+ * Modulation source selector for modulation matrix routes.
  */
 export type ModSource = "lfo1" | 
 /**
- * LFO2 – UI/types stub only; DSP contribution is always 0.0 this phase
+ * LFO2 is currently a placeholder source and evaluates to 0.0 in DSP.
  */
 "lfo2" | "velocity" | "modWheel" | "aftertouch"
 
 /**
- * Modulation destination – covers the full synth parameter surface
+ * Modulation destination selector for modulation matrix routes.
  */
 export type ModDestination = "volume" | "pitch" | "intPmAmount" | "line1DcwBase" | "line1DcaBase" | "line1DcoDepth" | "line1AlgoBlend" | "line1DcwComp" | "line1Detune" | "line1Octave" | "line1AlgoParam1" | "line1AlgoParam2" | "line1AlgoParam3" | "line1AlgoParam4" | "line1AlgoParam5" | "line1AlgoParam6" | "line1AlgoParam7" | "line1AlgoParam8" | "line2DcwBase" | "line2DcaBase" | "line2DcoDepth" | "line2AlgoBlend" | "line2DcwComp" | "line2Detune" | "line2Octave" | "line2AlgoParam1" | "line2AlgoParam2" | "line2AlgoParam3" | "line2AlgoParam4" | "line2AlgoParam5" | "line2AlgoParam6" | "line2AlgoParam7" | "line2AlgoParam8" | "filterCutoff" | "filterResonance" | "filterEnvAmount" | "chorusMix" | "delayMix" | "reverbMix" | "vibratoDepth" | "lfoDepth" | "lfoRate"
 
 /**
- * A single modulation routing assignment
+ * A single modulation route assignment.
  */
 export type ModRoute = { source: ModSource; destination: ModDestination; 
 /**
- * Modulation amount in range [-1.0, 1.0]
+ * Modulation amount in range [-1.0, 1.0].
  */
 amount: number; enabled: boolean }
 
 /**
- * The full modulation matrix (list of routes)
+ * Collection of modulation routes.
  */
-export type ModMatrix = { routes: ModRoute[] }
+export type ModMatrix = { routes?: ModRoute[] }
 
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
@@ -256,7 +256,7 @@ pitchBendRange?: number;
  */
 modWheelVibratoDepth?: number; 
 /**
- * Modulation matrix – routes from sources to destinations with amounts.
+ * Modulation matrix routes for source-to-destination parameter modulation.
  */
 modMatrix?: ModMatrix }
 
