@@ -326,6 +326,14 @@ export function installMockPluginBridge(): void {
 					resolve(null);
 					return;
 				}
+				if (method === "setAlgoControls") {
+					resolve(null);
+					return;
+				}
+				if (method === "getAlgoControls") {
+					resolve({ line1: [], line2: [] });
+					return;
+				}
 				if (method === "getScopeData") {
 					// Return empty scope data so the polling loop doesn't error.
 					resolve({ samples: [], sampleRate: 44100, hz: 220 });

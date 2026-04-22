@@ -30,9 +30,9 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 
 	const [uiScale, setUiScale] = useState<UiScale>(() => {
 		const saved = localStorage.getItem(UI_SCALE_KEY);
-		const parsed = saved ? Number(saved) : 100;
+		const parsed = saved ? Number(saved) : 70;
 		return (
-			PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.includes(parsed) ? parsed : 100
+			PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.includes(parsed) ? parsed : 70
 		) as UiScale;
 	});
 	const [scopeActiveHz, setScopeActiveHz] = useState(220);

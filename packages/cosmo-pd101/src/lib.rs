@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use beamer::prelude::*;
-use cosmo_synth_engine::params::{PolyMode, StepEnvData, SynthParams};
+use cosmo_synth_engine::params::{AlgoControlValueV1, PolyMode, StepEnvData, SynthParams};
 use cosmo_synth_engine::processor::{midi_note_to_freq, CosmoProcessor};
 
 const PLUGIN_LOG_PATH: &str = "/tmp/cosmo-plugin.log";
@@ -841,8 +841,39 @@ impl EnvelopeState {
     }
 }
 
+#[derive(Clone, Default)]
+struct AlgoControlsState {
+    line1: Vec<AlgoControlValueV1>,
+    line2: Vec<AlgoControlValueV1>,
+}
+
+impl AlgoControlsState {
+    fn apply_to(&self, params: &mut SynthParams) {
+        params.line1.algo_controls = Some(self.line1.clone());
+        params.line2.algo_controls = Some(self.line2.clone());
+    }
+
+    fn set(&mut self, line: u8, controls: Vec<AlgoControlValueV1>) -> Result<(), String> {
+        match line {
+            1 => self.line1 = controls,
+            2 => self.line2 = controls,
+            _ => return Err(format!("unknown algo controls line: {line}")),
+        }
+
+        Ok(())
+    }
+
+    fn to_json(&self) -> serde_json::Value {
+        serde_json::json!({
+            "line1": self.line1,
+            "line2": self.line2,
+        })
+    }
+}
+
 struct CzWebViewHandler {
     envelopes: Arc<RwLock<EnvelopeState>>,
+    algo_controls: Arc<RwLock<AlgoControlsState>>,
     scope_buffer: ScopeBuffer,
 }
 
@@ -875,6 +906,39 @@ impl CzWebViewHandler {
             .map_err(|error| format!("invalid envelope payload: {error}"))?;
         Ok((envelope_id, data))
     }
+
+    fn parse_set_algo_controls_args(
+        args: &[serde_json::Value],
+    ) -> Result<(u8, Vec<AlgoControlValueV1>), String> {
+        if args.len() == 2 {
+            let line = args[0]
+                .as_u64()
+                .ok_or_else(|| "setAlgoControls expects line as first argument".to_string())?
+                as u8;
+            let controls: Vec<AlgoControlValueV1> = serde_json::from_value(args[1].clone())
+                .map_err(|error| format!("invalid algo controls payload: {error}"))?;
+            return Ok((line, controls));
+        }
+
+        let payload = args
+            .first()
+            .ok_or_else(|| "setAlgoControls expects at least one argument".to_string())?;
+        let line = payload
+            .get("line")
+            .or_else(|| payload.get("line_id"))
+            .or_else(|| payload.get("lineId"))
+            .and_then(serde_json::Value::as_u64)
+            .ok_or_else(|| "setAlgoControls payload is missing line".to_string())?
+            as u8;
+        let controls_value = payload
+            .get("controls")
+            .or_else(|| payload.get("algo_controls"))
+            .cloned()
+            .ok_or_else(|| "setAlgoControls payload is missing controls".to_string())?;
+        let controls: Vec<AlgoControlValueV1> = serde_json::from_value(controls_value)
+            .map_err(|error| format!("invalid algo controls payload: {error}"))?;
+        Ok((line, controls))
+    }
 }
 
 impl WebViewHandler for CzWebViewHandler {
@@ -896,6 +960,16 @@ impl WebViewHandler for CzWebViewHandler {
                 append_log(&format!("setEnvelope envelope_id={envelope_id}"));
                 Ok(serde_json::Value::Null)
             }
+            "setAlgoControls" => {
+                let (line, controls) = Self::parse_set_algo_controls_args(args)?;
+                let mut algo_controls = self
+                    .algo_controls
+                    .write()
+                    .map_err(|_| "algo controls store is poisoned".to_string())?;
+                algo_controls.set(line, controls)?;
+                append_log(&format!("setAlgoControls line={line}"));
+                Ok(serde_json::Value::Null)
+            }
             "getEnvelopes" => {
                 let envelopes = self
                     .envelopes
@@ -903,6 +977,14 @@ impl WebViewHandler for CzWebViewHandler {
                     .map_err(|_| "envelope store is poisoned".to_string())?;
                 append_log("getEnvelopes");
                 Ok(envelopes.to_json())
+            }
+            "getAlgoControls" => {
+                let algo_controls = self
+                    .algo_controls
+                    .read()
+                    .map_err(|_| "algo controls store is poisoned".to_string())?;
+                append_log("getAlgoControls");
+                Ok(algo_controls.to_json())
             }
             "getScopeData" => {
                 let scope = self
@@ -947,6 +1029,7 @@ pub struct CzDescriptor {
     #[parameters]
     pub parameters: CzParameters,
     envelopes: Arc<RwLock<EnvelopeState>>,
+    algo_controls: Arc<RwLock<AlgoControlsState>>,
     scope_buffer: ScopeBuffer,
 }
 
@@ -978,6 +1061,7 @@ impl Descriptor for CzDescriptor {
         append_log("descriptor created webview handler");
         Some(Arc::new(CzWebViewHandler {
             envelopes: self.envelopes.clone(),
+            algo_controls: self.algo_controls.clone(),
             scope_buffer: self.scope_buffer.clone(),
         }))
     }
@@ -995,13 +1079,21 @@ impl Descriptor for CzDescriptor {
             .read()
             .map(|envelopes| envelopes.clone())
             .unwrap_or_default();
+        let cached_algo_controls = self
+            .algo_controls
+            .read()
+            .map(|algo_controls| algo_controls.clone())
+            .unwrap_or_default();
         cached_envelopes.apply_to(&mut synth_params);
+        cached_algo_controls.apply_to(&mut synth_params);
         processor.set_params(synth_params);
         CzProcessor {
             parameters: self.parameters,
             processor,
             envelopes: self.envelopes,
             cached_envelopes,
+            algo_controls: self.algo_controls,
+            cached_algo_controls,
             scope_buffer: self.scope_buffer,
         }
     }
@@ -1018,6 +1110,8 @@ pub struct CzProcessor {
     processor: CosmoProcessor,
     envelopes: Arc<RwLock<EnvelopeState>>,
     cached_envelopes: EnvelopeState,
+    algo_controls: Arc<RwLock<AlgoControlsState>>,
+    cached_algo_controls: AlgoControlsState,
     scope_buffer: ScopeBuffer,
 }
 
@@ -1034,9 +1128,13 @@ impl Processor for CzProcessor {
         if let Ok(envelopes) = self.envelopes.try_read() {
             self.cached_envelopes = envelopes.clone();
         }
+        if let Ok(algo_controls) = self.algo_controls.try_read() {
+            self.cached_algo_controls = algo_controls.clone();
+        }
 
         let mut synth_params = self.parameters.to_synth_params();
         self.cached_envelopes.apply_to(&mut synth_params);
+        self.cached_algo_controls.apply_to(&mut synth_params);
         self.processor.set_params(synth_params);
 
         let num_samples = buffer.num_samples();
