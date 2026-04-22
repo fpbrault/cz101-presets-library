@@ -226,11 +226,7 @@ export type ModSource = "lfo1" |
 /**
  * Modulation destination – covers the full synth parameter surface
  */
-<<<<<<< HEAD
 export type ModDestination = "volume" | "pitch" | "intPmAmount" | "line1DcwBase" | "line1DcaBase" | "line1DcoDepth" | "line1AlgoBlend" | "line1DcwComp" | "line1Detune" | "line1Octave" | "line1AlgoParam1" | "line1AlgoParam2" | "line1AlgoParam3" | "line1AlgoParam4" | "line1AlgoParam5" | "line1AlgoParam6" | "line1AlgoParam7" | "line1AlgoParam8" | "line2DcwBase" | "line2DcaBase" | "line2DcoDepth" | "line2AlgoBlend" | "line2DcwComp" | "line2Detune" | "line2Octave" | "line2AlgoParam1" | "line2AlgoParam2" | "line2AlgoParam3" | "line2AlgoParam4" | "line2AlgoParam5" | "line2AlgoParam6" | "line2AlgoParam7" | "line2AlgoParam8" | "filterCutoff" | "filterResonance" | "filterEnvAmount" | "chorusMix" | "delayMix" | "reverbMix" | "vibratoDepth" | "lfoDepth" | "lfoRate"
-=======
-export type ModDestination = "volume" | "pitch" | "intPmAmount" | "line1DcwBase" | "line1DcaBase" | "line1DcoDepth" | "line1AlgoBlend" | "line1DcwComp" | "line1Detune" | "line1Octave" | "line2DcwBase" | "line2DcaBase" | "line2DcoDepth" | "line2AlgoBlend" | "line2DcwComp" | "line2Detune" | "line2Octave" | "filterCutoff" | "filterResonance" | "filterEnvAmount" | "chorusMix" | "delayMix" | "reverbMix" | "vibratoDepth" | "lfoDepth" | "lfoRate"
->>>>>>> origin/split/mod-matrix-core
 
 /**
  * A single modulation routing assignment

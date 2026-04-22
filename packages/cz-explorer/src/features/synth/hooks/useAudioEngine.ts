@@ -65,7 +65,6 @@ export type EngineParams = {
 	};
 	pitchBendRange: number;
 	modWheelVibratoDepth: number;
-<<<<<<< HEAD
 	modMatrix: {
 		routes: {
 			source: string;
@@ -74,9 +73,6 @@ export type EngineParams = {
 			enabled: boolean;
 		}[];
 	};
-=======
-	modMatrix: { routes: { source: string; destination: string; amount: number; enabled: boolean }[] };
->>>>>>> origin/split/mod-matrix-core
 };
 
 export type LineParams = {
