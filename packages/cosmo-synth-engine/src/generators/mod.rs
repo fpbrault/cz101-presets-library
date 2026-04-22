@@ -7,6 +7,9 @@ use specta::Type;
 const TWO_PI: f32 = core::f32::consts::TAU;
 pub const PER_LINE_HEADROOM: f32 = 0.25;
 
+/// Reference per-line output headroom used by processor normalization.
+pub const PER_LINE_HEADROOM: f32 = 0.75;
+
 pub mod bend;
 pub mod clip;
 pub mod cz101;
