@@ -1,5 +1,5 @@
 {
-	"name": "@cosmo/cosmo-pd101",
+	"name": "@cosmo/cosmo-pd101-webview",
 	"private": true,
 	"type": "module",
 	"exports": {
@@ -14,8 +14,8 @@
 		"dev": "bunx --bun vite",
 		"dev:test": "VITE_TEST_HARNESS=1 VITE_DEBUG_PANEL=1 bunx --bun vite",
 		"build": "bunx --bun vite build",
-		"build:lib": "bunx tsdown src/index.ts --format esm --dts --out-dir dist --clean --no-bundle",
-		"build:lib:watch": "bunx tsdown src/index.ts --format esm --dts --out-dir dist --clean --no-bundle --watch",
+		"build:lib": "bunx tsdown src/index.ts --format esm --dts --out-dir lib-dist --clean --no-bundle",
+		"build:lib:watch": "bunx tsdown src/index.ts --format esm --dts --out-dir lib-dist --clean --no-bundle --watch",
 		"gen:bindings": "SPECTA_TS_EXPORT_PATH=./src/lib/synth/bindings/synth.ts cargo run --features specta-bindings --bin export-specta-bindings --manifest-path ../cosmo-synth-engine/Cargo.toml",
 		"test:unit": "bunx vitest --project unit --run",
 		"test:unit:watch": "bunx vitest --project unit",

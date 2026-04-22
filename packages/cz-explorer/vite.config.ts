@@ -125,7 +125,7 @@ export default defineConfig(async () => ({
 			{
 				find: "@cosmo/cosmo-pd101",
 				replacement: fileURLToPath(
-					new URL("../cosmo-pd101/webview/dist/index.mjs", import.meta.url),
+					new URL("../cosmo-pd101/webview/lib-dist/index.mjs", import.meta.url),
 				),
 			},
 			{

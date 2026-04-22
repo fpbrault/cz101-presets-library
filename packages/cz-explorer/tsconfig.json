@@ -9,7 +9,7 @@
 		/* Bundler mode */
 		"moduleResolution": "bundler",
 		"paths": {
-			"@cosmo/cosmo-pd101": ["../cosmo-pd101/webview/dist/index.d.mts"],
+			"@cosmo/cosmo-pd101": ["../cosmo-pd101/webview/lib-dist/index.d.mts"],
 			"@/*": ["./src/*"]
 		},
 		"allowImportingTsExtensions": true,

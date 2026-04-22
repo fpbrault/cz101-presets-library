@@ -429,6 +429,3 @@ export function decodeCzPatch(sysexData: Uint8Array): DecodedPatch | null {
 		dco2Env,
 	};
 }
-
-// Re-export for convenience
-export { WF_NAMES };

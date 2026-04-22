@@ -9,7 +9,7 @@
 	"scripts": {
 		"postinstall": "bun run scripts/install-wasm-pack.mjs",
 		"dev": "bun --filter @cosmo/cz-explorer dev",
-		"build": "bun run build:web && bun run build:plugin && bun run build:standalone",
+		"build": "bun run build:plugin && bun run build:web  && bun run build:standalone",
 		"build:engine": "bun --filter @cosmo/cosmo-synth-engine build:wasm",
 		"build:web": "bun --filter @cosmo/cosmo-synth-engine build:wasm && bun --filter @cosmo/cz-explorer build",
 		"build:plugin": "bun run scripts/build-plugin.mjs --release",
@@ -26,7 +26,7 @@
 		"test": "bun --filter @cosmo/cz-explorer test:all && cargo test --workspace",
 		"lint": "bun --filter @cosmo/cz-explorer lint && cargo fmt --all --check && cargo clippy --workspace --all-targets",
 		"lint:fix": "bun --filter @cosmo/cz-explorer lint:fix && cargo fmt --all",
-		"clean": "rimraf --glob packages/*/dist packages/*/target src-tauri/target",
+		"clean": "rimraf --glob packages/*/dist packages/**/lib-dist packages/*/target src-tauri/target",
 		"ci": "bun run lint && bun run build && bun run test"
 	},
 	"dependencies": {
