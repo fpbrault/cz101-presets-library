@@ -8,6 +8,7 @@ import type { UseSynthStateResult } from "@/features/synth/useSynthState";
 import { isWaveformId } from "@/lib/synth/algoRef";
 import type {
 	Algo,
+	AlgoControlValueV1,
 	CzWaveform,
 	FilterType,
 	LfoTarget,
@@ -289,10 +290,12 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		setFilterEnvAmount,
 		pitchBendRange,
 		modWheelVibratoDepth,
+		modMatrix,
 	} = synthState;
 
 	const sentParamsRef = useRef<Map<number, number>>(new Map());
 	const sentEnvelopesRef = useRef<Map<EnvelopeId, string>>(new Map());
+	const sentAlgoControlsRef = useRef<Map<1 | 2, string>>(new Map());
 
 	const queueParam = useCallback((id: number, value: number) => {
 		const prev = sentParamsRef.current.get(id);
@@ -309,6 +312,20 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 			window.ipc.postMessage(JSON.stringify({ envelope_id: envId, data: env }));
 		}
 	}, []);
+
+	const sendAlgoControls = useCallback(
+		(line: 1 | 2, controls: AlgoControlValueV1[]) => {
+			const serialized = JSON.stringify(controls);
+			if (sentAlgoControlsRef.current.get(line) === serialized) return;
+			sentAlgoControlsRef.current.set(line, serialized);
+			if (window.ipc) {
+				window.ipc.postMessage(
+					JSON.stringify({ algo_controls: { line, controls } }),
+				);
+			}
+		},
+		[],
+	);
 
 	const algoKeyToId = useCallback((key: Algo | null): number => {
 		if (key === null || isWaveformId(key)) return 0; // CZ waveform algos → cz101 (index 0)
@@ -416,9 +433,11 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				sendEnvelope("l2_dco", snapshot.line2DcoEnv);
 				sendEnvelope("l2_dcw", snapshot.line2DcwEnv);
 				sendEnvelope("l2_dca", snapshot.line2DcaEnv);
+				sendAlgoControls(1, snapshot.line1AlgoControls);
+				sendAlgoControls(2, snapshot.line2AlgoControls);
 			},
 		}),
-		[queueParam, sendEnvelope, algoKeyToId, algoKeyToWaveform],
+		[queueParam, sendEnvelope, sendAlgoControls, algoKeyToId, algoKeyToWaveform],
 	);
 
 	const snapshot = useMemo(
@@ -504,6 +523,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				filterEnvAmount,
 				pitchBendRange,
 				modWheelVibratoDepth,
+				modMatrix,
 			}),
 		[
 			lineSelect,
@@ -584,6 +604,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 			filterEnvAmount,
 			pitchBendRange,
 			modWheelVibratoDepth,
+			modMatrix,
 		],
 	);
 

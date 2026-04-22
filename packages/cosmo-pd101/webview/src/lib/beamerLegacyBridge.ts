@@ -1,4 +1,7 @@
-import type { StepEnvData } from "@/lib/synth/bindings/synth";
+import type {
+	AlgoControlValueV1,
+	StepEnvData,
+} from "@/lib/synth/bindings/synth";
 
 type BeamerParamInfo = {
 	id: number;
@@ -18,6 +21,11 @@ type BeamerParamInfo = {
 type BeamerParamUpdate = Record<string, [number, number, string]>;
 
 type EnvelopeMap = Partial<Record<EnvelopeId, StepEnvData>>;
+
+type AlgoControlsPayload = {
+	line: 1 | 2;
+	controls: AlgoControlValueV1[];
+};
 
 type EnvelopeId =
 	| "l1_dco"
@@ -224,7 +232,8 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 		postMessage(message: string) {
 			const payload = JSON.parse(message) as
 				| { parameter_id: number; value: number }
-				| { envelope_id: EnvelopeId; data: StepEnvData };
+				| { envelope_id: EnvelopeId; data: StepEnvData }
+				| { algo_controls: AlgoControlsPayload };
 
 			if ("parameter_id" in payload) {
 				const stringId = LEGACY_PARAM_IDS[payload.parameter_id];
@@ -242,6 +251,22 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 				runtime.params.beginEdit(stringId);
 				runtime.params.set(stringId, normalized);
 				runtime.params.endEdit(stringId);
+				return;
+			}
+
+			if ("algo_controls" in payload) {
+				void runtime
+					.invoke(
+						"setAlgoControls",
+						payload.algo_controls.line,
+						payload.algo_controls.controls,
+					)
+					.catch((error) => {
+						console.error(
+							"[beamerLegacyBridge] Failed to send algo controls",
+							error,
+						);
+					});
 				return;
 			}
 

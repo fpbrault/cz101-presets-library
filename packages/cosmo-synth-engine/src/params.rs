@@ -784,3 +784,41 @@ impl Default for SynthParams {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn step_env_deserialize_uses_fallback_count_and_pads_steps() {
+        let json = r#"{
+            "steps": [
+                { "level": 0.5, "rate": 12.6 },
+                { "level": 1.0, "rate": 120.0 }
+            ],
+            "sustainStep": 1,
+            "loop": true
+        }"#;
+
+        let env: StepEnvData = serde_json::from_str(json).expect("valid step env json");
+
+        assert_eq!(env.step_count, 2);
+        assert_eq!(env.sustain_step, 1);
+        assert!(env.loop_);
+        assert_eq!(env.steps[0].rate, 13);
+        assert_eq!(env.steps[1].rate, 99);
+        assert_eq!(env.steps[2].level, 0.0);
+        assert_eq!(env.steps[2].rate, 0);
+    }
+
+    #[test]
+    fn algo_cz_waveform_roundtrip_and_non_cz_detection() {
+        let from_square = Algo::from_cz_waveform(CzWaveform::Square);
+        assert_eq!(from_square, Algo::Square);
+        assert_eq!(from_square.as_cz_waveform(), Some(CzWaveform::Square));
+        assert!(from_square.is_cz_waveform());
+
+        assert_eq!(Algo::Bend.as_cz_waveform(), None);
+        assert!(!Algo::Bend.is_cz_waveform());
+    }
+}
