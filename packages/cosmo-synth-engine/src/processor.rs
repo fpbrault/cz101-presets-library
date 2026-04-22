@@ -16,6 +16,8 @@ use crate::voice::{render_voice, Voice};
 const SOFT_CLIP_DRIVE: f32 = 1.0;
 const SOFT_CLIP_THRESHOLD: f32 = 0.9;
 const REFERENCE_LINE_HEADROOM: f32 = 0.75;
+const HEADROOM_MAKEUP_EXPONENT: f32 = 0.8;
+const MAX_HEADROOM_MAKEUP: f32 = 1.0;
 
 // ---------------------------------------------------------------------------
 // NoteEntry — maps a MIDI note to a voice index
@@ -406,8 +408,9 @@ impl CosmoProcessor {
         let lfo_rate = p.lfo.rate;
         let lfo_waveform = p.lfo.waveform;
         let sr = self.sample_rate;
+        let headroom_ratio = REFERENCE_LINE_HEADROOM / PER_LINE_HEADROOM.max(0.01);
         let headroom_makeup =
-            libm::sqrtf(REFERENCE_LINE_HEADROOM / PER_LINE_HEADROOM.max(0.01)).clamp(1.0, 2.0);
+            libm::powf(headroom_ratio, HEADROOM_MAKEUP_EXPONENT).clamp(1.0, MAX_HEADROOM_MAKEUP);
         let norm = volume * headroom_makeup / libm::sqrtf(NUM_VOICES as f32);
 
         for sample_out in output.iter_mut() {
