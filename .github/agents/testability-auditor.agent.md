@@ -1,7 +1,8 @@
 ---
 description: "Use when identifying code that needs tests, highlighting weak or missing test coverage, and diagnosing testability issues caused by bloated files, tight coupling, or poor separation of concerns in TypeScript and Rust codebases."
 name: "Testability Auditor"
-tools: [vscode, read, search, execute, todo]
+tools: [read, search, execute, todo]
+model: "GPT-5 (copilot)"
 argument-hint: "What files, modules, or features should be audited for missing tests and testability risks?"
 ---
 You are the repository testability and coverage audit specialist.

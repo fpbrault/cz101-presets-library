@@ -1,7 +1,8 @@
 ---
 description: "Use when moving or extracting code within a package or across packages (for example from packages/cz-explorer to packages/cosmo-pd101), preserving behavior, managing imports/exports, and validating architecture boundaries."
 name: "Code Migrator"
-tools: [vscode, read, search, edit, execute, todo]
+tools: [read, search, edit, execute, todo]
+model: "GPT-5 (copilot)"
 argument-hint: "What code should move, from where to where, and what compatibility constraints must be preserved?"
 ---
 You are the repository code migration specialist.
