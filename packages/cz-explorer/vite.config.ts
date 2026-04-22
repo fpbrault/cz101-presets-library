@@ -113,6 +113,44 @@ function spectaBindingsDevPlugin() {
 
 const _host = process.env.TAURI_DEV_HOST;
 
+const cosmoPd101Src = fileURLToPath(
+	new URL("../cosmo-pd101/webview/src", import.meta.url),
+);
+
+// Synth UI/state/engine components moved to cosmo-pd101.
+// These aliases redirect the moved paths so cz-explorer's visualizer still works.
+const synthAliases = [
+	"@/components/synth",
+	"@/features/synth",
+].map((prefix) => ({
+	find: new RegExp(`^${prefix.replace("/", "\\/").replace("@", "@")}(/|$)`),
+	replacement: `${cosmoPd101Src}/${prefix.slice(2)}/`,
+}));
+
+const synthFileAliases: { find: string; replacement: string }[] = [
+	"context/ModMatrixContext",
+	"components/pdAlgorithms",
+	"components/SingleCycleDisplay",
+	"components/ControlKnob",
+	"components/BaseFxSection",
+	"components/ChorusSection",
+	"components/DelaySection",
+	"components/ReverbSection",
+	"components/StepEnvelopeEditor",
+	"components/PerLineWarpBlock",
+	"components/AlgoControlsGroup",
+	"components/AlgoControlItem",
+	"components/AlgoControlNumber",
+	"components/ui/ModulatableControl",
+	"components/ui/ModulationMenu",
+	"components/ui/ModulationIconButton",
+	"components/ui/CzHorizontalSlider",
+	"components/ui/CzVerticalSlider",
+].map((relPath) => ({
+	find: `@/${relPath}`,
+	replacement: `${cosmoPd101Src}/${relPath}`,
+}));
+
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
 	publicDir: "public",
@@ -121,9 +159,14 @@ export default defineConfig(async () => ({
 	envDir: fileURLToPath(new URL(".", import.meta.url)),
 	envPrefix: ["VITE_", "TAURI_ENV_"],
 	resolve: {
-		alias: {
-			"@": fileURLToPath(new URL("./src", import.meta.url)),
-		},
+		alias: [
+			...synthAliases,
+			...synthFileAliases,
+			{
+				find: "@",
+				replacement: fileURLToPath(new URL("./src", import.meta.url)),
+			},
+		],
 	},
 
 	build: {

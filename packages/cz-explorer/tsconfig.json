@@ -9,6 +9,26 @@
 		/* Bundler mode */
 		"moduleResolution": "bundler",
 		"paths": {
+			"@/components/synth/*": ["../cosmo-pd101/webview/src/components/synth/*"],
+			"@/features/synth/*": ["../cosmo-pd101/webview/src/features/synth/*"],
+			"@/context/ModMatrixContext": ["../cosmo-pd101/webview/src/context/ModMatrixContext"],
+			"@/components/pdAlgorithms": ["../cosmo-pd101/webview/src/components/pdAlgorithms"],
+			"@/components/SingleCycleDisplay": ["../cosmo-pd101/webview/src/components/SingleCycleDisplay"],
+			"@/components/ControlKnob": ["../cosmo-pd101/webview/src/components/ControlKnob"],
+			"@/components/BaseFxSection": ["../cosmo-pd101/webview/src/components/BaseFxSection"],
+			"@/components/ChorusSection": ["../cosmo-pd101/webview/src/components/ChorusSection"],
+			"@/components/DelaySection": ["../cosmo-pd101/webview/src/components/DelaySection"],
+			"@/components/ReverbSection": ["../cosmo-pd101/webview/src/components/ReverbSection"],
+			"@/components/StepEnvelopeEditor": ["../cosmo-pd101/webview/src/components/StepEnvelopeEditor"],
+			"@/components/PerLineWarpBlock": ["../cosmo-pd101/webview/src/components/PerLineWarpBlock"],
+			"@/components/AlgoControlsGroup": ["../cosmo-pd101/webview/src/components/AlgoControlsGroup"],
+			"@/components/AlgoControlItem": ["../cosmo-pd101/webview/src/components/AlgoControlItem"],
+			"@/components/AlgoControlNumber": ["../cosmo-pd101/webview/src/components/AlgoControlNumber"],
+			"@/components/ui/ModulatableControl": ["../cosmo-pd101/webview/src/components/ui/ModulatableControl"],
+			"@/components/ui/ModulationMenu": ["../cosmo-pd101/webview/src/components/ui/ModulationMenu"],
+			"@/components/ui/ModulationIconButton": ["../cosmo-pd101/webview/src/components/ui/ModulationIconButton"],
+			"@/components/ui/CzHorizontalSlider": ["../cosmo-pd101/webview/src/components/ui/CzHorizontalSlider"],
+			"@/components/ui/CzVerticalSlider": ["../cosmo-pd101/webview/src/components/ui/CzVerticalSlider"],
 			"@/*": ["./src/*"]
 		},
 		"allowImportingTsExtensions": true,
@@ -24,6 +44,6 @@
 		"noFallthroughCasesInSwitch": true,
 		"types": ["@testing-library/jest-dom"]
 	},
-	"include": ["src"],
+	"include": ["src", "../cosmo-pd101/webview/src/components", "../cosmo-pd101/webview/src/features", "../cosmo-pd101/webview/src/context"],
 	"references": [{ "path": "./tsconfig.node.json" }]
 }
