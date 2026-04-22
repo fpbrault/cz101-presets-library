@@ -4,7 +4,7 @@ import {
 	useSynthEngineController,
 } from "@/features/synth/engine/synthEngineAdapter";
 import { buildSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
-import { useSynthState } from "@/features/synth/useSynthState";
+import type { UseSynthStateResult } from "@/features/synth/useSynthState";
 import { isWaveformId } from "@/lib/synth/algoRef";
 import type {
 	Algo,
@@ -144,8 +144,7 @@ const IDX_TO_CZ_WAVEFORM: Record<number, CzWaveform> = {
 	8: "pulse2",
 };
 
-export function usePluginParamBridge() {
-	const synthState = useSynthState();
+export function usePluginParamBridge(synthState: UseSynthStateResult) {
 	const {
 		warpAAmount,
 		setWarpAAmount,

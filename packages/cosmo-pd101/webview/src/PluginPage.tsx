@@ -43,7 +43,7 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	);
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 
-	usePluginParamBridge();
+	usePluginParamBridge(synthState);
 
 	const subscribeScopeFrames = useCallback(
 		(

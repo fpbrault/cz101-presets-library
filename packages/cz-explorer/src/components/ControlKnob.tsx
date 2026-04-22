@@ -137,6 +137,7 @@ export function ControlKnob({
 	const startYRef = useRef(0);
 	const startValueRef = useRef(0);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const valueControlLabel = label ? `${label} value` : "knob value";
 	const displayValue = valueFormatter
 		? valueFormatter(value)
 		: value.toFixed(2);
@@ -177,7 +178,7 @@ export function ControlKnob({
 	const modTargetX = 28 + Math.cos(modTargetRad) * 19.5;
 	const modTargetY = 28 + Math.sin(modTargetRad) * 19.5;
 
-	const handlePointerDown = (event: React.PointerEvent) => {
+	const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
 		if (disabled) return;
 		event.preventDefault();
 		setDragging(true);
@@ -296,6 +297,7 @@ export function ControlKnob({
 						<input
 							ref={inputRef}
 							type="text"
+							aria-label={valueControlLabel}
 							className="w-14 border border-base-300 bg-cz-surface px-1 text-center text-2xs font-semibold text-base-content/80 outline-none focus:border-primary"
 							value={editValue}
 							onChange={(e) => setEditValue(e.target.value)}
@@ -305,6 +307,7 @@ export function ControlKnob({
 					) : valueVisibility !== "never" ? (
 						<button
 							type="button"
+							aria-label={valueControlLabel}
 							className={`text-2xs leading-none font-semibold transition-opacity ${
 								disabled
 									? "cursor-not-allowed text-base-content/55"

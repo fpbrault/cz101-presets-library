@@ -7,7 +7,7 @@ use crate::params::Algo;
 
 use super::{
 	AlgoControlKindV1, AlgoControlV1, AlgoDefinitionV1, NO_CONTROL_OPTIONS,
-	LineRenderConfig,
+	LineRenderConfig, PER_LINE_HEADROOM,
 };
 
 const CONTROLS: [AlgoControlV1; 4] = [
@@ -229,7 +229,10 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
 		)
 	};
 
-	(sample * config.window_gain * config.final_dca, ks_raw)
+	(
+		sample * config.window_gain * config.final_dca * PER_LINE_HEADROOM,
+		ks_raw,
+	)
 }
 
 #[inline(always)]
