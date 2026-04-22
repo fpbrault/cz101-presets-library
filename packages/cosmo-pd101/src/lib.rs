@@ -702,6 +702,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         filter,
         pitch_bend_range: _pitch_bend_range,               // not yet a VST param
         mod_wheel_vibrato_depth: _mod_wheel_vibrato_depth, // not yet a VST param
+        mod_matrix: _mod_matrix,                           // not yet a VST param
     } = p;
 
     let ChorusParams { rate: _cho_rate, depth: _cho_depth, mix: _cho_mix } = chorus;

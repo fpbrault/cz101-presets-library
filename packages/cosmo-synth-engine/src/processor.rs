@@ -57,6 +57,8 @@ pub struct CosmoProcessor {
     /// Normalised mod wheel value in [0.0, 1.0].
     /// Boosts vibrato depth by `params.mod_wheel_vibrato_depth * mod_wheel`.
     pub mod_wheel: f32,
+    /// Normalised aftertouch/channel pressure value in [0.0, 1.0].
+    pub aftertouch: f32,
 }
 
 impl CosmoProcessor {
@@ -73,6 +75,7 @@ impl CosmoProcessor {
             sample_rate,
             pitch_bend: 0.0,
             mod_wheel: 0.0,
+            aftertouch: 0.0,
         };
         proc.update_fx();
         proc
@@ -393,6 +396,11 @@ impl CosmoProcessor {
         self.mod_wheel = value.clamp(0.0, 1.0);
     }
 
+    /// Set aftertouch/channel pressure. `value` is normalised [0.0, 1.0].
+    pub fn set_aftertouch(&mut self, value: f32) {
+        self.aftertouch = value.clamp(0.0, 1.0);
+    }
+
     // -----------------------------------------------------------------------
     // Audio process loop
     // -----------------------------------------------------------------------
@@ -430,6 +438,7 @@ impl CosmoProcessor {
             let params_ptr: *const SynthParams = &self.params;
             let pitch_bend_semitones = self.pitch_bend * self.params.pitch_bend_range;
             let mod_wheel = self.mod_wheel;
+            let aftertouch = self.aftertouch;
             for v in 0..NUM_VOICES {
                 // SAFETY: params is read-only here and voices[v] is the only mutated field.
                 let p_ref: &SynthParams = unsafe { &*params_ptr };
@@ -440,6 +449,7 @@ impl CosmoProcessor {
                     sr,
                     pitch_bend_semitones,
                     mod_wheel,
+                    aftertouch,
                 );
             }
 
