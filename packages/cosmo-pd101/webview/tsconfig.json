@@ -6,6 +6,10 @@
 		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
+			"@/lib/synth/presetStorage": ["../../cosmo-preset-core/src/presetStorage"],
+			"@/lib/synth/czPresetConverter": ["../../cosmo-preset-core/src/czPresetConverter"],
+			"@/lib/synth/bindings/*": ["../../../packages/cz-explorer/src/lib/synth/bindings/*"],
+			"@/lib/synth/*": ["./src/lib/synth/*"],
 			"@/lib/*": ["../../../packages/cz-explorer/src/lib/*"],
 			"@/*": ["./src/*"]
 		},
@@ -18,6 +22,7 @@
 	"include": [
 		"src",
 		"../../../packages/cz-explorer/src/lib",
-		"../../../packages/cz-explorer/src/vite-env.d.ts"
+		"../../../packages/cz-explorer/src/vite-env.d.ts",
+		"../../cosmo-preset-core/src"
 	]
 }

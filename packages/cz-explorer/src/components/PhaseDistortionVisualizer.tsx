@@ -26,7 +26,7 @@ import {
 	synthBindingsUrl,
 	synthWasmUrl,
 } from "@/lib/synth/pdVisualizerWorkletUrl";
-import { noteToFreq } from "./pdAlgorithms";
+import { noteToFreq } from "@/components/pdAlgorithms";
 
 type PhaseDistortionVisualizerProps = {
 	frameStyle?: CSSProperties;

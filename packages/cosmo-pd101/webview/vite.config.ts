@@ -10,6 +10,7 @@ const webviewDir = fileURLToPath(new URL(".", import.meta.url));
 const repoRoot = path.resolve(webviewDir, "../../..");
 const explorerSrc = path.join(repoRoot, "packages/cz-explorer/src");
 const cosmoPd101Src = path.join(webviewDir, "src");
+const cosmoPresetCoreSrc = path.join(repoRoot, "packages/cosmo-preset-core/src");
 const rootPackageJsonPath = path.join(repoRoot, "package.json");
 const rootPackageJson = JSON.parse(
 	fs.readFileSync(rootPackageJsonPath, "utf8"),
@@ -47,7 +48,14 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			// lib/* still lives in cz-explorer (auto-generated bindings and synth math)
+			// preset-core files in cosmo-preset-core
+			{ find: "@/lib/synth/presetStorage", replacement: `${cosmoPresetCoreSrc}/presetStorage` },
+			{ find: "@/lib/synth/czPresetConverter", replacement: `${cosmoPresetCoreSrc}/czPresetConverter` },
+			// bindings still live in cz-explorer (auto-generated)
+			{ find: /^@\/lib\/synth\/bindings\//, replacement: `${explorerSrc}/lib/synth/bindings/` },
+			// other lib/synth files now live in cosmo-pd101's own src
+			{ find: /^@\/lib\/synth\//, replacement: `${cosmoPd101Src}/lib/synth/` },
+			// remaining lib/* still lives in cz-explorer
 			{ find: /^@\/lib\//, replacement: `${explorerSrc}/lib/` },
 			// everything else resolves to cosmo-pd101's own src
 			{ find: "@", replacement: cosmoPd101Src },

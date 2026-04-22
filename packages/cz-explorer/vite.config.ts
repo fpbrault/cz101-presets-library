@@ -116,6 +116,9 @@ const _host = process.env.TAURI_DEV_HOST;
 const cosmoPd101Src = fileURLToPath(
 	new URL("../cosmo-pd101/webview/src", import.meta.url),
 );
+const cosmoPresetCoreSrc = fileURLToPath(
+	new URL("../cosmo-preset-core/src", import.meta.url),
+);
 
 // Synth UI/state/engine components moved to cosmo-pd101.
 // These aliases redirect the moved paths so cz-explorer's visualizer still works.
@@ -141,15 +144,48 @@ const synthFileAliases: { find: string; replacement: string }[] = [
 	"components/AlgoControlsGroup",
 	"components/AlgoControlItem",
 	"components/AlgoControlNumber",
+	"components/AlgoControlSelect",
+	"components/AlgoControlToggle",
+	"components/AlgoControlTooltip",
+	"components/algoControlTypes",
+	"components/AlgoIconGrid",
 	"components/ui/ModulatableControl",
 	"components/ui/ModulationMenu",
 	"components/ui/ModulationIconButton",
 	"components/ui/CzHorizontalSlider",
 	"components/ui/CzVerticalSlider",
+	"components/ui/Card",
+	"components/ui/CzButton",
+	"components/ui/CzTabButton",
 ].map((relPath) => ({
 	find: `@/${relPath}`,
 	replacement: `${cosmoPd101Src}/${relPath}`,
 }));
+
+// lib/synth files now owned by cosmo-pd101 (except bindings which stay in cz-explorer)
+const synthLibAliases: { find: string | RegExp; replacement: string }[] = [
+	"lib/synth/algoRef",
+	"lib/synth/modDestination",
+	"lib/synth/defaultPresets",
+	"lib/synth/pdVisualizerWorkletUrl",
+	"lib/synth/drawOscilloscope",
+	"lib/synth/pdOscillator",
+	"lib/synth/windowFunction",
+].map((relPath) => ({
+	find: `@/${relPath}`,
+	replacement: `${cosmoPd101Src}/${relPath}`,
+}));
+
+// preset-core files now in cosmo-preset-core
+const presetCoreAliases: { find: string; replacement: string }[] = [
+	{ find: "@/lib/synth/presetStorage", replacement: `${cosmoPresetCoreSrc}/presetStorage` },
+	{ find: "@/lib/synth/czPresetConverter", replacement: `${cosmoPresetCoreSrc}/czPresetConverter` },
+];
+
+// update checker moved to cosmo-pd101
+const updateAliases: { find: string; replacement: string }[] = [
+	{ find: "@/lib/update/githubReleaseCheck", replacement: `${cosmoPd101Src}/update/githubReleaseCheck` },
+];
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -162,6 +198,9 @@ export default defineConfig(async () => ({
 		alias: [
 			...synthAliases,
 			...synthFileAliases,
+			...synthLibAliases,
+			...presetCoreAliases,
+			...updateAliases,
 			{
 				find: "@",
 				replacement: fileURLToPath(new URL("./src", import.meta.url)),

@@ -29,6 +29,24 @@
 			"@/components/ui/ModulationIconButton": ["../cosmo-pd101/webview/src/components/ui/ModulationIconButton"],
 			"@/components/ui/CzHorizontalSlider": ["../cosmo-pd101/webview/src/components/ui/CzHorizontalSlider"],
 			"@/components/ui/CzVerticalSlider": ["../cosmo-pd101/webview/src/components/ui/CzVerticalSlider"],
+			"@/components/AlgoControlSelect": ["../cosmo-pd101/webview/src/components/AlgoControlSelect"],
+			"@/components/AlgoControlToggle": ["../cosmo-pd101/webview/src/components/AlgoControlToggle"],
+			"@/components/AlgoControlTooltip": ["../cosmo-pd101/webview/src/components/AlgoControlTooltip"],
+			"@/components/algoControlTypes": ["../cosmo-pd101/webview/src/components/algoControlTypes"],
+			"@/components/AlgoIconGrid": ["../cosmo-pd101/webview/src/components/AlgoIconGrid"],
+			"@/components/ui/Card": ["../cosmo-pd101/webview/src/components/ui/Card"],
+			"@/components/ui/CzButton": ["../cosmo-pd101/webview/src/components/ui/CzButton"],
+			"@/components/ui/CzTabButton": ["../cosmo-pd101/webview/src/components/ui/CzTabButton"],
+			"@/lib/synth/algoRef": ["../cosmo-pd101/webview/src/lib/synth/algoRef"],
+			"@/lib/synth/modDestination": ["../cosmo-pd101/webview/src/lib/synth/modDestination"],
+			"@/lib/synth/defaultPresets": ["../cosmo-pd101/webview/src/lib/synth/defaultPresets"],
+			"@/lib/synth/pdVisualizerWorkletUrl": ["../cosmo-pd101/webview/src/lib/synth/pdVisualizerWorkletUrl"],
+			"@/lib/synth/drawOscilloscope": ["../cosmo-pd101/webview/src/lib/synth/drawOscilloscope"],
+			"@/lib/synth/pdOscillator": ["../cosmo-pd101/webview/src/lib/synth/pdOscillator"],
+			"@/lib/synth/windowFunction": ["../cosmo-pd101/webview/src/lib/synth/windowFunction"],
+			"@/lib/synth/presetStorage": ["../cosmo-preset-core/src/presetStorage"],
+			"@/lib/synth/czPresetConverter": ["../cosmo-preset-core/src/czPresetConverter"],
+			"@/lib/update/githubReleaseCheck": ["../cosmo-pd101/webview/src/update/githubReleaseCheck"],
 			"@/*": ["./src/*"]
 		},
 		"allowImportingTsExtensions": true,
@@ -44,6 +62,6 @@
 		"noFallthroughCasesInSwitch": true,
 		"types": ["@testing-library/jest-dom"]
 	},
-	"include": ["src", "../cosmo-pd101/webview/src/components", "../cosmo-pd101/webview/src/features", "../cosmo-pd101/webview/src/context"],
+	"include": ["src", "../cosmo-pd101/webview/src/components", "../cosmo-pd101/webview/src/features", "../cosmo-pd101/webview/src/context", "../cosmo-pd101/webview/src/lib/synth", "../cosmo-pd101/webview/src/update", "../cosmo-preset-core/src"],
 	"references": [{ "path": "./tsconfig.node.json" }]
 }
