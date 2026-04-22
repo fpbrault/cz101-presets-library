@@ -675,14 +675,14 @@ impl CzParameters {
 #[allow(dead_code, unused_variables, clippy::items_after_statements)]
 fn _assert_synth_params_coverage(p: SynthParams) {
     use cosmo_synth_engine::params::{
-        ChorusParams, CzLineParams, DelayParams, FilterParams, LineParams, LfoParams,
+        ChorusParams, CzLineParams, DelayParams, FilterParams, LfoParams, LineParams,
         PortamentoParams, ReverbParams, VibratoParams,
     };
 
     let SynthParams {
         line_select,
         mod_mode,
-        ring_gain: _ring_gain,             // intentionally not a VST param
+        ring_gain: _ring_gain, // intentionally not a VST param
         octave,
         line1,
         line2,
@@ -690,7 +690,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         int_pm_ratio,
         ext_pm_amount,
         pm_pre,
-        frequency: _frequency,             // set by the MIDI layer, not a VST param
+        frequency: _frequency, // set by the MIDI layer, not a VST param
         volume,
         poly_mode,
         legato,
@@ -702,14 +702,25 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         portamento,
         lfo,
         filter,
-        pitch_bend_range: _pitch_bend_range,               // not yet a VST param
+        pitch_bend_range: _pitch_bend_range, // not yet a VST param
         mod_wheel_vibrato_depth: _mod_wheel_vibrato_depth, // not yet a VST param
-        mod_matrix: _mod_matrix,                           // not yet a VST param
+        mod_matrix: _mod_matrix,             // not yet a VST param
     } = p;
 
-    let ChorusParams { rate: _cho_rate, depth: _cho_depth, mix: _cho_mix } = chorus;
-    let DelayParams { time: _del_time, feedback: _del_fb, mix: _del_mix } = delay;
-    let ReverbParams { size: _rev_size, mix: _rev_mix } = reverb;
+    let ChorusParams {
+        rate: _cho_rate,
+        depth: _cho_depth,
+        mix: _cho_mix,
+    } = chorus;
+    let DelayParams {
+        time: _del_time,
+        feedback: _del_fb,
+        mix: _del_mix,
+    } = delay;
+    let ReverbParams {
+        size: _rev_size,
+        mix: _rev_mix,
+    } = reverb;
     let VibratoParams {
         enabled: _vib_enabled,
         waveform: _vib_waveform,
@@ -792,8 +803,17 @@ fn _assert_synth_params_coverage(p: SynthParams) {
 
     // Suppress unused-variable warnings for fields that ARE mapped to VST params.
     let _ = (
-        line_select, mod_mode, octave, int_pm_amount, int_pm_ratio, ext_pm_amount,
-        pm_pre, volume, poly_mode, legato, velocity_target,
+        line_select,
+        mod_mode,
+        octave,
+        int_pm_amount,
+        int_pm_ratio,
+        ext_pm_amount,
+        pm_pre,
+        volume,
+        poly_mode,
+        legato,
+        velocity_target,
     );
 }
 
@@ -900,9 +920,7 @@ struct CzWebViewHandler {
 }
 
 impl CzWebViewHandler {
-    fn parse_set_envelope_args(
-        args: &[serde_json::Value],
-    ) -> Result<(&str, StepEnvData), String> {
+    fn parse_set_envelope_args(args: &[serde_json::Value]) -> Result<(&str, StepEnvData), String> {
         if args.len() == 2 {
             let envelope_id = args[0]
                 .as_str()
@@ -996,7 +1014,10 @@ impl WebViewHandler for CzWebViewHandler {
         method: &str,
         args: &[serde_json::Value],
     ) -> Result<serde_json::Value, String> {
-        append_log(&format!("webview invoke method={method} args={}", args.len()));
+        append_log(&format!(
+            "webview invoke method={method} args={}",
+            args.len()
+        ));
 
         match method {
             "setEnvelope" => {
@@ -1290,3 +1311,98 @@ impl Processor for CzProcessor {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmo_synth_engine::params::EnvStep;
+    use serde_json::json;
+
+    fn make_env(
+        level: f32,
+        rate: u8,
+        step_count: usize,
+        sustain_step: usize,
+        loop_: bool,
+    ) -> StepEnvData {
+        let mut env = StepEnvData::default();
+        env.steps[0] = EnvStep { level, rate };
+        env.step_count = step_count;
+        env.sustain_step = sustain_step;
+        env.loop_ = loop_;
+        env
+    }
+
+    #[test]
+    fn scope_frame_keeps_samples_in_chronological_order_after_wrap() {
+        let mut frame = ScopeFrame::default();
+        let initial: Vec<f32> = (0..SCOPE_CAPACITY).map(|sample| sample as f32).collect();
+        frame.push_block(&initial, 48_000.0, 110.0);
+        frame.push_block(&[4096.0, 4097.0, 4098.0], 48_000.0, 220.0);
+
+        let linear = frame.to_linear();
+        assert_eq!(linear.len(), SCOPE_CAPACITY);
+        assert_eq!(&linear[..3], &[3.0, 4.0, 5.0]);
+        assert_eq!(&linear[linear.len() - 3..], &[4096.0, 4097.0, 4098.0]);
+        assert_eq!(frame.sample_rate, 48_000.0);
+        assert_eq!(frame.hz, 220.0);
+    }
+
+    #[test]
+    fn envelope_state_applies_updates_and_serializes_expected_keys() {
+        let mut state = EnvelopeState {
+            l1_dco: StepEnvData::default(),
+            l1_dcw: StepEnvData::default(),
+            l1_dca: StepEnvData::default(),
+            l2_dco: StepEnvData::default(),
+            l2_dcw: StepEnvData::default(),
+            l2_dca: StepEnvData::default(),
+        };
+        let updated = make_env(0.25, 33, 6, 4, true);
+
+        state.set("l1_dco", updated.clone()).unwrap();
+
+        let mut params = SynthParams::default();
+        state.apply_to(&mut params);
+
+        assert_eq!(params.line1.dco_env.step_count, 6);
+        assert_eq!(params.line1.dco_env.sustain_step, 4);
+        assert!(params.line1.dco_env.loop_);
+        assert_eq!(params.line1.dco_env.steps[0].level, 0.25);
+        assert_eq!(params.line1.dco_env.steps[0].rate, 33);
+        assert_eq!(state.to_json()["l1_dco"]["stepCount"], json!(6));
+        assert_eq!(state.to_json()["l1_dco"]["sustainStep"], json!(4));
+        assert_eq!(state.to_json()["l1_dco"]["loop"], json!(true));
+        assert!(state.set("missing", StepEnvData::default()).is_err());
+    }
+
+    #[test]
+    fn algo_controls_state_applies_per_line_values_and_rejects_unknown_lines() {
+        let mut state = AlgoControlsState::default();
+        let line1 = vec![AlgoControlValueV1 {
+            id: "warp".to_string(),
+            value: 0.25,
+        }];
+        let line2 = vec![AlgoControlValueV1 {
+            id: "bias".to_string(),
+            value: 0.75,
+        }];
+
+        state.set(1, line1).unwrap();
+        state.set(2, line2).unwrap();
+
+        let mut params = SynthParams::default();
+        state.apply_to(&mut params);
+
+        let applied_line1 = params.line1.algo_controls.as_ref().unwrap();
+        let applied_line2 = params.line2.algo_controls.as_ref().unwrap();
+        assert_eq!(applied_line1.len(), 1);
+        assert_eq!(applied_line1[0].id, "warp");
+        assert_eq!(applied_line1[0].value, 0.25);
+        assert_eq!(applied_line2.len(), 1);
+        assert_eq!(applied_line2[0].id, "bias");
+        assert_eq!(applied_line2[0].value, 0.75);
+        assert_eq!(state.to_json()["line1"][0]["id"], json!("warp"));
+        assert_eq!(state.to_json()["line2"][0]["value"], json!(0.75));
+        assert!(state.set(3, Vec::new()).is_err());
+    }
+}
