@@ -964,7 +964,15 @@ impl CzWebViewHandler {
 
     fn parse_set_mod_matrix_args(args: &[serde_json::Value]) -> Result<ModMatrix, String> {
         if args.len() == 1 {
-            return serde_json::from_value(args[0].clone())
+            let payload = args
+                .first()
+                .ok_or_else(|| "setModMatrix expects at least one argument".to_string())?;
+            let matrix_value = payload
+                .get("mod_matrix")
+                .or_else(|| payload.get("modMatrix"))
+                .cloned()
+                .unwrap_or_else(|| payload.clone());
+            return serde_json::from_value(matrix_value)
                 .map_err(|error| format!("invalid mod matrix payload: {error}"));
         }
 
