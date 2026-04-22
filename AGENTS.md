@@ -25,17 +25,31 @@
 
 ## Architecture
 
-Tauri 2 desktop app for managing Casio CZ-101 synthesizer `.SYX` presets.
+Bun monorepo. Main packages:
 
-- `src/components/` — Reusable UI primitives (buttons, inputs, modals)
-- `src/features/` — Feature domains: `presets/`, `setlists/`, `synthBackups/`
-- `src/lib/` — Business logic (no UI): DB adapters, MIDI ops, SysEx parsing, sync
-- `src/lib/db/` — `PresetDatabase` interface with `browserDatabase` (IndexedDB), `postgresDatabase`, and `fakePresetDatabase` + runtime fallback
-- `src/lib/presets/presetManager.ts` — Core API surface for preset operations
-- `src/db/schema.ts` — Drizzle ORM schema (Postgres)
-- `src/context/` — React Context providers (MIDI port, MIDI channel, search, sidebar, toast)
-- `src/hooks/` — Custom hooks (`useDragDrop`, `useMidiSetup`)
-- `src-tauri/` — Rust backend (minimal; event handlers and native plugins)
+- `packages/cz-explorer` — React + Vite web app: preset library, setlists, synth browser UI
+- `packages/cz-explorer-desktop` — Tauri 2 desktop wrapper
+- `packages/cosmo-synth-engine` — Rust/WASM phase distortion engine
+- `packages/cosmo-pd101` — VST3/AUv2/AUv3 plugin host (beamer) **and** reusable lib; exports synth-specific components, hooks, and SysEx utilities consumed by `cz-explorer`
+- `packages/xtask` — Build automation
+
+### `packages/cz-explorer/src/`
+
+- `components/` — Reusable UI primitives (buttons, inputs, modals)
+- `features/` — Feature domains: `presets/`, `setlists/`, `synthBackups/`
+- `lib/` — Business logic (no UI): DB adapters, MIDI ops, sync
+- `lib/db/` — `PresetDatabase` interface with `browserDatabase` (IndexedDB), `postgresDatabase`, and `fakePresetDatabase` + runtime fallback
+- `db/schema.ts` — Drizzle ORM schema (Postgres)
+- `context/` — React Context providers (MIDI port, MIDI channel, search, sidebar, toast)
+- `hooks/` — Custom hooks (`useDragDrop`, `useMidiSetup`)
+
+### `packages/cosmo-pd101/webview/src/`
+
+- `components/` — Synth-specific UI components (controls, editor, renderer, panels)
+- `features/synth/` — Synth feature domain: hooks (`useAudioEngine`, `useSynthState`, etc.) and preset management
+- `lib/midi/` — CZ SysEx decoder (`czSysexDecoder`)
+- `lib/synth/` — Synth bindings, preset converter, PD algorithms, worklet URLs
+- `index.ts` — Public library entry point; exports components, hooks, and types for use by `cz-explorer`
 
 ## Conventions
 

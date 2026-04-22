@@ -1,7 +1,7 @@
 const LATEST_RELEASE_URL =
-	"https://api.github.com/repos/fpbrault/cz101-presets-library/releases/latest";
+	"https://api.github.com/repos/fpbrault/cosmo-pd/releases/latest";
 const RELEASES_PAGE_URL =
-	"https://github.com/fpbrault/cz101-presets-library/releases";
+	"https://github.com/fpbrault/cosmo-pd/releases";
 const SESSION_KEY = "cosmo-pd101.update.latestNotified";
 
 declare const __CZ_APP_VERSION__: string;
