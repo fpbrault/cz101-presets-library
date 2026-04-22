@@ -3,18 +3,34 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bunx --bun vite",
-		"build": "bunx --bun vite build"
+		"dev:test": "VITE_TEST_HARNESS=1 VITE_DEBUG_PANEL=1 bunx --bun vite",
+		"build": "bunx --bun vite build",
+		"test:unit": "bunx vitest --project unit --run",
+		"test:unit:watch": "bunx vitest --project unit",
+		"test:browser": "bunx vitest --project browser --run",
+		"test:all": "bunx vitest --run",
+		"test:e2e": "bunx playwright test",
+		"test:e2e:ui": "bunx playwright test --ui",
+		"test:e2e:debug": "PWDEBUG=1 bunx playwright test"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.49.0",
 		"@tailwindcss/vite": "^4.2.2",
+		"@testing-library/jest-dom": "^6.9.1",
 		"@types/react": "^18.3.28",
 		"@types/react-dom": "^18.3.7",
 		"@vitejs/plugin-react": "^6.0.1",
+		"@vitest/browser": "^4.1.4",
+		"@vitest/browser-playwright": "^4.1.4",
+		"@vitest/coverage-v8": "^4.1.4",
+		"@vitest/ui": "4.1.5",
+		"happy-dom": "^20.9.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"tailwindcss": "^4.2.2",
 		"typescript": "^6.0.2",
-		"vite": "^8.0.3"
+		"vite": "^8.0.3",
+		"vitest": "^4.1.4"
 	},
 	"dependencies": {
 		"i18next": "^26.0.6",

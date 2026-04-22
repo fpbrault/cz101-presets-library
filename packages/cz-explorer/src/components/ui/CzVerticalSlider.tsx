@@ -7,6 +7,7 @@ interface CzVerticalSliderProps {
 	step?: number;
 	onChange: (v: number) => void;
 	color?: string;
+	ariaLabel?: string;
 	/** Optional fixed height for the slider in px. When omitted, it fills parent height. */
 	trackHeight?: number;
 }
@@ -22,6 +23,7 @@ export default function CzVerticalSlider({
 	step = 0.01,
 	onChange,
 	color = "#9cb937",
+	ariaLabel,
 	trackHeight,
 }: CzVerticalSliderProps) {
 	const trackRef = useRef<HTMLDivElement>(null);
@@ -96,6 +98,7 @@ export default function CzVerticalSlider({
 				touchAction: "none",
 			}}
 			role="slider"
+			aria-label={ariaLabel}
 			aria-valuenow={value}
 			aria-valuemin={min}
 			aria-valuemax={max}

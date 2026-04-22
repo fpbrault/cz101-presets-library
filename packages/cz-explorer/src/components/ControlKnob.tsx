@@ -25,12 +25,12 @@ export function ControlKnob({
 	valueFormatter,
 	defaultValue,
 }: ControlKnobProps) {
-	const [dragging, setDragging] = useState(false);
 	const [editing, setEditing] = useState(false);
 	const [editValue, setEditValue] = useState("");
 	const startYRef = useRef(0);
 	const startValueRef = useRef(0);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const valueControlLabel = label ? `${label} value` : "knob value";
 	const displayValue = valueFormatter
 		? valueFormatter(value)
 		: value.toFixed(2);
@@ -50,12 +50,27 @@ export function ControlKnob({
 			? `M ${startX} ${startY} A 17 17 0 ${largeArcFlag} 1 ${endX} ${endY}`
 			: "";
 
-	const handlePointerDown = (event: React.PointerEvent) => {
+	const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
 		if (disabled) return;
 		event.preventDefault();
-		setDragging(true);
 		startYRef.current = event.clientY;
 		startValueRef.current = value;
+
+		const handlePointerMove = (e: PointerEvent) => {
+			const deltaY = startYRef.current - e.clientY;
+			const range = max - min;
+			const sensitivity = Math.max(160, size * 4);
+			const nextValue = startValueRef.current + (deltaY / sensitivity) * range;
+			onChange(Math.max(min, Math.min(max, nextValue)));
+		};
+
+		const handlePointerUp = () => {
+			window.removeEventListener("pointermove", handlePointerMove);
+			window.removeEventListener("pointerup", handlePointerUp);
+		};
+
+		window.addEventListener("pointermove", handlePointerMove);
+		window.addEventListener("pointerup", handlePointerUp);
 	};
 
 	const handleDoubleClick = () => {
@@ -93,30 +108,6 @@ export function ControlKnob({
 			inputRef.current.select();
 		}
 	}, [editing]);
-
-	useEffect(() => {
-		if (!dragging || disabled) return;
-
-		const handlePointerMove = (event: PointerEvent) => {
-			const deltaY = startYRef.current - event.clientY;
-			const range = max - min;
-			const sensitivity = Math.max(160, size * 4);
-			const nextValue = startValueRef.current + (deltaY / sensitivity) * range;
-			onChange(Math.max(min, Math.min(max, nextValue)));
-		};
-
-		const handlePointerUp = () => {
-			setDragging(false);
-		};
-
-		window.addEventListener("pointermove", handlePointerMove);
-		window.addEventListener("pointerup", handlePointerUp);
-
-		return () => {
-			window.removeEventListener("pointermove", handlePointerMove);
-			window.removeEventListener("pointerup", handlePointerUp);
-		};
-	}, [disabled, dragging, max, min, onChange, size]);
 
 	return (
 		<div className="flex flex-col items-center gap-1 text-center">
@@ -192,6 +183,7 @@ export function ControlKnob({
 						<input
 							ref={inputRef}
 							type="text"
+							aria-label={valueControlLabel}
 							className="w-14 border border-base-300 bg-cz-surface px-1 text-center text-2xs font-semibold text-base-content/80 outline-none focus:border-primary"
 							value={editValue}
 							onChange={(e) => setEditValue(e.target.value)}
@@ -201,6 +193,7 @@ export function ControlKnob({
 					) : (
 						<button
 							type="button"
+							aria-label={valueControlLabel}
 							className={`text-2xs font-semibold ${
 								disabled
 									? "cursor-not-allowed text-base-content/55"

@@ -5,7 +5,7 @@
     "": {
       "name": "cosmo-presets-library",
       "dependencies": {
-        "tailwindcss": "^4.2.2",
+        "tailwindcss": "^4.2.4",
       },
       "devDependencies": {
         "cross-env": "^10.1.0",

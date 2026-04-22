@@ -43,7 +43,7 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	);
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 
-	usePluginParamBridge();
+	usePluginParamBridge(synthState);
 
 	const subscribeScopeFrames = useCallback(
 		(
@@ -81,6 +81,7 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 
 	const {
 		allPresetEntries,
+		activePresetId,
 		activePresetName,
 		handleLoadLocal,
 		handleLoadBuiltin,
@@ -114,6 +115,7 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
+				activeEntryId: activePresetId,
 				activePresetName,
 				onLoadLocal: handleLoadLocal,
 				onLoadLibrary: handleLoadLibrary,

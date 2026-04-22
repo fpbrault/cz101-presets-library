@@ -1,4 +1,4 @@
-import type { StepEnvData } from "@/components/pdAlgorithms";
+import type { StepEnvData } from "@/lib/synth/bindings/synth";
 
 type BeamerParamInfo = {
 	id: number;
@@ -280,14 +280,14 @@ function syncExistingParams(runtime: BeamerRuntime) {
 	}
 }
 
-export function ensureBeamerLegacyBridge() {
+export function ensureBeamerLegacyBridge(): boolean {
 	if (installed) {
-		return;
+		return true;
 	}
 
 	const runtime = window.__BEAMER__;
 	if (!runtime) {
-		return;
+		return false;
 	}
 
 	installed = true;
@@ -308,6 +308,8 @@ export function ensureBeamerLegacyBridge() {
 	installLegacyIpc(runtime);
 	syncExistingParams(runtime);
 	installScopePolling(runtime);
+
+	return true;
 }
 
 // ---------------------------------------------------------------------------

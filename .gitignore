@@ -40,3 +40,4 @@ venv/
 plans/
 
 target/
+test-results/
