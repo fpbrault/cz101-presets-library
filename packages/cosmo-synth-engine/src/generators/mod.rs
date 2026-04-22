@@ -5,10 +5,8 @@ use serde::Serialize;
 use specta::Type;
 
 const TWO_PI: f32 = core::f32::consts::TAU;
-pub const PER_LINE_HEADROOM: f32 = 0.25;
-
 /// Reference per-line output headroom used by processor normalization.
-pub const PER_LINE_HEADROOM: f32 = 0.75;
+pub const PER_LINE_HEADROOM: f32 = 0.25;
 
 pub mod bend;
 pub mod clip;
@@ -124,6 +122,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			primary_dcw,
 			config.algo_controls,
+			[0.0; 8],
 			None,
 		);
 		let secondary = render_algo_sample(
@@ -131,6 +130,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			secondary_dcw,
 			config.algo_controls,
+			[0.0; 8],
 			None,
 		);
 		blend_line_samples(config.primary_algo, primary, secondary, config.blend)
@@ -140,6 +140,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
 			config.phase,
 			config.final_dcw,
 			config.algo_controls,
+			[0.0; 8],
 			None,
 		)
 	};

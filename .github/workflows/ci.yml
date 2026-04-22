@@ -2,9 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
@@ -104,7 +102,6 @@ jobs:
 
   build-plugins:
     name: Build plugins (${{ matrix.platform }})
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -128,7 +125,6 @@ jobs:
 
   build-desktop:
     name: Build desktop app (${{ matrix.os }})
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
