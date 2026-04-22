@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun ./scripts/dev-with-lib.mjs",
-		"prebuild": "bun --filter @cosmo/cosmo-pd101 build:lib",
+		"prebuild": "bun --filter @cosmo/cosmo-pd101-webview build:lib",
 		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"db:generate": "drizzle-kit generate",

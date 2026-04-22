@@ -12,8 +12,8 @@
 	"main": "./webview/lib-dist/index.mjs",
 	"types": "./webview/lib-dist/index.d.mts",
 	"scripts": {
-		"build": "cd webview && bun run build:lib",
-		"build:lib": "cd webview && bun run build:lib",
+		"build": "bun --filter @cosmo/cosmo-pd101-webview build:lib",
+		"build:lib": "bun --filter @cosmo/cosmo-pd101-webview build:lib",
 		"bundle:debug": "cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 --vst3 --auv2",
 		"bundle:release": "cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 --vst3 --auv2 --release",
 		"bundle:release:universal": "ARCH=universal bash ../../scripts/build-plugin.sh --release",
