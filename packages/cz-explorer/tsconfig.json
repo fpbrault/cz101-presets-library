@@ -46,7 +46,6 @@
 			"@/lib/synth/windowFunction": ["../cosmo-pd101/webview/src/lib/synth/windowFunction"],
 			"@/lib/synth/presetStorage": ["../cosmo-preset-core/src/presetStorage"],
 			"@/lib/synth/czPresetConverter": ["../cosmo-preset-core/src/czPresetConverter"],
-			"@/lib/update/githubReleaseCheck": ["../cosmo-pd101/webview/src/update/githubReleaseCheck"],
 			"@/*": ["./src/*"]
 		},
 		"allowImportingTsExtensions": true,
@@ -62,6 +61,12 @@
 		"noFallthroughCasesInSwitch": true,
 		"types": ["@testing-library/jest-dom"]
 	},
-	"include": ["src", "../cosmo-pd101/webview/src/components", "../cosmo-pd101/webview/src/features", "../cosmo-pd101/webview/src/context", "../cosmo-pd101/webview/src/lib/synth", "../cosmo-pd101/webview/src/update", "../cosmo-preset-core/src"],
+	"include": ["src", "../cosmo-pd101/webview/src/components", "../cosmo-pd101/webview/src/features", "../cosmo-pd101/webview/src/context", "../cosmo-pd101/webview/src/lib/synth"],
+	"exclude": [
+		"../cosmo-pd101/webview/src/**/*.test.*",
+		"../cosmo-pd101/webview/src/**/*.spec.*",
+		"../cosmo-preset-core/src/**/*.test.*",
+		"../cosmo-preset-core/src/**/*.spec.*"
+	],
 	"references": [{ "path": "./tsconfig.node.json" }]
 }

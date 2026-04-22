@@ -182,11 +182,6 @@ const presetCoreAliases: { find: string; replacement: string }[] = [
 	{ find: "@/lib/synth/czPresetConverter", replacement: `${cosmoPresetCoreSrc}/czPresetConverter` },
 ];
 
-// update checker moved to cosmo-pd101
-const updateAliases: { find: string; replacement: string }[] = [
-	{ find: "@/lib/update/githubReleaseCheck", replacement: `${cosmoPd101Src}/update/githubReleaseCheck` },
-];
-
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
 	publicDir: "public",
@@ -200,7 +195,6 @@ export default defineConfig(async () => ({
 			...synthFileAliases,
 			...synthLibAliases,
 			...presetCoreAliases,
-			...updateAliases,
 			{
 				find: "@",
 				replacement: fileURLToPath(new URL("./src", import.meta.url)),

@@ -4,7 +4,7 @@ import {
 	type CardVariant,
 	getCardClassName,
 	joinClasses,
-} from "./Card";
+} from "@/components/ui/Card";
 
 type CommonProps = {
 	variant?: CardVariant;
