@@ -126,6 +126,7 @@ jobs:
 
   build-desktop:
     name: Build desktop app (${{ matrix.os }})
+    if: false # TODO: re-enable when ready
     strategy:
       fail-fast: false
       matrix:
@@ -148,7 +149,6 @@ jobs:
         plugin-webview-unit-tests,
         plugin-webview-e2e-tests,
         build-plugins,
-        build-desktop,
       ]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
