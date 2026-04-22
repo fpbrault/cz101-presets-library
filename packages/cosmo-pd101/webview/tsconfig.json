@@ -6,7 +6,8 @@
 		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["../../../packages/cz-explorer/src/*"]
+			"@/lib/*": ["../../../packages/cz-explorer/src/lib/*"],
+			"@/*": ["./src/*"]
 		},
 		"jsx": "react-jsx",
 		"strict": true,
@@ -16,7 +17,7 @@
 	},
 	"include": [
 		"src",
-		"../../../packages/cz-explorer/src",
+		"../../../packages/cz-explorer/src/lib",
 		"../../../packages/cz-explorer/src/vite-env.d.ts"
 	]
 }
