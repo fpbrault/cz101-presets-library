@@ -131,7 +131,10 @@ export function SharedPhaseDistortionVisualizer({
 		pitchBendRange,
 		modWheelVibratoDepth,
 		modMatrix,
+<<<<<<< HEAD
 		setModMatrix,
+=======
+>>>>>>> origin/split/mod-matrix-core
 		gatherState,
 		applyPreset,
 	} = synthState;

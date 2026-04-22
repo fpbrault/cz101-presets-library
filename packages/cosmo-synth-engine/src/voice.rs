@@ -31,17 +31,29 @@ pub(crate) struct ModSources {
     pub lfo2: f32,
     pub velocity: f32,
     pub mod_wheel: f32,
+<<<<<<< HEAD
+=======
+    /// Aftertouch — stub, always 0.0 this phase.
+>>>>>>> origin/split/mod-matrix-core
     pub aftertouch: f32,
 }
 
 impl ModSources {
+<<<<<<< HEAD
     fn new(lfo1: f32, velocity: f32, mod_wheel: f32, aftertouch: f32) -> Self {
+=======
+    fn new(lfo1: f32, velocity: f32, mod_wheel: f32) -> Self {
+>>>>>>> origin/split/mod-matrix-core
         Self {
             lfo1,
             lfo2: 0.0,
             velocity,
             mod_wheel,
+<<<<<<< HEAD
             aftertouch,
+=======
+            aftertouch: 0.0,
+>>>>>>> origin/split/mod-matrix-core
         }
     }
 
@@ -67,6 +79,7 @@ fn mod_value_for(dest: ModDestination, matrix: &ModMatrix, sources: &ModSources)
     total.clamp(-1.0, 1.0)
 }
 
+<<<<<<< HEAD
 fn algo_param_slot_mods_for_line(
     line_index: u8,
     matrix: &ModMatrix,
@@ -103,6 +116,8 @@ fn algo_param_slot_mods_for_line(
     out
 }
 
+=======
+>>>>>>> origin/split/mod-matrix-core
 // ---------------------------------------------------------------------------
 // LineEnvs — per-line group of three envelope generators
 // ---------------------------------------------------------------------------
@@ -265,9 +280,13 @@ pub fn render_voice(
         return 0.0;
     }
 
+<<<<<<< HEAD
     let mod_sources = ModSources::new(lfo_mod_val, voice.velocity, mod_wheel, aftertouch);
     let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
     let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
+=======
+    let mod_sources = ModSources::new(lfo_mod_val, voice.velocity, mod_wheel);
+>>>>>>> origin/split/mod-matrix-core
     let mut signal = build_signal_state(voice, p, &env, base_freq, &mod_sources);
     apply_pitch_and_lfo_modulation(
         voice,
