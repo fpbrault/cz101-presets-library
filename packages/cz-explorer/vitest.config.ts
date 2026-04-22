@@ -7,6 +7,7 @@ const explorerSrc = fileURLToPath(new URL("./src", import.meta.url));
 const cosmoPd101LibEntry = fileURLToPath(
 	new URL("../cosmo-pd101/webview/lib-dist/index.mjs", import.meta.url),
 );
+const tailwindPlugins = tailwindcss() as unknown as [];
 
 export default defineConfig({
 	resolve: {
@@ -15,7 +16,19 @@ export default defineConfig({
 			{ find: "@", replacement: explorerSrc },
 		],
 	},
-	plugins: [tailwindcss()],
+	optimizeDeps: {
+		include: [
+			"@testing-library/jest-dom/vitest",
+			"@testing-library/react",
+			"@testing-library/user-event",
+			"fake-indexeddb/auto",
+			"react",
+			"react/jsx-dev-runtime",
+			"vitest-axe/extend-expect",
+			"vitest-browser-react",
+		],
+	},
+	plugins: tailwindPlugins,
 	test: {
 		globals: true,
 		setupFiles: ["./setupTests.ts"],
