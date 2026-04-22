@@ -57,6 +57,8 @@ pub struct CosmoProcessor {
     /// Normalised mod wheel value in [0.0, 1.0].
     /// Boosts vibrato depth by `params.mod_wheel_vibrato_depth * mod_wheel`.
     pub mod_wheel: f32,
+    /// Normalised aftertouch/channel pressure value in [0.0, 1.0].
+    pub aftertouch: f32,
 }
 
 impl CosmoProcessor {
@@ -73,6 +75,7 @@ impl CosmoProcessor {
             sample_rate,
             pitch_bend: 0.0,
             mod_wheel: 0.0,
+            aftertouch: 0.0,
         };
         proc.update_fx();
         proc
@@ -391,6 +394,11 @@ impl CosmoProcessor {
     /// Set mod wheel. `value` is normalised [0.0, 1.0] (CC1 / 127).
     pub fn set_mod_wheel(&mut self, value: f32) {
         self.mod_wheel = value.clamp(0.0, 1.0);
+    }
+
+    /// Set aftertouch/channel pressure. `value` is normalised [0.0, 1.0].
+    pub fn set_aftertouch(&mut self, value: f32) {
+        self.aftertouch = value.clamp(0.0, 1.0);
     }
 
     // -----------------------------------------------------------------------

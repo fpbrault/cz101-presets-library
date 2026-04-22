@@ -12,6 +12,7 @@ use cosmo_synth_engine::params::{
     ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType, CzAlgo,
     CzLineParams, CzWaveform, AlgoControlValueV1,
     Algo,
+    ModSource, ModDestination, ModRoute, ModMatrix,
 };
 use cosmo_synth_engine::generators::{
     AlgoControlAssignmentV1, AlgoControlKindV1, AlgoControlOptionV1, AlgoControlV1,
@@ -98,6 +99,14 @@ fn main() {
     out.push_str(&export::<AlgoDefinitionV1>(&config).expect("Failed to export AlgoDefinitionV1"));
     out.push_str("\n\n");
     out.push_str(&export::<AlgoUiEntryV1>(&config).expect("Failed to export AlgoUiEntryV1"));
+    out.push_str("\n\n");
+    out.push_str(&export::<ModSource>(&config).expect("Failed to export ModSource"));
+    out.push_str("\n\n");
+    out.push_str(&export::<ModDestination>(&config).expect("Failed to export ModDestination"));
+    out.push_str("\n\n");
+    out.push_str(&export::<ModRoute>(&config).expect("Failed to export ModRoute"));
+    out.push_str("\n\n");
+    out.push_str(&export::<ModMatrix>(&config).expect("Failed to export ModMatrix"));
     out.push_str("\n\n");
     out.push_str(&export::<SynthParams>(&config).expect("Failed to export SynthParams"));
     out.push_str("\n\n");

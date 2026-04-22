@@ -555,6 +555,102 @@ pub enum LfoTarget {
     Filter,
 }
 
+/// Modulation source selector for modulation matrix routes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub enum ModSource {
+    #[default]
+    Lfo1,
+    /// LFO2 is currently a placeholder source and evaluates to 0.0 in DSP.
+    Lfo2,
+    Velocity,
+    ModWheel,
+    Aftertouch,
+}
+
+/// Modulation destination selector for modulation matrix routes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub enum ModDestination {
+    #[default]
+    Volume,
+    Pitch,
+    IntPmAmount,
+    Line1DcwBase,
+    Line1DcaBase,
+    Line1DcoDepth,
+    Line1AlgoBlend,
+    Line1DcwComp,
+    Line1Detune,
+    Line1Octave,
+    Line1AlgoParam1,
+    Line1AlgoParam2,
+    Line1AlgoParam3,
+    Line1AlgoParam4,
+    Line1AlgoParam5,
+    Line1AlgoParam6,
+    Line1AlgoParam7,
+    Line1AlgoParam8,
+    Line2DcwBase,
+    Line2DcaBase,
+    Line2DcoDepth,
+    Line2AlgoBlend,
+    Line2DcwComp,
+    Line2Detune,
+    Line2Octave,
+    Line2AlgoParam1,
+    Line2AlgoParam2,
+    Line2AlgoParam3,
+    Line2AlgoParam4,
+    Line2AlgoParam5,
+    Line2AlgoParam6,
+    Line2AlgoParam7,
+    Line2AlgoParam8,
+    FilterCutoff,
+    FilterResonance,
+    FilterEnvAmount,
+    ChorusMix,
+    DelayMix,
+    ReverbMix,
+    VibratoDepth,
+    LfoDepth,
+    LfoRate,
+}
+
+/// A single modulation route assignment.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ModRoute {
+    pub source: ModSource,
+    pub destination: ModDestination,
+    /// Modulation amount in range [-1.0, 1.0].
+    pub amount: f32,
+    pub enabled: bool,
+}
+
+impl Default for ModRoute {
+    fn default() -> Self {
+        Self {
+            source: ModSource::Lfo1,
+            destination: ModDestination::Volume,
+            amount: 0.0,
+            enabled: false,
+        }
+    }
+}
+
+/// Collection of modulation routes.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ModMatrix {
+    #[serde(default)]
+    pub routes: Vec<ModRoute>,
+}
+
 /// LFO parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -644,6 +740,9 @@ pub struct SynthParams {
     /// When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
     #[serde(default)]
     pub mod_wheel_vibrato_depth: f32,
+    /// Modulation matrix routes for source-to-destination parameter modulation.
+    #[serde(default)]
+    pub mod_matrix: ModMatrix,
 }
 
 pub(crate) fn default_pitch_bend_range() -> f32 {
@@ -681,6 +780,7 @@ impl Default for SynthParams {
             filter: FilterParams::default(),
             pitch_bend_range: 2.0,
             mod_wheel_vibrato_depth: 0.0,
+            mod_matrix: ModMatrix::default(),
         }
     }
 }

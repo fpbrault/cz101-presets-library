@@ -65,6 +65,7 @@ export type EngineParams = {
 	};
 	pitchBendRange: number;
 	modWheelVibratoDepth: number;
+	modMatrix: { routes: { source: string; destination: string; amount: number; enabled: boolean }[] };
 };
 
 export type LineParams = {
@@ -178,6 +179,7 @@ export function useAudioEngine({
 		},
 		pitchBendRange: 2,
 		modWheelVibratoDepth: 0,
+		modMatrix: { routes: [] },
 	});
 
 	useEffect(() => {

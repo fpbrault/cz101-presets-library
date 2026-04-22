@@ -7,6 +7,7 @@ import type {
 	LfoTarget,
 	LfoWaveform,
 	LineSelect,
+	ModMatrix,
 	ModMode,
 	PortamentoMode,
 	StepEnvData,
@@ -94,6 +95,7 @@ type BuildSynthEngineSnapshotParams = {
 	filterEnvAmount: number;
 	pitchBendRange: number;
 	modWheelVibratoDepth: number;
+	modMatrix: ModMatrix;
 };
 
 export type SynthEngineSnapshot = BuildSynthEngineSnapshotParams;

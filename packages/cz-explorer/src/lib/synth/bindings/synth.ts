@@ -215,6 +215,34 @@ export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visib
 export type AlgoUiEntryV1 = { id: Algo; label: string; iconPath: string; visible: boolean }
 
 /**
+ * Modulation source identifier
+ */
+export type ModSource = "lfo1" | 
+/**
+ * LFO2 – UI/types stub only; DSP contribution is always 0.0 this phase
+ */
+"lfo2" | "velocity" | "modWheel" | "aftertouch"
+
+/**
+ * Modulation destination – covers the full synth parameter surface
+ */
+export type ModDestination = "volume" | "pitch" | "intPmAmount" | "line1DcwBase" | "line1DcaBase" | "line1DcoDepth" | "line1AlgoBlend" | "line1DcwComp" | "line1Detune" | "line1Octave" | "line2DcwBase" | "line2DcaBase" | "line2DcoDepth" | "line2AlgoBlend" | "line2DcwComp" | "line2Detune" | "line2Octave" | "filterCutoff" | "filterResonance" | "filterEnvAmount" | "chorusMix" | "delayMix" | "reverbMix" | "vibratoDepth" | "lfoDepth" | "lfoRate"
+
+/**
+ * A single modulation routing assignment
+ */
+export type ModRoute = { source: ModSource; destination: ModDestination; 
+/**
+ * Modulation amount in range [-1.0, 1.0]
+ */
+amount: number; enabled: boolean }
+
+/**
+ * The full modulation matrix (list of routes)
+ */
+export type ModMatrix = { routes: ModRoute[] }
+
+/**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
 export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; filter: FilterParams; 
@@ -226,7 +254,11 @@ pitchBendRange?: number;
  * How much the mod wheel adds to vibrato depth (0-99 UI units).
  * When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
  */
-modWheelVibratoDepth?: number }
+modWheelVibratoDepth?: number; 
+/**
+ * Modulation matrix – routes from sources to destinations with amounts.
+ */
+modMatrix?: ModMatrix }
 
 /**
  * Canonical, versioned synth preset wire contract.
