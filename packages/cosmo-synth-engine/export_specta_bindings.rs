@@ -27,7 +27,7 @@ fn main() {
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
 
     let ts_path = std::env::var("SPECTA_TS_EXPORT_PATH").unwrap_or_else(|_| {
-        format!("{manifest_dir}/../cz-explorer/src/lib/synth/bindings/synth.ts")
+        format!("{manifest_dir}/../cosmo-pd101/webview/src/lib/synth/bindings/synth.ts")
     });
 
     if let Some(ts_parent) = std::path::Path::new(&ts_path).parent() {

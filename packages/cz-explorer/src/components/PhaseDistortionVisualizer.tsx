@@ -1,3 +1,22 @@
+import {
+	type AsidePanelTab,
+	convertDecodedPatchToSynthPreset,
+	DEFAULT_SYNTH_PRESETS,
+	decodeCzPatch,
+	type LibraryPreset,
+	noteToFreq,
+	pdVisualizerWorkletUrl,
+	type StepEnvData,
+	SynthRenderer,
+	synthBindingsUrl,
+	synthWasmUrl,
+	useAudioEngine,
+	useLcdControlReadout,
+	useNoteHandling,
+	useSynthParamsToWorklet,
+	useSynthPresetManager,
+	useSynthState,
+} from "@cosmo/cosmo-pd101";
 import { useQuery } from "@tanstack/react-query";
 import {
 	type CSSProperties,
@@ -8,25 +27,7 @@ import {
 	useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import type { AsidePanelTab } from "@/components/synth/AsidePanelSwitcher";
-import SynthRenderer from "@/components/synth/SynthRenderer";
-import { useAudioEngine } from "@/features/synth/hooks/useAudioEngine";
-import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
-import { useNoteHandling } from "@/features/synth/hooks/useNoteHandling";
-import { useSynthParamsToWorklet } from "@/features/synth/hooks/useSynthParamsToWorklet";
-import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
-import { useSynthState } from "@/features/synth/useSynthState";
-import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 import { fetchPresetData, type Preset } from "@/lib/presets/presetManager";
-import type { StepEnvData } from "@/lib/synth/bindings/synth";
-import { convertDecodedPatchToSynthPreset } from "@/lib/synth/czPresetConverter";
-import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
-import {
-	pdVisualizerWorkletUrl,
-	synthBindingsUrl,
-	synthWasmUrl,
-} from "@/lib/synth/pdVisualizerWorkletUrl";
-import { noteToFreq } from "./pdAlgorithms";
 
 type PhaseDistortionVisualizerProps = {
 	frameStyle?: CSSProperties;
@@ -244,7 +245,7 @@ export function SharedPhaseDistortionVisualizer({
 	});
 
 	const handleLoadLibraryPreset = useCallback(
-		(preset: Preset) => {
+		(preset: LibraryPreset) => {
 			if (preset.sysexData) {
 				const decoded = decodeCzPatch(preset.sysexData);
 				if (decoded) {

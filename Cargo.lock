@@ -617,6 +617,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "cosmo-pd"
+version = "0.1.0"
+dependencies = [
+ "cosmo-synth-engine",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-midi",
+ "tauri-plugin-shell",
+]
+
+[[package]]
 name = "cosmo-pd101"
 version = "0.1.0"
 dependencies = [
@@ -722,21 +737,6 @@ checksum = "32a2785755761f3ddc1492979ce1e48d2c00d09311c39e4466429188f3dd6501"
 dependencies = [
  "quote",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "cz101-presets-library"
-version = "0.1.0"
-dependencies = [
- "cosmo-synth-engine",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-midi",
- "tauri-plugin-shell",
 ]
 
 [[package]]

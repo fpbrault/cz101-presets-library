@@ -18,7 +18,6 @@ import {
 } from "@/lib/presets/presetManager";
 import { saveOnlineSyncSettings } from "@/lib/sync/onlineSyncSettings";
 import { configurePresetSyncAdapterFromSettings } from "@/lib/sync/remotePresetSyncAdapter";
-import { checkForDesktopUpdate } from "@/lib/update/githubReleaseCheck";
 import { RouterProvider, router } from "@/routes/router";
 import { queryClient } from "@/utils/queryClient";
 
@@ -50,15 +49,8 @@ function AppInner() {
 			if (onboardingStatus === "needs-confirmation") {
 				setShowOnboardingModal(true);
 			}
-
-			const updateInfo = await checkForDesktopUpdate();
-			if (updateInfo) {
-				notifyInfo(
-					`New version available: v${updateInfo.latestVersion} (you have v${updateInfo.currentVersion}). Download: ${updateInfo.releaseUrl}`,
-				);
-			}
 		})();
-	}, [notifyInfo]);
+	}, []);
 
 	const handleAcceptOnboarding = () => {
 		setShowOnboardingModal(false);

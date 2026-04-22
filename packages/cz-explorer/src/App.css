@@ -8,6 +8,7 @@
 
 @source "../index.html";
 @source "./**/*.{js,ts,jsx,tsx}";
+@source "../../cosmo-pd101/webview/src/**/*.{js,ts,jsx,tsx}";
 
 @theme {
 	--font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;

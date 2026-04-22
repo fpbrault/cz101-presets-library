@@ -1,5 +1,5 @@
+import { decodeCzPatch } from "@cosmo/cosmo-pd101";
 import { describe, expect, it } from "vitest";
-import { decodeCzPatch } from "@/lib/midi/czSysexDecoder";
 
 /** Build a canonical CZ-101 SysEx packet with 256 nibble bytes all set to zero. */
 function makeZeroPacket(): Uint8Array {

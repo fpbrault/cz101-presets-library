@@ -1,6 +1,6 @@
-# CZ101 Presets Library
+# cosmo-pd
 
-A managed library and toolset for Casio CZ-101 synthesizer `.SYX` presets — including a desktop preset manager, an in-browser phase distortion synthesizer, and a VST3/AUv2/AUv3 plugin.
+A monorepo for Casio CZ-101 phase distortion synthesis — including a preset manager web/desktop app, an in-browser phase distortion synthesizer, and a VST3/AUv2/AUv3 plugin.
 
 ## Overview
 
@@ -8,10 +8,10 @@ This is a **Bun monorepo** containing:
 
 | Package | Description |
 |---------|-------------|
-| `packages/cz-explorer` | React + Vite web app: preset library, setlists, browser synth |
+| `packages/cz-explorer` | React + Vite web app: preset library, setlists, synth browser UI |
 | `packages/cz-explorer-desktop` | Tauri 2 desktop wrapper for cz-explorer |
 | `packages/cosmo-synth-engine` | Rust WebAssembly phase distortion synth engine |
-| `packages/cosmo-pd101` | beamer-based VST3/AUv2/AUv3 plugin host |
+| `packages/cosmo-pd101` | beamer-based VST3/AUv2/AUv3 plugin host **and** reusable library for synth-specific UI components, hooks, and SysEx utilities |
 | `packages/xtask` | Build automation (xtask pattern) |
 
 ## Setup
@@ -94,10 +94,11 @@ For database migration details, see [docs/db-migrations.md](docs/db-migrations.m
 - **Tauri 2** wrapping the cz-explorer web app.
 - Provides native file system and MIDI access.
 
-### Plugin (`packages/cosmo-pd101`)
+### Plugin / Synth Library (`packages/cosmo-pd101`)
 
 - **beamer** framework: VST3 + AUv2 + AUv3 from a single Rust codebase.
 - Embeds the cosmo-synth-engine and exposes the React/Vite GUI via WebView IPC.
+- Also acts as a **library**: `packages/cosmo-pd101/webview/src/index.ts` exports synth-specific React components (`SynthRenderer`), hooks (`useAudioEngine`, `useSynthState`, etc.), SysEx decoder utilities, and shared types consumed by `cz-explorer`.
 
 ### Database
 

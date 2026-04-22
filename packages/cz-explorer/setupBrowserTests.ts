@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
+/// <reference types="vitest/globals" />
 
 import "@testing-library/jest-dom/vitest";
-import { beforeEach, vi } from "vitest";
 import "./src/App.css";
 
 // Mock the MIDIAccess object
@@ -11,11 +11,9 @@ const mockMIDIAccess = {
 	onstatechange: null,
 };
 
-// Global mock for navigator.requestMIDIAccess
-vi.stubGlobal("navigator", {
-	...navigator,
-	userAgent: navigator.userAgent,
-	requestMIDIAccess: vi.fn().mockResolvedValue(mockMIDIAccess),
+Object.defineProperty(globalThis.navigator, "requestMIDIAccess", {
+	configurable: true,
+	value: async () => mockMIDIAccess,
 });
 
 beforeEach(() => {

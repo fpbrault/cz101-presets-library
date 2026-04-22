@@ -6,7 +6,10 @@
 		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["../../../packages/cz-explorer/src/*"]
+			"@/lib/synth/*": ["./src/lib/synth/*"],
+			"@/lib/midi/*": ["./src/lib/midi/*"],
+			"@/lib/*": ["./src/lib/*"],
+			"@/*": ["./src/*"]
 		},
 		"jsx": "react-jsx",
 		"strict": true,
@@ -14,9 +17,5 @@
 		"isolatedModules": true,
 		"noEmit": true
 	},
-	"include": [
-		"src",
-		"../../../packages/cz-explorer/src",
-		"../../../packages/cz-explorer/src/vite-env.d.ts"
-	]
+	"include": ["src"]
 }

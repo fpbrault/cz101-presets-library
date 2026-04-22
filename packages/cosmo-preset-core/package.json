@@ -1,0 +1,10 @@
+{
+	"name": "@cosmo/preset-core",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./presetStorage": "./src/presetStorage.ts",
+		"./czPresetConverter": "./src/czPresetConverter.ts"
+	}
+}

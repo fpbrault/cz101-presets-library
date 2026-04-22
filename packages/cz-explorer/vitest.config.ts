@@ -3,13 +3,32 @@ import tailwindcss from "@tailwindcss/vite";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
+const explorerSrc = fileURLToPath(new URL("./src", import.meta.url));
+const cosmoPd101LibEntry = fileURLToPath(
+	new URL("../cosmo-pd101/webview/lib-dist/index.mjs", import.meta.url),
+);
+const tailwindPlugins = tailwindcss() as unknown as [];
+
 export default defineConfig({
 	resolve: {
-		alias: {
-			"@": fileURLToPath(new URL("./src", import.meta.url)),
-		},
+		alias: [
+			{ find: "@cosmo/cosmo-pd101", replacement: cosmoPd101LibEntry },
+			{ find: "@", replacement: explorerSrc },
+		],
 	},
-	plugins: [tailwindcss()],
+	optimizeDeps: {
+		include: [
+			"@testing-library/jest-dom/vitest",
+			"@testing-library/react",
+			"@testing-library/user-event",
+			"fake-indexeddb/auto",
+			"react",
+			"react/jsx-dev-runtime",
+			"vitest-axe/extend-expect",
+			"vitest-browser-react",
+		],
+	},
+	plugins: tailwindPlugins,
 	test: {
 		globals: true,
 		setupFiles: ["./setupTests.ts"],
