@@ -842,3 +842,167 @@ fn wrap_voice_phase(phase: &mut f32, cycle_count: &mut u32) {
         *cycle_count = cycle_count.wrapping_add(1);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{mod_value_for, ModSources};
+    use crate::params::{ModDestination, ModMatrix, ModRoute, ModSource};
+
+    fn all_sources() -> [ModSource; 5] {
+        [
+            ModSource::Lfo1,
+            ModSource::Lfo2,
+            ModSource::Velocity,
+            ModSource::ModWheel,
+            ModSource::Aftertouch,
+        ]
+    }
+
+    fn all_destinations() -> [ModDestination; 42] {
+        [
+            ModDestination::Volume,
+            ModDestination::Pitch,
+            ModDestination::IntPmAmount,
+            ModDestination::Line1DcwBase,
+            ModDestination::Line1DcaBase,
+            ModDestination::Line1DcoDepth,
+            ModDestination::Line1AlgoBlend,
+            ModDestination::Line1DcwComp,
+            ModDestination::Line1Detune,
+            ModDestination::Line1Octave,
+            ModDestination::Line1AlgoParam1,
+            ModDestination::Line1AlgoParam2,
+            ModDestination::Line1AlgoParam3,
+            ModDestination::Line1AlgoParam4,
+            ModDestination::Line1AlgoParam5,
+            ModDestination::Line1AlgoParam6,
+            ModDestination::Line1AlgoParam7,
+            ModDestination::Line1AlgoParam8,
+            ModDestination::Line2DcwBase,
+            ModDestination::Line2DcaBase,
+            ModDestination::Line2DcoDepth,
+            ModDestination::Line2AlgoBlend,
+            ModDestination::Line2DcwComp,
+            ModDestination::Line2Detune,
+            ModDestination::Line2Octave,
+            ModDestination::Line2AlgoParam1,
+            ModDestination::Line2AlgoParam2,
+            ModDestination::Line2AlgoParam3,
+            ModDestination::Line2AlgoParam4,
+            ModDestination::Line2AlgoParam5,
+            ModDestination::Line2AlgoParam6,
+            ModDestination::Line2AlgoParam7,
+            ModDestination::Line2AlgoParam8,
+            ModDestination::FilterCutoff,
+            ModDestination::FilterResonance,
+            ModDestination::FilterEnvAmount,
+            ModDestination::ChorusMix,
+            ModDestination::DelayMix,
+            ModDestination::ReverbMix,
+            ModDestination::VibratoDepth,
+            ModDestination::LfoDepth,
+            ModDestination::LfoRate,
+        ]
+    }
+
+    fn source_value(sources: &ModSources, source: ModSource) -> f32 {
+        match source {
+            ModSource::Lfo1 => sources.lfo1,
+            ModSource::Lfo2 => sources.lfo2,
+            ModSource::Velocity => sources.velocity,
+            ModSource::ModWheel => sources.mod_wheel,
+            ModSource::Aftertouch => sources.aftertouch,
+        }
+    }
+
+    #[test]
+    fn every_source_can_drive_every_destination() {
+        let sources = ModSources {
+            lfo1: 0.25,
+            lfo2: -0.4,
+            velocity: 0.8,
+            mod_wheel: 0.6,
+            aftertouch: 0.3,
+        };
+
+        let amount = 0.5;
+
+        for destination in all_destinations() {
+            for source in all_sources() {
+                let matrix = ModMatrix {
+                    routes: vec![ModRoute {
+                        source,
+                        destination,
+                        amount,
+                        enabled: true,
+                    }],
+                };
+
+                let got = mod_value_for(destination, &matrix, &sources);
+                let expected = (amount * source_value(&sources, source)).clamp(-1.0, 1.0);
+                assert!(
+                    (got - expected).abs() < 1e-6,
+                    "unexpected route value for source={:?} destination={:?}: got {}, expected {}",
+                    source,
+                    destination,
+                    got,
+                    expected
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn disabled_routes_do_not_contribute() {
+        let sources = ModSources {
+            lfo1: 0.9,
+            lfo2: 0.0,
+            velocity: 0.0,
+            mod_wheel: 0.0,
+            aftertouch: 0.0,
+        };
+        let destination = ModDestination::Volume;
+        let matrix = ModMatrix {
+            routes: vec![ModRoute {
+                source: ModSource::Lfo1,
+                destination,
+                amount: 1.0,
+                enabled: false,
+            }],
+        };
+
+        let got = mod_value_for(destination, &matrix, &sources);
+        assert_eq!(got, 0.0);
+    }
+
+    #[test]
+    fn route_sum_is_clamped_to_unit_range() {
+        let sources = ModSources {
+            lfo1: 1.0,
+            lfo2: 1.0,
+            velocity: 0.0,
+            mod_wheel: 0.0,
+            aftertouch: 0.0,
+        };
+        let destination = ModDestination::Pitch;
+        let matrix = ModMatrix {
+            routes: vec![
+                ModRoute {
+                    source: ModSource::Lfo1,
+                    destination,
+                    amount: 0.9,
+                    enabled: true,
+                },
+                ModRoute {
+                    source: ModSource::Lfo2,
+                    destination,
+                    amount: 0.9,
+                    enabled: true,
+                },
+            ],
+        };
+
+        let got = mod_value_for(destination, &matrix, &sources);
+        assert_eq!(got, 1.0);
+    }
+}

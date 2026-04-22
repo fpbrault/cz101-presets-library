@@ -14,6 +14,7 @@ import type {
 	LfoTarget,
 	LfoWaveform,
 	LineSelect,
+	ModMatrix,
 	ModMode,
 	PolyMode,
 	PortamentoMode,
@@ -106,6 +107,7 @@ declare global {
 		__czOnParams?: (json: string) => void;
 		__czOnScope?: (samples: number[], sampleRate: number, hz: number) => void;
 		__czGetEnvelopes?: () => Promise<Partial<Record<EnvelopeId, StepEnvData>>>;
+		__czGetModMatrix?: () => Promise<ModMatrix>;
 	}
 }
 
@@ -290,12 +292,14 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		setFilterEnvAmount,
 		pitchBendRange,
 		modWheelVibratoDepth,
+		setModMatrix,
 		modMatrix,
 	} = synthState;
 
 	const sentParamsRef = useRef<Map<number, number>>(new Map());
 	const sentEnvelopesRef = useRef<Map<EnvelopeId, string>>(new Map());
 	const sentAlgoControlsRef = useRef<Map<1 | 2, string>>(new Map());
+	const sentModMatrixRef = useRef("");
 
 	const queueParam = useCallback((id: number, value: number) => {
 		const prev = sentParamsRef.current.get(id);
@@ -326,6 +330,15 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		},
 		[],
 	);
+
+	const sendModMatrix = useCallback((matrix: ModMatrix) => {
+		const serialized = JSON.stringify(matrix ?? { routes: [] });
+		if (sentModMatrixRef.current === serialized) return;
+		sentModMatrixRef.current = serialized;
+		if (window.ipc) {
+			window.ipc.postMessage(JSON.stringify({ mod_matrix: matrix }));
+		}
+	}, []);
 
 	const algoKeyToId = useCallback((key: Algo | null): number => {
 		if (key === null || isWaveformId(key)) return 0; // CZ waveform algos → cz101 (index 0)
@@ -435,9 +448,17 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				sendEnvelope("l2_dca", snapshot.line2DcaEnv);
 				sendAlgoControls(1, snapshot.line1AlgoControls);
 				sendAlgoControls(2, snapshot.line2AlgoControls);
+				sendModMatrix(snapshot.modMatrix);
 			},
 		}),
-		[queueParam, sendEnvelope, sendAlgoControls, algoKeyToId, algoKeyToWaveform],
+		[
+			queueParam,
+			sendEnvelope,
+			sendAlgoControls,
+			sendModMatrix,
+			algoKeyToId,
+			algoKeyToWaveform,
+		],
 	);
 
 	const snapshot = useMemo(
@@ -930,4 +951,25 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		setLine2DcwEnv,
 		setLine2DcaEnv,
 	]);
+
+	useEffect(() => {
+		if (!window.__czGetModMatrix) {
+			return;
+		}
+		let cancelled = false;
+		void window
+			.__czGetModMatrix()
+			.then((matrix) => {
+				if (cancelled || !matrix || typeof matrix !== "object") {
+					return;
+				}
+				setModMatrix(matrix);
+			})
+			.catch((error) => {
+				console.error("[PluginPage] Failed to load mod matrix state:", error);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [setModMatrix]);
 }

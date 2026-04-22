@@ -1,5 +1,6 @@
 import type {
 	AlgoControlValueV1,
+	ModMatrix,
 	StepEnvData,
 } from "@/lib/synth/bindings/synth";
 
@@ -53,6 +54,7 @@ declare global {
 		ipc?: { postMessage: (msg: string) => void };
 		__czOnParams?: (json: string) => void;
 		__czGetEnvelopes?: () => Promise<EnvelopeMap>;
+		__czGetModMatrix?: () => Promise<ModMatrix>;
 		__czOnScope?: (samples: number[], sampleRate: number, hz: number) => void;
 	}
 }
@@ -233,7 +235,8 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 			const payload = JSON.parse(message) as
 				| { parameter_id: number; value: number }
 				| { envelope_id: EnvelopeId; data: StepEnvData }
-				| { algo_controls: AlgoControlsPayload };
+				| { algo_controls: AlgoControlsPayload }
+				| { mod_matrix: ModMatrix };
 
 			if ("parameter_id" in payload) {
 				const stringId = LEGACY_PARAM_IDS[payload.parameter_id];
@@ -270,6 +273,16 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 				return;
 			}
 
+			if ("mod_matrix" in payload) {
+				void runtime.invoke("setModMatrix", payload.mod_matrix).catch((error) => {
+					console.error(
+						"[beamerLegacyBridge] Failed to send mod matrix",
+						error,
+					);
+				});
+				return;
+			}
+
 			void runtime
 				.invoke("setEnvelope", payload.envelope_id, payload.data)
 				.catch((error) => {
@@ -281,6 +294,11 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 	window.__czGetEnvelopes = async () => {
 		const response = await runtime.invoke("getEnvelopes");
 		return (response ?? {}) as EnvelopeMap;
+	};
+
+	window.__czGetModMatrix = async () => {
+		const response = await runtime.invoke("getModMatrix");
+		return (response ?? { routes: [] }) as ModMatrix;
 	};
 }
 
