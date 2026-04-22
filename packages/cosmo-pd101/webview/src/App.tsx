@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import PluginPage from "./PluginPage";
-import "@/App.css";
+import "@/index.css";
 import { ensureBeamerLegacyBridge } from "./beamerLegacyBridge";
 import {
 	checkForPluginUpdate,
