@@ -1,4 +1,5 @@
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { type CSSProperties, type ReactNode, type RefObject, useState } from "react";
 import LineSelectControl from "@/components/controls/LineSelectControl";
 import ModModeControl from "@/components/controls/ModModeControl";
 import type { EnvOverrideHandlers } from "@/components/editor/PhaseLinesSection";
@@ -7,6 +8,7 @@ import { SynthSingleCycleDisplay } from "@/components/editor/SingleCycleDisplay"
 import type { AsidePanelTab } from "@/components/layout/AsidePanelSwitcher";
 import AsidePanelSwitcher from "@/components/layout/AsidePanelSwitcher";
 import SynthLcdDisplay from "@/components/layout/SynthLcdDisplay";
+import CzButton from "@/components/primitives/CzButton";
 import ScopePanel from "@/components/panels/analysis/ScopePanel";
 import ChorusPanel from "@/components/panels/fx/ChorusPanel";
 import DelayPanel from "@/components/panels/fx/DelayPanel";
@@ -52,6 +54,8 @@ type SynthRendererProps = {
 	onControlReadout?: (key: string, value: string | number | boolean) => void;
 };
 
+type MainPanelMode = "phase" | "fx";
+
 export default function SynthRenderer({
 	synthState,
 	headerProps,
@@ -71,6 +75,7 @@ export default function SynthRenderer({
 	onControlReadout,
 }: SynthRendererProps) {
 	const { modMatrix, setModMatrix } = synthState;
+	const [mainPanelMode, setMainPanelMode] = useState<MainPanelMode>("phase");
 
 	return (
 		<ModMatrixProvider modMatrix={modMatrix} setModMatrix={setModMatrix}>
@@ -113,17 +118,79 @@ export default function SynthRenderer({
 							</AsidePanelSwitcher>
 						</aside>
 
-						<main className="flex flex-col gap-4 p-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-							<div className="mb-3 shrink-0 flex flex-wrap items-end gap-x-6 gap-y-2 border-b border-cz-cream pb-3">
-								<LineSelectControl />
-								<ModModeControl />
-								<SynthSingleCycleDisplay />
-							</div>
+						<main className="flex flex-col gap-3 p-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
+							<div className="ml-auto flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-3">
+								<div className="shrink-0 rounded-md border border-cz-border bg-cz-body/88 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+									<div className="flex flex-wrap items-end justify-end gap-x-4 gap-y-2">
+										<LineSelectControl />
+										<ModModeControl />
+										<SynthSingleCycleDisplay />
+										<div className="flex items-end gap-2 border-l border-cz-border pl-3">
+											<CzButton
+												active={mainPanelMode === "phase"}
+												onClick={() => setMainPanelMode("phase")}
+												className="[&_button]:w-18"
+											>
+												Phase
+											</CzButton>
+											<CzButton
+												active={mainPanelMode === "fx"}
+												onClick={() =>
+													setMainPanelMode((current) =>
+														current === "fx" ? "phase" : "fx",
+													)
+												}
+												className="[&_button]:w-18"
+											>
+												FX
+											</CzButton>
+										</div>
+									</div>
+								</div>
 
-							<PhaseLinesSection
-								className="flex-1 min-h-0 max-w-5xl max-h-164"
-								envOverrideHandlers={envOverrideHandlers}
-							/>
+								<div className="relative flex-1 min-h-0 min-w-0">
+								<PhaseLinesSection
+									className="h-full min-h-0 max-h-164"
+									envOverrideHandlers={envOverrideHandlers}
+								/>
+								<AnimatePresence>
+									{mainPanelMode === "fx" ? (
+										<motion.div
+											key="fx-drawer"
+											initial={{ opacity: 0, y: 18 }}
+											animate={{ opacity: 1, y: 0 }}
+											exit={{ opacity: 0, y: 12 }}
+											transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+											className="absolute inset-0 z-10 flex flex-col rounded-lg border border-cz-border bg-cz-body/96 p-3 shadow-[0_18px_40px_rgba(0,0,0,0.42)] backdrop-blur-[2px]"
+										>
+											<div className="mb-3 flex items-center justify-between border-b border-cz-border pb-2">
+												<div>
+													<div className="text-4xs font-mono uppercase tracking-[0.28em] text-cz-light-blue">
+														Main Panel
+													</div>
+													<div className="text-sm font-mono font-bold uppercase tracking-[0.18em] text-cz-cream">
+														Effects
+													</div>
+												</div>
+												<button
+													type="button"
+													onClick={() => setMainPanelMode("phase")}
+													className="rounded border border-cz-border px-2 py-1 text-4xs font-mono uppercase tracking-[0.2em] text-cz-cream-dim transition-colors hover:text-cz-cream"
+												>
+													Close
+												</button>
+											</div>
+											<div className="grid min-h-0 flex-1 gap-3 overflow-y-auto pr-1 xl:grid-cols-2">
+												<SynthFilterPanel />
+												<ChorusPanel />
+												<DelayPanel />
+												<ReverbPanel />
+											</div>
+										</motion.div>
+									) : null}
+								</AnimatePresence>
+							</div>
+							</div>
 						</main>
 					</div>
 				</div>

@@ -28,6 +28,8 @@ export type AsidePanelTab =
 	| "delay"
 	| "reverb";
 
+const FX_TAB_IDS = new Set(["filter", "chorus", "delay", "reverb"]);
+
 export type AsidePanelTabMeta = {
 	topLabel: string;
 	bottomLabel: string;
@@ -58,6 +60,10 @@ export default function AsidePanelSwitcher<T extends string>({
 	const { value: chorusEnabled } = useSynthParam("chorusEnabled");
 	const { value: delayEnabled } = useSynthParam("delayEnabled");
 	const { value: reverbEnabled } = useSynthParam("reverbEnabled");
+	const { setValue: setFilterEnabled } = useSynthParam("filterEnabled");
+	const { setValue: setChorusEnabled } = useSynthParam("chorusEnabled");
+	const { setValue: setDelayEnabled } = useSynthParam("delayEnabled");
+	const { setValue: setReverbEnabled } = useSynthParam("reverbEnabled");
 
 	const isTabEnabled = (tabId: T): boolean => {
 		switch (String(tabId).toLowerCase()) {
@@ -107,6 +113,34 @@ export default function AsidePanelSwitcher<T extends string>({
 		return "black";
 	};
 
+	const isFxTab = (tabId: T): boolean => FX_TAB_IDS.has(String(tabId).toLowerCase());
+
+	const toggleFxTab = (tabId: T) => {
+		switch (String(tabId).toLowerCase()) {
+			case "filter":
+				setFilterEnabled(!filterEnabled);
+				break;
+			case "chorus":
+				setChorusEnabled(!chorusEnabled);
+				break;
+			case "delay":
+				setDelayEnabled(!delayEnabled);
+				break;
+			case "reverb":
+				setReverbEnabled(!reverbEnabled);
+				break;
+		}
+	};
+
+	const handleTabClick = (tabId: T) => {
+		if (isFxTab(tabId)) {
+			toggleFxTab(tabId);
+			return;
+		}
+
+		onTabChange(tabId);
+	};
+
 	const getTabLedColor = (tabId: T, isActive: boolean): CzTabButtonLedColor => {
 		const isEnabled = isTabEnabled(tabId);
 		if (isEnabled && isActive) {
@@ -130,7 +164,8 @@ export default function AsidePanelSwitcher<T extends string>({
 
 	const activePanel = panelElements.find(
 		(child) =>
-			(child.type as AsidePanelComponent).panelId === String(activeTab),
+			(child.type as AsidePanelComponent).panelId === String(activeTab) &&
+			!FX_TAB_IDS.has(String(activeTab).toLowerCase()),
 	);
 
 	const visibleTabs = panelElements.map((child) => {
@@ -149,9 +184,9 @@ export default function AsidePanelSwitcher<T extends string>({
 					<CzTabButton
 						key={tab.id}
 						color={getTabColor(tab.id)}
-						active={activeTab === tab.id}
+						active={isFxTab(tab.id) ? isTabEnabled(tab.id) : activeTab === tab.id}
 						ledColor={getTabLedColor(tab.id, activeTab === tab.id)}
-						onClick={() => onTabChange(tab.id)}
+						onClick={() => handleTabClick(tab.id)}
 						topLabel={tab.topLabel}
 						bottomLabel={tab.bottomLabel}
 						buttonClassName="aspect-square h-auto"
