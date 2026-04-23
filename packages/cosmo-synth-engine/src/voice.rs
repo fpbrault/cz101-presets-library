@@ -7,7 +7,7 @@ extern crate alloc;
 use libm::{cosf, sinf};
 
 use crate::dsp_utils::{lfo_output, wrap01};
-use crate::envelope::EnvGen;
+use crate::envelope::{EnvGen, EnvelopeKind};
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
     FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModDestination, ModMatrix, ModMode,
@@ -358,27 +358,27 @@ fn advance_envelopes(voice: &mut Voice, p: &SynthParams, sr: f32) -> EnvelopeSna
     voice
         .line1_env
         .dco
-        .advance(&l1.dco_env, sr, l1.key_follow, note);
+        .advance(EnvelopeKind::Dco, &l1.dco_env, sr, l1.key_follow, note);
     voice
         .line1_env
         .dcw
-        .advance(&l1.dcw_env, sr, l1.key_follow, note);
+        .advance(EnvelopeKind::Dcw, &l1.dcw_env, sr, l1.key_follow, note);
     voice
         .line1_env
         .dca
-        .advance(&l1.dca_env, sr, l1.key_follow, note);
+        .advance(EnvelopeKind::Dca, &l1.dca_env, sr, l1.key_follow, note);
     voice
         .line2_env
         .dco
-        .advance(&l2.dco_env, sr, l2.key_follow, note);
+        .advance(EnvelopeKind::Dco, &l2.dco_env, sr, l2.key_follow, note);
     voice
         .line2_env
         .dcw
-        .advance(&l2.dcw_env, sr, l2.key_follow, note);
+        .advance(EnvelopeKind::Dcw, &l2.dcw_env, sr, l2.key_follow, note);
     voice
         .line2_env
         .dca
-        .advance(&l2.dca_env, sr, l2.key_follow, note);
+        .advance(EnvelopeKind::Dca, &l2.dca_env, sr, l2.key_follow, note);
 
     EnvelopeSnapshot {
         dco1_env: voice.line1_env.dco.output,
@@ -459,10 +459,26 @@ fn compensated_dca_level(line: &LineParams, dca_env: f32, dcw_env: f32) -> f32 {
     dca_level * (1.0 - line.dcw_comp + line.dcw_comp * dcw_env)
 }
 
+/// Maps a normalized DCO envelope output (0.0–1.0) to semitones using the CZ-101
+/// piecewise non-linear pitch curve.
+///
+/// The CZ-101 maps display levels 0–99 to pitch as follows:
+///   - Levels  0–64: linear, 1 semitone per 8 levels
+///   - Levels >64: each increment raises pitch by a whole tone (+2 semitones)
+fn cz_dco_env_semitones(dco_env: f32) -> f32 {
+    let level = dco_env * 99.0;
+    if level <= 64.0 {
+        level / 8.0
+    } else {
+        8.0 + (level - 64.0) * 2.0
+    }
+}
+
 fn line_frequency(base_freq: f32, line: &LineParams, dco_env: f32) -> f32 {
+    let dco_semitones = cz_dco_env_semitones(dco_env) * (line.dco_depth / 12.0);
     base_freq
         * libm::powf(2.0, line.octave + line.detune_cents / 1200.0)
-        * libm::powf(2.0, (line.dco_depth * dco_env) / 12.0)
+        * libm::powf(2.0, dco_semitones / 12.0)
 }
 
 fn apply_pitch_and_lfo_modulation(

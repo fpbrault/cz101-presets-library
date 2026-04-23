@@ -79,9 +79,9 @@ export function getPdAlgoDef(algo: PdAlgo): PdAlgoDef | undefined {
 
 export const DEFAULT_DCA_ENV: StepEnvData = {
 	steps: [
-		{ level: 1, rate: 75 },
-		{ level: 0.8, rate: 80 },
-		{ level: 0.8, rate: 75 },
+		{ level: 99, rate: 75 },
+		{ level: 79, rate: 80 },
+		{ level: 79, rate: 75 },
 		{ level: 0, rate: 40 },
 		{ level: 0, rate: 50 },
 		{ level: 0, rate: 50 },
@@ -95,9 +95,9 @@ export const DEFAULT_DCA_ENV: StepEnvData = {
 
 export const DEFAULT_DCW_ENV: StepEnvData = {
 	steps: [
-		{ level: 1, rate: 75 },
-		{ level: 1, rate: 80 },
-		{ level: 1, rate: 75 },
+		{ level: 99, rate: 75 },
+		{ level: 99, rate: 80 },
+		{ level: 99, rate: 75 },
 		{ level: 0, rate: 40 },
 		{ level: 0, rate: 50 },
 		{ level: 0, rate: 50 },

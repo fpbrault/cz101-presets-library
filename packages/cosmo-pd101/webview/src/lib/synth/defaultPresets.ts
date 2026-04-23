@@ -65,31 +65,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 0.7482429786659466,
-							rate: 43.25,
+							level: 74,
+							rate: 43,
 						},
 						{
-							level: 0.31875,
-							rate: 28.5625,
+							level: 32,
+							rate: 29,
 						},
 						{
-							level: 0.25,
-							rate: 7.7375,
+							level: 25,
+							rate: 8,
 						},
 						{
 							level: 0,
-							rate: 14.475,
+							rate: 14,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.749392384553065,
+							level: 74,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -104,31 +104,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 47.125,
+							level: 99,
+							rate: 47,
 						},
 						{
-							level: 1,
-							rate: 48.1625,
+							level: 99,
+							rate: 48,
 						},
 						{
-							level: 1,
-							rate: 24.275,
+							level: 99,
+							rate: 24,
 						},
 						{
 							level: 0,
-							rate: 42.0375,
+							rate: 42,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -201,31 +201,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 0.7482429786659466,
-							rate: 43.25,
+							level: 74,
+							rate: 43,
 						},
 						{
-							level: 0.31875,
-							rate: 28.5625,
+							level: 32,
+							rate: 29,
 						},
 						{
-							level: 0.25,
-							rate: 7.7375,
+							level: 25,
+							rate: 8,
 						},
 						{
 							level: 0,
-							rate: 14.475,
+							rate: 14,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.749392384553065,
+							level: 74,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -240,31 +240,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 47.125,
+							level: 99,
+							rate: 47,
 						},
 						{
-							level: 1,
-							rate: 48.1625,
+							level: 99,
+							rate: 48,
 						},
 						{
-							level: 1,
-							rate: 24.275,
+							level: 99,
+							rate: 24,
 						},
 						{
 							level: 0,
-							rate: 42.0375,
+							rate: 42,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -398,35 +398,35 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.35681152343750006,
+							level: 35,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.21803476165892277,
+							level: 22,
 							rate: 60,
 						},
 					],
@@ -437,36 +437,36 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 90,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
 							level: 0,
-							rate: 78.751611328125,
+							rate: 79,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
 							level: 0,
-							rate: 70.754638671875,
+							rate: 71,
 						},
 					],
 					sustainStep: 1,
@@ -534,35 +534,35 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.42500000000000004,
+							level: 42,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.21803476165892277,
+							level: 22,
 							rate: 60,
 						},
 					],
@@ -573,36 +573,36 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 90,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
 							level: 0,
-							rate: 78.751611328125,
+							rate: 79,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
 							level: 0,
-							rate: 70.754638671875,
+							rate: 71,
 						},
 					],
 					sustainStep: 1,
@@ -731,31 +731,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 51,
 						},
 						{
-							level: 0.49,
+							level: 49,
 							rate: 34,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -770,31 +770,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 90,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -867,31 +867,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 80,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -906,31 +906,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 90,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -1025,12 +1025,12 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcoEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 66.17,
+							level: 99,
+							rate: 66,
 						},
 						{
-							level: 1,
-							rate: 45.1,
+							level: 99,
+							rate: 45,
 						},
 						{
 							level: 0,
@@ -1064,31 +1064,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 57.84,
+							level: 99,
+							rate: 58,
 						},
 						{
-							level: 0.35,
-							rate: 67.64,
+							level: 35,
+							rate: 68,
 						},
 						{
-							level: 0.6018181818181818,
-							rate: 36.28,
+							level: 60,
+							rate: 36,
 						},
 						{
-							level: 0.3618181818181818,
-							rate: 54.41,
+							level: 36,
+							rate: 54,
 						},
 						{
-							level: 0.5700000000000001,
-							rate: 22.07,
+							level: 56,
+							rate: 22,
 						},
 						{
-							level: 0.1752197265625,
-							rate: 25.569863281250008,
+							level: 17,
+							rate: 26,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -1103,31 +1103,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 31.34642578124999,
+							level: 99,
+							rate: 31,
 						},
 						{
 							level: 0,
-							rate: 32.454267578125,
-						},
-						{
-							level: 0,
-							rate: 1,
+							rate: 32,
 						},
 						{
 							level: 0,
 							rate: 1,
 						},
 						{
-							level: 1,
+							level: 0,
+							rate: 1,
+						},
+						{
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -1200,35 +1200,35 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 0.48587857263656353,
-							rate: 53.602685546875,
+							level: 48,
+							rate: 54,
 						},
 						{
-							level: 0.22470703125,
-							rate: 45.470849609375,
+							level: 22,
+							rate: 45,
 						},
 						{
-							level: 0.2910536106883139,
-							rate: 36.527392578125,
+							level: 29,
+							rate: 37,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.4425841366480636,
+							level: 44,
 							rate: 60,
 						},
 					],
@@ -1239,31 +1239,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 66.009619140625,
+							level: 99,
+							rate: 66,
 						},
 						{
-							level: 0.8755284965330628,
-							rate: 36.9365234375,
+							level: 87,
+							rate: 37,
 						},
 						{
 							level: 0,
-							rate: 23.291650390624998,
+							rate: 23,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -1397,7 +1397,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 0.5353535353535354,
+							level: 53,
 							rate: 82,
 						},
 						{
@@ -1436,11 +1436,11 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 94,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 83,
 						},
 						{
@@ -1533,7 +1533,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 0.40404040404040403,
+							level: 40,
 							rate: 99,
 						},
 						{
@@ -1572,11 +1572,11 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 0.5757575757575758,
+							level: 57,
 							rate: 99,
 						},
 						{
-							level: 0.7676767676767676,
+							level: 76,
 							rate: 99,
 						},
 						{
@@ -1691,11 +1691,11 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcoEnv: {
 					steps: [
 						{
-							level: 0.69,
+							level: 68,
 							rate: 56,
 						},
 						{
-							level: 0.72,
+							level: 71,
 							rate: 74,
 						},
 						{
@@ -1730,31 +1730,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 0.65,
+							level: 64,
 							rate: 80,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -1769,31 +1769,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 0.71,
+							level: 70,
 							rate: 90,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -1866,31 +1866,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 43,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -1905,31 +1905,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 90,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -2028,8 +2028,8 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 							rate: 99,
 						},
 						{
-							level: 0.8704833984375,
-							rate: 27.378173828125,
+							level: 86,
+							rate: 27,
 						},
 						{
 							level: 0,
@@ -2037,15 +2037,15 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 						},
 						{
 							level: 0,
-							rate: 21.159863281249997,
+							rate: 21,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.718609960260421,
-							rate: 15.238232421875,
+							level: 71,
+							rate: 15,
 						},
 						{
 							level: 0,
@@ -2053,7 +2053,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 						},
 						{
 							level: 0,
-							rate: 16.707275390625,
+							rate: 17,
 						},
 					],
 					sustainStep: 7,
@@ -2063,23 +2063,23 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 30.172656250000003,
+							level: 99,
+							rate: 30,
 						},
 						{
-							level: 0.20935763127404458,
-							rate: 24.5783203125,
+							level: 21,
+							rate: 25,
 						},
 						{
-							level: 0.8268368986217975,
-							rate: 25.145849609375002,
+							level: 82,
+							rate: 25,
 						},
 						{
 							level: 0,
-							rate: 24.9927734375,
+							rate: 25,
 						},
 						{
-							level: 0.567092246554494,
+							level: 56,
 							rate: 50,
 						},
 						{
@@ -2102,20 +2102,20 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 75,
 						},
 						{
-							level: 0.8,
+							level: 79,
 							rate: 80,
 						},
 						{
-							level: 0.8,
-							rate: 83.610888671875,
+							level: 79,
+							rate: 84,
 						},
 						{
 							level: 0,
-							rate: 8.543798828125,
+							rate: 9,
 						},
 						{
 							level: 0,
@@ -2164,8 +2164,8 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 							rate: 99,
 						},
 						{
-							level: 0.8704833984375,
-							rate: 27.378173828125,
+							level: 86,
+							rate: 27,
 						},
 						{
 							level: 0,
@@ -2173,15 +2173,15 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 						},
 						{
 							level: 0,
-							rate: 21.159863281249997,
+							rate: 21,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 0.718609960260421,
-							rate: 15.238232421875,
+							level: 71,
+							rate: 15,
 						},
 						{
 							level: 0,
@@ -2189,7 +2189,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 						},
 						{
 							level: 0,
-							rate: 16.707275390625,
+							rate: 17,
 						},
 					],
 					sustainStep: 7,
@@ -2199,23 +2199,23 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 30.172656250000003,
+							level: 99,
+							rate: 30,
 						},
 						{
-							level: 0.20935763127404458,
-							rate: 24.5783203125,
+							level: 21,
+							rate: 25,
 						},
 						{
-							level: 0.8268368986217975,
-							rate: 25.145849609375002,
+							level: 82,
+							rate: 25,
 						},
 						{
 							level: 0,
-							rate: 24.9927734375,
+							rate: 25,
 						},
 						{
-							level: 0.567092246554494,
+							level: 56,
 							rate: 50,
 						},
 						{
@@ -2238,20 +2238,20 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 75,
 						},
 						{
-							level: 0.8,
+							level: 79,
 							rate: 80,
 						},
 						{
-							level: 0.8,
-							rate: 83.610888671875,
+							level: 79,
+							rate: 84,
 						},
 						{
 							level: 0,
-							rate: 8.543798828125,
+							rate: 9,
 						},
 						{
 							level: 0,
@@ -2357,12 +2357,12 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcoEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 66.17,
+							level: 99,
+							rate: 66,
 						},
 						{
-							level: 1,
-							rate: 45.1,
+							level: 99,
+							rate: 45,
 						},
 						{
 							level: 0,
@@ -2396,31 +2396,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 57.84,
+							level: 99,
+							rate: 58,
 						},
 						{
-							level: 0.35,
-							rate: 67.64,
+							level: 35,
+							rate: 68,
 						},
 						{
-							level: 0.6018181818181818,
-							rate: 36.28,
+							level: 60,
+							rate: 36,
 						},
 						{
-							level: 0.3618181818181818,
-							rate: 54.41,
+							level: 36,
+							rate: 54,
 						},
 						{
-							level: 0.5700000000000001,
-							rate: 22.07,
+							level: 56,
+							rate: 22,
 						},
 						{
 							level: 0,
-							rate: 27.46,
+							rate: 27,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -2435,31 +2435,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
-							rate: 47.86,
+							level: 99,
+							rate: 48,
 						},
 						{
 							level: 0,
-							rate: 16.68,
-						},
-						{
-							level: 0,
-							rate: 1,
+							rate: 17,
 						},
 						{
 							level: 0,
 							rate: 1,
 						},
 						{
-							level: 1,
+							level: 0,
+							rate: 1,
+						},
+						{
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -2532,31 +2532,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcwEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 80,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
@@ -2571,31 +2571,31 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				dcaEnv: {
 					steps: [
 						{
-							level: 1,
+							level: 99,
 							rate: 90,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{
-							level: 1,
+							level: 99,
 							rate: 99,
 						},
 						{

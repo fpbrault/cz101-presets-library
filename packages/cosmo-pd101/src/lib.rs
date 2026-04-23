@@ -1318,7 +1318,7 @@ mod tests {
     use serde_json::json;
 
     fn make_env(
-        level: f32,
+        level: u8,
         rate: u8,
         step_count: usize,
         sustain_step: usize,
@@ -1357,7 +1357,7 @@ mod tests {
             l2_dcw: StepEnvData::default(),
             l2_dca: StepEnvData::default(),
         };
-        let updated = make_env(0.25, 33, 6, 4, true);
+        let updated = make_env(25, 33, 6, 4, true);
 
         state.set("l1_dco", updated.clone()).unwrap();
 
@@ -1367,7 +1367,7 @@ mod tests {
         assert_eq!(params.line1.dco_env.step_count, 6);
         assert_eq!(params.line1.dco_env.sustain_step, 4);
         assert!(params.line1.dco_env.loop_);
-        assert_eq!(params.line1.dco_env.steps[0].level, 0.25);
+        assert_eq!(params.line1.dco_env.steps[0].level, 25);
         assert_eq!(params.line1.dco_env.steps[0].rate, 33);
         assert_eq!(state.to_json()["l1_dco"]["stepCount"], json!(6));
         assert_eq!(state.to_json()["l1_dco"]["sustainStep"], json!(4));

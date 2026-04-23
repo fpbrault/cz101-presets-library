@@ -1,3 +1,4 @@
+use crate::default_envelopes::{default_dca_env, default_dco_env, default_dcw_env};
 use serde::{Deserialize, Deserializer, Serialize};
 #[cfg(feature = "specta-bindings")]
 use specta::Type;
@@ -9,17 +10,18 @@ pub const NUM_ENV_STEPS: usize = 8;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct EnvStep {
-    /// Level [0.0, 1.0]
-    pub level: f32,
-    /// Rate [0, 99] — JS may send floats; we round to u8.
-    #[serde(deserialize_with = "deserialize_rate")]
+    /// Internal machine level [0, 127].
+    #[serde(deserialize_with = "deserialize_step_value")]
+    pub level: u8,
+    /// Internal machine rate [0, 127].
+    #[serde(deserialize_with = "deserialize_step_value")]
     pub rate: u8,
 }
 
-/// Accept rate as either integer or float, round to u8.
-fn deserialize_rate<'de, D: Deserializer<'de>>(d: D) -> Result<u8, D::Error> {
+/// Accept value as either integer or float and normalize into [0, 127].
+fn deserialize_step_value<'de, D: Deserializer<'de>>(d: D) -> Result<u8, D::Error> {
     let v = f64::deserialize(d)?;
-    Ok(v.round().clamp(0.0, 99.0) as u8)
+    Ok(v.round().clamp(0.0, 127.0) as u8)
 }
 
 /// Step envelope data (CZ-style)
@@ -62,10 +64,7 @@ impl<'de> Deserialize<'de> for StepEnvData {
         if raw.step_count == 0 {
             raw.step_count = raw.steps.len().max(1);
         }
-        let mut steps = [EnvStep {
-            level: 0.0,
-            rate: 0,
-        }; NUM_ENV_STEPS];
+        let mut steps = [EnvStep { level: 0, rate: 0 }; NUM_ENV_STEPS];
         for (i, s) in raw.steps.iter().enumerate().take(NUM_ENV_STEPS) {
             steps[i] = *s;
         }
@@ -80,46 +79,7 @@ impl<'de> Deserialize<'de> for StepEnvData {
 
 impl Default for StepEnvData {
     fn default() -> Self {
-        // mirrors DEFAULT_DCA_ENV in pdAlgorithms.ts
-        Self {
-            steps: [
-                EnvStep {
-                    level: 1.0,
-                    rate: 75,
-                },
-                EnvStep {
-                    level: 0.8,
-                    rate: 80,
-                },
-                EnvStep {
-                    level: 0.8,
-                    rate: 75,
-                },
-                EnvStep {
-                    level: 0.0,
-                    rate: 40,
-                },
-                EnvStep {
-                    level: 0.0,
-                    rate: 50,
-                },
-                EnvStep {
-                    level: 0.0,
-                    rate: 50,
-                },
-                EnvStep {
-                    level: 0.0,
-                    rate: 50,
-                },
-                EnvStep {
-                    level: 0.0,
-                    rate: 50,
-                },
-            ],
-            sustain_step: 2,
-            step_count: 4,
-            loop_: false,
-        }
+        default_dca_env()
     }
 }
 
@@ -430,9 +390,9 @@ impl Default for LineParams {
             modulation: 0.0,
             detune_cents: 0.0,
             octave: 0.0,
-            dco_env: StepEnvData::default(),
-            dcw_env: StepEnvData::default(),
-            dca_env: StepEnvData::default(),
+            dco_env: default_dco_env(),
+            dcw_env: default_dcw_env(),
+            dca_env: default_dca_env(),
             key_follow: 0.0,
             cz: CzLineParams::default(),
             algo_controls: None,
@@ -806,9 +766,28 @@ mod tests {
         assert_eq!(env.sustain_step, 1);
         assert!(env.loop_);
         assert_eq!(env.steps[0].rate, 13);
-        assert_eq!(env.steps[1].rate, 99);
-        assert_eq!(env.steps[2].level, 0.0);
+        assert_eq!(env.steps[1].rate, 120);
+        assert_eq!(env.steps[2].level, 0);
         assert_eq!(env.steps[2].rate, 0);
+    }
+
+    #[test]
+    fn step_env_deserialize_treats_values_as_raw_7bit() {
+        let json = r#"{
+            "steps": [
+                { "level": 66, "rate": 99 },
+                { "level": 127, "rate": 127 }
+            ],
+            "sustainStep": 0,
+            "stepCount": 2,
+            "loop": false
+        }"#;
+
+        let env: StepEnvData = serde_json::from_str(json).expect("valid step env json");
+        assert_eq!(env.steps[0].level, 66);
+        assert_eq!(env.steps[0].rate, 99);
+        assert_eq!(env.steps[1].level, 127);
+        assert_eq!(env.steps[1].rate, 127);
     }
 
     #[test]

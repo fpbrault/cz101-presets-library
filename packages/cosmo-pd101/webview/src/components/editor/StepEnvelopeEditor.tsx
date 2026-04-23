@@ -71,13 +71,16 @@ function buildEnvelopePoints(
 
 	for (let i = 0; i < activeSteps.length; i++) {
 		const step = activeSteps[i];
+		const isLastStep = i === activeSteps.length - 1;
+		// CZ behaviour: last step always resolves to 0
+		const effectiveLevel = isLastStep ? 0 : step.level;
 		const duration = editorStepDuration(step.rate, activeStepCount);
 		const dx = (duration / totalTime) * drawWidth;
 		x += dx;
 		points.push({
 			index: i,
 			x,
-			y: CHART_PADDING_Y + (1 - step.level) * drawHeight,
+			y: CHART_PADDING_Y + (1 - effectiveLevel / 99) * drawHeight,
 		});
 	}
 
@@ -327,7 +330,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 
 				const levelDelta =
 					(dragState.startClientY - e.clientY) / pos.rect.height;
-				const level = clamp(dragState.startLevel + levelDelta, 0, 1);
+				const level = clamp(dragState.startLevel + levelDelta * 99, 0, 99);
 				const isLastActiveStep = dragState.stepIndex === env.stepCount - 1;
 				const allowed = getStepAllowedXRange(
 					dragState.stepIndex,
@@ -452,38 +455,50 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 						: "grid grid-cols-2 gap-2 sm:grid-cols-4 2xl:grid-cols-8"
 				}
 			>
-				{env.steps.slice(0, env.stepCount).map((step, i) => (
-					<div
-						key={STEP_KEYS[i]}
-						className={`rounded-xl border border-base-300/60 bg-base-300/20 px-1 ${
-							compact ? "py-1.5" : "py-2"
-						}`}
-					>
-						<div className="mb-1 text-center text-4xs uppercase tracking-[0.2em] text-base-content/45">
-							{i + 1}
+				{env.steps.slice(0, env.stepCount).map((step, i) => {
+					const isLastStep = i === env.stepCount - 1;
+					return (
+						<div
+							key={STEP_KEYS[i]}
+							className={`rounded-xl border px-1 ${
+								isLastStep
+									? "border-base-300/40 bg-base-300/10 opacity-70"
+									: "border-base-300/60 bg-base-300/20"
+							} ${compact ? "py-1.5" : "py-2"}`}
+						>
+							<div className="mb-1 text-center text-4xs uppercase tracking-[0.2em] text-base-content/45">
+								{i + 1}
+							</div>
+							<div className="flex flex-col items-center justify-center gap-2">
+								<ControlKnob
+									value={step.level}
+									onChange={(v) => updateStep(i, "level", v)}
+									min={0}
+									max={99}
+									label="Lvl"
+									// CZ behaviour: last step always outputs 0; show effective
+									// value as 0 but the stored value is still editable so it
+									// is preserved when the step count is increased.
+									valueFormatter={(v) =>
+										isLastStep ? "0*" : `${Math.round(v)}`
+									}
+									color={isLastStep ? "#6b7280" : color}
+									size={compact ? 26 : 30}
+								/>
+								<ControlKnob
+									value={step.rate}
+									onChange={(v) => updateStep(i, "rate", v)}
+									min={0}
+									max={99}
+									label="Rate"
+									valueFormatter={(v) => `${Math.round(v)}`}
+									color="#a3a3a3"
+									size={compact ? 26 : 30}
+								/>
+							</div>
 						</div>
-						<div className="flex flex-col items-center justify-center gap-2">
-							<ControlKnob
-								value={step.level}
-								onChange={(v) => updateStep(i, "level", v)}
-								label="Lvl"
-								valueFormatter={(v) => `${Math.round(v * 99)}`}
-								color={color}
-								size={compact ? 26 : 30}
-							/>
-							<ControlKnob
-								value={step.rate}
-								onChange={(v) => updateStep(i, "rate", v)}
-								min={0}
-								max={99}
-								label="Rate"
-								valueFormatter={(v) => `${Math.round(v)}`}
-								color="#a3a3a3"
-								size={compact ? 26 : 30}
-							/>
-						</div>
-					</div>
-				))}
+					);
+				})}
 			</div>
 
 			<div className="flex items-center gap-2">
@@ -504,9 +519,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 					</select>
 				</label>
 				<span className="text-xs text-base-content/50 ml-auto">
-					Release: L
-					{Math.round((env.steps[env.stepCount - 1]?.level ?? 0) * 99)} R
-					{(env.steps[env.stepCount - 1]?.rate ?? 0).toFixed(0)}
+					Release: L0* R{(env.steps[env.stepCount - 1]?.rate ?? 0).toFixed(0)}
 				</span>
 			</div>
 		</Card>
