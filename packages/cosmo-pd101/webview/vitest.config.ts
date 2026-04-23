@@ -18,9 +18,7 @@ const cosmoPd101Src = path.join(webviewDir, "src");
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
 	resolve: {
-		alias: [
-			{ find: "@", replacement: cosmoPd101Src },
-		],
+		alias: [{ find: "@", replacement: cosmoPd101Src }],
 	},
 	define: {
 		// Vite defines needed by App.tsx / main.tsx when running under Vitest.

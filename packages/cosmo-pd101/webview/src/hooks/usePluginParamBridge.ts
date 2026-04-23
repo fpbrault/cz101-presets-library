@@ -374,7 +374,10 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				queueParam(P_INT_PM_AMOUNT, snapshot.intPmAmount);
 				queueParam(P_INT_PM_RATIO, snapshot.intPmRatio);
 				queueParam(P_PM_PRE, snapshot.pmPre ? 1 : 0);
-				queueParam(P_L1_WAVEFORM, algoKeyToWaveform(snapshot.warpAAlgo, snapshot.line1CzSlotAWaveform));
+				queueParam(
+					P_L1_WAVEFORM,
+					algoKeyToWaveform(snapshot.warpAAlgo, snapshot.line1CzSlotAWaveform),
+				);
 				queueParam(P_L1_WARP_ALGO, algoKeyToId(snapshot.warpAAlgo));
 				queueParam(P_L1_DCW_BASE, snapshot.warpAAmount);
 				queueParam(P_L1_DCA_BASE, snapshot.line1Level);
@@ -388,7 +391,10 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 					P_L1_WARP_ALGO2,
 					snapshot.algo2A === null ? -1 : algoKeyToId(snapshot.algo2A),
 				);
-				queueParam(P_L2_WAVEFORM, algoKeyToWaveform(snapshot.warpBAlgo, snapshot.line2CzSlotAWaveform));
+				queueParam(
+					P_L2_WAVEFORM,
+					algoKeyToWaveform(snapshot.warpBAlgo, snapshot.line2CzSlotAWaveform),
+				);
 				queueParam(P_L2_WARP_ALGO, algoKeyToId(snapshot.warpBAlgo));
 				queueParam(P_L2_DCW_BASE, snapshot.warpBAmount);
 				queueParam(P_L2_DCA_BASE, snapshot.line2Level);
@@ -678,7 +684,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							break;
 						}
 						case P_L1_WARP_ALGO: {
-							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ??
+								"cz101") as Algo;
 							setWarpAAlgo(algoName);
 							break;
 						}
@@ -710,7 +717,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							if (value < 0) {
 								setAlgo2A(null);
 							} else {
-								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ??
+									"cz101") as Algo;
 								setAlgo2A(algoName);
 							}
 							break;
@@ -724,7 +732,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							break;
 						}
 						case P_L2_WARP_ALGO: {
-							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ??
+								"cz101") as Algo;
 							setWarpBAlgo(algoName);
 							break;
 						}
@@ -756,7 +765,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							if (value < 0) {
 								setAlgo2B(null);
 							} else {
-								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ??
+									"cz101") as Algo;
 								setAlgo2B(algoName);
 							}
 							break;

@@ -5,9 +5,7 @@ import CzTabButton from "./CzTabButton";
 describe("CzTabButton", () => {
 	it("renders two-line labels and click handler", () => {
 		const onClick = vi.fn();
-		render(
-			<CzTabButton topLabel="DCO" bottomLabel="ENV" onClick={onClick} />,
-		);
+		render(<CzTabButton topLabel="DCO" bottomLabel="ENV" onClick={onClick} />);
 
 		fireEvent.click(screen.getByRole("button"));
 		expect(onClick).toHaveBeenCalledTimes(1);

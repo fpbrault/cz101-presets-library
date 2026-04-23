@@ -46,8 +46,18 @@ describe("ModulatableControl", () => {
 			modMatrix: {
 				routes: [
 					{ source: "lfo1", destination: "volume", amount: 0.4, enabled: true },
-					{ source: "velocity", destination: "volume", amount: 0.2, enabled: true },
-					{ source: "modWheel", destination: "line1Level", amount: 0.3, enabled: true },
+					{
+						source: "velocity",
+						destination: "volume",
+						amount: 0.2,
+						enabled: true,
+					},
+					{
+						source: "modWheel",
+						destination: "line1Level",
+						amount: 0.3,
+						enabled: true,
+					},
 				],
 			},
 			setModMatrix: vi.fn(),
@@ -75,7 +85,12 @@ describe("ModulatableControl", () => {
 			modMatrix: {
 				routes: [
 					{ source: "lfo1", destination: "volume", amount: 0.4, enabled: true },
-					{ source: "modWheel", destination: "line1Level", amount: 0.3, enabled: true },
+					{
+						source: "modWheel",
+						destination: "line1Level",
+						amount: 0.3,
+						enabled: true,
+					},
 				],
 			},
 			setModMatrix,

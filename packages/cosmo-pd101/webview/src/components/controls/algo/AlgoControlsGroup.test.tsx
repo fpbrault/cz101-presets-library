@@ -4,11 +4,15 @@ import { describe, expect, it } from "vitest";
 import AlgoControlsGroup from "./AlgoControlsGroup";
 
 vi.mock("@/components/primitives/Card", () => ({
-	default: ({ children }: { children: ReactNode }) => <div data-testid="card">{children}</div>,
+	default: ({ children }: { children: ReactNode }) => (
+		<div data-testid="card">{children}</div>
+	),
 }));
 
 vi.mock("./AlgoControlItem", () => ({
-	default: ({ control }: { control: { id: string } }) => <div data-testid={`item-${control.id}`} />,
+	default: ({ control }: { control: { id: string } }) => (
+		<div data-testid={`item-${control.id}`} />
+	),
 }));
 
 const sharedProps = {

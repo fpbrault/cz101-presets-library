@@ -5,7 +5,8 @@ export async function waitForBridge(page: Page): Promise<void> {
 	await page.waitForFunction(
 		() =>
 			typeof window.__MOCK_BRIDGE__ !== "undefined" &&
-			typeof (window as Window & { __czOnParams?: (json: string) => void }).__czOnParams !== "undefined",
+			typeof (window as Window & { __czOnParams?: (json: string) => void })
+				.__czOnParams !== "undefined",
 		{ timeout: 5000 },
 	);
 }

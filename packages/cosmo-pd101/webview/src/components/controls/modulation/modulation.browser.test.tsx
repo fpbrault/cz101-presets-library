@@ -34,7 +34,9 @@ describe("modulation controls (browser)", () => {
 				onClick={onClick}
 			/>,
 		);
-		expect(screen.getByRole("button", { name: "Modulation" })).toHaveTextContent("2");
+		expect(
+			screen.getByRole("button", { name: "Modulation" }),
+		).toHaveTextContent("2");
 	});
 
 	it("renders ModulationMenu route management actions", () => {

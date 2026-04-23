@@ -6,7 +6,8 @@ const knobSpy = vi.fn();
 const algoParamTargetFromSlotMock = vi.fn();
 
 vi.mock("@/lib/synth/modDestination", () => ({
-	algoParamTargetFromSlot: (...args: unknown[]) => algoParamTargetFromSlotMock(...args),
+	algoParamTargetFromSlot: (...args: unknown[]) =>
+		algoParamTargetFromSlotMock(...args),
 }));
 
 vi.mock("../ControlKnob", () => ({

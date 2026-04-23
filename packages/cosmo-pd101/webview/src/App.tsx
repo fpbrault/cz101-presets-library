@@ -83,8 +83,8 @@ export default function App() {
 					<div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 text-slate-100 shadow-2xl">
 						<h2 className="text-lg font-semibold">New Version Available</h2>
 						<p className="mt-2 text-sm text-slate-300">
-							Version v{updateInfo.latestVersion} is available (you are on
-							 v{updateInfo.currentVersion}).
+							Version v{updateInfo.latestVersion} is available (you are on v
+							{updateInfo.currentVersion}).
 						</p>
 						{updateInfo.forcedByEnv && (
 							<p className="mt-1 text-xs text-amber-300">

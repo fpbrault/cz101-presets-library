@@ -19,7 +19,8 @@ test.describe("Alias command path", () => {
 
 		const messages = await getMessages(page);
 		const setMessage = messages.find(
-			(message) => message.type === "param:set" && message.stringId === "volume",
+			(message) =>
+				message.type === "param:set" && message.stringId === "volume",
 		);
 		expect(setMessage).toBeDefined();
 		expect(setMessage?.value as number).toBeCloseTo(0.75, 2);
@@ -61,7 +62,9 @@ test.describe("Alias command path", () => {
 		page,
 	}) => {
 		await page.evaluate(() => {
-			const bridgeWindow = window as Window & { ipc?: { postMessage: (msg: string) => void } };
+			const bridgeWindow = window as Window & {
+				ipc?: { postMessage: (msg: string) => void };
+			};
 			const saved = bridgeWindow.ipc;
 			bridgeWindow.ipc = undefined;
 			window.__MOCK_BRIDGE__?.setParameter(0, 0.5);

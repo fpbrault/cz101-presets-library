@@ -1,7 +1,6 @@
 const LATEST_RELEASE_URL =
 	"https://api.github.com/repos/fpbrault/cosmo-pd/releases/latest";
-const RELEASES_PAGE_URL =
-	"https://github.com/fpbrault/cosmo-pd/releases";
+const RELEASES_PAGE_URL = "https://github.com/fpbrault/cosmo-pd/releases";
 const SESSION_KEY = "cosmo-pd101.update.latestNotified";
 
 declare const __CZ_APP_VERSION__: string;
@@ -54,7 +53,8 @@ export async function checkForPluginUpdate(
 	options: CheckOptions = {},
 ): Promise<PluginUpdateInfo | null> {
 	const manual = options.manual === true;
-	const forceUpdateNotifier = import.meta.env.VITE_FORCE_UPDATE_NOTIFIER === "1";
+	const forceUpdateNotifier =
+		import.meta.env.VITE_FORCE_UPDATE_NOTIFIER === "1";
 
 	try {
 		const response = await fetch(LATEST_RELEASE_URL, {
@@ -75,7 +75,12 @@ export async function checkForPluginUpdate(
 		}
 
 		const latest = (await response.json()) as GitHubLatestReleaseResponse;
-		if (latest.draft || latest.prerelease || !latest.tag_name || !latest.html_url) {
+		if (
+			latest.draft ||
+			latest.prerelease ||
+			!latest.tag_name ||
+			!latest.html_url
+		) {
 			if (forceUpdateNotifier) {
 				return {
 					currentVersion: normalizeVersion(__CZ_APP_VERSION__),
@@ -90,7 +95,10 @@ export async function checkForPluginUpdate(
 		const currentVersion = normalizeVersion(__CZ_APP_VERSION__);
 		const latestVersion = normalizeVersion(latest.tag_name);
 
-		if (compareVersions(latestVersion, currentVersion) <= 0 && !forceUpdateNotifier) {
+		if (
+			compareVersions(latestVersion, currentVersion) <= 0 &&
+			!forceUpdateNotifier
+		) {
 			return null;
 		}
 
@@ -105,7 +113,9 @@ export async function checkForPluginUpdate(
 
 		return {
 			currentVersion,
-			latestVersion: forceUpdateNotifier ? `${latestVersion} (test)` : latestVersion,
+			latestVersion: forceUpdateNotifier
+				? `${latestVersion} (test)`
+				: latestVersion,
 			releaseUrl: latest.html_url,
 			forcedByEnv: forceUpdateNotifier,
 		};

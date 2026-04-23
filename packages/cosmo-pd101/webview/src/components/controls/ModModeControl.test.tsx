@@ -34,7 +34,9 @@ describe("ModModeControl", () => {
 		useSynthParamMock.mockReturnValue({ value: "ring", setValue: vi.fn() });
 		render(<ModModeControl />);
 
-		expect(screen.getAllByRole("button")[1].className).toContain("text-cz-cream");
+		expect(screen.getAllByRole("button")[1].className).toContain(
+			"text-cz-cream",
+		);
 		expect(screen.getAllByRole("button")[0].className).toContain(
 			"text-cz-cream-dim",
 		);

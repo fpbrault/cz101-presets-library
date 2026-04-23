@@ -274,12 +274,14 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 			}
 
 			if ("mod_matrix" in payload) {
-				void runtime.invoke("setModMatrix", payload.mod_matrix).catch((error) => {
-					console.error(
-						"[beamerLegacyBridge] Failed to send mod matrix",
-						error,
-					);
-				});
+				void runtime
+					.invoke("setModMatrix", payload.mod_matrix)
+					.catch((error) => {
+						console.error(
+							"[beamerLegacyBridge] Failed to send mod matrix",
+							error,
+						);
+					});
 				return;
 			}
 
