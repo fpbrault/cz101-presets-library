@@ -54,9 +54,12 @@ test.describe("Mod matrix route management", () => {
 		const amountSlider = modulationMenu.getByRole("slider").first();
 		await amountSlider.evaluate((element) => {
 			const input = element as HTMLInputElement;
-			input.value = "0.25";
+			const nativeSetter = Object.getOwnPropertyDescriptor(
+				window.HTMLInputElement.prototype,
+				"value",
+			)?.set;
+			nativeSetter?.call(input, "0.25");
 			input.dispatchEvent(new Event("input", { bubbles: true }));
-			input.dispatchEvent(new Event("change", { bubbles: true }));
 		});
 		await waitForMessageMatching(page, (message) => {
 			if (message.type !== "invoke" || message.method !== "setModMatrix") {
