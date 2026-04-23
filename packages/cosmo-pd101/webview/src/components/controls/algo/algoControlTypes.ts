@@ -16,6 +16,9 @@ export type AlgoControlRuntime = {
 	label: string;
 	description?: string | null;
 	kind?: "number" | "select" | "toggle";
+	controlType?: "knob" | "slider" | "buttonGroup" | "dropdown";
+	bipolar?: boolean;
+	iconName?: string | null;
 	min?: number | null;
 	max?: number | null;
 	default?: number | null;

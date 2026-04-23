@@ -7,8 +7,8 @@
 //! - SPECTA_TS_EXPORT_PATH: absolute/relative path to generated TypeScript file
 
 use cosmo_synth_engine::generators::{
-    AlgoControlAssignmentV1, AlgoControlKindV1, AlgoControlOptionV1, AlgoControlV1,
-    AlgoDefinitionV1, AlgoUiEntryV1, CzPresetV1,
+    AlgoControlAssignmentV1, AlgoControlKindV1, AlgoControlOptionV1, AlgoControlPresentationV1,
+    AlgoControlV1, AlgoDefinitionV1, AlgoUiEntryV1, CzPresetV1,
 };
 use cosmo_synth_engine::params::{
     Algo, AlgoControlValueV1, ChorusParams, CzAlgo, CzLineParams, CzWaveform, DelayParams, EnvStep,
@@ -91,6 +91,11 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(
         &export::<AlgoControlKindV1>(&config).expect("Failed to export AlgoControlKindV1"),
+    );
+    out.push_str("\n\n");
+    out.push_str(
+        &export::<AlgoControlPresentationV1>(&config)
+            .expect("Failed to export AlgoControlPresentationV1"),
     );
     out.push_str("\n\n");
     out.push_str(

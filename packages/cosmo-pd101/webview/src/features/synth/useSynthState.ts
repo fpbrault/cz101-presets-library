@@ -34,6 +34,9 @@ export type { PolyMode, VelocityTarget };
 type AlgoControlRuntime = {
 	id: string;
 	kind?: "number" | "select" | "toggle";
+	controlType?: "knob" | "slider" | "buttonGroup" | "dropdown";
+	bipolar?: boolean;
+	iconName?: string | null;
 	default?: number | null;
 	min?: number | null;
 };
