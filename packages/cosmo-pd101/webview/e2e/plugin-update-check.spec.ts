@@ -10,6 +10,7 @@ test.describe("Plugin update checks", () => {
 	}) => {
 		await page.addInitScript(() => {
 			sessionStorage.clear();
+			sessionStorage.setItem("cosmo-pd101.update.latestNotified", "9.9.9");
 		});
 
 		await page.route(LATEST_RELEASE_URL, async (route) => {

@@ -1,10 +1,23 @@
 import { expect, test } from "@playwright/test";
 import { setupPluginPage } from "./helpers/pluginBridge";
 
+const LATEST_RELEASE_URL =
+	"https://api.github.com/repos/fpbrault/cosmo-pd/releases/latest";
+
 test.beforeEach(async ({ page }) => {
 	await page.addInitScript(() => {
 		localStorage.clear();
 		sessionStorage.clear();
+	});
+	await page.route(LATEST_RELEASE_URL, async (route) => {
+		await route.fulfill({
+			status: 200,
+			contentType: "application/json",
+			body: JSON.stringify({
+				tag_name: "v0.0.0",
+				html_url: "https://github.com/fpbrault/cosmo-pd/releases/tag/v0.0.0",
+			}),
+		});
 	});
 	await setupPluginPage(page);
 });
