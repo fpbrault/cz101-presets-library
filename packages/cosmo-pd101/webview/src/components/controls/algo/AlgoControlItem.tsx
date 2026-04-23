@@ -11,6 +11,7 @@ import type {
 
 interface AlgoControlItemProps {
 	control: AlgoControlRuntime;
+	disabled?: boolean;
 	binding?: AlgoControlBinding;
 	lineIndex: LineIndex;
 	algoParamSlotIndex: Record<string, number>;
@@ -24,6 +25,7 @@ interface AlgoControlItemProps {
 
 function AlgoControlItemInner({
 	control,
+	disabled = false,
 	binding,
 	lineIndex,
 	algoParamSlotIndex,
@@ -38,6 +40,7 @@ function AlgoControlItemInner({
 		return (
 			<AlgoControlSelect
 				control={control}
+				disabled={disabled}
 				binding={binding}
 				getActiveSelectOption={getActiveSelectOption}
 				applyOptionAssignments={applyOptionAssignments}
@@ -49,6 +52,7 @@ function AlgoControlItemInner({
 		return (
 			<AlgoControlNumber
 				control={control}
+				disabled={disabled}
 				binding={binding}
 				lineIndex={lineIndex}
 				algoParamSlotIndex={algoParamSlotIndex}
@@ -58,7 +62,7 @@ function AlgoControlItemInner({
 		);
 	}
 
-	return <AlgoControlToggle control={control} binding={binding} />;
+	return <AlgoControlToggle control={control} binding={binding} disabled={disabled} />;
 }
 
 const AlgoControlItem = memo(AlgoControlItemInner);

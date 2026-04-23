@@ -1,4 +1,5 @@
 import type React from "react";
+import { useHoverInfo } from "../layout/HoverInfo";
 
 type CzButtonProps = {
 	active?: boolean;
@@ -33,11 +34,23 @@ export default function CzButton({
 	style,
 	tooltip,
 }: CzButtonProps) {
+	const { setHoverInfo, clearHoverInfo } = useHoverInfo();
+	const hoverHandlers = tooltip
+		? {
+			onPointerEnter: () => setHoverInfo(tooltip),
+			onPointerLeave: clearHoverInfo,
+			onFocus: () => setHoverInfo(tooltip),
+			onBlur: clearHoverInfo,
+		}
+		: undefined;
+
 	const buttonFace = (
 		<button
 			type={type}
 			disabled={disabled}
 			onClick={onClick}
+			data-hover-info={tooltip}
+			{...hoverHandlers}
 			className={`inline-flex h-5 w-8 items-center justify-center px-2 py-0.75 rounded-[3px] border cursor-pointer select-none transition-colors duration-75 shadow-[0_2px_0_#111,inset_0_1px_0_rgba(255,255,255,0.06)] active:shadow-[0_1px_0_#111,inset_0_1px_2px_rgba(0,0,0,0.4)] active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed ${
 				active
 					? "bg-cz-btn border-cz-btn-border text-cz-cream"
@@ -66,16 +79,7 @@ export default function CzButton({
 				<span className="inline-block h-1 w-3 mb-1" aria-hidden="true" />
 			)}
 			{/* Button face */}
-			{tooltip ? (
-				<div
-					className="tooltip tooltip-right z-50 [&:before]:bg-cz-body [&:before]:text-left [&:before]:text-xs normal-case [&:before]:leading-tight"
-					data-tip={tooltip}
-				>
-					{buttonFace}
-				</div>
-			) : (
-				buttonFace
-			)}
+			{buttonFace}
 			<div className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] ">
 				{children}
 			</div>

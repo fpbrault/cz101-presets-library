@@ -9,6 +9,7 @@ import {
 import type { AsidePanelTab } from "@/components/layout/AsidePanelSwitcher";
 import SynthRenderer from "@/components/renderer/SynthRenderer";
 import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
+import { useNoteHandling } from "@/features/synth/hooks/useNoteHandling";
 import { getSynthRuntimeCapabilities } from "@/features/synth/runtimeCapabilities";
 import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
 import { useSynthState } from "@/features/synth/useSynthState";
@@ -41,6 +42,12 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	const [activeAsidePanel, setActiveAsidePanel] =
 		useState<AsidePanelTab>("global");
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
+	const { activeNotes, sendNoteOn, sendNoteOff } = useNoteHandling({
+		velocityTarget: synthState.velocityTarget,
+		eventSink: (type, payload) => {
+			window.__BEAMER__?.emit?.(type, payload);
+		},
+	});
 
 	usePluginParamBridge(synthState);
 
@@ -166,6 +173,11 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 			activeAsidePanel={activeAsidePanel}
 			onAsidePanelChange={setActiveAsidePanel}
 			onControlReadout={pushLcdControlReadout}
+			miniKeyboard={{
+				activeNotes,
+				onNoteOn: sendNoteOn,
+				onNoteOff: sendNoteOff,
+			}}
 		/>
 	);
 }

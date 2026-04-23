@@ -45,14 +45,16 @@ type BuildSynthEngineSnapshotParams = {
 	line1CzSlotAWaveform: CzWaveform;
 	line1CzSlotBWaveform: CzWaveform;
 	line1CzWindow: WindowType;
-	line1AlgoControls: AlgoControlValueV1[];
+	line1AlgoControlsA: AlgoControlValueV1[];
+	line1AlgoControlsB: AlgoControlValueV1[];
 	line2DcoEnv: StepEnvData;
 	line2DcwEnv: StepEnvData;
 	line2DcaEnv: StepEnvData;
 	line2CzSlotAWaveform: CzWaveform;
 	line2CzSlotBWaveform: CzWaveform;
 	line2CzWindow: WindowType;
-	line2AlgoControls: AlgoControlValueV1[];
+	line2AlgoControlsA: AlgoControlValueV1[];
+	line2AlgoControlsB: AlgoControlValueV1[];
 	polyMode: PolyMode;
 	legato: boolean;
 	velocityTarget: VelocityTarget;

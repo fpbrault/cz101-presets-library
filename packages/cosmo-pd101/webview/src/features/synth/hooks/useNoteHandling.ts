@@ -3,7 +3,8 @@ import type { ModSource } from "@/lib/synth/bindings/synth";
 import { noteToFreq, PC_KEY_TO_NOTE } from "@/lib/synth/pdAlgorithms";
 
 type UseNoteHandlingParams = {
-	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
+	workletNodeRef?: React.MutableRefObject<AudioWorkletNode | null> | null;
+	eventSink?: (type: string, payload: Record<string, unknown>) => void;
 	velocityTarget: "amp" | "dcw" | "both" | "off";
 };
 
@@ -19,8 +20,20 @@ export type NoteHandlingApi = {
 
 export function useNoteHandling({
 	workletNodeRef,
+	eventSink,
 	velocityTarget,
 }: UseNoteHandlingParams): NoteHandlingApi {
+	const dispatchEngineEvent = useCallback(
+		(type: string, payload: Record<string, unknown>) => {
+			if (eventSink) {
+				eventSink(type, payload);
+				return;
+			}
+			workletNodeRef?.current?.port.postMessage({ type, ...payload });
+		},
+		[eventSink, workletNodeRef],
+	);
+
 	const emitModSourceValue = useCallback((source: ModSource, value: number) => {
 		window.dispatchEvent(
 			new CustomEvent("cz-mod-source", {
@@ -43,8 +56,7 @@ export function useNoteHandling({
 			if (activeNotesRef.current.has(note)) return;
 			activeNotesRef.current.add(note);
 			setActiveNotes((prev) => (prev.includes(note) ? prev : [...prev, note]));
-			workletNodeRef.current?.port.postMessage({
-				type: "noteOn",
+			dispatchEngineEvent("noteOn", {
 				note,
 				frequency: noteToFreq(note),
 				// Always forward physical note velocity so ModSource::Velocity works
@@ -53,7 +65,7 @@ export function useNoteHandling({
 			});
 			emitModSourceValue("velocity", velocity / 127);
 		},
-		[workletNodeRef, emitModSourceValue],
+		[dispatchEngineEvent, emitModSourceValue],
 	);
 
 	const sendNoteOff = useCallback(
@@ -63,49 +75,49 @@ export function useNoteHandling({
 			if (sustainRef.current) {
 				sustainedButReleasedRef.current.add(note);
 			} else {
-				workletNodeRef.current?.port.postMessage({ type: "noteOff", note });
+				dispatchEngineEvent("noteOff", { note });
 			}
 		},
-		[workletNodeRef],
+		[dispatchEngineEvent],
 	);
 
 	const setSustain = useCallback(
 		(on: boolean) => {
 			sustainRef.current = on;
-			workletNodeRef.current?.port.postMessage({ type: "sustain", on });
+			dispatchEngineEvent("sustain", { on });
 			if (!on) {
 				for (const note of sustainedButReleasedRef.current) {
 					if (!activeNotesRef.current.has(note)) {
-						workletNodeRef.current?.port.postMessage({ type: "noteOff", note });
+						dispatchEngineEvent("noteOff", { note });
 					}
 				}
 				sustainedButReleasedRef.current.clear();
 			}
 		},
-		[workletNodeRef],
+		[dispatchEngineEvent],
 	);
 
 	const sendPitchBend = useCallback(
 		(value: number) => {
-			workletNodeRef.current?.port.postMessage({ type: "pitchBend", value });
+			dispatchEngineEvent("pitchBend", { value });
 		},
-		[workletNodeRef],
+		[dispatchEngineEvent],
 	);
 
 	const sendModWheel = useCallback(
 		(value: number) => {
-			workletNodeRef.current?.port.postMessage({ type: "modWheel", value });
+			dispatchEngineEvent("modWheel", { value });
 			emitModSourceValue("modWheel", value);
 		},
-		[workletNodeRef, emitModSourceValue],
+		[dispatchEngineEvent, emitModSourceValue],
 	);
 
 	const sendAftertouch = useCallback(
 		(value: number) => {
-			workletNodeRef.current?.port.postMessage({ type: "aftertouch", value });
+			dispatchEngineEvent("aftertouch", { value });
 			emitModSourceValue("aftertouch", value);
 		},
-		[workletNodeRef, emitModSourceValue],
+		[dispatchEngineEvent, emitModSourceValue],
 	);
 
 	// Keyboard input

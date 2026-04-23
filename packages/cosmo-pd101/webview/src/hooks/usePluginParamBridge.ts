@@ -206,7 +206,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		line1CzSlotBWaveform,
 		setLine1CzSlotBWaveform,
 		line1CzWindow,
-		line1AlgoControls,
+		line1AlgoControlsA,
+		line1AlgoControlsB,
 		line2DcoEnv,
 		setLine2DcoEnv,
 		line2DcwEnv,
@@ -218,7 +219,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		line2CzSlotBWaveform,
 		setLine2CzSlotBWaveform,
 		line2CzWindow,
-		line2AlgoControls,
+		line2AlgoControlsA,
+		line2AlgoControlsB,
 		polyMode,
 		setPolyMode,
 		legato,
@@ -298,7 +300,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 
 	const sentParamsRef = useRef<Map<number, number>>(new Map());
 	const sentEnvelopesRef = useRef<Map<EnvelopeId, string>>(new Map());
-	const sentAlgoControlsRef = useRef<Map<1 | 2, string>>(new Map());
+	const sentAlgoControlsRef = useRef<Map<string, string>>(new Map());
 	const sentModMatrixRef = useRef("");
 
 	const queueParam = useCallback((id: number, value: number) => {
@@ -318,13 +320,14 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 	}, []);
 
 	const sendAlgoControls = useCallback(
-		(line: 1 | 2, controls: AlgoControlValueV1[]) => {
+		(line: 1 | 2, bank: "a" | "b", controls: AlgoControlValueV1[]) => {
 			const serialized = JSON.stringify(controls);
-			if (sentAlgoControlsRef.current.get(line) === serialized) return;
-			sentAlgoControlsRef.current.set(line, serialized);
+			const cacheKey = `${line}:${bank}`;
+			if (sentAlgoControlsRef.current.get(cacheKey) === serialized) return;
+			sentAlgoControlsRef.current.set(cacheKey, serialized);
 			if (window.ipc) {
 				window.ipc.postMessage(
-					JSON.stringify({ algo_controls: { line, controls } }),
+					JSON.stringify({ algo_controls: { line, bank, controls } }),
 				);
 			}
 		},
@@ -452,8 +455,10 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				sendEnvelope("l2_dco", snapshot.line2DcoEnv);
 				sendEnvelope("l2_dcw", snapshot.line2DcwEnv);
 				sendEnvelope("l2_dca", snapshot.line2DcaEnv);
-				sendAlgoControls(1, snapshot.line1AlgoControls);
-				sendAlgoControls(2, snapshot.line2AlgoControls);
+				sendAlgoControls(1, "a", snapshot.line1AlgoControlsA);
+				sendAlgoControls(1, "b", snapshot.line1AlgoControlsB);
+				sendAlgoControls(2, "a", snapshot.line2AlgoControlsA);
+				sendAlgoControls(2, "b", snapshot.line2AlgoControlsB);
 				sendModMatrix(snapshot.modMatrix);
 			},
 		}),
@@ -500,14 +505,16 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				line1CzSlotAWaveform,
 				line1CzSlotBWaveform,
 				line1CzWindow,
-				line1AlgoControls,
+				line1AlgoControlsA,
+				line1AlgoControlsB,
 				line2DcoEnv,
 				line2DcwEnv,
 				line2DcaEnv,
 				line2CzSlotAWaveform,
 				line2CzSlotBWaveform,
 				line2CzWindow,
-				line2AlgoControls,
+				line2AlgoControlsA,
+				line2AlgoControlsB,
 				polyMode,
 				legato,
 				velocityTarget,
@@ -581,14 +588,16 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 			line1CzSlotAWaveform,
 			line1CzSlotBWaveform,
 			line1CzWindow,
-			line1AlgoControls,
+			line1AlgoControlsA,
+			line1AlgoControlsB,
 			line2DcoEnv,
 			line2DcwEnv,
 			line2DcaEnv,
 			line2CzSlotAWaveform,
 			line2CzSlotBWaveform,
 			line2CzWindow,
-			line2AlgoControls,
+			line2AlgoControlsA,
+			line2AlgoControlsB,
 			polyMode,
 			legato,
 			velocityTarget,

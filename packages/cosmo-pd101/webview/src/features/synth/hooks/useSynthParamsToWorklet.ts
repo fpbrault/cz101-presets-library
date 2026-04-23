@@ -52,14 +52,16 @@ type UseSynthParamsToWorkletParams = {
 	line1CzSlotAWaveform: CzWaveform;
 	line1CzSlotBWaveform: CzWaveform;
 	line1CzWindow: WindowType;
-	line1AlgoControls: AlgoControlValueV1[];
+	line1AlgoControlsA: AlgoControlValueV1[];
+	line1AlgoControlsB: AlgoControlValueV1[];
 	line2DcoEnv: StepEnvData;
 	line2DcwEnv: StepEnvData;
 	line2DcaEnv: StepEnvData;
 	line2CzSlotAWaveform: CzWaveform;
 	line2CzSlotBWaveform: CzWaveform;
 	line2CzWindow: WindowType;
-	line2AlgoControls: AlgoControlValueV1[];
+	line2AlgoControlsA: AlgoControlValueV1[];
+	line2AlgoControlsB: AlgoControlValueV1[];
 	polyMode: PolyMode;
 	legato: boolean;
 	velocityTarget: VelocityTarget;
@@ -138,14 +140,16 @@ export function useSynthParamsToWorklet({
 	line1CzSlotAWaveform,
 	line1CzSlotBWaveform,
 	line1CzWindow,
-	line1AlgoControls,
+	line1AlgoControlsA,
+	line1AlgoControlsB,
 	line2DcoEnv,
 	line2DcwEnv,
 	line2DcaEnv,
 	line2CzSlotAWaveform,
 	line2CzSlotBWaveform,
 	line2CzWindow,
-	line2AlgoControls,
+	line2AlgoControlsA,
+	line2AlgoControlsB,
 	polyMode,
 	legato,
 	velocityTarget,
@@ -232,14 +236,16 @@ export function useSynthParamsToWorklet({
 				line1CzSlotAWaveform,
 				line1CzSlotBWaveform,
 				line1CzWindow,
-				line1AlgoControls,
+				line1AlgoControlsA,
+				line1AlgoControlsB,
 				line2DcoEnv,
 				line2DcwEnv,
 				line2DcaEnv,
 				line2CzSlotAWaveform,
 				line2CzSlotBWaveform,
 				line2CzWindow,
-				line2AlgoControls,
+				line2AlgoControlsA,
+				line2AlgoControlsB,
 				polyMode,
 				legato,
 				velocityTarget,
@@ -315,14 +321,16 @@ export function useSynthParamsToWorklet({
 			line1CzSlotAWaveform,
 			line1CzSlotBWaveform,
 			line1CzWindow,
-			line1AlgoControls,
+			line1AlgoControlsA,
+			line1AlgoControlsB,
 			line2DcoEnv,
 			line2DcwEnv,
 			line2DcaEnv,
 			line2CzSlotAWaveform,
 			line2CzSlotBWaveform,
 			line2CzWindow,
-			line2AlgoControls,
+			line2AlgoControlsA,
+			line2AlgoControlsB,
 			polyMode,
 			legato,
 			velocityTarget,

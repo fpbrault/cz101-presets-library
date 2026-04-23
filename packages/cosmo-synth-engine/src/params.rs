@@ -379,8 +379,10 @@ pub struct LineParams {
     pub key_follow: f32,
     #[serde(default)]
     pub cz: CzLineParams,
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "algoControls")]
+    pub algo_controls_a: Option<Vec<AlgoControlValueV1>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub algo_controls: Option<Vec<AlgoControlValueV1>>,
+    pub algo_controls_b: Option<Vec<AlgoControlValueV1>>,
 }
 
 impl Default for LineParams {
@@ -402,7 +404,8 @@ impl Default for LineParams {
             dca_env: default_dca_env(),
             key_follow: 0.0,
             cz: CzLineParams::default(),
-            algo_controls: None,
+            algo_controls_a: None,
+            algo_controls_b: None,
         }
     }
 }
