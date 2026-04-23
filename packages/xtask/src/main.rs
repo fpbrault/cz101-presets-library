@@ -20,7 +20,7 @@ use util::{cargo_target_dir_for_package, print_error, Arch};
 /// Configuration for creating appex Info.plist (AUv3)
 pub struct AppexPlistConfig<'a> {
     pub package: &'a str,
-    pub bundle_identifier_prefix: &'a str,
+    pub bundle_identifier_prefix:      &'a str,
     pub executable_name: &'a str,
     pub component_type: &'a str,
     pub manufacturer: Option<&'a str>,
