@@ -140,6 +140,40 @@ describe("invoke", () => {
 		window.__MOCK_BRIDGE__?.rejectNextInvoke("something went wrong");
 		await expect(promise).rejects.toBe("something went wrong");
 	});
+
+	it("resolves queued custom invocations in order", async () => {
+		const firstPromise = window.__BEAMER__?.invoke("firstMethod");
+		const secondPromise = window.__BEAMER__?.invoke("secondMethod");
+
+		window.__MOCK_BRIDGE__?.resolveNextInvoke({ id: 1 });
+		window.__MOCK_BRIDGE__?.resolveNextInvoke({ id: 2 });
+
+		await expect(firstPromise).resolves.toEqual({ id: 1 });
+		await expect(secondPromise).resolves.toEqual({ id: 2 });
+	});
+
+	it("returns cloned mod matrix state", async () => {
+		await window.__BEAMER__?.invoke("setModMatrix", {
+			routes: [
+				{
+					source: "lfo1",
+					destination: "volume",
+					amount: 0.5,
+					enabled: true,
+				},
+			],
+		});
+
+		const firstRead = (await window.__BEAMER__?.invoke("getModMatrix")) as {
+			routes: Array<{ amount: number }>;
+		};
+		firstRead.routes[0].amount = 0;
+
+		const secondRead = (await window.__BEAMER__?.invoke("getModMatrix")) as {
+			routes: Array<{ amount: number }>;
+		};
+		expect(secondRead.routes[0].amount).toBe(0.5);
+	});
 });
 
 // ---------------------------------------------------------------------------

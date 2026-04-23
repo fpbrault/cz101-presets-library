@@ -237,9 +237,19 @@ const DEFAULT_PARAMS: BeamerParamInfo[] = [
 export function installMockPluginBridge(): void {
 	const messages: MockBridgeMessage[] = [];
 	const messageListeners: Array<(msg: MockBridgeMessage) => void> = [];
-	let pendingInvokeResolve: ((result: unknown) => void) | null = null;
-	let pendingInvokeReject: ((error: string) => void) | null = null;
+	const pendingInvokes: Array<{
+		resolve: (result: unknown) => void;
+		reject: (error: string) => void;
+	}> = [];
 	let virtualModMatrix: { routes: unknown[] } = { routes: [] };
+
+	function cloneRoutes(routes: unknown[]) {
+		return routes.map((route) =>
+			route && typeof route === "object"
+				? { ...(route as Record<string, unknown>) }
+				: route,
+		);
+	}
 
 	// Virtual param state: Beamer numeric ID → normalized value
 	const virtualParamState: Record<number, number> = {};
@@ -339,12 +349,12 @@ export function installMockPluginBridge(): void {
 					const next = (args[0] ?? { routes: [] }) as {
 						routes?: unknown[];
 					};
-					virtualModMatrix = { routes: [...(next.routes ?? [])] };
+					virtualModMatrix = { routes: cloneRoutes(next.routes ?? []) };
 					resolve(null);
 					return;
 				}
 				if (method === "getModMatrix") {
-					resolve({ routes: [...virtualModMatrix.routes] });
+					resolve({ routes: cloneRoutes(virtualModMatrix.routes) });
 					return;
 				}
 				if (method === "getScopeData") {
@@ -354,8 +364,7 @@ export function installMockPluginBridge(): void {
 				}
 
 				// Unknown invocations queue so tests can drive the response.
-				pendingInvokeResolve = resolve;
-				pendingInvokeReject = reject;
+				pendingInvokes.push({ resolve, reject });
 			});
 		},
 
@@ -415,20 +424,17 @@ export function installMockPluginBridge(): void {
 		},
 
 		resolveNextInvoke(result: unknown): void {
-			pendingInvokeResolve?.(result);
-			pendingInvokeResolve = null;
+			pendingInvokes.shift()?.resolve(result);
 		},
 
 		rejectNextInvoke(error: string): void {
-			pendingInvokeReject?.(error);
-			pendingInvokeReject = null;
+			pendingInvokes.shift()?.reject(error);
 		},
 
 		reset(): void {
 			messages.length = 0;
 			messageListeners.length = 0;
-			pendingInvokeResolve = null;
-			pendingInvokeReject = null;
+			pendingInvokes.length = 0;
 		},
 	};
 

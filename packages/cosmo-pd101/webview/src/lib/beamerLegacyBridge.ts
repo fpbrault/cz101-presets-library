@@ -139,6 +139,19 @@ let latestLegacyParams: Record<number, number> = {};
 let currentParamHandler: ((json: string) => void) | undefined;
 const runtimeStringIdsByNumericId: Record<number, string> = {};
 
+export function __resetBeamerLegacyBridgeForTests() {
+	installed = false;
+	latestLegacyParams = {};
+	currentParamHandler = undefined;
+	for (const numericId of Object.keys(runtimeStringIdsByNumericId)) {
+		delete runtimeStringIdsByNumericId[Number(numericId)];
+	}
+	delete window.ipc;
+	delete window.__czGetEnvelopes;
+	delete window.__czGetModMatrix;
+	delete window.__czOnParams;
+}
+
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
 }
@@ -274,12 +287,14 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 			}
 
 			if ("mod_matrix" in payload) {
-				void runtime.invoke("setModMatrix", payload.mod_matrix).catch((error) => {
-					console.error(
-						"[beamerLegacyBridge] Failed to send mod matrix",
-						error,
-					);
-				});
+				void runtime
+					.invoke("setModMatrix", payload.mod_matrix)
+					.catch((error) => {
+						console.error(
+							"[beamerLegacyBridge] Failed to send mod matrix",
+							error,
+						);
+					});
 				return;
 			}
 

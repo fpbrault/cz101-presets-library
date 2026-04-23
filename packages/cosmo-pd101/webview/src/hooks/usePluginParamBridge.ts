@@ -122,7 +122,7 @@ function sendParam(parameterId: number, value: number) {
 // Maps CzWaveform strings to Rust Waveform enum 0-based indices.
 // The Rust enum includes DoubleSine=5 (no CzWaveform counterpart), so
 // sawPulse, multiSine, and pulse2 are at indices 6, 7, 8 respectively.
-const CZ_WAVEFORM_IDX: Readonly<Record<CzWaveform, number>> = {
+export const CZ_WAVEFORM_IDX: Readonly<Record<CzWaveform, number>> = {
 	saw: 0,
 	square: 1,
 	pulse: 2,
@@ -135,7 +135,7 @@ const CZ_WAVEFORM_IDX: Readonly<Record<CzWaveform, number>> = {
 
 // Reverse mapping for incoming param updates from Rust (index → CzWaveform).
 // DoubleSine (5) maps to multiSine since that's how Rust's map_waveform handles it.
-const IDX_TO_CZ_WAVEFORM: Record<number, CzWaveform> = {
+export const IDX_TO_CZ_WAVEFORM: Record<number, CzWaveform> = {
 	0: "saw",
 	1: "square",
 	2: "pulse",
@@ -146,6 +146,37 @@ const IDX_TO_CZ_WAVEFORM: Record<number, CzWaveform> = {
 	7: "multiSine",
 	8: "pulse2",
 };
+
+export function mapAlgoKeyToId(key: Algo | null): number {
+	if (key === null || isWaveformId(key)) return 0;
+	return WARP_ALGO_IDS[key as keyof typeof WARP_ALGO_IDS] ?? 0;
+}
+
+export function mapAlgoKeyToWaveform(
+	key: Algo | null,
+	slotWaveform: CzWaveform,
+): number {
+	if (key === null) return CZ_WAVEFORM_IDX.saw;
+	if (isWaveformId(key)) return CZ_WAVEFORM_IDX[key as CzWaveform] ?? 0;
+	if (key === "cz101") return CZ_WAVEFORM_IDX[slotWaveform] ?? 0;
+	return 0;
+}
+
+export function mapInboundWaveformIndex(value: number): CzWaveform | undefined {
+	return IDX_TO_CZ_WAVEFORM[Math.round(value)];
+}
+
+export function mapInboundWarpAlgoId(value: number): Algo {
+	return (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
+}
+
+export function mapInboundOptionalWarpAlgoId(value: number): Algo | null {
+	if (value < 0) {
+		return null;
+	}
+
+	return mapInboundWarpAlgoId(value);
+}
 
 export function usePluginParamBridge(synthState: UseSynthStateResult) {
 	const {
@@ -340,24 +371,6 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		}
 	}, []);
 
-	const algoKeyToId = useCallback((key: Algo | null): number => {
-		if (key === null || isWaveformId(key)) return 0; // CZ waveform algos → cz101 (index 0)
-		return WARP_ALGO_IDS[key as keyof typeof WARP_ALGO_IDS] ?? 0;
-	}, []);
-
-	const algoKeyToWaveform = useCallback(
-		(key: Algo | null, slotWaveform: CzWaveform): number => {
-			if (key === null) return CZ_WAVEFORM_IDX.saw;
-			// CZ waveform algos: the algo string IS the waveform
-			if (isWaveformId(key)) return CZ_WAVEFORM_IDX[key as CzWaveform] ?? 0;
-			// cz101 warp: waveform comes from the explicit slot setting
-			if (key === "cz101") return CZ_WAVEFORM_IDX[slotWaveform] ?? 0;
-			// other warp algos use a sine carrier; waveform param is irrelevant
-			return 0;
-		},
-		[],
-	);
-
 	const adapter = useMemo<SynthEngineAdapter>(
 		() => ({
 			sync(snapshot) {
@@ -374,8 +387,14 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				queueParam(P_INT_PM_AMOUNT, snapshot.intPmAmount);
 				queueParam(P_INT_PM_RATIO, snapshot.intPmRatio);
 				queueParam(P_PM_PRE, snapshot.pmPre ? 1 : 0);
-				queueParam(P_L1_WAVEFORM, algoKeyToWaveform(snapshot.warpAAlgo, snapshot.line1CzSlotAWaveform));
-				queueParam(P_L1_WARP_ALGO, algoKeyToId(snapshot.warpAAlgo));
+				queueParam(
+					P_L1_WAVEFORM,
+					mapAlgoKeyToWaveform(
+						snapshot.warpAAlgo,
+						snapshot.line1CzSlotAWaveform,
+					),
+				);
+				queueParam(P_L1_WARP_ALGO, mapAlgoKeyToId(snapshot.warpAAlgo));
 				queueParam(P_L1_DCW_BASE, snapshot.warpAAmount);
 				queueParam(P_L1_DCA_BASE, snapshot.line1Level);
 				queueParam(P_L1_DCO_DEPTH, snapshot.line1DcoDepth);
@@ -386,10 +405,16 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				queueParam(P_L1_ALGO_BLEND, snapshot.algoBlendA);
 				queueParam(
 					P_L1_WARP_ALGO2,
-					snapshot.algo2A === null ? -1 : algoKeyToId(snapshot.algo2A),
+					snapshot.algo2A === null ? -1 : mapAlgoKeyToId(snapshot.algo2A),
 				);
-				queueParam(P_L2_WAVEFORM, algoKeyToWaveform(snapshot.warpBAlgo, snapshot.line2CzSlotAWaveform));
-				queueParam(P_L2_WARP_ALGO, algoKeyToId(snapshot.warpBAlgo));
+				queueParam(
+					P_L2_WAVEFORM,
+					mapAlgoKeyToWaveform(
+						snapshot.warpBAlgo,
+						snapshot.line2CzSlotAWaveform,
+					),
+				);
+				queueParam(P_L2_WARP_ALGO, mapAlgoKeyToId(snapshot.warpBAlgo));
 				queueParam(P_L2_DCW_BASE, snapshot.warpBAmount);
 				queueParam(P_L2_DCA_BASE, snapshot.line2Level);
 				queueParam(P_L2_DCO_DEPTH, snapshot.line2DcoDepth);
@@ -400,7 +425,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				queueParam(P_L2_ALGO_BLEND, snapshot.algoBlendB);
 				queueParam(
 					P_L2_WARP_ALGO2,
-					snapshot.algo2B === null ? -1 : algoKeyToId(snapshot.algo2B),
+					snapshot.algo2B === null ? -1 : mapAlgoKeyToId(snapshot.algo2B),
 				);
 				queueParam(P_VIB_ENABLED, snapshot.vibratoEnabled ? 1 : 0);
 				queueParam(P_VIB_WAVEFORM, snapshot.vibratoWave);
@@ -451,14 +476,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				sendModMatrix(snapshot.modMatrix);
 			},
 		}),
-		[
-			queueParam,
-			sendEnvelope,
-			sendAlgoControls,
-			sendModMatrix,
-			algoKeyToId,
-			algoKeyToWaveform,
-		],
+		[queueParam, sendEnvelope, sendAlgoControls, sendModMatrix],
 	);
 
 	const snapshot = useMemo(
@@ -670,7 +688,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							setPmPre(value >= 0.5);
 							break;
 						case P_L1_WAVEFORM: {
-							const waveform = IDX_TO_CZ_WAVEFORM[Math.round(value)];
+							const waveform = mapInboundWaveformIndex(value);
 							if (waveform) {
 								setLine1CzSlotAWaveform(waveform);
 								setLine1CzSlotBWaveform(waveform);
@@ -678,8 +696,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							break;
 						}
 						case P_L1_WARP_ALGO: {
-							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
-							setWarpAAlgo(algoName);
+							setWarpAAlgo(mapInboundWarpAlgoId(value));
 							break;
 						}
 						case P_L1_DCW_BASE:
@@ -707,16 +724,11 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							setAlgoBlendA(value);
 							break;
 						case P_L1_WARP_ALGO2: {
-							if (value < 0) {
-								setAlgo2A(null);
-							} else {
-								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
-								setAlgo2A(algoName);
-							}
+							setAlgo2A(mapInboundOptionalWarpAlgoId(value));
 							break;
 						}
 						case P_L2_WAVEFORM: {
-							const waveform = IDX_TO_CZ_WAVEFORM[Math.round(value)];
+							const waveform = mapInboundWaveformIndex(value);
 							if (waveform) {
 								setLine2CzSlotAWaveform(waveform);
 								setLine2CzSlotBWaveform(waveform);
@@ -724,8 +736,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							break;
 						}
 						case P_L2_WARP_ALGO: {
-							const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
-							setWarpBAlgo(algoName);
+							setWarpBAlgo(mapInboundWarpAlgoId(value));
 							break;
 						}
 						case P_L2_DCW_BASE:
@@ -753,12 +764,7 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 							setAlgoBlendB(value);
 							break;
 						case P_L2_WARP_ALGO2: {
-							if (value < 0) {
-								setAlgo2B(null);
-							} else {
-								const algoName = (WARP_ALGO_FROM_ID[Math.round(value)] ?? "cz101") as Algo;
-								setAlgo2B(algoName);
-							}
+							setAlgo2B(mapInboundOptionalWarpAlgoId(value));
 							break;
 						}
 						case P_VIB_ENABLED:
