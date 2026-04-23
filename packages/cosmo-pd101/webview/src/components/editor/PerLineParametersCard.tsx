@@ -41,6 +41,7 @@ function PerLineParametersCardInner({
 			value: warpAmount,
 			min: 0,
 			max: 1,
+			defaultValue: 1,
 			step: 0.01,
 			color,
 			fmt: (value: number) => value.toFixed(2),
@@ -52,6 +53,7 @@ function PerLineParametersCardInner({
 			value: dcwComp,
 			min: 0,
 			max: 1,
+			defaultValue: 0,
 			step: 0.01,
 			color: "#7f9de4",
 			fmt: (value: number) => `${Math.round(value * 100)}%`,
@@ -63,6 +65,7 @@ function PerLineParametersCardInner({
 			value: level,
 			min: 0,
 			max: 1,
+			defaultValue: 1,
 			step: 0.01,
 			color: "#9cb937",
 			fmt: (value: number) => `${Math.round(value * 100)}%`,
@@ -74,6 +77,7 @@ function PerLineParametersCardInner({
 			value: octave,
 			min: -2,
 			max: 2,
+			defaultValue: 0,
 			step: 1,
 			color: "#7f9de4",
 			fmt: (value: number) => `${value >= 0 ? "+" : ""}${Math.round(value)}`,
@@ -85,6 +89,7 @@ function PerLineParametersCardInner({
 			value: fineDetune,
 			min: -50,
 			max: 50,
+			defaultValue: 0,
 			step: 1,
 			color: "#9cb937",
 			fmt: (value: number) => `${value >= 0 ? "+" : ""}${Math.round(value)}`,
@@ -96,6 +101,7 @@ function PerLineParametersCardInner({
 			value: dcoDepth,
 			min: 0,
 			max: 24,
+			defaultValue: 24,
 			step: 1,
 			color: "#9cb937",
 			fmt: (value: number) => `${Math.round(value)} st`,
@@ -111,7 +117,7 @@ function PerLineParametersCardInner({
 			</div>
 			<div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-3 place-items-center content-start">
 				{controls.map(
-					({ label, value, min, max, step, color, fmt, onChange, modDest }) => (
+					({ label, value, min, max, defaultValue, step, color, fmt, onChange, modDest }) => (
 						<ControlKnob
 							key={label}
 							label={label}
@@ -120,6 +126,7 @@ function PerLineParametersCardInner({
 							max={max}
 							step={step}
 							size={52}
+							defaultValue={defaultValue}	
 							bipolar={min < 0 && max > 0}
 							color={color}
 							modulatable={modDest}
