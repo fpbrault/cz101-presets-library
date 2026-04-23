@@ -6,7 +6,14 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!!**/dist"],
+		"includes": [
+			"**",
+			"!!**/dist",
+			"!!**/lib-dist",
+			"!!**/target",
+			"!!vendor",
+			"!!packages/cz-explorer/public/cosmo-synth-engine-wasm"
+		],
 		"maxSize": 20000000
 	},
 	"formatter": {
