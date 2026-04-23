@@ -6,7 +6,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe("Host to UI inbound updates", () => {
-	test("pushParamUpdate drives volume display to the pushed value", async ({ page }) => {
+	test("pushParamUpdate drives volume display to the pushed value", async ({
+		page,
+	}) => {
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.pushParamUpdate(0, 0.6));
 
 		await expect(
@@ -14,7 +16,9 @@ test.describe("Host to UI inbound updates", () => {
 		).toBeVisible({ timeout: 2000 });
 	});
 
-	test("debug panel DSP state reflects pushed param update", async ({ page }) => {
+	test("debug panel DSP state reflects pushed param update", async ({
+		page,
+	}) => {
 		const panel = page.getByTestId("debug-panel");
 		if (!(await panel.isVisible())) {
 			await page.getByTestId("debug-panel-toggle").click();
@@ -26,7 +30,9 @@ test.describe("Host to UI inbound updates", () => {
 		await expect(dspState).toContainText("id:0", { timeout: 2000 });
 	});
 
-	test("pushBeamerParamUpdate through _onParams updates the debug panel", async ({ page }) => {
+	test("pushBeamerParamUpdate through _onParams updates the debug panel", async ({
+		page,
+	}) => {
 		const panel = page.getByTestId("debug-panel");
 		if (!(await panel.isVisible())) {
 			await page.getByTestId("debug-panel-toggle").click();

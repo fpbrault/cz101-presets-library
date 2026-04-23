@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { setupPluginPage, waitForMessageMatching } from "./helpers/pluginBridge";
+import {
+	setupPluginPage,
+	waitForMessageMatching,
+} from "./helpers/pluginBridge";
 
 test.beforeEach(async ({ page }) => {
 	await setupPluginPage(page);

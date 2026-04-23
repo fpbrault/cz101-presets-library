@@ -64,9 +64,14 @@ export type AlgoParamSlotTarget =
 	| "algoParam7"
 	| "algoParam8";
 
-export type ModTarget = ModDestination | LineScopedModTarget | AlgoParamSlotTarget;
+export type ModTarget =
+	| ModDestination
+	| LineScopedModTarget
+	| AlgoParamSlotTarget;
 
-export function algoParamTargetFromSlot(slot: number): AlgoParamSlotTarget | undefined {
+export function algoParamTargetFromSlot(
+	slot: number,
+): AlgoParamSlotTarget | undefined {
 	if (!Number.isInteger(slot) || slot < 1 || slot > 8) {
 		return undefined;
 	}

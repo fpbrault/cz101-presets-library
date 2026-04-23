@@ -34,7 +34,9 @@ describe("LineSelectControl", () => {
 		useSynthParamMock.mockReturnValue({ value: "L2", setValue: vi.fn() });
 		render(<LineSelectControl />);
 
-		expect(screen.getAllByRole("button")[2].className).toContain("text-cz-cream");
+		expect(screen.getAllByRole("button")[2].className).toContain(
+			"text-cz-cream",
+		);
 		expect(screen.getAllByRole("button")[0].className).toContain(
 			"text-cz-cream-dim",
 		);

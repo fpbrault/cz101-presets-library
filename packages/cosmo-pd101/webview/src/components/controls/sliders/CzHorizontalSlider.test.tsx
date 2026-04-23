@@ -12,7 +12,9 @@ vi.mock("@/components/controls/modulation/ModulatableControl", () => ({
 describe("CzHorizontalSlider", () => {
 	it("renders a range input and emits numeric changes", () => {
 		const onChange = vi.fn();
-		render(<CzHorizontalSlider value={0.2} min={0} max={1} onChange={onChange} />);
+		render(
+			<CzHorizontalSlider value={0.2} min={0} max={1} onChange={onChange} />,
+		);
 
 		const slider = screen.getByRole("slider");
 		fireEvent.change(slider, { target: { value: "0.75" } });
@@ -20,7 +22,15 @@ describe("CzHorizontalSlider", () => {
 	});
 
 	it("supports disabled state", () => {
-		render(<CzHorizontalSlider value={0.2} min={0} max={1} onChange={vi.fn()} disabled />);
+		render(
+			<CzHorizontalSlider
+				value={0.2}
+				min={0}
+				max={1}
+				onChange={vi.fn()}
+				disabled
+			/>,
+		);
 		expect(screen.getByRole("slider")).toBeDisabled();
 	});
 

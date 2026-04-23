@@ -33,7 +33,9 @@ test.describe("UI to host outbound messages", () => {
 	test("dragging DCW Amt records a param:set message for l1_dcw_base", async ({
 		page,
 	}) => {
-		const dcwAmtSlider = page.getByRole("slider", { name: /line 1 dcw amt/i }).first();
+		const dcwAmtSlider = page
+			.getByRole("slider", { name: /line 1 dcw amt/i })
+			.first();
 		await expect(dcwAmtSlider).toBeVisible();
 
 		const box = await dcwAmtSlider.boundingBox();

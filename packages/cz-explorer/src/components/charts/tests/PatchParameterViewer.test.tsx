@@ -1,8 +1,5 @@
 // Mocking decodeCzPatch to control the patch data
-import type {
-	DecodedPatch,
-	WaveformConfig,
-} from "@cosmo/cosmo-pd101";
+import type { DecodedPatch, WaveformConfig } from "@cosmo/cosmo-pd101";
 import * as decoder from "@cosmo/cosmo-pd101";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -11,9 +8,7 @@ import { expectNoAxeViolations } from "@/test/accessibility";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 vi.mock("@cosmo/cosmo-pd101", async () => {
-	const actual = await vi.importActual(
-		"@cosmo/cosmo-pd101",
-	);
+	const actual = await vi.importActual("@cosmo/cosmo-pd101");
 	return {
 		...actual,
 		decodeCzPatch: vi.fn(),

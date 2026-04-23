@@ -3,16 +3,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import AlgoControlItem from "./AlgoControlItem";
 import AlgoControlNumber from "./AlgoControlNumber";
 import AlgoControlSelect from "./AlgoControlSelect";
+import AlgoControlsGroup from "./AlgoControlsGroup";
 import AlgoControlToggle from "./AlgoControlToggle";
 import AlgoControlTooltip from "./AlgoControlTooltip";
-import AlgoControlsGroup from "./AlgoControlsGroup";
 import AlgoIconGrid from "./AlgoIconGrid";
 
 const knobSpy = vi.fn();
 const algoParamTargetFromSlotMock = vi.fn();
 
 vi.mock("@/lib/synth/modDestination", () => ({
-	algoParamTargetFromSlot: (...args: unknown[]) => algoParamTargetFromSlotMock(...args),
+	algoParamTargetFromSlot: (...args: unknown[]) =>
+		algoParamTargetFromSlotMock(...args),
 }));
 
 vi.mock("../ControlKnob", () => ({
@@ -51,11 +52,17 @@ describe("algo controls (browser)", () => {
 	});
 
 	it("renders tooltip only when description exists", () => {
-		const { rerender } = render(<AlgoControlTooltip description="Helpful info" />);
-		expect(screen.getByRole("button", { name: "Show control description" })).toBeInTheDocument();
+		const { rerender } = render(
+			<AlgoControlTooltip description="Helpful info" />,
+		);
+		expect(
+			screen.getByRole("button", { name: "Show control description" }),
+		).toBeInTheDocument();
 
 		rerender(<AlgoControlTooltip description={undefined} />);
-		expect(screen.queryByRole("button", { name: "Show control description" })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: "Show control description" }),
+		).toBeNull();
 	});
 
 	it("renders and updates select controls", () => {
@@ -74,7 +81,9 @@ describe("algo controls (browser)", () => {
 		fireEvent.click(screen.getAllByRole("button")[0]);
 		expect(setNumber).toHaveBeenCalledWith(0);
 		fireEvent.click(screen.getAllByRole("button")[1]);
-		expect(applyOptionAssignments).toHaveBeenCalledWith(selectControl.options[1]);
+		expect(applyOptionAssignments).toHaveBeenCalledWith(
+			selectControl.options[1],
+		);
 	});
 
 	it("renders and updates toggle controls", () => {
@@ -106,7 +115,10 @@ describe("algo controls (browser)", () => {
 		);
 
 		expect(screen.getByTestId("mock-knob")).toHaveTextContent("Depth");
-		const props = knobSpy.mock.calls[0][0] as { onChange: (value: number) => void; modulatable: string };
+		const props = knobSpy.mock.calls[0][0] as {
+			onChange: (value: number) => void;
+			modulatable: string;
+		};
 		expect(props.modulatable).toBe("algoParam2");
 		props.onChange(0.8);
 		expect(setAlgoControlValue).toHaveBeenCalledWith("depth", 0.8);
@@ -129,13 +141,14 @@ describe("algo controls (browser)", () => {
 		expect(screen.getByTestId("mock-knob")).toBeInTheDocument();
 
 		rerender(
-			<AlgoControlItem {...baseProps} control={{ id: "toggle", label: "Toggle", kind: "toggle" }} />,
+			<AlgoControlItem
+				{...baseProps}
+				control={{ id: "toggle", label: "Toggle", kind: "toggle" }}
+			/>,
 		);
 		expect(screen.getByRole("checkbox")).toBeInTheDocument();
 
-		rerender(
-			<AlgoControlItem {...baseProps} control={selectControl} />,
-		);
+		rerender(<AlgoControlItem {...baseProps} control={selectControl} />);
 		expect(screen.getAllByRole("button")).toHaveLength(2);
 	});
 

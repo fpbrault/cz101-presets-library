@@ -23,11 +23,17 @@ if (check.status === 0) {
 console.log(`Installing wasm-pack v${WASM_PACK_VERSION} via cargo...`);
 
 try {
-	spawnSync("cargo", ["install", "wasm-pack", `--version=${WASM_PACK_VERSION}`], {
-		stdio: "inherit",
-	});
+	spawnSync(
+		"cargo",
+		["install", "wasm-pack", `--version=${WASM_PACK_VERSION}`],
+		{
+			stdio: "inherit",
+		},
+	);
 	console.log(`wasm-pack v${WASM_PACK_VERSION} installed successfully.`);
 } catch (error) {
-	console.error("Failed to install wasm-pack via cargo. Please ensure Rust is installed.");
+	console.error(
+		"Failed to install wasm-pack via cargo. Please ensure Rust is installed.",
+	);
 	process.exit(1);
 }

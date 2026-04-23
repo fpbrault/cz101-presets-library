@@ -1,1 +1,18 @@
-{"default":{"identifier":"default","description":"Capability for the main window","local":true,"windows":["main"],"permissions":["core:default","midi:default","shell:allow-open","fs:default",{"identifier":"fs:allow-document-meta-recursive"},{"identifier":"fs:allow-document-read-recursive"},{"identifier":"fs:allow-document-write-recursive"},"dialog:default"]}}
+{
+	"default": {
+		"identifier": "default",
+		"description": "Capability for the main window",
+		"local": true,
+		"windows": ["main"],
+		"permissions": [
+			"core:default",
+			"midi:default",
+			"shell:allow-open",
+			"fs:default",
+			{ "identifier": "fs:allow-document-meta-recursive" },
+			{ "identifier": "fs:allow-document-read-recursive" },
+			{ "identifier": "fs:allow-document-write-recursive" },
+			"dialog:default"
+		]
+	}
+}

@@ -1,5 +1,11 @@
+import {
+	act,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
@@ -58,10 +64,14 @@ describe("App", () => {
 
 		render(<App />);
 
-		expect(await screen.findByText("New Version Available")).toBeInTheDocument();
+		expect(
+			await screen.findByText("New Version Available"),
+		).toBeInTheDocument();
 		fireEvent.click(screen.getByRole("button", { name: "Later" }));
 		await waitFor(() => {
-			expect(screen.queryByText("New Version Available")).not.toBeInTheDocument();
+			expect(
+				screen.queryByText("New Version Available"),
+			).not.toBeInTheDocument();
 		});
 	});
 

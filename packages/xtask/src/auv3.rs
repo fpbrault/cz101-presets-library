@@ -9,10 +9,9 @@ use std::process::Command;
 
 use crate::build::get_version_info;
 use crate::util::{
-    cargo_target_dir_for_package,
-    codesign_bundle, combine_or_rename_binaries, detect_au_component_info,
-    detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags, install_bundle,
-    shorten_path, to_au_bundle_name, to_pascal_case, Arch, PathExt,
+    cargo_target_dir_for_package, codesign_bundle, combine_or_rename_binaries,
+    detect_au_component_info, detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags,
+    install_bundle, shorten_path, to_au_bundle_name, to_pascal_case, Arch, PathExt,
 };
 use crate::AppexPlistConfig;
 
@@ -365,7 +364,8 @@ pub fn bundle_auv3(
     crate::verbose!(verbose, "    Signing...");
     codesign_bundle(&framework_dir, None, "Framework", verbose);
 
-    let entitlements_path = workspace_root.join("packages/xtask/au-support/resources/appex.entitlements");
+    let entitlements_path =
+        workspace_root.join("packages/xtask/au-support/resources/appex.entitlements");
     codesign_bundle(&appex_dir, Some(&entitlements_path), "Appex", verbose);
 
     codesign_bundle(&bundle_dir, None, "Container app", verbose);

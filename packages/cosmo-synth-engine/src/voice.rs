@@ -10,8 +10,8 @@ use crate::dsp_utils::{lfo_output, wrap01};
 use crate::envelope::EnvGen;
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
-    FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModDestination, ModMatrix,
-    ModMode, ModSource, PortamentoMode, SynthParams, VelocityTarget,
+    FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModDestination, ModMatrix, ModMode,
+    ModSource, PortamentoMode, SynthParams, VelocityTarget,
 };
 
 // TWO_PI for f32
@@ -282,32 +282,28 @@ pub fn render_voice(
     );
 
     let phase = build_phase_frame(voice, p, sr, base_freq, &mod_sources);
-    let (s1, ks_raw1) = voice.algo_runtime.render_line1(
-        LineRenderConfig::from_line(
-            l1,
-            voice.cycle_count1,
-            phase.phi1,
-            phase.phase_a_post,
-            signal.final_dcw1,
-            signal.final_dca1,
-            signal.effective_freq1,
-            sr,
-            line1_algo_param_mods,
-        ),
-    );
-    let (s2, ks_raw2) = voice.algo_runtime.render_line2(
-        LineRenderConfig::from_line(
-            l2,
-            voice.cycle_count2,
-            phase.phi2,
-            phase.phase_b_post,
-            signal.final_dcw2,
-            signal.final_dca2,
-            signal.effective_freq2,
-            sr,
-            line2_algo_param_mods,
-        ),
-    );
+    let (s1, ks_raw1) = voice.algo_runtime.render_line1(LineRenderConfig::from_line(
+        l1,
+        voice.cycle_count1,
+        phase.phi1,
+        phase.phase_a_post,
+        signal.final_dcw1,
+        signal.final_dca1,
+        signal.effective_freq1,
+        sr,
+        line1_algo_param_mods,
+    ));
+    let (s2, ks_raw2) = voice.algo_runtime.render_line2(LineRenderConfig::from_line(
+        l2,
+        voice.cycle_count2,
+        phase.phi2,
+        phase.phase_b_post,
+        signal.final_dcw2,
+        signal.final_dca2,
+        signal.effective_freq2,
+        sr,
+        line2_algo_param_mods,
+    ));
 
     let sample = mix_line_outputs(
         p,
@@ -601,7 +597,13 @@ fn apply_global_lfo(p: &SynthParams, lfo_mod_val: f32, signal: &mut SignalState)
     }
 }
 
-fn build_phase_frame(voice: &Voice, p: &SynthParams, sr: f32, base_freq: f32, sources: &ModSources) -> PhaseFrame {
+fn build_phase_frame(
+    voice: &Voice,
+    p: &SynthParams,
+    sr: f32,
+    base_freq: f32,
+    sources: &ModSources,
+) -> PhaseFrame {
     let int_pm_mod = mod_value_for(ModDestination::IntPmAmount, &p.mod_matrix, sources);
     let int_pm_amount = (p.int_pm_amount + int_pm_mod).clamp(-1.0, 1.0);
     let pm_delta = (base_freq * p.int_pm_ratio) / sr;

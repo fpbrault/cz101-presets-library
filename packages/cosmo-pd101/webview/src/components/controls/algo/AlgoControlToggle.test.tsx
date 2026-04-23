@@ -21,7 +21,12 @@ describe("AlgoControlToggle", () => {
 	it("falls back to defaultToggle and disables when no setter", () => {
 		render(
 			<AlgoControlToggle
-				control={{ id: "sync", label: "Sync", kind: "toggle", defaultToggle: true }}
+				control={{
+					id: "sync",
+					label: "Sync",
+					kind: "toggle",
+					defaultToggle: true,
+				}}
 			/>,
 		);
 

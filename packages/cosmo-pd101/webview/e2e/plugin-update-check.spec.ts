@@ -28,8 +28,12 @@ test.describe("Plugin update checks", () => {
 		await page.getByRole("button", { name: /check updates/i }).click();
 
 		await expect(page.getByText("New Version Available")).toBeVisible();
-		await expect(page.getByText(/version v9\.9\.9 is available/i)).toBeVisible();
-		await expect(page.getByRole("link", { name: "View Release" })).toHaveAttribute(
+		await expect(
+			page.getByText(/version v9\.9\.9 is available/i),
+		).toBeVisible();
+		await expect(
+			page.getByRole("link", { name: "View Release" }),
+		).toHaveAttribute(
 			"href",
 			"https://github.com/fpbrault/cosmo-pd/releases/tag/v9.9.9",
 		);

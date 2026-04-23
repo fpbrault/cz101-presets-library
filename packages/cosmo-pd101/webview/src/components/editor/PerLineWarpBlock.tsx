@@ -7,9 +7,9 @@ import type {
 	AlgoControlRuntime,
 	LineIndex,
 } from "@/components/controls/algo/algoControlTypes";
+import CzVerticalSlider from "@/components/controls/sliders/CzVerticalSlider";
 import Card from "@/components/primitives/Card";
 import CzButton from "@/components/primitives/CzButton";
-import CzVerticalSlider from "@/components/controls/sliders/CzVerticalSlider";
 import { getCzPresetDefaults } from "@/lib/synth/algoRef";
 import type {
 	AlgoControlValueV1,

@@ -26,17 +26,29 @@ const baseProps = {
 
 describe("AlgoControlItem", () => {
 	it("renders select control for select kind", () => {
-		render(<AlgoControlItem {...baseProps} control={{ id: "x", label: "X", kind: "select" }} />);
+		render(
+			<AlgoControlItem
+				{...baseProps}
+				control={{ id: "x", label: "X", kind: "select" }}
+			/>,
+		);
 		expect(screen.getByTestId("select-control")).toBeInTheDocument();
 	});
 
 	it("renders number control by default", () => {
-		render(<AlgoControlItem {...baseProps} control={{ id: "x", label: "X" }} />);
+		render(
+			<AlgoControlItem {...baseProps} control={{ id: "x", label: "X" }} />,
+		);
 		expect(screen.getByTestId("number-control")).toBeInTheDocument();
 	});
 
 	it("renders toggle control for toggle kind", () => {
-		render(<AlgoControlItem {...baseProps} control={{ id: "x", label: "X", kind: "toggle" }} />);
+		render(
+			<AlgoControlItem
+				{...baseProps}
+				control={{ id: "x", label: "X", kind: "toggle" }}
+			/>,
+		);
 		expect(screen.getByTestId("toggle-control")).toBeInTheDocument();
 	});
 });
