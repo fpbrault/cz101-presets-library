@@ -42,7 +42,8 @@ function AlgoControlNumberInner({
 				min={min}
 				max={max}
 				value={value}
-				size={48}
+				size={64}
+				bipolar={min < 0 && max > 0}
 				color="cyan"
 				modulatable={algoParamTarget}
 				lineIndex={lineIndex}
