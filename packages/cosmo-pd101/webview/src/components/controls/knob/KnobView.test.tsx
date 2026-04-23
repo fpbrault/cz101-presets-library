@@ -27,8 +27,12 @@ describe("KnobView", () => {
 			/>,
 		);
 
-		expect(container.querySelector('path[stroke-width="2.5"]')).toBeInTheDocument();
-		expect(container.querySelector('path[stroke-width="1.45"]')).toBeInTheDocument();
+		expect(
+			container.querySelector('path[stroke-width="2.5"]'),
+		).toBeInTheDocument();
+		expect(
+			container.querySelector('path[stroke-width="1.45"]'),
+		).toBeInTheDocument();
 		expect(
 			container.querySelector(
 				'circle[fill="var(--knob-value-color)"][fill-opacity="0.95"]',
@@ -50,7 +54,9 @@ describe("KnobView", () => {
 
 		const root = container.firstElementChild as HTMLElement;
 		expect(root.style.getPropertyValue("--knob-value-color")).toBe("#00ffff");
-		expect(root.style.getPropertyValue("--knob-indicator-color")).toBe("#00ffff");
+		expect(root.style.getPropertyValue("--knob-indicator-color")).toBe(
+			"#00ffff",
+		);
 	});
 
 	it("guards against invalid numeric inputs without undefined SVG attributes", () => {

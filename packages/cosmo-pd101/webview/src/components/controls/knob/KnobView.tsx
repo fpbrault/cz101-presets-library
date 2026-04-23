@@ -1,5 +1,16 @@
-import { motion, useReducedMotion, useSpring, useTransform } from "motion/react";
-import { type CSSProperties, type ReactNode, type RefObject, useEffect, useId } from "react";
+import {
+	motion,
+	useReducedMotion,
+	useSpring,
+	useTransform,
+} from "motion/react";
+import {
+	type CSSProperties,
+	type ReactNode,
+	type RefObject,
+	useEffect,
+	useId,
+} from "react";
 import {
 	type ArcGeometry,
 	DEFAULT_ARC_GEOMETRY,
@@ -52,8 +63,12 @@ export function KnobView({
 	const innerGradId = `knobInner-${uid}`;
 	const reducedMotion = useReducedMotion();
 
-	const cx = Number.isFinite(arcGeometry.cx) ? arcGeometry.cx : DEFAULT_ARC_GEOMETRY.cx;
-	const cy = Number.isFinite(arcGeometry.cy) ? arcGeometry.cy : DEFAULT_ARC_GEOMETRY.cy;
+	const cx = Number.isFinite(arcGeometry.cx)
+		? arcGeometry.cx
+		: DEFAULT_ARC_GEOMETRY.cx;
+	const cy = Number.isFinite(arcGeometry.cy)
+		? arcGeometry.cy
+		: DEFAULT_ARC_GEOMETRY.cy;
 	const radius = Number.isFinite(arcGeometry.radius)
 		? arcGeometry.radius
 		: DEFAULT_ARC_GEOMETRY.radius;
@@ -73,7 +88,9 @@ export function KnobView({
 		? arcGeometry.indicatorRadius
 		: DEFAULT_ARC_GEOMETRY.indicatorRadius;
 
-	const safeNormalizedValue = Number.isFinite(normalizedValue) ? normalizedValue : 0;
+	const safeNormalizedValue = Number.isFinite(normalizedValue)
+		? normalizedValue
+		: 0;
 	const safeModulatedNorm =
 		modulatedNorm !== undefined && Number.isFinite(modulatedNorm)
 			? modulatedNorm
@@ -85,13 +102,28 @@ export function KnobView({
 	const midDamping = Math.max(26, Math.min(56, trailDuration / 6));
 	const tailDamping = Math.max(28, Math.min(60, trailDuration / 5));
 
-	const indicatorAngle = valueToAngle(safeNormalizedValue, startAngle, sweepAngle);
-	const indicatorTip = polarToCartesian(cx, cy, indicatorRadius, indicatorAngle);
+	const indicatorAngle = valueToAngle(
+		safeNormalizedValue,
+		startAngle,
+		sweepAngle,
+	);
+	const indicatorTip = polarToCartesian(
+		cx,
+		cy,
+		indicatorRadius,
+		indicatorAngle,
+	);
 	const thinTrackWidth = Math.max(1, trackWidth - 2);
 	const thickTrackWidth = trackWidth + 1;
 	const currentTrackWidth = hovered ? thickTrackWidth : thinTrackWidth;
 
-	const trackPath = describeArc(cx, cy, radius, startAngle, startAngle + sweepAngle);
+	const trackPath = describeArc(
+		cx,
+		cy,
+		radius,
+		startAngle,
+		startAngle + sweepAngle,
+	);
 	const valuePath = describeValuePath(safeNormalizedValue, bipolarNorm, {
 		...arcGeometry,
 		cx,
@@ -140,31 +172,53 @@ export function KnobView({
 		trailHead.set(safeModulatedNorm ?? safeNormalizedValue);
 	}, [safeModulatedNorm, safeNormalizedValue, trailHead]);
 
-	const headX = useTransform(trailHead, (norm) => modTargetPoint(norm, safeGeometry).x);
-	const headY = useTransform(trailHead, (norm) => modTargetPoint(norm, safeGeometry).y);
+	const headX = useTransform(
+		trailHead,
+		(norm) => modTargetPoint(norm, safeGeometry).x,
+	);
+	const headY = useTransform(
+		trailHead,
+		(norm) => modTargetPoint(norm, safeGeometry).y,
+	);
 
-	const trailFrontPath = useTransform([trailHead, trailMid], ([headNorm, midNorm]: number[]) => {
-		if (!Number.isFinite(headNorm) || !Number.isFinite(midNorm)) return "";
-		if (Math.abs(headNorm - midNorm) < 0.0008) return "";
-		const from = valueToAngle(midNorm, startAngle, sweepAngle);
-		const to = valueToAngle(headNorm, startAngle, sweepAngle);
-		return describeArc(cx, cy, safeGeometry.modOrbitRadius, from, to);
-	});
+	const trailFrontPath = useTransform(
+		[trailHead, trailMid],
+		([headNorm, midNorm]: number[]) => {
+			if (!Number.isFinite(headNorm) || !Number.isFinite(midNorm)) return "";
+			if (Math.abs(headNorm - midNorm) < 0.0008) return "";
+			const from = valueToAngle(midNorm, startAngle, sweepAngle);
+			const to = valueToAngle(headNorm, startAngle, sweepAngle);
+			return describeArc(cx, cy, safeGeometry.modOrbitRadius, from, to);
+		},
+	);
 
-	const trailBackPath = useTransform([trailMid, trailFar], ([midNorm, farNorm]: number[]) => {
-		if (!Number.isFinite(midNorm) || !Number.isFinite(farNorm)) return "";
-		if (Math.abs(midNorm - farNorm) < 0.0008) return "";
-		const from = valueToAngle(farNorm, startAngle, sweepAngle);
-		const to = valueToAngle(midNorm, startAngle, sweepAngle);
-		return describeArc(cx, cy, safeGeometry.modOrbitRadius, from, to);
-	});
+	const trailBackPath = useTransform(
+		[trailMid, trailFar],
+		([midNorm, farNorm]: number[]) => {
+			if (!Number.isFinite(midNorm) || !Number.isFinite(farNorm)) return "";
+			if (Math.abs(midNorm - farNorm) < 0.0008) return "";
+			const from = valueToAngle(farNorm, startAngle, sweepAngle);
+			const to = valueToAngle(midNorm, startAngle, sweepAngle);
+			return describeArc(cx, cy, safeGeometry.modOrbitRadius, from, to);
+		},
+	);
 
 	const centerTick =
 		bipolarNorm !== null
 			? (() => {
 					const angle = valueToAngle(bipolarNorm, startAngle, sweepAngle);
-					const outer = polarToCartesian(cx, cy, radius + currentTrackWidth / 2 + 1, angle);
-					const inner = polarToCartesian(cx, cy, radius - currentTrackWidth / 2 - 1, angle);
+					const outer = polarToCartesian(
+						cx,
+						cy,
+						radius + currentTrackWidth / 2 + 1,
+						angle,
+					);
+					const inner = polarToCartesian(
+						cx,
+						cy,
+						radius - currentTrackWidth / 2 - 1,
+						angle,
+					);
 					return { outer, inner };
 				})()
 			: null;
@@ -196,8 +250,16 @@ export function KnobView({
 			>
 				<defs>
 					<linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-						<stop offset="0%" stopColor="var(--knob-value-color)" stopOpacity="0.18" />
-						<stop offset="100%" stopColor="var(--knob-value-color)" stopOpacity="0" />
+						<stop
+							offset="0%"
+							stopColor="var(--knob-value-color)"
+							stopOpacity="0.18"
+						/>
+						<stop
+							offset="100%"
+							stopColor="var(--knob-value-color)"
+							stopOpacity="0"
+						/>
 					</linearGradient>
 					<radialGradient id={innerGradId} cx="50%" cy="50%" r="50%">
 						<stop offset="60%" stopColor="rgba(0,0,0,0)" />

@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { createRef } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { useKnobInteraction } from "./useKnobInteraction";
 
 function makeRefs() {

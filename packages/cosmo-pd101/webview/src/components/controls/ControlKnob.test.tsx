@@ -69,7 +69,9 @@ describe("ControlKnob", () => {
 			/>,
 		);
 
-		fireEvent.doubleClick(screen.getByRole("spinbutton", { name: "Resonance" }));
+		fireEvent.doubleClick(
+			screen.getByRole("spinbutton", { name: "Resonance" }),
+		);
 		expect(onChange).toHaveBeenCalledWith(0.1);
 	});
 
