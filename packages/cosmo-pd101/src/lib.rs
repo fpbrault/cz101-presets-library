@@ -675,14 +675,14 @@ impl CzParameters {
 #[allow(dead_code, unused_variables, clippy::items_after_statements)]
 fn _assert_synth_params_coverage(p: SynthParams) {
     use cosmo_synth_engine::params::{
-        ChorusParams, CzLineParams, DelayParams, FilterParams, LineParams, LfoParams,
+        ChorusParams, CzLineParams, DelayParams, FilterParams, LfoParams, LineParams,
         PortamentoParams, ReverbParams, VibratoParams,
     };
 
     let SynthParams {
         line_select,
         mod_mode,
-        ring_gain: _ring_gain,             // intentionally not a VST param
+        ring_gain: _ring_gain, // intentionally not a VST param
         octave,
         line1,
         line2,
@@ -690,7 +690,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         int_pm_ratio,
         ext_pm_amount,
         pm_pre,
-        frequency: _frequency,             // set by the MIDI layer, not a VST param
+        frequency: _frequency, // set by the MIDI layer, not a VST param
         volume,
         poly_mode,
         legato,
@@ -702,14 +702,25 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         portamento,
         lfo,
         filter,
-        pitch_bend_range: _pitch_bend_range,               // not yet a VST param
+        pitch_bend_range: _pitch_bend_range, // not yet a VST param
         mod_wheel_vibrato_depth: _mod_wheel_vibrato_depth, // not yet a VST param
-        mod_matrix: _mod_matrix,                           // not yet a VST param
+        mod_matrix: _mod_matrix,             // not yet a VST param
     } = p;
 
-    let ChorusParams { rate: _cho_rate, depth: _cho_depth, mix: _cho_mix } = chorus;
-    let DelayParams { time: _del_time, feedback: _del_fb, mix: _del_mix } = delay;
-    let ReverbParams { size: _rev_size, mix: _rev_mix } = reverb;
+    let ChorusParams {
+        rate: _cho_rate,
+        depth: _cho_depth,
+        mix: _cho_mix,
+    } = chorus;
+    let DelayParams {
+        time: _del_time,
+        feedback: _del_fb,
+        mix: _del_mix,
+    } = delay;
+    let ReverbParams {
+        size: _rev_size,
+        mix: _rev_mix,
+    } = reverb;
     let VibratoParams {
         enabled: _vib_enabled,
         waveform: _vib_waveform,
@@ -792,8 +803,17 @@ fn _assert_synth_params_coverage(p: SynthParams) {
 
     // Suppress unused-variable warnings for fields that ARE mapped to VST params.
     let _ = (
-        line_select, mod_mode, octave, int_pm_amount, int_pm_ratio, ext_pm_amount,
-        pm_pre, volume, poly_mode, legato, velocity_target,
+        line_select,
+        mod_mode,
+        octave,
+        int_pm_amount,
+        int_pm_ratio,
+        ext_pm_amount,
+        pm_pre,
+        volume,
+        poly_mode,
+        legato,
+        velocity_target,
     );
 }
 
@@ -900,9 +920,7 @@ struct CzWebViewHandler {
 }
 
 impl CzWebViewHandler {
-    fn parse_set_envelope_args(
-        args: &[serde_json::Value],
-    ) -> Result<(&str, StepEnvData), String> {
+    fn parse_set_envelope_args(args: &[serde_json::Value]) -> Result<(&str, StepEnvData), String> {
         if args.len() == 2 {
             let envelope_id = args[0]
                 .as_str()
@@ -996,7 +1014,10 @@ impl WebViewHandler for CzWebViewHandler {
         method: &str,
         args: &[serde_json::Value],
     ) -> Result<serde_json::Value, String> {
-        append_log(&format!("webview invoke method={method} args={}", args.len()));
+        append_log(&format!(
+            "webview invoke method={method} args={}",
+            args.len()
+        ));
 
         match method {
             "setEnvelope" => {
@@ -1290,3 +1311,125 @@ impl Processor for CzProcessor {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmo_synth_engine::params::{ModDestination, ModSource};
+    use serde_json::json;
+
+    #[test]
+    fn parse_set_envelope_args_accepts_wrapped_and_unwrapped_payloads() {
+        let unwrapped_args = [
+            json!("l1_dco"),
+            json!({
+                "steps": [{ "level": 1.0, "rate": 10.0 }],
+                "sustainStep": 0,
+                "stepCount": 1,
+                "loop": false,
+            }),
+        ];
+        let unwrapped = CzWebViewHandler::parse_set_envelope_args(&unwrapped_args)
+            .expect("unwrapped setEnvelope payload should parse");
+        assert_eq!(unwrapped.0, "l1_dco");
+        assert_eq!(unwrapped.1.step_count, 1);
+        assert_eq!(unwrapped.1.steps[0].rate, 10);
+
+        let wrapped_args = [json!({
+            "envelopeId": "l2_dca",
+            "data": {
+                "steps": [{ "level": 0.5, "rate": 22.0 }],
+                "sustainStep": 0,
+                "stepCount": 1,
+                "loop": true,
+            }
+        })];
+        let wrapped = CzWebViewHandler::parse_set_envelope_args(&wrapped_args)
+            .expect("wrapped setEnvelope payload should parse");
+        assert_eq!(wrapped.0, "l2_dca");
+        assert!(wrapped.1.loop_);
+        assert_eq!(wrapped.1.steps[0].level, 0.5);
+    }
+
+    #[test]
+    fn parse_set_algo_controls_args_accepts_wrapped_and_unwrapped_payloads() {
+        let unwrapped = CzWebViewHandler::parse_set_algo_controls_args(&[
+            json!(2),
+            json!([{ "id": "curve", "value": 0.75 }]),
+        ])
+        .expect("unwrapped setAlgoControls payload should parse");
+        assert_eq!(unwrapped.0, 2);
+        assert_eq!(unwrapped.1.len(), 1);
+        assert_eq!(unwrapped.1[0].id, "curve");
+        assert_eq!(unwrapped.1[0].value, 0.75);
+
+        let wrapped = CzWebViewHandler::parse_set_algo_controls_args(&[json!({
+            "lineId": 1,
+            "algo_controls": [{ "id": "spread", "value": 0.25 }]
+        })])
+        .expect("wrapped setAlgoControls payload should parse");
+        assert_eq!(wrapped.0, 1);
+        assert_eq!(wrapped.1.len(), 1);
+        assert_eq!(wrapped.1[0].id, "spread");
+        assert_eq!(wrapped.1[0].value, 0.25);
+    }
+
+    #[test]
+    fn parse_set_mod_matrix_args_accepts_raw_and_wrapped_payloads() {
+        let raw = CzWebViewHandler::parse_set_mod_matrix_args(&[json!({
+            "routes": [{
+                "source": "lfo1",
+                "destination": "volume",
+                "amount": 0.5,
+                "enabled": true,
+            }]
+        })])
+        .expect("raw setModMatrix payload should parse");
+        assert_eq!(raw.routes.len(), 1);
+        assert_eq!(raw.routes[0].source, ModSource::Lfo1);
+        assert_eq!(raw.routes[0].destination, ModDestination::Volume);
+        assert_eq!(raw.routes[0].amount, 0.5);
+        assert!(raw.routes[0].enabled);
+
+        let wrapped = CzWebViewHandler::parse_set_mod_matrix_args(&[json!({
+            "modMatrix": {
+                "routes": [{
+                    "source": "modWheel",
+                    "destination": "line1AlgoParam2",
+                    "amount": -0.25,
+                    "enabled": false,
+                }]
+            }
+        })])
+        .expect("wrapped setModMatrix payload should parse");
+        assert_eq!(wrapped.routes.len(), 1);
+        assert_eq!(wrapped.routes[0].source, ModSource::ModWheel);
+        assert_eq!(
+            wrapped.routes[0].destination,
+            ModDestination::Line1AlgoParam2
+        );
+        assert_eq!(wrapped.routes[0].amount, -0.25);
+        assert!(!wrapped.routes[0].enabled);
+    }
+
+    #[test]
+    fn parse_set_mod_matrix_args_rejects_missing_wrapped_payloads() {
+        let error = CzWebViewHandler::parse_set_mod_matrix_args(&[
+            json!({ "unexpected": { "routes": [] } }),
+            json!({}),
+        ])
+        .expect_err("invalid wrapped setModMatrix payload should fail");
+        assert!(error.contains("missing mod_matrix"));
+    }
+
+    #[test]
+    fn map_waveform_normalizes_double_sine_to_multi_sine() {
+        assert_eq!(
+            CzParameters::map_waveform(Waveform::DoubleSine),
+            cosmo_synth_engine::params::CzWaveform::MultiSine
+        );
+        assert_eq!(
+            CzParameters::map_waveform(Waveform::MultiSine),
+            cosmo_synth_engine::params::CzWaveform::MultiSine
+        );
+    }
+}
