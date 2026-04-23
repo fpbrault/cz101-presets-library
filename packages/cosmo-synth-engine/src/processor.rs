@@ -8,6 +8,7 @@ use alloc::vec::Vec;
 use core::array;
 
 use crate::dsp_utils::lfo_output;
+use crate::envelope::normalize_synth_params_envelopes_to_raw_if_human;
 use crate::fx::FxChain;
 use crate::generators::PER_LINE_HEADROOM;
 use crate::params::{PolyMode, SynthParams, NUM_VOICES};
@@ -103,7 +104,8 @@ impl CosmoProcessor {
     // -----------------------------------------------------------------------
 
     /// Replace the entire parameter set and re-sync FX.
-    pub fn set_params(&mut self, params: SynthParams) {
+    pub fn set_params(&mut self, mut params: SynthParams) {
+        normalize_synth_params_envelopes_to_raw_if_human(&mut params);
         self.params = params;
         self.update_fx();
     }

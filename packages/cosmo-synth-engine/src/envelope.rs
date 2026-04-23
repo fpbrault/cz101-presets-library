@@ -1,4 +1,24 @@
-use crate::params::StepEnvData;
+pub use crate::envelope_map::EnvelopeKind;
+use crate::envelope_map::{
+    human_level_to_raw, human_rate_to_raw, raw_level_to_human, raw_rate_to_human,
+};
+use crate::params::{StepEnvData, SynthParams};
+
+pub fn normalize_env_to_raw_if_human(kind: EnvelopeKind, env: &mut StepEnvData) {
+    for step in env.steps.iter_mut() {
+        step.level = human_level_to_raw(kind, step.level);
+        step.rate = human_rate_to_raw(kind, step.rate);
+    }
+}
+
+pub fn normalize_synth_params_envelopes_to_raw_if_human(params: &mut SynthParams) {
+    normalize_env_to_raw_if_human(EnvelopeKind::Dco, &mut params.line1.dco_env);
+    normalize_env_to_raw_if_human(EnvelopeKind::Dcw, &mut params.line1.dcw_env);
+    normalize_env_to_raw_if_human(EnvelopeKind::Dca, &mut params.line1.dca_env);
+    normalize_env_to_raw_if_human(EnvelopeKind::Dco, &mut params.line2.dco_env);
+    normalize_env_to_raw_if_human(EnvelopeKind::Dcw, &mut params.line2.dcw_env);
+    normalize_env_to_raw_if_human(EnvelopeKind::Dca, &mut params.line2.dca_env);
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct EnvGen {
@@ -27,7 +47,14 @@ impl EnvGen {
     /// Advance the envelope by one sample.
     ///
     /// Mirrors `advanceEnv` in pdVisualizerProcessor.js exactly.
-    pub fn advance(&mut self, env_data: &StepEnvData, sr: f32, key_follow: f32, note: u8) {
+    pub fn advance(
+        &mut self,
+        kind: EnvelopeKind,
+        env_data: &StepEnvData,
+        sr: f32,
+        key_follow: f32,
+        note: u8,
+    ) {
         let steps = &env_data.steps;
         // Use step_count to honour the active-step window (matches JS `stepCount`)
         let step_count = env_data.step_count.clamp(1, steps.len());
@@ -39,9 +66,18 @@ impl EnvGen {
         let speed_mult = 1.0 + key_follow * note_offset * 0.1;
 
         let step_data = &steps[current_step];
-        let target_level = step_data.level;
-        let frozen_step = is_frozen_step(self.prev_level, target_level, step_data.rate);
-        let raw_duration = step_duration_samples(self.prev_level, target_level, step_data.rate, sr);
+        let step_rate = raw_rate_to_human(kind, step_data.rate);
+        let step_target_level = raw_level_to_human(kind, step_data.level) as f32 / 99.0;
+        // CZ behaviour: the last active step always targets 0 (silence / neutral
+        // pitch) so that all envelopes return to their rest state.  The stored
+        // value is left untouched so it is available when step count is raised.
+        let target_level = if current_step == effective_end_step {
+            0.0
+        } else {
+            step_target_level
+        };
+        let frozen_step = is_frozen_step(self.prev_level, target_level, step_rate);
+        let raw_duration = step_duration_samples(self.prev_level, target_level, step_rate, sr);
         // Apply key-follow speed multiplier, ensure at least 1
         let duration = if raw_duration == 0 {
             0
@@ -71,7 +107,7 @@ impl EnvGen {
                 self.step += 1;
                 if self.step >= effective_end_step {
                     self.step = effective_end_step;
-                    self.output = steps[effective_end_step].level;
+                    self.output = 0.0; // last step always ends at 0
                 }
             }
             return;
@@ -83,11 +119,18 @@ impl EnvGen {
             return;
         }
 
-        // Re-read using current_step (matches JS which re-assigns stepData)
+        // Re-read using current_step (matches JS which re-assigns stepData).
+        // CZ behaviour: last step always targets 0.
         let step_data2 = &steps[current_step];
-        let target_level2 = step_data2.level;
-        let frozen_step2 = is_frozen_step(self.prev_level, target_level2, step_data2.rate);
-        let duration2 = step_duration_samples(self.prev_level, target_level2, step_data2.rate, sr);
+        let step_rate2 = raw_rate_to_human(kind, step_data2.rate);
+        let step_target_level2 = raw_level_to_human(kind, step_data2.level) as f32 / 99.0;
+        let target_level2 = if current_step == effective_end_step {
+            0.0
+        } else {
+            step_target_level2
+        };
+        let frozen_step2 = is_frozen_step(self.prev_level, target_level2, step_rate2);
+        let duration2 = step_duration_samples(self.prev_level, target_level2, step_rate2, sr);
 
         if frozen_step2 {
             // CZ-style hold: stop advancing this envelope step.
@@ -126,7 +169,7 @@ impl EnvGen {
                     self.step = 0;
                 } else {
                     self.step = effective_end_step;
-                    self.output = steps[effective_end_step].level;
+                    self.output = 0.0; // last step always ends at 0
                 }
             }
         }
@@ -186,4 +229,82 @@ fn step_duration_samples(from_level: f32, to_level: f32, rate: u8, sr: f32) -> u
 #[inline]
 fn is_frozen_step(from_level: f32, to_level: f32, rate: u8) -> bool {
     rate == 0 && libm::fabsf(to_level - from_level) > 0.0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::params::SynthParams;
+
+    #[test]
+    fn dco_rate_mapping_matches_spec() {
+        assert_eq!(human_rate_to_raw(EnvelopeKind::Dco, 0), 0);
+        assert_eq!(human_rate_to_raw(EnvelopeKind::Dco, 99), 127);
+        assert_eq!(raw_rate_to_human(EnvelopeKind::Dco, 0), 0);
+        assert_eq!(raw_rate_to_human(EnvelopeKind::Dco, 127), 99);
+    }
+
+    #[test]
+    fn dco_level_mapping_matches_spec() {
+        assert_eq!(human_level_to_raw(EnvelopeKind::Dco, 63), 63);
+        assert_eq!(human_level_to_raw(EnvelopeKind::Dco, 64), 68);
+        assert_eq!(human_level_to_raw(EnvelopeKind::Dco, 99), 103);
+        assert_eq!(raw_level_to_human(EnvelopeKind::Dco, 63), 63);
+        assert_eq!(raw_level_to_human(EnvelopeKind::Dco, 68), 64);
+    }
+
+    #[test]
+    fn dcw_mapping_matches_spec() {
+        assert_eq!(human_rate_to_raw(EnvelopeKind::Dcw, 0), 8);
+        assert_eq!(human_rate_to_raw(EnvelopeKind::Dcw, 99), 127);
+        assert_eq!(human_level_to_raw(EnvelopeKind::Dcw, 99), 127);
+        assert_eq!(raw_rate_to_human(EnvelopeKind::Dcw, 8), 0);
+        assert_eq!(raw_rate_to_human(EnvelopeKind::Dcw, 127), 99);
+    }
+
+    #[test]
+    fn dca_mapping_matches_spec() {
+        assert_eq!(human_rate_to_raw(EnvelopeKind::Dca, 0), 0);
+        assert_eq!(human_rate_to_raw(EnvelopeKind::Dca, 99), 119);
+        assert_eq!(human_level_to_raw(EnvelopeKind::Dca, 0), 0);
+        assert_eq!(human_level_to_raw(EnvelopeKind::Dca, 1), 29);
+        assert_eq!(human_level_to_raw(EnvelopeKind::Dca, 99), 127);
+        assert_eq!(raw_level_to_human(EnvelopeKind::Dca, 127), 99);
+    }
+
+    #[test]
+    fn normalize_synth_params_converts_human_envelopes_to_raw() {
+        use crate::params::{EnvStep, NUM_ENV_STEPS};
+        // Build all envelopes from known human-scale values (level/rate in 0–99)
+        // so no step starts as already-raw. This prevents double-conversion of
+        // default/untouched steps.
+        let blank = || StepEnvData {
+            steps: [EnvStep { level: 0, rate: 0 }; NUM_ENV_STEPS],
+            sustain_step: 0,
+            step_count: 1,
+            loop_: false,
+        };
+        let mut params = SynthParams::default();
+        params.line1.dco_env = blank();
+        params.line1.dco_env.steps[0] = EnvStep {
+            level: 66,
+            rate: 99,
+        };
+        params.line1.dcw_env = blank();
+        params.line1.dcw_env.steps[0] = EnvStep { level: 99, rate: 0 };
+        params.line1.dca_env = blank();
+        params.line1.dca_env.steps[0] = EnvStep { level: 1, rate: 99 };
+        params.line2.dco_env = blank();
+        params.line2.dcw_env = blank();
+        params.line2.dca_env = blank();
+
+        normalize_synth_params_envelopes_to_raw_if_human(&mut params);
+
+        assert_eq!(params.line1.dco_env.steps[0].level, 70);
+        assert_eq!(params.line1.dco_env.steps[0].rate, 127);
+        assert_eq!(params.line1.dcw_env.steps[0].level, 127);
+        assert_eq!(params.line1.dcw_env.steps[0].rate, 8);
+        assert_eq!(params.line1.dca_env.steps[0].level, 29);
+        assert_eq!(params.line1.dca_env.steps[0].rate, 119);
+    }
 }

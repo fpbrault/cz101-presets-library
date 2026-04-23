@@ -17,7 +17,7 @@ function convertEnvelope(env: {
 }): StepEnvData {
 	const czSteps = env.steps.slice(0, env.endStep);
 	const steps: EnvStep[] = czSteps.map((step) => ({
-		level: step.level / 99,
+		level: step.level,
 		rate: step.rate,
 	}));
 

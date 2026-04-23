@@ -31,7 +31,7 @@ try {
 		},
 	);
 	console.log(`wasm-pack v${WASM_PACK_VERSION} installed successfully.`);
-} catch (error) {
+} catch (_error) {
 	console.error(
 		"Failed to install wasm-pack via cargo. Please ensure Rust is installed.",
 	);
