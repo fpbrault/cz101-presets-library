@@ -22,8 +22,8 @@ describe("ModulationMenu", () => {
 		);
 
 		expect(screen.getByText("Volume")).toBeInTheDocument();
-		expect(screen.getByText("LFO 1")).toBeInTheDocument();
-		expect(screen.getByText("Mod Wheel")).toBeInTheDocument();
+		expect(screen.getAllByText("LFO 1")).toHaveLength(2);
+		expect(screen.getAllByText("Mod Wheel")).toHaveLength(2);
 		expect(screen.getByText("0.50")).toBeInTheDocument();
 	});
 

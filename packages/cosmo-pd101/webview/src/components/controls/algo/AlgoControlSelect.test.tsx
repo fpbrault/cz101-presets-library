@@ -24,7 +24,7 @@ describe("AlgoControlSelect", () => {
 		);
 
 		expect(screen.getAllByRole("button")).toHaveLength(2);
-		expect(screen.getByRole("button").className).toContain("text-cz-cream");
+		expect(screen.getAllByRole("button")[0].className).toContain("text-cz-cream");
 	});
 
 	it("uses binding.setNumber for options without assignments", () => {

@@ -43,9 +43,10 @@ describe("CzVerticalSlider", () => {
 		fireEvent.keyDown(slider, { key: "ArrowDown" });
 		fireEvent.wheel(slider, { deltaY: -100 });
 
-		expect(onChange).toHaveBeenNthCalledWith(1, 0.6);
-		expect(onChange).toHaveBeenNthCalledWith(2, 0.4);
-		expect(onChange).toHaveBeenNthCalledWith(3, 0.6);
+		const values = onChange.mock.calls.map(([v]) => v as number);
+		expect(values[0]).toBeCloseTo(0.6, 10);
+		expect(values[1]).toBeCloseTo(0.4, 10);
+		expect(values[2]).toBeCloseTo(0.6, 10);
 	});
 
 	it("wraps in modulatable control when destination is provided", () => {

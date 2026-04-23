@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import AlgoControlNumber from "./AlgoControlNumber";
 
 const knobSpy = vi.fn();
@@ -17,6 +17,11 @@ vi.mock("../ControlKnob", () => ({
 }));
 
 describe("AlgoControlNumber", () => {
+	beforeEach(() => {
+		knobSpy.mockClear();
+		algoParamTargetFromSlotMock.mockReset();
+	});
+
 	it("renders knob with resolved value and forwards number changes to binding", () => {
 		const setNumber = vi.fn();
 		algoParamTargetFromSlotMock.mockReturnValue("algoParam2");
@@ -33,7 +38,11 @@ describe("AlgoControlNumber", () => {
 		);
 
 		expect(screen.getByTestId("mock-knob")).toHaveTextContent("Depth");
-		const props = knobSpy.mock.calls[0][0] as { value: number; onChange: (value: number) => void; modulatable: string };
+		const props = knobSpy.mock.calls[0][0] as {
+			value: number;
+			onChange: (value: number) => void;
+			modulatable: string;
+		};
 		expect(props.value).toBe(1.25);
 		expect(props.modulatable).toBe("algoParam2");
 		props.onChange(0.77);
@@ -52,7 +61,9 @@ describe("AlgoControlNumber", () => {
 			/>,
 		);
 
-		const props = knobSpy.mock.calls[0][0] as { onChange: (value: number) => void };
+		const props = knobSpy.mock.calls.at(-1)?.[0] as {
+			onChange: (value: number) => void;
+		};
 		props.onChange(0.2);
 		expect(setAlgoControlValue).toHaveBeenCalledWith("res", 0.2);
 	});
