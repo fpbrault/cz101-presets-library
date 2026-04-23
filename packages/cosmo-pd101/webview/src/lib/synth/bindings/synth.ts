@@ -5,11 +5,11 @@
  */
 export type EnvStep = {
 	/**
-	 * Level [0.0, 1.0]
+	 * Internal machine level [0, 127].
 	 */
 	level: number;
 	/**
-	 * Rate [0, 99] — JS may send floats; we round to u8.
+	 * Internal machine rate [0, 127].
 	 */
 	rate: number;
 };
