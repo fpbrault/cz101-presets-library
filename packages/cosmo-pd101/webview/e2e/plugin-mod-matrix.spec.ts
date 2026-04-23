@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("Mod matrix plugin bridge", () => {
 	test("adding a mod route should invoke setModMatrix", async ({ page }) => {
-		const volumeKnob = page.getByRole("button", { name: /^volume$/i });
+		const volumeKnob = page.getByRole("spinbutton", { name: /^volume$/i });
 		await expect(volumeKnob).toBeVisible();
 		await volumeKnob.hover();
 

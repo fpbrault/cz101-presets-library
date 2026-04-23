@@ -139,7 +139,10 @@ export function useKnobInteraction({
 		(e: React.KeyboardEvent) => {
 			if (disabled) return;
 			const currentNorm = normalizeValue(value, min, max);
-			const delta = e.shiftKey ? fineWheelStep : wheelStep;
+			const stepNorm = step && max > min ? step / (max - min) : undefined;
+			const delta = e.shiftKey
+				? (stepNorm ?? fineWheelStep)
+				: (stepNorm ?? wheelStep);
 			switch (e.key) {
 				case "ArrowUp":
 				case "ArrowRight":
@@ -165,7 +168,7 @@ export function useKnobInteraction({
 					break;
 			}
 		},
-		[disabled, value, min, max, wheelStep, fineWheelStep, emit],
+		[disabled, value, min, max, step, wheelStep, fineWheelStep, emit],
 	);
 
 	const beginEdit = useCallback(
@@ -227,7 +230,7 @@ export function useKnobInteraction({
 					: 1;
 				const nextValue =
 					state.startValue +
-					(deltaY / (effectiveSensitivity * screenRatio)) * (max - min);
+					((deltaY * screenRatio) / effectiveSensitivity) * (max - min);
 				emit(nextValue);
 			}
 		};

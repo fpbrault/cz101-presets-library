@@ -12,7 +12,7 @@ test.describe("Mod matrix route management", () => {
 	test("add, adjust, disable, and remove route emits setModMatrix payloads", async ({
 		page,
 	}) => {
-		const volumeKnob = page.getByRole("button", { name: /^volume$/i });
+		const volumeKnob = page.getByRole("spinbutton", { name: /^volume$/i });
 		await expect(volumeKnob).toBeVisible();
 		await volumeKnob.hover();
 

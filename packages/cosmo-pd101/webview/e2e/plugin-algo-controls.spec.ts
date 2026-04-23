@@ -19,7 +19,7 @@ test.describe("Algo controls plugin bridge", () => {
 		await bendAlgoButton.click();
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
 
-		const curveKnob = page.getByRole("button", { name: /^curve$/i });
+		const curveKnob = page.getByRole("spinbutton", { name: /^curve$/i });
 		await expect(curveKnob).toBeVisible();
 
 		const box = await curveKnob.boundingBox();
@@ -56,7 +56,7 @@ test.describe("Algo controls plugin bridge", () => {
 		await bendAlgoButton.click();
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
 
-		const curveKnob = page.getByRole("button", { name: /^curve$/i });
+		const curveKnob = page.getByRole("spinbutton", { name: /^curve$/i });
 		await expect(curveKnob).toBeVisible();
 
 		const box = await curveKnob.boundingBox();

@@ -96,11 +96,16 @@ export function KnobView({
 			? modulatedNorm
 			: undefined;
 	const trailDuration = Number.isFinite(modTrailDuration)
-		? Math.max(60, modTrailDuration)
+		? modTrailDuration > 0
+			? Math.max(60, modTrailDuration)
+			: 0
 		: 220;
-	const headDamping = Math.max(24, Math.min(52, trailDuration / 7));
-	const midDamping = Math.max(26, Math.min(56, trailDuration / 6));
-	const tailDamping = Math.max(28, Math.min(60, trailDuration / 5));
+	const headDamping =
+		trailDuration > 0 ? Math.max(24, Math.min(52, trailDuration / 7)) : 0;
+	const midDamping =
+		trailDuration > 0 ? Math.max(26, Math.min(56, trailDuration / 6)) : 0;
+	const tailDamping =
+		trailDuration > 0 ? Math.max(28, Math.min(60, trailDuration / 5)) : 0;
 
 	const indicatorAngle = valueToAngle(
 		safeNormalizedValue,
@@ -336,7 +341,7 @@ export function KnobView({
 					fillOpacity="0.85"
 				/>
 
-				{safeModulatedNorm !== undefined && (
+				{safeModulatedNorm !== undefined && trailDuration > 0 && (
 					<>
 						<motion.path
 							d={trailBackPath}

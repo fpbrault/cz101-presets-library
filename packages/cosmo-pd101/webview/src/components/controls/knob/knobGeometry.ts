@@ -18,7 +18,7 @@ export interface ArcGeometry {
 	viewBoxSize: number;
 	/** Indicator line end radius (distance from center to tip). Default 14. */
 	indicatorRadius: number;
-	/** Orbit radius for the modulation target dot. Default 19.5. */
+	/** Orbit radius for the modulation target dot. Default 22.5. */
 	modOrbitRadius: number;
 	/** Hit radius for the handle in viewBox units (for angular drag detection). Default 6. */
 	handleHitRadius: number;
