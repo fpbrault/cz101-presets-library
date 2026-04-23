@@ -110,23 +110,25 @@ function PerLineParametersCardInner({
 				Parameters
 			</div>
 			<div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-3 place-items-center content-start">
-				{controls.map(({ label, value, min, max, step, color, fmt, onChange, modDest }) => (
-					<ControlKnob
-						key={label}
-						label={label}
-						value={value}
-						min={min}
-						max={max}
-						step={step}
-						size={52}
-						bipolar={min < 0 && max > 0}
-						color={color}
-						modulatable={modDest}
-						lineIndex={lineIndex}
-						onChange={onChange}
-						valueFormatter={fmt}
-					/>
-				))}
+				{controls.map(
+					({ label, value, min, max, step, color, fmt, onChange, modDest }) => (
+						<ControlKnob
+							key={label}
+							label={label}
+							value={value}
+							min={min}
+							max={max}
+							step={step}
+							size={52}
+							bipolar={min < 0 && max > 0}
+							color={color}
+							modulatable={modDest}
+							lineIndex={lineIndex}
+							onChange={onChange}
+							valueFormatter={fmt}
+						/>
+					),
+				)}
 			</div>
 		</Card>
 	);
