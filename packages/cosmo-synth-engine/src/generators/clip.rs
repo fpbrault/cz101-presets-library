@@ -7,6 +7,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Drive",
         description: "Increases the gain before clipping for a stronger flattened peak.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -18,6 +21,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Shape",
         description: "Sets the clip threshold width from narrow to wide.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -29,9 +35,12 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Bias",
         description: "Offsets the clipped region toward the start or end of the cycle.",
         kind: AlgoControlKindV1::Number,
-        min: Some(0.0),
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: true,
+        icon_name: None,
+        min: Some(-1.0),
         max: Some(1.0),
-        default: Some(0.5),
+        default: Some(0.0),
         default_toggle: None,
         options: &NO_CONTROL_OPTIONS,
     },
@@ -40,6 +49,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Soft",
         description: "Blends from hard clipping into a softer rounded saturation.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.0),
@@ -60,7 +72,8 @@ pub const DEFINITION: AlgoDefinitionV1 = AlgoDefinitionV1 {
 pub fn warp_phase(phase: f32, amt: f32, drive: f32, shape: f32, bias: f32, soft: f32) -> f32 {
     let gain = 1.0 + amt * (2.0 + drive * 8.0);
     let clip = 0.15 + (1.0 - shape) * 0.35;
-    let x = ((phase - 0.5) + (bias - 0.5) * 0.5) * gain;
+    // bias is bipolar [-1, 1]; remap: old = (bias + 1) / 2, so (old - 0.5) = bias / 2
+    let x = ((phase - 0.5) + bias * 0.25) * gain;
     let hard = x.clamp(-clip, clip);
     let soft_mix = soft.clamp(0.0, 1.0);
     let softened = libm::tanhf(x / clip.max(0.001)) * clip;

@@ -277,6 +277,15 @@ export type LineParams = {
 export type AlgoControlKindV1 = "number" | "select" | "toggle";
 
 /**
+ * Intended presentation for a control in synth UIs.
+ */
+export type AlgoControlPresentationV1 =
+	| "knob"
+	| "slider"
+	| "buttonGroup"
+	| "dropdown";
+
+/**
  * Assignment emitted by a select option to update one or more numeric controls.
  */
 export type AlgoControlAssignmentV1 = { controlId: string; value: number };
@@ -298,6 +307,9 @@ export type AlgoControlV1 = {
 	label: string;
 	description: string;
 	kind: AlgoControlKindV1;
+	controlType: AlgoControlPresentationV1;
+	bipolar: boolean;
+	iconName: string | null;
 	min: number | null;
 	max: number | null;
 	default: number | null;

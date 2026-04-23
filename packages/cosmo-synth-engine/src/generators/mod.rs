@@ -170,6 +170,17 @@ pub enum AlgoControlKindV1 {
     Toggle,
 }
 
+/// Intended presentation for a control in synth UIs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub enum AlgoControlPresentationV1 {
+    Knob,
+    Slider,
+    ButtonGroup,
+    Dropdown,
+}
+
 /// Assignment emitted by a select option to update one or more numeric controls.
 #[derive(Debug, Clone, Copy, Serialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -198,6 +209,9 @@ pub struct AlgoControlV1 {
     pub label: &'static str,
     pub description: &'static str,
     pub kind: AlgoControlKindV1,
+    pub control_type: AlgoControlPresentationV1,
+    pub bipolar: bool,
+    pub icon_name: Option<&'static str>,
     pub min: Option<f32>,
     pub max: Option<f32>,
     pub default: Option<f32>,
@@ -237,6 +251,9 @@ pub const WARP_AMOUNT_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "Warp Amount",
     description: "Sets the overall phase distortion amount for the current algorithm.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Knob,
+    bipolar: false,
+    icon_name: None,
     min: Some(0.0),
     max: Some(1.0),
     default: Some(0.0),
@@ -248,6 +265,9 @@ pub const DCW_COMP_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "DCW Comp",
     description: "Compensates output level as the distortion envelope opens and closes.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Knob,
+    bipolar: false,
+    icon_name: None,
     min: Some(0.0),
     max: Some(1.0),
     default: Some(0.0),
@@ -259,6 +279,9 @@ pub const LEVEL_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "Level",
     description: "Sets the base output level for this line.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Slider,
+    bipolar: false,
+    icon_name: Some("volume"),
     min: Some(0.0),
     max: Some(1.0),
     default: Some(1.0),
@@ -270,6 +293,9 @@ pub const OCTAVE_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "Octave",
     description: "Offsets oscillator pitch by whole octaves.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Knob,
+    bipolar: true,
+    icon_name: Some("octave"),
     min: Some(-2.0),
     max: Some(2.0),
     default: Some(0.0),
@@ -281,6 +307,9 @@ pub const FINE_DETUNE_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "Fine",
     description: "Applies a fine pitch offset in cents.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Knob,
+    bipolar: true,
+    icon_name: Some("tuningFork"),
     min: Some(-50.0),
     max: Some(50.0),
     default: Some(0.0),
@@ -292,6 +321,9 @@ pub const DCO_DEPTH_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "DCO Range",
     description: "Sets the pitch-envelope range or oscillator excursion in semitones.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Knob,
+    bipolar: false,
+    icon_name: Some("range"),
     min: Some(0.0),
     max: Some(24.0),
     default: Some(12.0),
@@ -303,6 +335,9 @@ pub const KEY_FOLLOW_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "Key Follow",
     description: "Adjusts how strongly keyboard pitch affects this parameter.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Knob,
+    bipolar: false,
+    icon_name: Some("keyboard"),
     min: Some(0.0),
     max: Some(9.0),
     default: Some(0.0),
@@ -314,6 +349,9 @@ pub const ALGO_BLEND_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     label: "Algo Blend",
     description: "Blends between the primary and secondary algorithm outputs.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Slider,
+    bipolar: false,
+    icon_name: Some("blend"),
     min: Some(0.0),
     max: Some(1.0),
     default: Some(0.0),
@@ -326,6 +364,9 @@ pub const DCW_CONTROL: [AlgoControlV1; 1] = [AlgoControlV1 {
     label: "DCW",
     description: "Controls distortion depth for algorithms that expose direct DCW mapping.",
     kind: AlgoControlKindV1::Number,
+    control_type: AlgoControlPresentationV1::Knob,
+    bipolar: false,
+    icon_name: Some("waveSine"),
     min: Some(0.0),
     max: Some(1.0),
     default: Some(0.0),

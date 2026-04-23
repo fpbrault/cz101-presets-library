@@ -7,6 +7,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Center",
         description: "Chooses the pivot around which the phase is mirrored.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -18,6 +21,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Blend",
         description: "Controls how strongly the mirrored phase replaces the original phase.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -29,6 +35,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Clip",
         description: "Clamps the mirrored excursion for a tighter folded reflection.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.0),
@@ -40,9 +49,12 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Skew",
         description: "Skews the mirrored side so reflection distance changes across the cycle.",
         kind: AlgoControlKindV1::Number,
-        min: Some(0.0),
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: true,
+        icon_name: None,
+        min: Some(-1.0),
         max: Some(1.0),
-        default: Some(0.5),
+        default: Some(0.0),
         default_toggle: None,
         options: &NO_CONTROL_OPTIONS,
     },
@@ -59,7 +71,8 @@ pub const DEFINITION: AlgoDefinitionV1 = AlgoDefinitionV1 {
 /// Mirror algorithm phase warp.
 pub fn warp_phase(phase: f32, amt: f32, center: f32, blend: f32, clip: f32, skew: f32) -> f32 {
     let pivot = center.clamp(0.01, 0.99);
-    let mirrored = (pivot + (pivot - phase) * (0.5 + skew)).clamp(0.0, 1.0);
+    // skew is bipolar [-1, 1]; remap: old = (skew + 1) / 2, so (0.5 + old) = 1 + skew / 2
+    let mirrored = (pivot + (pivot - phase) * (1.0 + skew * 0.5)).clamp(0.0, 1.0);
     let clipped = if clip > 0.0 {
         let clip_amt = 0.5 - clip * 0.45;
         ((mirrored - 0.5).clamp(-clip_amt, clip_amt) / (clip_amt * 2.0)) + 0.5

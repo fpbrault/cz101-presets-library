@@ -277,6 +277,15 @@ export type LineParams = {
 export type AlgoControlKindV1 = "number" | "select" | "toggle";
 
 /**
+ * Intended presentation for a control in synth UIs.
+ */
+export type AlgoControlPresentationV1 =
+	| "knob"
+	| "slider"
+	| "buttonGroup"
+	| "dropdown";
+
+/**
  * Assignment emitted by a select option to update one or more numeric controls.
  */
 export type AlgoControlAssignmentV1 = { controlId: string; value: number };
@@ -298,6 +307,9 @@ export type AlgoControlV1 = {
 	label: string;
 	description: string;
 	kind: AlgoControlKindV1;
+	controlType: AlgoControlPresentationV1;
+	bipolar: boolean;
+	iconName: string | null;
 	min: number | null;
 	max: number | null;
 	default: number | null;
@@ -552,6 +564,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Preset",
 				description: "Loads a predefined CZ waveform and window combination.",
 				kind: "select",
+				controlType: "dropdown",
+				bipolar: false,
+				iconName: null,
 				min: null,
 				max: null,
 				default: 0.0,
@@ -708,6 +723,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Waveform 1",
 				description: "Selects the first CZ waveform slot used by the line.",
 				kind: "select",
+				controlType: "dropdown",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 7.0,
 				default: 0.0,
@@ -760,6 +778,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Waveform 2",
 				description: "Selects the second CZ waveform slot used by the line.",
 				kind: "select",
+				controlType: "dropdown",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 7.0,
 				default: 0.0,
@@ -813,6 +834,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Chooses the CZ windowing shape applied to the oscillator cycle.",
 				kind: "select",
+				controlType: "dropdown",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 5.0,
 				default: 0.0,
@@ -864,6 +888,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Changes how aggressively the phase bends along the curve.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -875,9 +902,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Bias",
 				description: "Offsets the bend toward the start or end of the cycle.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -887,6 +917,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Shapes the transition point between the flatter and steeper bend regions.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -907,6 +940,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Sets how many internal sync resets occur within one cycle.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -918,6 +954,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Phase",
 				description: "Offsets where the sync restart begins inside the cycle.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.0,
@@ -929,6 +968,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Curve",
 				description: "Shapes the post-sync ramp after each internal reset.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -941,6 +983,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Controls how strongly the sync-shaped phase replaces the original phase.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -961,6 +1006,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Moves the pinch center toward the start or end of the cycle.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -973,7 +1021,10 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Adds asymmetry so one side of the pinch shifts more than the other.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
 				default: 0.0,
 				defaultToggle: null,
@@ -984,6 +1035,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Curve",
 				description: "Changes the curvature of the pinched center region.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -996,6 +1050,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Pushes the pinch harder for a tighter, more exaggerated distortion.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1015,6 +1072,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Stages",
 				description: "Sets how many fold passes are applied across the cycle.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1027,9 +1087,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Moves the fold pivot toward the start or end of the cycle.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -1039,9 +1102,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Offsets fold balance to make one side of the cycle fold harder than the other.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -1050,6 +1116,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Softness",
 				description: "Softens each fold pass so the phase wraps less abruptly.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.0,
@@ -1070,6 +1139,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Moves the breakpoint where the skewed ramp changes slope.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.2,
@@ -1082,6 +1154,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Adjusts the curvature on both sides of the skew breakpoint.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1094,9 +1169,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Redistributes how much of the cycle is assigned to each side of the skew.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -1106,9 +1184,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Tilts the skewed ramp so one side becomes steeper than the other.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -1126,6 +1207,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Sets the internal modulation harmonic used to twist the phase.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1138,6 +1222,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Controls how far the phase is displaced by the twist modulator.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1150,6 +1237,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Offsets the phase of the internal twist modulation signal.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.0,
@@ -1162,6 +1252,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Changes the contour of the twist modulation from smooth to sharp.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1182,6 +1275,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Increases the gain before clipping for a stronger flattened peak.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1193,6 +1289,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Shape",
 				description: "Sets the clip threshold width from narrow to wide.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1205,9 +1304,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Offsets the clipped region toward the start or end of the cycle.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -1217,6 +1319,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Blends from hard clipping into a softer rounded saturation.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.0,
@@ -1237,6 +1342,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Sets how many ripple oscillations appear across the cycle.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1249,6 +1357,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Controls the amplitude of the ripple imposed on the phase.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1261,6 +1372,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Offsets where the ripple pattern begins inside the cycle.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.0,
@@ -1273,6 +1387,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Changes the ripple from a smooth sine to a sharper contour.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1292,6 +1409,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Center",
 				description: "Chooses the pivot around which the phase is mirrored.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1304,6 +1424,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Controls how strongly the mirrored phase replaces the original phase.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1316,6 +1439,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Clamps the mirrored excursion for a tighter folded reflection.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.0,
@@ -1328,9 +1454,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Skews the mirrored side so reflection distance changes across the cycle.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -1348,6 +1477,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Controls how quickly high-frequency energy is damped in the string model.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1360,6 +1492,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Adjusts the brightness of the feedback filter inside the string loop.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1372,6 +1507,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Sets how long the plucked string sustains before fading out.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1384,6 +1522,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Injects fresh noise into the delay line for a noisier or raspier pluck.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.0,
@@ -1404,6 +1545,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Sets the internal carrier multiplier used for the formant-like repetition.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1415,6 +1559,9 @@ export const ALGO_DEFINITIONS_V1 = [
 				label: "Tight",
 				description: "Narrows or widens the Gaussian-like formant window.",
 				kind: "number",
+				controlType: "knob",
+				bipolar: false,
+				iconName: null,
 				min: 0.0,
 				max: 1.0,
 				default: 0.5,
@@ -1427,9 +1574,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Offsets the repeated carrier phase before the formant window is applied.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
@@ -1439,9 +1589,12 @@ export const ALGO_DEFINITIONS_V1 = [
 				description:
 					"Moves the center of the formant window toward the start or end of the cycle.",
 				kind: "number",
-				min: 0.0,
+				controlType: "knob",
+				bipolar: true,
+				iconName: null,
+				min: -1.0,
 				max: 1.0,
-				default: 0.5,
+				default: 0.0,
 				defaultToggle: null,
 				options: [],
 			},
