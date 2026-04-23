@@ -10,42 +10,7 @@ permissions:
 
 jobs:
   lint:
-    name: Lint (Biome)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-          fetch-depth: 0
-
-      - name: Setup Biome
-        uses: biomejs/setup-biome@v2
-        with:
-          version: latest
-
-      - name: Run Biome CI
-        id: biome-ci
-        run: biome ci . || echo "has-issues=true" >> $GITHUB_OUTPUT
-
-      - name: Fix Biome issues
-        if: steps.biome-ci.outputs.has-issues == 'true'
-        run: biome check --write .
-
-      - name: Auto-commit Biome fixes
-        if: github.event_name == 'pull_request' && steps.biome-ci.outputs.has-issues == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "chore(ci): apply biome fixes"
-          git push origin HEAD:${{ github.head_ref }}
-
-      - name: Verify Biome CI after fixes
-        if: steps.biome-ci.outputs.has-issues == 'true'
-        run: biome ci .
-
-  cargo-fmt:
-    name: Cargo fmt
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -62,11 +27,24 @@ jobs:
         run: bun install
         shell: bash
 
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: latest
+
+      - name: Run Biome CI
+        id: biome-ci
+        run: biome ci . || echo "has-issues=true" >> $GITHUB_OUTPUT
+
+      - name: Fix Biome issues
+        if: steps.biome-ci.outputs.has-issues == 'true'
+        run: biome check --write .
+
       - name: Run Cargo fmt
         run: bun run lint:fix:cargo || true
         shell: bash
 
-      - name: Check for formatting changes
+      - name: Check for any formatting changes
         id: check-changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
@@ -74,20 +52,24 @@ jobs:
           fi
         shell: bash
 
-      - name: Auto-commit Cargo fmt fixes
+      - name: Auto-commit all fixes
         if: github.event_name == 'pull_request' && steps.check-changes.outputs.has-changes == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "chore(ci): apply cargo fmt fixes"
-          git push
+          git commit -m "chore(ci): apply lint fixes"
+          git push origin HEAD:${{ github.head_ref }}
         shell: bash
 
       - name: Fail if formatting changes were needed
         if: steps.check-changes.outputs.has-changes == 'true'
         run: exit 1
         shell: bash
+
+      - name: Verify Biome CI after fixes
+        if: steps.biome-ci.outputs.has-issues == 'true' && steps.check-changes.outputs.has-changes != 'true'
+        run: biome ci .
 
   unit-tests:
     name: Unit Tests
