@@ -459,23 +459,30 @@ fn compensated_dca_level(line: &LineParams, dca_env: f32, dcw_env: f32) -> f32 {
     dca_level * (1.0 - line.dcw_comp + line.dcw_comp * dcw_env)
 }
 
-/// Maps a normalized DCO envelope output (0.0–1.0) to semitones using the CZ-101
-/// piecewise non-linear pitch curve.
+/// Maps a normalized DCO envelope output (0.0–1.0) to a 0.0–1.0 normalized pitch
+/// position using the CZ-101 piecewise non-linear pitch curve, then scales by
+/// `dco_depth` (in semitones) to produce the final semitone offset.
 ///
-/// The CZ-101 maps display levels 0–99 to pitch as follows:
-///   - Levels  0–64: linear, 1 semitone per 8 levels
+/// The CZ-101 display levels 0–99 map to pitch as follows:
+///   - Levels  0–64: linear, 1 semitone per 8 levels  (max 8 st)
 ///   - Levels >64: each increment raises pitch by a whole tone (+2 semitones)
-fn cz_dco_env_semitones(dco_env: f32) -> f32 {
-    let level = dco_env * 99.0;
-    if level <= 64.0 {
+///                 (max 8 + 35*2 = 78 st at level 99)
+///
+/// This function returns a value in [0.0, 1.0] (normalized to the 78-semitone max).
+/// The input is clamped to [0.0, 1.0] before conversion.
+fn cz_dco_env_normalized(dco_env: f32) -> f32 {
+    const MAX_SEMITONES: f32 = 78.0; // 8 + (99 - 64) * 2
+    let level = dco_env.clamp(0.0, 1.0) * 99.0;
+    let semitones = if level <= 64.0 {
         level / 8.0
     } else {
         8.0 + (level - 64.0) * 2.0
-    }
+    };
+    semitones / MAX_SEMITONES
 }
 
 fn line_frequency(base_freq: f32, line: &LineParams, dco_env: f32) -> f32 {
-    let dco_semitones = cz_dco_env_semitones(dco_env) * (line.dco_depth / 12.0);
+    let dco_semitones = cz_dco_env_normalized(dco_env) * line.dco_depth;
     base_freq
         * libm::powf(2.0, line.octave + line.detune_cents / 1200.0)
         * libm::powf(2.0, dco_semitones / 12.0)

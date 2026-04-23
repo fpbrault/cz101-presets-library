@@ -79,7 +79,14 @@ impl<'de> Deserialize<'de> for StepEnvData {
 
 impl Default for StepEnvData {
     fn default() -> Self {
-        default_dca_env()
+        // Neutral envelope: single silent step, no loop.
+        // Use default_dco_env/default_dcw_env/default_dca_env for kind-specific defaults.
+        StepEnvData {
+            steps: [EnvStep { level: 0, rate: 0 }; NUM_ENV_STEPS],
+            sustain_step: 0,
+            step_count: 1,
+            loop_: false,
+        }
     }
 }
 

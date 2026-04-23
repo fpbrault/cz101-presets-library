@@ -274,13 +274,29 @@ mod tests {
 
     #[test]
     fn normalize_synth_params_converts_human_envelopes_to_raw() {
+        use crate::params::{EnvStep, NUM_ENV_STEPS};
+        // Build all envelopes from known human-scale values (level/rate in 0–99)
+        // so no step starts as already-raw. This prevents double-conversion of
+        // default/untouched steps.
+        let blank = || StepEnvData {
+            steps: [EnvStep { level: 0, rate: 0 }; NUM_ENV_STEPS],
+            sustain_step: 0,
+            step_count: 1,
+            loop_: false,
+        };
         let mut params = SynthParams::default();
-        params.line1.dco_env.steps[0].level = 66;
-        params.line1.dco_env.steps[0].rate = 99;
-        params.line1.dcw_env.steps[0].level = 99;
-        params.line1.dcw_env.steps[0].rate = 0;
-        params.line1.dca_env.steps[0].level = 1;
-        params.line1.dca_env.steps[0].rate = 99;
+        params.line1.dco_env = blank();
+        params.line1.dco_env.steps[0] = EnvStep {
+            level: 66,
+            rate: 99,
+        };
+        params.line1.dcw_env = blank();
+        params.line1.dcw_env.steps[0] = EnvStep { level: 99, rate: 0 };
+        params.line1.dca_env = blank();
+        params.line1.dca_env.steps[0] = EnvStep { level: 1, rate: 99 };
+        params.line2.dco_env = blank();
+        params.line2.dcw_env = blank();
+        params.line2.dca_env = blank();
 
         normalize_synth_params_envelopes_to_raw_if_human(&mut params);
 

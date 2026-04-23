@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use beamer::prelude::*;
+use cosmo_synth_engine::default_envelopes::{default_dca_env, default_dco_env, default_dcw_env};
 use cosmo_synth_engine::params::{
     AlgoControlValueV1, ModMatrix, PolyMode, StepEnvData, SynthParams,
 };
@@ -817,7 +818,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
     );
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 struct EnvelopeState {
     l1_dco: StepEnvData,
     l1_dcw: StepEnvData,
@@ -825,6 +826,19 @@ struct EnvelopeState {
     l2_dco: StepEnvData,
     l2_dcw: StepEnvData,
     l2_dca: StepEnvData,
+}
+
+impl Default for EnvelopeState {
+    fn default() -> Self {
+        Self {
+            l1_dco: default_dco_env(),
+            l1_dcw: default_dcw_env(),
+            l1_dca: default_dca_env(),
+            l2_dco: default_dco_env(),
+            l2_dcw: default_dcw_env(),
+            l2_dca: default_dca_env(),
+        }
+    }
 }
 
 impl EnvelopeState {
