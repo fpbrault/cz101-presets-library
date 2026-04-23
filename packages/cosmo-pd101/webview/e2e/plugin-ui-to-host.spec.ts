@@ -34,12 +34,12 @@ test.describe("UI to host outbound messages", () => {
 		page,
 	}) => {
 		const dcwAmtSlider = page
-			.getByRole("slider", { name: /line 1 dcw amt/i })
+			.getByRole("spinbutton", { name: /dcw amt/i })
 			.first();
 		await expect(dcwAmtSlider).toBeVisible();
 
 		const box = await dcwAmtSlider.boundingBox();
-		if (!box) throw new Error("DCW Amt slider not found in layout");
+		if (!box) throw new Error("DCW Amt knob not found in layout");
 
 		const cx = box.x + box.width / 2;
 		const cy = box.y + box.height * 0.75;

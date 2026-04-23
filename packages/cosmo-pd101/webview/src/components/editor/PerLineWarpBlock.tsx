@@ -7,7 +7,6 @@ import type {
 	AlgoControlRuntime,
 	LineIndex,
 } from "@/components/controls/algo/algoControlTypes";
-import CzVerticalSlider from "@/components/controls/sliders/CzVerticalSlider";
 import Card from "@/components/primitives/Card";
 import CzButton from "@/components/primitives/CzButton";
 import { getCzPresetDefaults } from "@/lib/synth/algoRef";
@@ -20,6 +19,7 @@ import type {
 import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
 import type { PdAlgo } from "@/lib/synth/pdAlgorithms";
 import { getPdAlgoDef, PD_ALGOS } from "@/lib/synth/pdAlgorithms";
+import PerLineParametersCard from "./PerLineParametersCard";
 import { StepEnvelopeEditor } from "./StepEnvelopeEditor";
 
 interface PerLineWarpBlockProps {
@@ -368,122 +368,22 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									</div>
 								</Card>
 
-								<Card
-									variant="subtle"
-									className="p-3 md:col-span-1 min-h-0 flex flex-col"
-								>
-									<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-										Parameters
-									</div>
-									<div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 items-stretch">
-										{(
-											[
-												{
-													label: "DCW Amt",
-													value: warpAmount,
-													min: 0,
-													max: 1,
-													step: 0.01,
-													color: color,
-													fmt: (v: number) => v.toFixed(2),
-													onChange: setWarpAmount,
-													modDest: "dcwBase",
-												},
-												{
-													label: "DCW Comp",
-													value: dcwComp,
-													min: 0,
-													max: 1,
-													step: 0.01,
-													color: "#7f9de4",
-													fmt: (v: number) => `${Math.round(v * 100)}%`,
-													onChange: setDcwComp,
-													modDest: "dcwComp",
-												},
-												{
-													label: "Level",
-													value: level,
-													min: 0,
-													max: 1,
-													step: 0.01,
-													color: "#9cb937",
-													fmt: (v: number) => `${Math.round(v * 100)}%`,
-													onChange: setLevel,
-													modDest: "dcaBase",
-												},
-												{
-													label: "Oct",
-													value: octave,
-													min: -2,
-													max: 2,
-													step: 1,
-													color: "#7f9de4",
-													fmt: (v: number) =>
-														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
-													onChange: (v: number) => setOctave(Math.round(v)),
-													modDest: "octave",
-												},
-												{
-													label: "Fine",
-													value: fineDetune,
-													min: -50,
-													max: 50,
-													step: 1,
-													color: "#9cb937",
-													fmt: (v: number) =>
-														`${v >= 0 ? "+" : ""}${Math.round(v)}`,
-													onChange: (v: number) => setFineDetune(Math.round(v)),
-													modDest: "detune",
-												},
-												{
-													label: "DCO Rng",
-													value: dcoDepth,
-													min: 0,
-													max: 24,
-													step: 1,
-													color: "#9cb937",
-													fmt: (v: number) => `${Math.round(v)} st`,
-													onChange: (v: number) => setDcoDepth(Math.round(v)),
-													modDest: "dcoDepth",
-												},
-											] as const
-										).map(
-											({
-												label,
-												value,
-												min,
-												max,
-												step,
-												color: c,
-												fmt,
-												onChange,
-												modDest,
-											}) => (
-												<div
-													key={label}
-													className="min-h-0 h-full flex flex-col items-center gap-1.5"
-												>
-													<span className="text-4xs uppercase tracking-[0.18em] text-cz-cream whitespace-nowrap">
-														{fmt(value)}
-													</span>
-													<div className="flex-1 min-h-0 w-7.5">
-														<CzVerticalSlider
-															value={value}
-															min={min}
-															max={max}
-															step={step}
-															color={c}
-															onChange={onChange}
-															modulatable={modDest}
-															lineIndex={lineIndex}
-															ariaLabel={`Line ${lineIndex} ${label}`}
-														/>
-													</div>
-												</div>
-											),
-										)}
-									</div>
-								</Card>
+								<PerLineParametersCard
+									color={color}
+									warpAmount={warpAmount}
+									setWarpAmount={setWarpAmount}
+									dcwComp={dcwComp}
+									setDcwComp={setDcwComp}
+									level={level}
+									setLevel={setLevel}
+									octave={octave}
+									setOctave={setOctave}
+									fineDetune={fineDetune}
+									setFineDetune={setFineDetune}
+									dcoDepth={dcoDepth}
+									setDcoDepth={setDcoDepth}
+									lineIndex={lineIndex}
+								/>
 
 								<AlgoControlsGroup
 									controls={algoDefinitionControls}
