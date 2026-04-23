@@ -1,12 +1,13 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import type { ModRoute } from "@/lib/synth/bindings/synth";
 import ModulationIconButton from "./ModulationIconButton";
 import ModulationMenu from "./ModulationMenu";
 
-const routes = [
+const routes: ModRoute[] = [
 	{ source: "lfo1", destination: "volume", amount: 0.5, enabled: true },
 	{ source: "modWheel", destination: "volume", amount: -0.2, enabled: false },
-] as const;
+];
 
 describe("modulation controls (browser)", () => {
 	it("renders ModulationIconButton states", () => {

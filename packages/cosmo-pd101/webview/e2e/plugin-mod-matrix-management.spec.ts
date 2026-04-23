@@ -32,8 +32,11 @@ test.describe("Mod matrix route management", () => {
 			return Array.isArray(payload.routes) && payload.routes[0]?.source === "lfo1";
 		});
 
+		const modulationMenu = page.locator("div").filter({
+			has: page.getByRole("button", { name: "Close" }),
+		}).last();
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
-		await page.getByRole("checkbox").first().click();
+		await modulationMenu.getByRole("checkbox").first().click();
 		await waitForMessageMatching(page, (message) => {
 			if (message.type !== "invoke" || message.method !== "setModMatrix") {
 				return false;
@@ -48,7 +51,7 @@ test.describe("Mod matrix route management", () => {
 		});
 
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
-		const amountSlider = page.getByRole("slider").first();
+		const amountSlider = modulationMenu.getByRole("slider").first();
 		await amountSlider.evaluate((element) => {
 			const input = element as HTMLInputElement;
 			input.value = "0.25";
