@@ -23,19 +23,31 @@ describe("ControlKnob", () => {
 
 	it("renders label and formatted value", () => {
 		render(
-			<ControlKnob value={0.25} onChange={vi.fn()} label="Cutoff" min={0} max={1} />,
+			<ControlKnob
+				value={0.25}
+				onChange={vi.fn()}
+				label="Cutoff"
+				min={0}
+				max={1}
+			/>,
 		);
 
 		expect(screen.getByText("Cutoff")).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Cutoff value" })).toHaveTextContent(
-			"0.25",
-		);
+		expect(
+			screen.getByRole("button", { name: "Cutoff value" }),
+		).toHaveTextContent("0.25");
 	});
 
 	it("supports direct value editing and commits clamped values", () => {
 		const onChange = vi.fn();
 		render(
-			<ControlKnob value={0.25} onChange={onChange} label="Cutoff" min={0} max={1} />,
+			<ControlKnob
+				value={0.25}
+				onChange={onChange}
+				label="Cutoff"
+				min={0}
+				max={1}
+			/>,
 		);
 
 		fireEvent.click(screen.getByRole("button", { name: "Cutoff value" }));

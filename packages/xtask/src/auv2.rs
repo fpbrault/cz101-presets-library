@@ -6,10 +6,9 @@ use std::process::Command;
 
 use crate::build::get_version_info;
 use crate::util::{
-    cargo_target_dir_for_package,
-    codesign_bundle, combine_or_rename_binaries, detect_au_component_info,
-    detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags, install_bundle,
-    shorten_path, to_auv2_component_name, to_pascal_case, Arch, PathExt,
+    cargo_target_dir_for_package, codesign_bundle, combine_or_rename_binaries,
+    detect_au_component_info, detect_bundle_identifier_prefix, generate_au_subtype, get_au_tags,
+    install_bundle, shorten_path, to_auv2_component_name, to_pascal_case, Arch, PathExt,
 };
 use crate::ComponentPlistConfig;
 
@@ -193,7 +192,12 @@ pub fn bundle_auv2(
         .unwrap_or_else(|| dylib_path.to_str_safe().unwrap_or("").to_string());
 
     let status = Command::new("install_name_tool")
-        .args(["-change", &linked_old_path, &load_path, binary_dest.to_str_safe()?])
+        .args([
+            "-change",
+            &linked_old_path,
+            &load_path,
+            binary_dest.to_str_safe()?,
+        ])
         .status()
         .map_err(|e| format!("Failed to run install_name_tool: {}", e))?;
     if !status.success() {

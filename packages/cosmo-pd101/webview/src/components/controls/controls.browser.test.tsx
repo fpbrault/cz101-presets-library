@@ -50,7 +50,13 @@ describe("core controls (browser)", () => {
 	it("supports ControlKnob value editing", () => {
 		const onChange = vi.fn();
 		render(
-			<ControlKnob value={0.25} onChange={onChange} label="Cutoff" min={0} max={1} />,
+			<ControlKnob
+				value={0.25}
+				onChange={onChange}
+				label="Cutoff"
+				min={0}
+				max={1}
+			/>,
 		);
 
 		fireEvent.click(screen.getByRole("button", { name: "Cutoff value" }));

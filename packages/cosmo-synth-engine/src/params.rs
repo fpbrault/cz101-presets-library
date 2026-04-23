@@ -410,8 +410,8 @@ pub struct LineParams {
     pub dcw_env: StepEnvData,
     pub dca_env: StepEnvData,
     pub key_follow: f32,
-	#[serde(default)]
-	pub cz: CzLineParams,
+    #[serde(default)]
+    pub cz: CzLineParams,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub algo_controls: Option<Vec<AlgoControlValueV1>>,
 }
@@ -434,7 +434,7 @@ impl Default for LineParams {
             dcw_env: StepEnvData::default(),
             dca_env: StepEnvData::default(),
             key_follow: 0.0,
-			cz: CzLineParams::default(),
+            cz: CzLineParams::default(),
             algo_controls: None,
         }
     }

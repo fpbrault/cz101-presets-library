@@ -188,22 +188,28 @@ function stagePluginBundle(sourceDir, destDir) {
 	cpSync(sourceDir, destDir, { recursive: true });
 }
 
-function packageBareMacosBundle(sourceDir, outputDir, version, bundleName, formatLabel) {
+function packageBareMacosBundle(
+	sourceDir,
+	outputDir,
+	version,
+	bundleName,
+	formatLabel,
+) {
 	const archiveBaseName = `cosmo-pd101-plugin-macos-universal-v${version}-${formatLabel}.zip`;
 	const archiveOut = path.join(outputDir, archiveBaseName);
 	const bundlePath = path.join(sourceDir, bundleName);
 	rmSync(archiveOut, { force: true });
-	run("ditto", [
-		"-c",
-		"-k",
-		"--keepParent",
-		bundlePath,
-		archiveOut,
-	]);
+	run("ditto", ["-c", "-k", "--keepParent", bundlePath, archiveOut]);
 	return archiveOut;
 }
 
-function packageBareWindowsBundle(sourceDir, outputDir, version, bundleName, archLabel) {
+function packageBareWindowsBundle(
+	sourceDir,
+	outputDir,
+	version,
+	bundleName,
+	archLabel,
+) {
 	const archiveBaseName = `cosmo-pd101-plugin-windows-${archLabel}-v${version}-vst3.zip`;
 	const archiveOut = path.join(outputDir, archiveBaseName);
 	const bundlePath = path.join(sourceDir, bundleName);
@@ -404,8 +410,7 @@ function packageWindows({ sourceDir, outputDir, version }) {
 	const exeOut = path.join(outputDir, `${packageBaseName}.exe`);
 	const productName = `${pluginBaseName} Plugin`;
 	const uninstallExeName = `${productName} Uninstall.exe`;
-	const uninstallRegistryKey =
-		`Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${productName}`;
+	const uninstallRegistryKey = `Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${productName}`;
 
 	rmSync(stagingRoot, { recursive: true, force: true });
 	rmSync(exeOut, { force: true });

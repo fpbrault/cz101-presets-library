@@ -38,9 +38,8 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 	const [scopeActiveHz, setScopeActiveHz] = useState(220);
 	const analyserNodeRef = useRef<AnalyserNode | null>(null);
 	const audioCtxRef = useRef<AudioContext | null>(null);
-	const [activeAsidePanel, setActiveAsidePanel] = useState<AsidePanelTab>(
-		"global",
-	);
+	const [activeAsidePanel, setActiveAsidePanel] =
+		useState<AsidePanelTab>("global");
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 
 	usePluginParamBridge(synthState);

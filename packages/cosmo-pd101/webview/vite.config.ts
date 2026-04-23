@@ -45,9 +45,7 @@ export default defineConfig({
 		__CZ_BUILD_LABEL__: JSON.stringify(buildLabel),
 	},
 	resolve: {
-		alias: [
-			{ find: "@", replacement: cosmoPd101Src },
-		],
+		alias: [{ find: "@", replacement: cosmoPd101Src }],
 		dedupe: ["react", "react-dom"],
 	},
 	server: {

@@ -1,10 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import Card, {
-	CARD_BASE_CLASSES,
-	getCardClassName,
-	joinClasses,
-} from "./Card";
+import Card, { CARD_BASE_CLASSES, getCardClassName, joinClasses } from "./Card";
 
 describe("Card", () => {
 	it("joinClasses omits falsey values", () => {

@@ -76,14 +76,16 @@ function resolveTargets(platformName, requestedArch) {
 	if (platformName === "windows") {
 		if (normalized === "arm64") return ["aarch64-pc-windows-msvc"];
 		if (normalized === "x86_64") return ["x86_64-pc-windows-msvc"];
-		if (normalized === "all") return ["aarch64-pc-windows-msvc", "x86_64-pc-windows-msvc"];
+		if (normalized === "all")
+			return ["aarch64-pc-windows-msvc", "x86_64-pc-windows-msvc"];
 		throw new Error(`Unsupported arch '${requestedArch}' for windows`);
 	}
 
 	if (platformName === "linux") {
 		if (normalized === "arm64") return ["aarch64-unknown-linux-gnu"];
 		if (normalized === "x86_64") return ["x86_64-unknown-linux-gnu"];
-		if (normalized === "all") return ["aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"];
+		if (normalized === "all")
+			return ["aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"];
 		throw new Error(`Unsupported arch '${requestedArch}' for linux`);
 	}
 
@@ -99,7 +101,9 @@ function platformBundleSubdir(platformName, targetTriple) {
 		if (targetTriple.startsWith("aarch64-")) return "aarch64-linux";
 		if (targetTriple.startsWith("x86_64-")) return "x86_64-linux";
 	}
-	throw new Error(`Unsupported target triple '${targetTriple}' for ${platformName}`);
+	throw new Error(
+		`Unsupported target triple '${targetTriple}' for ${platformName}`,
+	);
 }
 
 function ensureRustTarget(target) {

@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { setupPluginPage, waitForMessageMatching } from "./helpers/pluginBridge";
+import {
+	setupPluginPage,
+	waitForMessageMatching,
+} from "./helpers/pluginBridge";
 
 test.beforeEach(async ({ page }) => {
 	await setupPluginPage(page);
@@ -28,13 +31,20 @@ test.describe("Mod matrix route management", () => {
 			if (!Array.isArray(message.args) || message.args.length < 1) {
 				return false;
 			}
-			const payload = message.args[0] as { routes?: Array<{ source?: string }> };
-			return Array.isArray(payload.routes) && payload.routes[0]?.source === "lfo1";
+			const payload = message.args[0] as {
+				routes?: Array<{ source?: string }>;
+			};
+			return (
+				Array.isArray(payload.routes) && payload.routes[0]?.source === "lfo1"
+			);
 		});
 
-		const modulationMenu = page.locator("div").filter({
-			has: page.getByRole("button", { name: "Close" }),
-		}).last();
+		const modulationMenu = page
+			.locator("div")
+			.filter({
+				has: page.getByRole("button", { name: "Close" }),
+			})
+			.last();
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
 		await modulationMenu.getByRole("checkbox").first().click();
 		await waitForMessageMatching(page, (message) => {
@@ -47,7 +57,9 @@ test.describe("Mod matrix route management", () => {
 			const payload = message.args[0] as {
 				routes?: Array<{ enabled?: boolean }>;
 			};
-			return Array.isArray(payload.routes) && payload.routes[0]?.enabled === false;
+			return (
+				Array.isArray(payload.routes) && payload.routes[0]?.enabled === false
+			);
 		});
 
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
@@ -68,7 +80,9 @@ test.describe("Mod matrix route management", () => {
 			if (!Array.isArray(message.args) || message.args.length < 1) {
 				return false;
 			}
-			const payload = message.args[0] as { routes?: Array<{ amount?: number }> };
+			const payload = message.args[0] as {
+				routes?: Array<{ amount?: number }>;
+			};
 			return (
 				Array.isArray(payload.routes) &&
 				typeof payload.routes[0]?.amount === "number" &&

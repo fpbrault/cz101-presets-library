@@ -12,7 +12,9 @@ describe("ModulationIconButton", () => {
 				onClick={vi.fn()}
 			/>,
 		);
-		expect(screen.getByRole("button", { name: "Modulation" })).toHaveTextContent("+");
+		expect(
+			screen.getByRole("button", { name: "Modulation" }),
+		).toHaveTextContent("+");
 	});
 
 	it("shows route count and handles click", () => {

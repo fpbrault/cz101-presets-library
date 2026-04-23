@@ -94,7 +94,9 @@ fn get_au_rustflags(plugin_name: &str, objc_lib_dir: &Path) -> Result<String, St
 }
 
 fn is_au_build(format: &str) -> bool {
-    format.split(',').any(|f| f == "au" || f == "auv2" || f == "auv3")
+    format
+        .split(',')
+        .any(|f| f == "au" || f == "auv2" || f == "auv3")
 }
 
 /// Legacy hook kept for compatibility with older bundling flow.
@@ -505,10 +507,7 @@ pub fn compile_plugin_objc(
     let target_root = cargo_target_dir_for_package(workspace_root, plugin_name);
 
     // Create output directory for generated sources and compiled libraries
-    let gen_dir = target_root
-        .join("au-gen")
-        .join(plugin_name)
-        .join(target);
+    let gen_dir = target_root.join("au-gen").join(plugin_name).join(target);
 
     fs::create_dir_all(&gen_dir)
         .map_err(|e| format!("Failed to create au-gen directory: {}", e))?;

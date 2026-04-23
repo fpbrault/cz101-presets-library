@@ -27,7 +27,9 @@ describe("primitive components (browser)", () => {
 
 		fireEvent.click(screen.getByRole("button"));
 		expect(onClick).toHaveBeenCalledTimes(1);
-		expect(screen.getByRole("button").closest("[data-tip='Choose line']")).not.toBeNull();
+		expect(
+			screen.getByRole("button").closest("[data-tip='Choose line']"),
+		).not.toBeNull();
 		expect(screen.getByText("L1")).toBeInTheDocument();
 	});
 

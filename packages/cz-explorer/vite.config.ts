@@ -57,7 +57,10 @@ function wasmDevPlugin() {
 }
 
 const spectaTsBindingsOutFile = fileURLToPath(
-	new URL("../cosmo-pd101/webview/src/lib/synth/bindings/synth.ts", import.meta.url),
+	new URL(
+		"../cosmo-pd101/webview/src/lib/synth/bindings/synth.ts",
+		import.meta.url,
+	),
 );
 const cosmoSynthEngineDir = fileURLToPath(
 	new URL("../cosmo-synth-engine", import.meta.url),

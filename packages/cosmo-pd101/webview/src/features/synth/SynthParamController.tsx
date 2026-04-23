@@ -354,7 +354,7 @@ export function useSynthParam<K extends SynthParamKey>(
 
 	return {
 		value: controller.getParam(key),
-		setValue: (value) => controller.setParam(key, value),
+		setValue: (value) =>		 controller.setParam(key, value),
 	};
 }
 

@@ -6,17 +6,16 @@
 //! Optional env vars:
 //! - SPECTA_TS_EXPORT_PATH: absolute/relative path to generated TypeScript file
 
-use cosmo_synth_engine::params::{
-    ChorusParams, DelayParams, EnvStep, FilterParams, FilterType, LfoParams, LfoTarget,
-    LfoWaveform, LineParams, LineSelect, ModMode, PolyMode, PortamentoMode, PortamentoParams,
-    ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType, CzAlgo,
-    CzLineParams, CzWaveform, AlgoControlValueV1,
-    Algo,
-    ModSource, ModDestination, ModRoute, ModMatrix,
-};
 use cosmo_synth_engine::generators::{
     AlgoControlAssignmentV1, AlgoControlKindV1, AlgoControlOptionV1, AlgoControlV1,
     AlgoDefinitionV1, AlgoUiEntryV1, CzPresetV1,
+};
+use cosmo_synth_engine::params::{
+    Algo, AlgoControlValueV1, ChorusParams, CzAlgo, CzLineParams, CzWaveform, DelayParams, EnvStep,
+    FilterParams, FilterType, LfoParams, LfoTarget, LfoWaveform, LineParams, LineSelect,
+    ModDestination, ModMatrix, ModMode, ModRoute, ModSource, PolyMode, PortamentoMode,
+    PortamentoParams, ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams,
+    WindowType,
 };
 use cosmo_synth_engine::preset_wire::{
     algo_definitions_v1, algo_ui_catalog_v1, cz_presets, SynthPresetV1,
@@ -84,15 +83,24 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(&export::<FilterParams>(&config).expect("Failed to export FilterParams"));
     out.push_str("\n\n");
-    out.push_str(&export::<AlgoControlValueV1>(&config).expect("Failed to export AlgoControlValueV1"));
+    out.push_str(
+        &export::<AlgoControlValueV1>(&config).expect("Failed to export AlgoControlValueV1"),
+    );
     out.push_str("\n\n");
     out.push_str(&export::<LineParams>(&config).expect("Failed to export LineParams"));
     out.push_str("\n\n");
-    out.push_str(&export::<AlgoControlKindV1>(&config).expect("Failed to export AlgoControlKindV1"));
+    out.push_str(
+        &export::<AlgoControlKindV1>(&config).expect("Failed to export AlgoControlKindV1"),
+    );
     out.push_str("\n\n");
-    out.push_str(&export::<AlgoControlAssignmentV1>(&config).expect("Failed to export AlgoControlAssignmentV1"));
+    out.push_str(
+        &export::<AlgoControlAssignmentV1>(&config)
+            .expect("Failed to export AlgoControlAssignmentV1"),
+    );
     out.push_str("\n\n");
-    out.push_str(&export::<AlgoControlOptionV1>(&config).expect("Failed to export AlgoControlOptionV1"));
+    out.push_str(
+        &export::<AlgoControlOptionV1>(&config).expect("Failed to export AlgoControlOptionV1"),
+    );
     out.push_str("\n\n");
     out.push_str(&export::<AlgoControlV1>(&config).expect("Failed to export AlgoControlV1"));
     out.push_str("\n\n");
@@ -129,8 +137,8 @@ fn main() {
     out.push_str(&definitions_json);
     out.push_str(";\n");
     out.push_str("\n");
-    let cz_presets_json = serde_json::to_string_pretty(cz_presets())
-        .expect("Failed to serialize CZ_PRESETS");
+    let cz_presets_json =
+        serde_json::to_string_pretty(cz_presets()).expect("Failed to serialize CZ_PRESETS");
     out.push_str("/** Rust-owned CZ waveform combination presets. */\n");
     out.push_str("export const CZ_PRESETS: CzPresetV1[] = ");
     out.push_str(&cz_presets_json);
