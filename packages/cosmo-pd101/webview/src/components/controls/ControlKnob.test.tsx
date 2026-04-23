@@ -69,7 +69,7 @@ describe("ControlKnob", () => {
 			/>,
 		);
 
-		fireEvent.doubleClick(screen.getByRole("button", { name: "Resonance" }));
+		fireEvent.doubleClick(screen.getByRole("spinbutton", { name: "Resonance" }));
 		expect(onChange).toHaveBeenCalledWith(0.1);
 	});
 
@@ -97,5 +97,93 @@ describe("ControlKnob", () => {
 		);
 
 		expect(screen.getByTestId("modulatable-wrapper")).toBeInTheDocument();
+	});
+
+	it("renders with variant class applied via container", () => {
+		const { container } = render(
+			<ControlKnob
+				value={0.5}
+				onChange={vi.fn()}
+				label="Test"
+				variant="accent"
+			/>,
+		);
+
+		expect(container.querySelector(".knob-variant-accent")).toBeInTheDocument();
+	});
+
+	it("renders with default variant when no variant specified", () => {
+		const { container } = render(
+			<ControlKnob value={0.5} onChange={vi.fn()} label="Test" />,
+		);
+
+		expect(
+			container.querySelector(".knob-variant-default"),
+		).toBeInTheDocument();
+	});
+
+	it("uses valueFormatter when provided", () => {
+		render(
+			<ControlKnob
+				value={440}
+				onChange={vi.fn()}
+				label="Freq"
+				min={20}
+				max={20000}
+				valueFormatter={(v) => `${v}Hz`}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("button", { name: "Freq value" }),
+		).toHaveTextContent("440Hz");
+	});
+
+	it("renders children as HTML overlay inside knob", () => {
+		const { container } = render(
+			<ControlKnob value={0.5} onChange={vi.fn()} label="Test">
+				<span data-testid="overlay-icon">★</span>
+			</ControlKnob>,
+		);
+
+		expect(screen.getByTestId("overlay-icon")).toBeInTheDocument();
+		// Overlay should be inside the pointer-events-none wrapper
+		expect(container.querySelector(".pointer-events-none")).toBeInTheDocument();
+	});
+
+	it("cancels edit on Escape key", () => {
+		const onChange = vi.fn();
+		render(
+			<ControlKnob
+				value={0.25}
+				onChange={onChange}
+				label="Vol"
+				min={0}
+				max={1}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Vol value" }));
+		const input = screen.getByRole("textbox", { name: "Vol value" });
+		fireEvent.change(input, { target: { value: "9" } });
+		fireEvent.keyDown(input, { key: "Escape" });
+
+		expect(onChange).not.toHaveBeenCalled();
+		// editing closes
+		expect(screen.queryByRole("textbox", { name: "Vol value" })).toBeNull();
+	});
+
+	it("does not render value display when disabled", () => {
+		render(
+			<ControlKnob
+				value={0.5}
+				onChange={vi.fn()}
+				label="Gain"
+				disabled={true}
+			/>,
+		);
+
+		const knobButton = screen.getByRole("spinbutton", { name: "Gain" });
+		expect(knobButton).toBeDisabled();
 	});
 });

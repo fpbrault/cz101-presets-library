@@ -1,4 +1,5 @@
 import ControlKnob from "@/components/controls/ControlKnob";
+import type { KnobVariant } from "@/components/controls/knob/KnobView";
 
 export interface FxKnobConfig {
 	label: string;
@@ -7,7 +8,10 @@ export interface FxKnobConfig {
 	min: number;
 	max: number;
 	size: number;
-	color: string;
+	/** Prefer variant over color for new configs. */
+	variant?: KnobVariant;
+	/** Legacy: raw CSS color override. Prefer variant. */
+	color?: string;
 	valueFormatter: (value: number) => string;
 }
 
@@ -29,6 +33,7 @@ export function BaseFxSection({ title, knobs }: BaseFxSectionProps) {
 						min={knob.min}
 						max={knob.max}
 						size={knob.size}
+						variant={knob.variant}
 						color={knob.color}
 						label={knob.label}
 						valueFormatter={knob.valueFormatter}
