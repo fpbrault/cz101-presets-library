@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import CzHorizontalSlider from "./CzHorizontalSlider";
 
 vi.mock("@/components/controls/modulation/ModulatableControl", () => ({
-	default: ({ children }: { children: React.ReactNode }) => (
+	default: ({ children }: { children: ReactNode }) => (
 		<div data-testid="modulatable-wrapper">{children}</div>
 	),
 }));
