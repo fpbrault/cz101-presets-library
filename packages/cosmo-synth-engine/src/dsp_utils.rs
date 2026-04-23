@@ -36,15 +36,11 @@ pub fn apply_window(phase: f32, window: WindowType) -> f32 {
     // 1. Calculate the base unipolar amplitude shape [0.0, 1.0]
     let amp = match window {
         // WAVE 6: Starts at 100% and ramps steadily down to 0%
-        WindowType::Saw => {
-            1.0 - phase
-        }
-        
+        WindowType::Saw => 1.0 - phase,
+
         // WAVE 7: Ramps 0% -> 100% -> 0% over the full cycle
-        WindowType::Triangle => {
-            1.0 - libm::fabsf(phase * 2.0 - 1.0)
-        }
-        
+        WindowType::Triangle => 1.0 - libm::fabsf(phase * 2.0 - 1.0),
+
         // WAVE 8: Holds at 100% for the first half, then ramps to 0%
         WindowType::Trapezoid => {
             if phase < 0.5 {
@@ -53,7 +49,7 @@ pub fn apply_window(phase: f32, window: WindowType) -> f32 {
                 1.0 - (phase - 0.5) * 2.0
             }
         }
-        
+
         // SYSEX ONLY: Holds at 100% for the first half, 0% for the second
         WindowType::Pulse => {
             if phase < 0.5 {
@@ -62,12 +58,10 @@ pub fn apply_window(phase: f32, window: WindowType) -> f32 {
                 0.0
             }
         }
-        
+
         // SYSEX ONLY: Two consecutive ascending saws (0% -> 100%)
-        WindowType::DoubleSaw => {
-            wrap01(phase * 2.0)
-        }
-        
+        WindowType::DoubleSaw => wrap01(phase * 2.0),
+
         _ => 1.0,
     };
 

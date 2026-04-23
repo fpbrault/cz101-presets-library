@@ -7,9 +7,9 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::array;
 
+use crate::dsp_utils::lfo_output;
 use crate::fx::FxChain;
 use crate::generators::PER_LINE_HEADROOM;
-use crate::dsp_utils::lfo_output;
 use crate::params::{PolyMode, SynthParams, NUM_VOICES};
 use crate::voice::{render_voice, Voice};
 
@@ -147,8 +147,7 @@ impl CosmoProcessor {
         if self.params.vibrato.enabled {
             voice.vibrato_phase = 0.0;
             let delay_ms = self.params.vibrato.delay;
-            voice.vibrato_delay_counter =
-                libm::roundf(delay_ms * self.sample_rate / 1000.0) as u32;
+            voice.vibrato_delay_counter = libm::roundf(delay_ms * self.sample_rate / 1000.0) as u32;
         }
     }
 
@@ -206,10 +205,7 @@ impl CosmoProcessor {
     /// Handle mono legato note-on without retriggering envelopes.
     fn try_handle_mono_legato_note_on(&mut self, note: u8, frequency: f32) -> bool {
         let voice = &mut self.voices[0];
-        if !self.params.legato
-            || voice.is_releasing
-            || voice.is_silent
-            || voice.note == Some(note)
+        if !self.params.legato || voice.is_releasing || voice.is_silent || voice.note == Some(note)
         {
             return false;
         }

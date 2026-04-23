@@ -6,9 +6,89 @@ on:
     branches: main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  lint:
+    name: Lint (Biome)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: latest
+
+      - name: Run Biome CI
+        id: biome-ci
+        run: biome ci . || echo "has-issues=true" >> $GITHUB_OUTPUT
+
+      - name: Fix Biome issues
+        if: steps.biome-ci.outputs.has-issues == 'true'
+        run: biome check --write .
+
+      - name: Auto-commit Biome fixes
+        if: github.event_name == 'pull_request' && steps.biome-ci.outputs.has-issues == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(ci): apply biome fixes"
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Verify Biome CI after fixes
+        if: steps.biome-ci.outputs.has-issues == 'true'
+        run: biome ci .
+
+  cargo-fmt:
+    name: Cargo fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Run Cargo fmt
+        run: bun run lint:fix:cargo || true
+        shell: bash
+
+      - name: Check for formatting changes
+        id: check-changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+      - name: Auto-commit Cargo fmt fixes
+        if: github.event_name == 'pull_request' && steps.check-changes.outputs.has-changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(ci): apply cargo fmt fixes"
+          git push
+        shell: bash
+
+      - name: Fail if formatting changes were needed
+        if: steps.check-changes.outputs.has-changes == 'true'
+        run: exit 1
+        shell: bash
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -144,6 +224,7 @@ jobs:
     name: Database Migration
     needs:
       [
+        lint,
         unit-tests,
         browser-tests,
         plugin-webview-unit-tests,
