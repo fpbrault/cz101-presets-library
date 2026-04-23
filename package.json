@@ -26,7 +26,9 @@
 		"package:plugin:installer:linux": "bun run scripts/package-plugin-installers.mjs --platform linux",
 		"test": "bun --filter '*' test && cargo test --workspace",
 		"lint": "bunx biome check . && bun run scripts/cargo-fmt-workspace.mjs --check && cargo clippy --workspace --all-targets",
-		"lint:fix": "bunx biome check --write . && bun run scripts/cargo-fmt-workspace.mjs",
+		"lint:fix:biome": "bunx biome check --write .",
+		"lint:fix:cargo": "bun run scripts/cargo-fmt-workspace.mjs",
+		"lint:fix": "bun run lint:fix:biome && bun run lint:fix:cargo",
 		"clean": "rimraf --glob packages/*/dist packages/**/lib-dist packages/*/target src-tauri/target",
 		"ci": "bun run lint && bun run build && bun run test"
 	},
