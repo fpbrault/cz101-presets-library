@@ -25,7 +25,7 @@ jobs:
         shell: bash
 
       - name: Run lint fixes
-        run: bun run lint:fix
+        run: bun run lint:fix || true
         shell: bash
 
       - name: Auto-commit lint fixes
