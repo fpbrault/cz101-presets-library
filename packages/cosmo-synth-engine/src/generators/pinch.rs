@@ -7,6 +7,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Focus",
         description: "Moves the pinch center toward the start or end of the cycle.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -18,7 +21,10 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Asym",
         description: "Adds asymmetry so one side of the pinch shifts more than the other.",
         kind: AlgoControlKindV1::Number,
-        min: Some(0.0),
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: true,
+        icon_name: None,
+        min: Some(-1.0),
         max: Some(1.0),
         default: Some(0.0),
         default_toggle: None,
@@ -29,6 +35,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Curve",
         description: "Changes the curvature of the pinched center region.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -40,6 +49,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Drive",
         description: "Pushes the pinch harder for a tighter, more exaggerated distortion.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -66,7 +78,8 @@ pub fn warp_phase(phase: f32, amt: f32, focus: f32, asym: f32, curve: f32, drive
         let right_norm = ((phase - center) / (1.0 - center)).clamp(0.0, 1.0);
         center + (1.0 - center) * (1.0 - libm::powf(1.0 - right_norm, intensity))
     };
-    let asym_shift = (asym - 0.5) * (0.2 + drive * 0.2);
+    // asym is bipolar [-1, 1]; remap: old = (asym + 1) / 2, so (old - 0.5) = asym / 2
+    let asym_shift = asym * (0.1 + drive * 0.1);
     let curved = if shaped < 0.5 {
         0.5 * libm::powf((shaped * 2.0).clamp(0.0, 1.0), 0.35 + curve * 2.4)
     } else {

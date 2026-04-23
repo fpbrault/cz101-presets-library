@@ -7,6 +7,9 @@ const CONTROLS: [AlgoControlV1; 3] = [
         label: "Curve",
         description: "Changes how aggressively the phase bends along the curve.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -18,9 +21,12 @@ const CONTROLS: [AlgoControlV1; 3] = [
         label: "Bias",
         description: "Offsets the bend toward the start or end of the cycle.",
         kind: AlgoControlKindV1::Number,
-        min: Some(0.0),
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: true,
+        icon_name: None,
+        min: Some(-1.0),
         max: Some(1.0),
-        default: Some(0.5),
+        default: Some(0.0),
         default_toggle: None,
         options: &NO_CONTROL_OPTIONS,
     },
@@ -29,6 +35,9 @@ const CONTROLS: [AlgoControlV1; 3] = [
         label: "Knee",
         description: "Shapes the transition point between the flatter and steeper bend regions.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -47,7 +56,8 @@ pub const DEFINITION: AlgoDefinitionV1 = AlgoDefinitionV1 {
 
 /// Bend algorithm phase warp.
 pub fn warp_phase(phase: f32, amt: f32, curve: f32, bias: f32, knee: f32) -> f32 {
-    let centered = (phase - 0.5) * (0.5 + bias * 1.5) + 0.5;
+    // bias is bipolar [-1, 1]; remap to [0, 1] equivalent: old = (bias + 1) / 2
+    let centered = (phase - 0.5) * (1.25 + bias * 0.75) + 0.5;
     let warped_phase = centered.clamp(0.0, 1.0);
     let knee_shaped = if warped_phase < 0.5 {
         0.5 * libm::powf((warped_phase * 2.0).clamp(0.0, 1.0), 0.25 + knee * 2.75)

@@ -8,6 +8,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Stages",
         description: "Sets how many fold passes are applied across the cycle.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.5),
@@ -19,9 +22,12 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Tilt",
         description: "Moves the fold pivot toward the start or end of the cycle.",
         kind: AlgoControlKindV1::Number,
-        min: Some(0.0),
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: true,
+        icon_name: None,
+        min: Some(-1.0),
         max: Some(1.0),
-        default: Some(0.5),
+        default: Some(0.0),
         default_toggle: None,
         options: &NO_CONTROL_OPTIONS,
     },
@@ -31,9 +37,12 @@ const CONTROLS: [AlgoControlV1; 4] = [
         description:
             "Offsets fold balance to make one side of the cycle fold harder than the other.",
         kind: AlgoControlKindV1::Number,
-        min: Some(0.0),
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: true,
+        icon_name: None,
+        min: Some(-1.0),
         max: Some(1.0),
-        default: Some(0.5),
+        default: Some(0.0),
         default_toggle: None,
         options: &NO_CONTROL_OPTIONS,
     },
@@ -42,6 +51,9 @@ const CONTROLS: [AlgoControlV1; 4] = [
         label: "Softness",
         description: "Softens each fold pass so the phase wraps less abruptly.",
         kind: AlgoControlKindV1::Number,
+        control_type: super::AlgoControlPresentationV1::Knob,
+        bipolar: false,
+        icon_name: None,
         min: Some(0.0),
         max: Some(1.0),
         default: Some(0.0),
@@ -69,7 +81,8 @@ pub fn warp_phase(
 ) -> f32 {
     let mut p = phase;
     let folds = 1 + libm::floorf((0.5 + stages * 5.5) * amt.max(0.05)) as u32;
-    let pivot = (0.2 + tilt * 0.6 + (symmetry - 0.5) * 0.25).clamp(0.05, 0.95);
+    // tilt and symmetry are bipolar [-1, 1]; remap: old = (x + 1) / 2
+    let pivot = (0.5 + tilt * 0.3 + symmetry * 0.125).clamp(0.05, 0.95);
     for _ in 0..folds {
         if p > pivot {
             p = 1.0 - p;
