@@ -24,7 +24,7 @@
 		"package:plugin:installer:macos": "bun run scripts/package-plugin-installers.mjs --platform macos",
 		"package:plugin:installer:windows": "bun run scripts/package-plugin-installers.mjs --platform windows",
 		"package:plugin:installer:linux": "bun run scripts/package-plugin-installers.mjs --platform linux",
-		"test": "bun --filter @cosmo/cz-explorer test:all && cargo test --workspace",
+		"test": "bun --filter '*' test && cargo test --workspace",
 		"lint": "bun --filter @cosmo/cz-explorer lint && cargo fmt --all --check && cargo clippy --workspace --all-targets",
 		"lint:fix": "bun --filter @cosmo/cz-explorer lint:fix && cargo fmt --all",
 		"clean": "rimraf --glob packages/*/dist packages/**/lib-dist packages/*/target src-tauri/target",
