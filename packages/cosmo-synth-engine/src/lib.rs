@@ -6,10 +6,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub mod dsp_utils;
 pub mod envelope;
 pub mod fx;
 pub mod generators;
-pub mod dsp_utils;
 pub mod params;
 pub mod preset_wire;
 pub mod processor;
