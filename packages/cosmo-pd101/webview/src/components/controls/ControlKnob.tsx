@@ -1,5 +1,4 @@
 import { type ReactNode, useRef, useState } from "react";
-import { useHoverInfo } from "../layout/HoverInfo";
 import ModulatableControl from "@/components/controls/modulation/ModulatableControl";
 import { useOptionalSynthController } from "@/features/synth/SynthParamController";
 import type { ModDestination } from "@/lib/synth/bindings/synth";
@@ -7,6 +6,7 @@ import {
 	type ModTarget,
 	resolveModDestination,
 } from "@/lib/synth/modDestination";
+import { useHoverInfo } from "../layout/HoverInfo";
 import { type KnobVariant, KnobView } from "./knob/KnobView";
 import {
 	bipolarCenterNorm,
@@ -168,17 +168,29 @@ export function ControlKnob({
 		? valueFormatter(value)
 		: value.toFixed(2);
 	const valueControlLabel = label ? `${label} value` : "knob value";
+	const hoverHandlers = tooltip
+		? {
+				onPointerEnter: () => setHoverInfo(tooltip),
+				onPointerLeave: clearHoverInfo,
+				onFocusCapture: () => setHoverInfo(tooltip),
+				onBlurCapture: clearHoverInfo,
+			}
+		: undefined;
 	const infoButtonHandlers = tooltip
 		? {
-			onPointerEnter: () => setHoverInfo(tooltip),
-			onPointerLeave: clearHoverInfo,
-			onFocus: () => setHoverInfo(tooltip),
-			onBlur: clearHoverInfo,
-		}
+				onPointerEnter: () => setHoverInfo(tooltip),
+				onPointerLeave: clearHoverInfo,
+				onFocus: () => setHoverInfo(tooltip),
+				onBlur: clearHoverInfo,
+			}
 		: undefined;
 
 	const inner = (
-		<div className="group flex flex-col items-center gap-0.5 text-center">
+		<div
+			className="group flex flex-col items-center gap-0.5 text-center"
+			data-hover-info={tooltip}
+			{...hoverHandlers}
+		>
 			{label && (
 				<div className="space-y-0.5">
 					<div className="flex items-center justify-center gap-1 text-3xs uppercase tracking-[0.24em] text-base-content/55">

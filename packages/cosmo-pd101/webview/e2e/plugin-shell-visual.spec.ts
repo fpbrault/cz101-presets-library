@@ -20,6 +20,8 @@ test.describe("Plugin shell visual smoke", () => {
 
 	test("captures the mini keyboard overlay", async ({ page }, testInfo) => {
 		await expect(page.getByTestId("test-harness")).toBeVisible();
+		await expect(page.getByText("Performance Keys")).toBeVisible();
+		await page.getByRole("button", { name: /Hide Keys/i }).click();
 		await page.getByRole("button", { name: /Show Keys/i }).click();
 		await expect(page.getByText("Performance Keys")).toBeVisible();
 		await page.screenshot({

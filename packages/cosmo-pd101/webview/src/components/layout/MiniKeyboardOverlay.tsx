@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "motion/react";
 type MiniKeyboardOverlayProps = {
 	activeNotes: number[];
 	visible: boolean;
-	onToggle: () => void;
 	onNoteOn: (note: number, velocity?: number) => void;
 	onNoteOff: (note: number) => void;
 };
@@ -92,64 +91,55 @@ function PianoKey({
 export default function MiniKeyboardOverlay({
 	activeNotes,
 	visible,
-	onToggle,
 	onNoteOn,
 	onNoteOff,
 }: MiniKeyboardOverlayProps) {
 	const activeSet = new Set(activeNotes);
 
 	return (
-		<>
-			<button
-				type="button"
-				onClick={onToggle}
-				className="absolute bottom-10 right-4 z-30 rounded-sm border border-cz-border bg-[linear-gradient(180deg,rgba(45,45,43,0.96),rgba(23,23,22,0.98))] px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-cz-cream shadow-[0_8px_18px_rgba(0,0,0,0.28)]"
-			>
-				{visible ? "Hide Keys" : "Show Keys"}
-			</button>
-			<AnimatePresence initial={false}>
-				{visible ? (
-					<motion.div
-						key="mini-keyboard"
-						initial={{ opacity: 0, y: 28 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: 22 }}
-						transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-						className="pointer-events-none absolute inset-x-6 bottom-16 z-20 flex justify-center"
-					>
-						<div className="pointer-events-auto w-full max-w-4xl rounded-xl border border-cz-border bg-[linear-gradient(180deg,rgba(52,52,50,0.94),rgba(30,30,29,0.98))] p-3 shadow-[0_24px_44px_rgba(0,0,0,0.32)] backdrop-blur-sm">
-							<div className="mb-2 flex items-center justify-between px-1 font-mono text-[0.56rem] uppercase tracking-[0.24em] text-cz-cream/70">
-								<span>Performance Keys</span>
-								<span>{activeNotes.length > 0 ? `Held ${activeNotes.length}` : "Ready"}</span>
-							</div>
-							<div className="relative flex h-28 gap-1 overflow-hidden rounded-lg border border-cz-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.08))] p-2">
-								{WHITE_KEYS.map((key) => (
-									<PianoKey
-										key={key.note}
-										note={key.note}
-										label={key.label}
-										active={activeSet.has(key.note)}
-										onNoteOn={onNoteOn}
-										onNoteOff={onNoteOff}
-									/>
-								))}
-								{BLACK_KEYS.map((key) => (
-									<PianoKey
-										key={key.note}
-										note={key.note}
-										label={key.label}
-										black
-										left={key.left}
-										active={activeSet.has(key.note)}
-										onNoteOn={onNoteOn}
-										onNoteOff={onNoteOff}
-									/>
-								))}
-							</div>
+		<AnimatePresence initial={false}>
+			{visible ? (
+				<motion.div
+					key="mini-keyboard"
+					initial={{ opacity: 0, y: 28 }}
+					animate={{ opacity: 1, y: 0 }}
+					exit={{ opacity: 0, y: 22 }}
+					transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+					className="pointer-events-none absolute inset-x-4 bottom-9 z-20 flex justify-center"
+				>
+					<div className="pointer-events-auto w-full max-w-5xl overflow-hidden rounded-[1.35rem] border border-cz-border bg-[linear-gradient(180deg,rgba(45,46,44,0.96),rgba(27,28,27,0.99))] p-3 shadow-[0_26px_56px_rgba(0,0,0,0.4)] backdrop-blur-sm">
+						<div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[repeating-linear-gradient(90deg,rgba(123,150,226,0.08)_0px,rgba(123,150,226,0.08)_1px,transparent_1px,transparent_22px)] opacity-70" />
+						<div className="relative mb-2 flex items-center justify-between px-1 font-mono text-[0.56rem] uppercase tracking-[0.24em] text-cz-cream/70">
+							<span>Performance Keys</span>
+							<span>{activeNotes.length > 0 ? `Held ${activeNotes.length}` : "Ready"}</span>
 						</div>
-					</motion.div>
-				) : null}
-			</AnimatePresence>
-		</>
+						<div className="relative flex h-28 gap-1 overflow-hidden rounded-xl border border-cz-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.12))] p-2">
+							{WHITE_KEYS.map((key) => (
+								<PianoKey
+									key={key.note}
+									note={key.note}
+									label={key.label}
+									active={activeSet.has(key.note)}
+									onNoteOn={onNoteOn}
+									onNoteOff={onNoteOff}
+								/>
+							))}
+							{BLACK_KEYS.map((key) => (
+								<PianoKey
+									key={key.note}
+									note={key.note}
+									label={key.label}
+									black
+									left={key.left}
+									active={activeSet.has(key.note)}
+									onNoteOn={onNoteOn}
+									onNoteOff={onNoteOff}
+								/>
+							))}
+						</div>
+					</div>
+				</motion.div>
+			) : null}
+		</AnimatePresence>
 	);
 }
