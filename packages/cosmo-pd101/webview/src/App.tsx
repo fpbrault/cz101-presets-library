@@ -58,22 +58,18 @@ export default function App() {
 	return (
 		<>
 			<PluginPage
-				headerExtra={
-					<div className="flex items-center gap-2 px-8 -mt-2">
-						<span className="text-3xs font-mono uppercase tracking-[0.2em] text-base-content/50">
-							Build {__CZ_BUILD_LABEL__}
-						</span>
+				utilityExtra={
+					<div className="flex items-center gap-2">
+						<span className="text-cz-cream/55">Build {__CZ_BUILD_LABEL__}</span>
 						<button
 							type="button"
 							onClick={handleManualCheck}
-							className="btn btn-xs font-mono btn-ghost opacity-70"
+							className="rounded-sm border border-cz-border bg-black/25 px-1.5 py-0.5 text-[0.54rem] font-mono tracking-[0.14em] text-cz-cream/80 transition-colors hover:text-cz-cream"
 						>
 							Check updates
 						</button>
 						{manualStatus ? (
-							<span className="text-3xs font-mono text-base-content/70">
-								{manualStatus}
-							</span>
+							<span className="text-cz-cream/70">{manualStatus}</span>
 						) : null}
 					</div>
 				}

@@ -8,6 +8,7 @@ import type {
 
 interface AlgoControlSelectProps {
 	control: AlgoControlRuntime;
+	disabled?: boolean;
 	binding?: AlgoControlBinding;
 	getActiveSelectOption: (
 		control: AlgoControlRuntime,
@@ -17,6 +18,7 @@ interface AlgoControlSelectProps {
 
 function AlgoControlSelectInner({
 	control,
+	disabled = false,
 	binding,
 	getActiveSelectOption,
 	applyOptionAssignments,
@@ -34,9 +36,13 @@ function AlgoControlSelectInner({
 					<CzButton
 						key={option.value}
 						active={activeOption?.value === option.value}
+						disabled={disabled}
 						led={false}
 						tooltip={buttonTooltip}
 						onClick={() => {
+							if (disabled) {
+								return;
+							}
 							if (option.set.length > 0) {
 								applyOptionAssignments(option);
 								return;

@@ -193,7 +193,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
     let control_value = |id: &str, default: f32| {
         super::resolve_algo_control_value(
             config.primary_algo,
-            config.algo_controls,
+            config.primary_algo_controls,
             id,
             default,
             &config.algo_param_mods,
@@ -221,7 +221,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
             config.primary_algo,
             config.phase,
             primary_dcw,
-            config.algo_controls,
+            config.primary_algo_controls,
             config.algo_param_mods,
             ks_raw,
         );
@@ -229,7 +229,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
             secondary_algo,
             config.phase,
             secondary_dcw,
-            config.algo_controls,
+            config.secondary_algo_controls,
             config.algo_param_mods,
             ks_raw,
         );
@@ -239,7 +239,7 @@ fn render_line(ks_state: &mut KarpunkState, config: LineRenderConfig<'_>) -> (f3
             config.primary_algo,
             config.phase,
             config.final_dcw,
-            config.algo_controls,
+            config.primary_algo_controls,
             config.algo_param_mods,
             ks_raw,
         )

@@ -7,10 +7,15 @@ import type {
 
 interface AlgoControlToggleProps {
 	control: AlgoControlRuntime;
+	disabled?: boolean;
 	binding?: AlgoControlBinding;
 }
 
-function AlgoControlToggleInner({ control, binding }: AlgoControlToggleProps) {
+function AlgoControlToggleInner({
+	control,
+	disabled = false,
+	binding,
+}: AlgoControlToggleProps) {
 	const toggleValue = binding?.getToggle?.() ?? control.defaultToggle ?? false;
 
 	return (
@@ -25,7 +30,7 @@ function AlgoControlToggleInner({ control, binding }: AlgoControlToggleProps) {
 				type="checkbox"
 				checked={toggleValue}
 				onChange={(event) => binding?.setToggle?.(event.target.checked)}
-				disabled={!binding?.setToggle}
+				disabled={disabled || !binding?.setToggle}
 				className="checkbox checkbox-xs"
 			/>
 		</div>

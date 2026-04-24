@@ -122,7 +122,10 @@ export function useSynthState() {
 	const [line1CzSlotBWaveform, setLine1CzSlotBWaveform] =
 		useState<CzWaveform>("saw");
 	const [line1CzWindow, setLine1CzWindow] = useState<WindowType>("off");
-	const [line1AlgoControls, setLine1AlgoControls] = useState<
+	const [line1AlgoControlsA, setLine1AlgoControlsA] = useState<
+		AlgoControlValueV1[]
+	>([]);
+	const [line1AlgoControlsB, setLine1AlgoControlsB] = useState<
 		AlgoControlValueV1[]
 	>([]);
 
@@ -141,7 +144,10 @@ export function useSynthState() {
 	const [line2CzSlotBWaveform, setLine2CzSlotBWaveform] =
 		useState<CzWaveform>("saw");
 	const [line2CzWindow, setLine2CzWindow] = useState<WindowType>("off");
-	const [line2AlgoControls, setLine2AlgoControls] = useState<
+	const [line2AlgoControlsA, setLine2AlgoControlsA] = useState<
+		AlgoControlValueV1[]
+	>([]);
+	const [line2AlgoControlsB, setLine2AlgoControlsB] = useState<
 		AlgoControlValueV1[]
 	>([]);
 
@@ -168,9 +174,9 @@ export function useSynthState() {
 
 	const [vibratoEnabled, setVibratoEnabled] = useState(false);
 	const [vibratoWave, setVibratoWave] = useState(1);
-	const [vibratoRate, setVibratoRate] = useState(30);
-	const [vibratoDepth, setVibratoDepth] = useState(30);
-	const [vibratoDelay, setVibratoDelay] = useState(0);
+	const [vibratoRate, setVibratoRate] = useState(55);
+	const [vibratoDepth, setVibratoDepth] = useState(8);
+	const [vibratoDelay, setVibratoDelay] = useState(120);
 
 	const [portamentoEnabled, setPortamentoEnabled] = useState(false);
 	const [portamentoMode, setPortamentoMode] = useState<PortamentoMode>("rate");
@@ -180,7 +186,7 @@ export function useSynthState() {
 	const [lfoEnabled, setLfoEnabled] = useState(false);
 	const [lfoWaveform, setLfoWaveform] = useState<LfoWaveform>("sine");
 	const [lfoRate, setLfoRate] = useState(5);
-	const [lfoDepth, setLfoDepth] = useState(0);
+	const [lfoDepth, setLfoDepth] = useState(0.2);
 	const [lfoOffset, setLfoOffset] = useState(0);
 	const [lfoTarget, setLfoTarget] = useState<LfoTarget>("pitch");
 
@@ -195,14 +201,20 @@ export function useSynthState() {
 	const [modMatrix, setModMatrix] = useState<ModMatrix>({ routes: [] });
 
 	const gatherState = useCallback((): SynthPresetV1 => {
-		const line1NormalizedAlgoControls = normalizeAlgoControls(
+		const line1NormalizedAlgoControlsA = normalizeAlgoControls(
 			warpAAlgo,
-			line1AlgoControls,
+			line1AlgoControlsA,
 		);
-		const line2NormalizedAlgoControls = normalizeAlgoControls(
+		const line1NormalizedAlgoControlsB = algo2A
+			? normalizeAlgoControls(algo2A, line1AlgoControlsB)
+			: [];
+		const line2NormalizedAlgoControlsA = normalizeAlgoControls(
 			warpBAlgo,
-			line2AlgoControls,
+			line2AlgoControlsA,
 		);
+		const line2NormalizedAlgoControlsB = algo2B
+			? normalizeAlgoControls(algo2B, line2AlgoControlsB)
+			: [];
 
 		return {
 			schemaVersion: 1,
@@ -231,7 +243,8 @@ export function useSynthState() {
 						slotBWaveform: line1CzSlotBWaveform,
 						window: line1CzWindow,
 					},
-					algoControls: line1NormalizedAlgoControls,
+					algoControlsA: line1NormalizedAlgoControlsA,
+					algoControlsB: line1NormalizedAlgoControlsB,
 				},
 				line2: {
 					algo: warpBAlgo,
@@ -254,7 +267,8 @@ export function useSynthState() {
 						slotBWaveform: line2CzSlotBWaveform,
 						window: line2CzWindow,
 					},
-					algoControls: line2NormalizedAlgoControls,
+					algoControlsA: line2NormalizedAlgoControlsA,
+					algoControlsB: line2NormalizedAlgoControlsB,
 				},
 				intPmAmount: phaseModEnabled ? intPmAmount : 0,
 				intPmRatio,
@@ -342,7 +356,8 @@ export function useSynthState() {
 		line1CzSlotAWaveform,
 		line1CzSlotBWaveform,
 		line1CzWindow,
-		line1AlgoControls,
+		line1AlgoControlsA,
+		line1AlgoControlsB,
 		line1DcaEnv,
 		line1DcoDepth,
 		line1DcoEnv,
@@ -355,7 +370,8 @@ export function useSynthState() {
 		line2CzSlotAWaveform,
 		line2CzSlotBWaveform,
 		line2CzWindow,
-		line2AlgoControls,
+		line2AlgoControlsA,
+		line2AlgoControlsB,
 		line2DcaEnv,
 		line2DcoDepth,
 		line2DcoEnv,
@@ -477,8 +493,19 @@ export function useSynthState() {
 		setLine1CzSlotAWaveform(line1SlotAWaveform);
 		setLine1CzSlotBWaveform(line1SlotBWaveform);
 		setLine1CzWindow((p.line1?.cz?.window as WindowType) ?? "off");
-		setLine1AlgoControls(
-			normalizeAlgoControls(line1PrimaryAlgo, p.line1?.algoControls ?? []),
+		setLine1AlgoControlsA(
+			normalizeAlgoControls(
+				line1PrimaryAlgo,
+				p.line1?.algoControlsA ?? p.line1?.algoControls ?? [],
+			),
+		);
+		setLine1AlgoControlsB(
+			line1SecondaryAlgo
+				? normalizeAlgoControls(
+						line1SecondaryAlgo,
+						p.line1?.algoControlsB ?? [],
+					)
+				: [],
 		);
 		setLine2DcoEnv(p.line2?.dcoEnv ?? DEFAULT_DCO_ENV);
 		setLine2DcwEnv(p.line2?.dcwEnv ?? DEFAULT_DCW_ENV);
@@ -486,8 +513,19 @@ export function useSynthState() {
 		setLine2CzSlotAWaveform(line2SlotAWaveform);
 		setLine2CzSlotBWaveform(line2SlotBWaveform);
 		setLine2CzWindow((p.line2?.cz?.window as WindowType) ?? "off");
-		setLine2AlgoControls(
-			normalizeAlgoControls(line2PrimaryAlgo, p.line2?.algoControls ?? []),
+		setLine2AlgoControlsA(
+			normalizeAlgoControls(
+				line2PrimaryAlgo,
+				p.line2?.algoControlsA ?? p.line2?.algoControls ?? [],
+			),
+		);
+		setLine2AlgoControlsB(
+			line2SecondaryAlgo
+				? normalizeAlgoControls(
+						line2SecondaryAlgo,
+						p.line2?.algoControlsB ?? [],
+					)
+				: [],
 		);
 		setPolyMode((p.polyMode as PolyMode) ?? "poly8");
 		setLegato(p.legato ?? false);
@@ -593,8 +631,10 @@ export function useSynthState() {
 		setLine1CzSlotBWaveform,
 		line1CzWindow,
 		setLine1CzWindow,
-		line1AlgoControls,
-		setLine1AlgoControls,
+		line1AlgoControlsA,
+		setLine1AlgoControlsA,
+		line1AlgoControlsB,
+		setLine1AlgoControlsB,
 		line2Level,
 		setLine2Level,
 		line2Octave,
@@ -621,8 +661,10 @@ export function useSynthState() {
 		setLine2CzSlotBWaveform,
 		line2CzWindow,
 		setLine2CzWindow,
-		line2AlgoControls,
-		setLine2AlgoControls,
+		line2AlgoControlsA,
+		setLine2AlgoControlsA,
+		line2AlgoControlsB,
+		setLine2AlgoControlsB,
 		lineSelect,
 		setLineSelect,
 		modMode,

@@ -9,6 +9,7 @@ import type {
 
 interface AlgoControlNumberProps {
 	control: AlgoControlRuntime;
+	disabled?: boolean;
 	binding?: AlgoControlBinding;
 	lineIndex: LineIndex;
 	algoParamSlotIndex: Record<string, number>;
@@ -18,6 +19,7 @@ interface AlgoControlNumberProps {
 
 function AlgoControlNumberInner({
 	control,
+	disabled = false,
 	binding,
 	lineIndex,
 	algoParamSlotIndex,
@@ -39,6 +41,7 @@ function AlgoControlNumberInner({
 			<ControlKnob
 				label={control.label}
 				tooltip={control.description ?? undefined}
+				disabled={disabled}
 				min={min}
 				max={max}
 				value={value}
@@ -46,7 +49,7 @@ function AlgoControlNumberInner({
 				bipolar={min < 0 && max > 0}
 				defaultValue={control.default ?? undefined}
 				color="cyan"
-				modulatable={algoParamTarget}
+				modulatable={disabled ? undefined : algoParamTarget}
 				lineIndex={lineIndex}
 				onChange={(newVal) =>
 					binding?.setNumber

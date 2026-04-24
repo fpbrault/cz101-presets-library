@@ -52,7 +52,7 @@ export const SingleCycleDisplay = memo(function SingleCycleDisplay({
 			<Card
 				variant="subtle"
 				padding="none"
-				className="overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+				className="overflow-hidden shadow-lg"
 			>
 				<canvas
 					ref={canvasRef}
@@ -182,7 +182,7 @@ export const SynthSingleCycleDisplay = memo(function SynthSingleCycleDisplay() {
 			<Card
 				variant="subtle"
 				padding="none"
-				className="overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+				className="overflow-hidden shadow-lg"
 			>
 				<canvas
 					ref={canvasRef}

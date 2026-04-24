@@ -1,4 +1,5 @@
 import { memo } from "react";
+import AlgoControlDropdown from "./AlgoControlDropdown";
 import AlgoControlNumber from "./AlgoControlNumber";
 import AlgoControlSelect from "./AlgoControlSelect";
 import AlgoControlToggle from "./AlgoControlToggle";
@@ -11,6 +12,7 @@ import type {
 
 interface AlgoControlItemProps {
 	control: AlgoControlRuntime;
+	disabled?: boolean;
 	binding?: AlgoControlBinding;
 	lineIndex: LineIndex;
 	algoParamSlotIndex: Record<string, number>;
@@ -24,6 +26,7 @@ interface AlgoControlItemProps {
 
 function AlgoControlItemInner({
 	control,
+	disabled = false,
 	binding,
 	lineIndex,
 	algoParamSlotIndex,
@@ -35,9 +38,22 @@ function AlgoControlItemInner({
 	const controlKind = control.kind ?? "number";
 
 	if (controlKind === "select") {
+		if (control.controlType === "dropdown") {
+			return (
+				<AlgoControlDropdown
+					control={control}
+					disabled={disabled}
+					binding={binding}
+					getActiveSelectOption={getActiveSelectOption}
+					applyOptionAssignments={applyOptionAssignments}
+				/>
+			);
+		}
+
 		return (
 			<AlgoControlSelect
 				control={control}
+				disabled={disabled}
 				binding={binding}
 				getActiveSelectOption={getActiveSelectOption}
 				applyOptionAssignments={applyOptionAssignments}
@@ -49,6 +65,7 @@ function AlgoControlItemInner({
 		return (
 			<AlgoControlNumber
 				control={control}
+				disabled={disabled}
 				binding={binding}
 				lineIndex={lineIndex}
 				algoParamSlotIndex={algoParamSlotIndex}
@@ -58,7 +75,13 @@ function AlgoControlItemInner({
 		);
 	}
 
-	return <AlgoControlToggle control={control} binding={binding} />;
+	return (
+		<AlgoControlToggle
+			control={control}
+			binding={binding}
+			disabled={disabled}
+		/>
+	);
 }
 
 const AlgoControlItem = memo(AlgoControlItemInner);

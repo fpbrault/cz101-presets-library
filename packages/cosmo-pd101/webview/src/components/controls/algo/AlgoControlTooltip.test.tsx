@@ -12,13 +12,13 @@ describe("AlgoControlTooltip", () => {
 
 	it("renders tooltip trigger when description exists", () => {
 		render(<AlgoControlTooltip description="Fine tune harmonic spread" />);
-		expect(
-			screen.getByRole("button", { name: "Show control description" }),
-		).toBeInTheDocument();
-		expect(
-			screen
-				.getByRole("button")
-				.closest("[data-tip='Fine tune harmonic spread']"),
-		).not.toBeNull();
+		const button = screen.getByRole("button", {
+			name: "Show control description",
+		});
+		expect(button).toBeInTheDocument();
+		expect(button).toHaveAttribute(
+			"data-hover-info",
+			"Fine tune harmonic spread",
+		);
 	});
 });

@@ -379,8 +379,14 @@ pub struct LineParams {
     pub key_follow: f32,
     #[serde(default)]
     pub cz: CzLineParams,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        alias = "algoControls"
+    )]
+    pub algo_controls_a: Option<Vec<AlgoControlValueV1>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub algo_controls: Option<Vec<AlgoControlValueV1>>,
+    pub algo_controls_b: Option<Vec<AlgoControlValueV1>>,
 }
 
 impl Default for LineParams {
@@ -402,7 +408,8 @@ impl Default for LineParams {
             dca_env: default_dca_env(),
             key_follow: 0.0,
             cz: CzLineParams::default(),
-            algo_controls: None,
+            algo_controls_a: None,
+            algo_controls_b: None,
         }
     }
 }
@@ -482,9 +489,9 @@ impl Default for VibratoParams {
         Self {
             enabled: false,
             waveform: 1,
-            rate: 30.0,
-            depth: 30.0,
-            delay: 0.0,
+            rate: 55.0,
+            depth: 8.0,
+            delay: 120.0,
         }
     }
 }
@@ -510,7 +517,10 @@ impl Default for PortamentoParams {
     }
 }
 
-/// LFO target
+/// LFO target.
+///
+/// Deprecated: per-destination routing should now be done through the modulation matrix.
+/// This enum is kept for backward-compatible preset/state deserialization.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 #[serde(rename_all = "camelCase")]
@@ -628,6 +638,8 @@ pub struct LfoParams {
     pub rate: f32,
     /// Depth [0, 1]
     pub depth: f32,
+    /// Deprecated: use modulation matrix routes for destination selection.
+    /// Kept for backward compatibility.
     pub target: LfoTarget,
     /// DC offset/bias applied to LFO output [-1, 1]
     #[serde(default)]
@@ -640,7 +652,7 @@ impl Default for LfoParams {
             enabled: false,
             waveform: LfoWaveform::Sine,
             rate: 5.0,
-            depth: 0.0,
+            depth: 0.2,
             target: LfoTarget::Pitch,
             offset: 0.0,
         }
