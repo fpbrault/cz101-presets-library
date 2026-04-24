@@ -71,7 +71,7 @@ export default function ModulationMenu({
 						<AnimatePresence initial={false}>
 							{routes.map((route, idx) => (
 								<motion.div
-									key={`${route.source}-${route.destination}`}
+									key={`${route.source}-${route.destination}-${idx}`}
 									initial={{ opacity: 0, x: -8 }}
 									animate={{ opacity: 1, x: 0 }}
 									exit={{ opacity: 0, x: 8, height: 0, marginTop: 0 }}

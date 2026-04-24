@@ -33,6 +33,7 @@ describe("ModulationMenu", () => {
 	it("dispatches route actions", () => {
 		const onToggleEnabled = vi.fn();
 		const onRemoveRoute = vi.fn();
+		const onAmountChange = vi.fn();
 		const onClose = vi.fn();
 		render(
 			<ModulationMenu
@@ -40,7 +41,7 @@ describe("ModulationMenu", () => {
 				routes={[...routes]}
 				onToggleEnabled={onToggleEnabled}
 				onRemoveRoute={onRemoveRoute}
-				onAmountChange={vi.fn()}
+				onAmountChange={onAmountChange}
 				onAddRoute={vi.fn()}
 				onClose={onClose}
 			/>,
@@ -55,6 +56,17 @@ describe("ModulationMenu", () => {
 		// Remove second route (index 1 among remove buttons)
 		fireEvent.click(screen.getAllByRole("button", { name: "Remove route" })[1]);
 		expect(onRemoveRoute).toHaveBeenCalledWith(1);
+
+		// Adjust amount on first route using keyboard interaction on knob spinbutton
+		fireEvent.keyDown(screen.getAllByRole("spinbutton", { name: "Amount" })[0], {
+			key: "ArrowDown",
+		});
+		expect(onAmountChange).toHaveBeenCalledTimes(1);
+		expect(onAmountChange).toHaveBeenCalledWith(
+			0,
+			expect.any(Number),
+		);
+		expect(onAmountChange.mock.calls[0]?.[1]).toBeLessThan(0.5);
 
 		// Close via header × button
 		fireEvent.click(

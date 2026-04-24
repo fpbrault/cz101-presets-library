@@ -57,18 +57,31 @@ describe("modulation controls (browser)", () => {
 			/>,
 		);
 
-		expect(screen.getAllByText("LFO 1")).toHaveLength(2);
-		fireEvent.click(screen.getAllByRole("checkbox")[0]);
-		fireEvent.click(screen.getAllByRole("button", { name: "✕" })[0]);
-		fireEvent.change(screen.getAllByRole("slider")[0], {
-			target: { value: "0.25" },
+		expect(screen.getByText("LFO1")).toBeInTheDocument();
+
+		fireEvent.click(screen.getAllByRole("button", { name: /disable route/i })[0]);
+		fireEvent.click(screen.getAllByRole("button", { name: "Remove route" })[0]);
+		fireEvent.keyDown(screen.getAllByRole("spinbutton", { name: "Amount" })[0], {
+			key: "ArrowDown",
 		});
-		fireEvent.click(screen.getByRole("button", { name: "Velocity" }));
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		fireEvent.change(
+			screen.getByRole("combobox", { name: /select modulation source/i }),
+			{
+				target: { value: "velocity" },
+			},
+		);
+		fireEvent.click(screen.getByRole("button", { name: /^Add$/i }));
+		fireEvent.click(
+			screen.getByRole("button", { name: "Close modulation panel" }),
+		);
 
 		expect(onToggleEnabled).toHaveBeenCalledWith(0);
 		expect(onRemoveRoute).toHaveBeenCalledWith(0);
-		expect(onAmountChange).toHaveBeenCalledWith(0, 0.25);
+		expect(onAmountChange).toHaveBeenCalledWith(
+			0,
+			expect.any(Number),
+		);
+		expect(onAmountChange.mock.calls[0]?.[1]).toBeLessThan(0.5);
 		expect(onAddRoute).toHaveBeenCalledWith("velocity");
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
