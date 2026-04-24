@@ -145,7 +145,6 @@ export default function CzTabButton({
 							}
 				}
 				transition={{ duration: 0.08, ease: "easeOut" }}
-				whileHover={disabled ? undefined : { y: -1 }}
 				className={joinClasses(
 					"h-12 w-full shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold px-1 py-1",
 					"disabled:opacity-40 disabled:cursor-not-allowed",
