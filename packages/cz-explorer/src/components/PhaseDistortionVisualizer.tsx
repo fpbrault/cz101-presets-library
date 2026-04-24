@@ -15,7 +15,7 @@ import {
 	useNoteHandling,
 	useSynthParamsToWorklet,
 	useSynthPresetManager,
-	useSynthState,
+	useSynthStore,
 } from "@cosmo/cosmo-pd101";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -44,27 +44,24 @@ export function SharedPhaseDistortionVisualizer({
 	libraryPresets = [],
 }: PhaseDistortionVisualizerBaseProps = {}) {
 	const { t } = useTranslation("synth");
-	const synthState = useSynthState();
-	const {
-		line1DcoEnv,
-		setLine1DcoEnv,
-		line1DcwEnv,
-		setLine1DcwEnv,
-		line1DcaEnv,
-		setLine1DcaEnv,
-		line2DcoEnv,
-		setLine2DcoEnv,
-		line2DcwEnv,
-		setLine2DcwEnv,
-		line2DcaEnv,
-		setLine2DcaEnv,
-		polyMode,
-		velocityTarget,
-		lineSelect,
-		filterEnabled,
-		gatherState,
-		applyPreset,
-	} = synthState;
+	const line1DcoEnv = useSynthStore((s) => s.line1DcoEnv);
+	const setLine1DcoEnv = useSynthStore((s) => s.setLine1DcoEnv);
+	const line1DcwEnv = useSynthStore((s) => s.line1DcwEnv);
+	const setLine1DcwEnv = useSynthStore((s) => s.setLine1DcwEnv);
+	const line1DcaEnv = useSynthStore((s) => s.line1DcaEnv);
+	const setLine1DcaEnv = useSynthStore((s) => s.setLine1DcaEnv);
+	const line2DcoEnv = useSynthStore((s) => s.line2DcoEnv);
+	const setLine2DcoEnv = useSynthStore((s) => s.setLine2DcoEnv);
+	const line2DcwEnv = useSynthStore((s) => s.line2DcwEnv);
+	const setLine2DcwEnv = useSynthStore((s) => s.setLine2DcwEnv);
+	const line2DcaEnv = useSynthStore((s) => s.line2DcaEnv);
+	const setLine2DcaEnv = useSynthStore((s) => s.setLine2DcaEnv);
+	const polyMode = useSynthStore((s) => s.polyMode);
+	const velocityTarget = useSynthStore((s) => s.velocityTarget);
+	const lineSelect = useSynthStore((s) => s.lineSelect);
+	const filterEnabled = useSynthStore((s) => s.filterEnabled);
+	const gatherState = useSynthStore((s) => s.gatherState);
+	const applyPreset = useSynthStore((s) => s.applyPreset);
 
 	const [extPmAmount] = useState(0);
 	const [activeAsidePanel, setActiveAsidePanel] =
@@ -89,6 +86,7 @@ export function SharedPhaseDistortionVisualizer({
 		activeNotes.length > 0 ? activeNotes[activeNotes.length - 1] : null;
 	const currentFreq = heldNote != null ? noteToFreq(heldNote) : 220;
 
+	const synthState = useSynthStore();
 	useSynthParamsToWorklet({
 		workletNodeRef,
 		paramsRef,
