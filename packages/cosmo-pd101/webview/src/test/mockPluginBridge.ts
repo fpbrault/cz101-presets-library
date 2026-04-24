@@ -389,10 +389,11 @@ export function installMockPluginBridge(): void {
 		},
 
 		pushParamUpdate(idOrStringId: string | number, value: number): void {
-			const stringId = typeof idOrStringId === "number" 
-				? paramsById[idOrStringId]?.stringId ?? String(idOrStringId)
-				: idOrStringId;
-			
+			const stringId =
+				typeof idOrStringId === "number"
+					? (paramsById[idOrStringId]?.stringId ?? String(idOrStringId))
+					: idOrStringId;
+
 			if (window.__czOnParams) {
 				window.__czOnParams(JSON.stringify({ [stringId]: value }));
 			}
@@ -404,10 +405,11 @@ export function installMockPluginBridge(): void {
 		},
 
 		setParameter(idOrStringId: string | number, value: number): void {
-			const stringId = typeof idOrStringId === "number" 
-				? paramsById[idOrStringId]?.stringId ?? String(idOrStringId)
-				: idOrStringId;
-			
+			const stringId =
+				typeof idOrStringId === "number"
+					? (paramsById[idOrStringId]?.stringId ?? String(idOrStringId))
+					: idOrStringId;
+
 			if (window.ipc) {
 				// Full path: UI → installBridgeIpc → runtime.params.set.
 				window.ipc.postMessage(JSON.stringify({ param_id: stringId, value }));
