@@ -383,13 +383,22 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										getAlgoControlValue(algoControlsA, id, fallback)
 									}
 									setAlgoControlValue={(id, value) =>
-										setAlgoControlValue(algoControlsA, setAlgoControlsA, id, value)
+										setAlgoControlValue(
+											algoControlsA,
+											setAlgoControlsA,
+											id,
+											value,
+										)
 									}
 									getActiveSelectOption={(control) =>
 										getActiveSelectOption(algoControlsA, control)
 									}
 									applyOptionAssignments={(option) =>
-										applyOptionAssignments(algoControlsA, setAlgoControlsA, option)
+										applyOptionAssignments(
+											algoControlsA,
+											setAlgoControlsA,
+											option,
+										)
 									}
 								/>
 								<div className="flex min-h-0 flex-col gap-4">
@@ -463,13 +472,22 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										getAlgoControlValue(algoControlsB, id, fallback)
 									}
 									setAlgoControlValue={(id, value) =>
-										setAlgoControlValue(algoControlsB, setAlgoControlsB, id, value)
+										setAlgoControlValue(
+											algoControlsB,
+											setAlgoControlsB,
+											id,
+											value,
+										)
 									}
 									getActiveSelectOption={(control) =>
 										getActiveSelectOption(algoControlsB, control)
 									}
 									applyOptionAssignments={(option) =>
-										applyOptionAssignments(algoControlsB, setAlgoControlsB, option)
+										applyOptionAssignments(
+											algoControlsB,
+											setAlgoControlsB,
+											option,
+										)
 									}
 								/>
 							</div>

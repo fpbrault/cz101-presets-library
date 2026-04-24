@@ -89,7 +89,9 @@ function PianoKey({
 				active ? "border-cz-light-blue bg-cz-surface" : ""
 			}`
 		: `relative flex h-full flex-1 flex-col justify-end rounded-b-md border border-cz-border/75 bg-cz-cream px-0.5 pb-1.5 pt-1.5 text-[0.42rem] font-mono uppercase tracking-[0.15em] text-[#302d26] shadow-sm transition-all ${
-				active ? "translate-y-[1px] border-cz-gold bg-cz-gold/70 text-[#232018]" : ""
+				active
+					? "translate-y-[1px] border-cz-gold bg-cz-gold/70 text-[#232018]"
+					: ""
 			}`;
 
 	return (
@@ -126,17 +128,17 @@ export default function MiniKeyboardOverlay({
 
 	const playDraggedNote = useCallback(
 		(note: number) => {
-		const previousNote = draggingNoteRef.current;
-		if (previousNote === note) {
-			return;
-		}
+			const previousNote = draggingNoteRef.current;
+			if (previousNote === note) {
+				return;
+			}
 
-		if (previousNote !== null) {
-			onNoteOff(previousNote);
-		}
+			if (previousNote !== null) {
+				onNoteOff(previousNote);
+			}
 
-		draggingNoteRef.current = note;
-		onNoteOn(note, 112);
+			draggingNoteRef.current = note;
+			onNoteOn(note, 112);
 		},
 		[onNoteOn, onNoteOff],
 	);
@@ -166,7 +168,8 @@ export default function MiniKeyboardOverlay({
 				event.clientX,
 				event.clientY,
 			) as HTMLElement | null;
-			const keyElement = elementUnderPointer?.closest<HTMLElement>("[data-mini-note]");
+			const keyElement =
+				elementUnderPointer?.closest<HTMLElement>("[data-mini-note]");
 			if (!keyElement) {
 				return;
 			}
@@ -248,7 +251,9 @@ export default function MiniKeyboardOverlay({
 										max={1}
 										step={0.01}
 										value={pitchWheel}
-										onChange={(event) => setPitchWheel(Number(event.target.value))}
+										onChange={(event) =>
+											setPitchWheel(Number(event.target.value))
+										}
 										className="h-12 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
 									/>
 									<span className="text-[0.38rem] uppercase tracking-[0.12em] text-cz-cream/70">
@@ -263,7 +268,9 @@ export default function MiniKeyboardOverlay({
 										max={1}
 										step={0.01}
 										value={modWheel}
-										onChange={(event) => setModWheel(Number(event.target.value))}
+										onChange={(event) =>
+											setModWheel(Number(event.target.value))
+										}
 										className="h-12 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
 									/>
 									<span className="text-[0.38rem] uppercase tracking-[0.12em] text-cz-cream/70">

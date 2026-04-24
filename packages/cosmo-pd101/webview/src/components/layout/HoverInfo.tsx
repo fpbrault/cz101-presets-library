@@ -32,7 +32,9 @@ export function HoverInfoProvider({ children }: PropsWithChildren) {
 	);
 
 	return (
-		<HoverInfoContext.Provider value={value}>{children}</HoverInfoContext.Provider>
+		<HoverInfoContext.Provider value={value}>
+			{children}
+		</HoverInfoContext.Provider>
 	);
 }
 

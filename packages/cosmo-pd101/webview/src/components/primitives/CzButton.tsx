@@ -37,11 +37,11 @@ export default function CzButton({
 	const { setHoverInfo, clearHoverInfo } = useHoverInfo();
 	const hoverHandlers = tooltip
 		? {
-			onPointerEnter: () => setHoverInfo(tooltip),
-			onPointerLeave: clearHoverInfo,
-			onFocus: () => setHoverInfo(tooltip),
-			onBlur: clearHoverInfo,
-		}
+				onPointerEnter: () => setHoverInfo(tooltip),
+				onPointerLeave: clearHoverInfo,
+				onFocus: () => setHoverInfo(tooltip),
+				onBlur: clearHoverInfo,
+			}
 		: undefined;
 
 	const buttonFace = (
@@ -68,9 +68,7 @@ export default function CzButton({
 			{led ? (
 				<span
 					className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
-						active
-							? "bg-cz-led-on shadow-sm"
-							: "bg-cz-led-off shadow-inner"
+						active ? "bg-cz-led-on shadow-sm" : "bg-cz-led-off shadow-inner"
 					}`}
 					aria-hidden="true"
 				/>

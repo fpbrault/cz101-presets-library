@@ -19,6 +19,7 @@ import DelayPanel from "@/components/panels/fx/DelayPanel";
 import FxConsoleDrawer from "@/components/panels/fx/FxConsoleDrawer";
 import ReverbPanel from "@/components/panels/fx/ReverbPanel";
 import SynthFilterPanel from "@/components/panels/fx/SynthFilterPanel";
+import ModConsoleDrawer from "@/components/panels/mod/ModConsoleDrawer";
 import GlobalVoicePanel from "@/components/panels/voice/GlobalVoicePanel";
 import LfoPanel from "@/components/panels/voice/LfoPanel";
 import PhaseModPanel from "@/components/panels/voice/PhaseModPanel";
@@ -68,7 +69,7 @@ type SynthRendererProps = {
 	};
 };
 
-type MainPanelMode = "phase" | "fx";
+type MainPanelMode = "phase" | "fx" | "mod";
 
 export default function SynthRenderer({
 	synthState,
@@ -159,7 +160,6 @@ function SynthRendererContent({
 					{headerExtra}
 					<div className="relative z-10 px-1 grid flex-1 min-h-0 min-w-0 w-full gap-2 xl:gap-3 grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] overflow-hidden">
 						<aside className="overflow-y-auto min-h-0 rounded-[1.15rem] border border-cz-border/80 bg-cz-inset px-0 pb-2 shadow-lg [scrollbar-gutter:stable]">
-					
 							<div className="px-4 mt-4 mx-auto">
 								<SynthLcdDisplay
 									primaryText={lcdPrimaryText}
@@ -217,6 +217,17 @@ function SynthRendererContent({
 											>
 												FX
 											</CzButton>
+											<CzButton
+												active={mainPanelMode === "mod"}
+												onClick={() =>
+													setMainPanelMode((current) =>
+														current === "mod" ? "phase" : "mod",
+													)
+												}
+												className="[&_button]:w-18"
+											>
+												MOD
+											</CzButton>
 										</div>
 									</div>
 								</div>
@@ -228,9 +239,9 @@ function SynthRendererContent({
 										envOverrideHandlers={envOverrideHandlers}
 									/>
 									<AnimatePresence initial={false}>
-										{mainPanelMode === "fx" ? (
+										{mainPanelMode === "fx" || mainPanelMode === "mod" ? (
 											<motion.div
-												key="fx-drawer"
+												key={`${mainPanelMode}-drawer`}
 												initial={{ y: "-100%" }}
 												animate={{ y: 0 }}
 												exit={{ y: "-100%" }}
@@ -247,7 +258,11 @@ function SynthRendererContent({
 													<div className="pointer-events-none absolute inset-0 rounded-lg bg-white/5" />
 													<div className="pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-lg opacity-60" />
 													<div className="relative min-h-0 flex-1">
-														<FxConsoleDrawer />
+														{mainPanelMode === "fx" ? (
+															<FxConsoleDrawer />
+														) : (
+															<ModConsoleDrawer />
+														)}
 													</div>
 												</div>
 											</motion.div>

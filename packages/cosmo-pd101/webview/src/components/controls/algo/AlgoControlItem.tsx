@@ -75,7 +75,13 @@ function AlgoControlItemInner({
 		);
 	}
 
-	return <AlgoControlToggle control={control} binding={binding} disabled={disabled} />;
+	return (
+		<AlgoControlToggle
+			control={control}
+			binding={binding}
+			disabled={disabled}
+		/>
+	);
 }
 
 const AlgoControlItem = memo(AlgoControlItemInner);

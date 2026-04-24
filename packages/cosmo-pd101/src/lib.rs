@@ -2,9 +2,9 @@
 //!
 //! Uses beamer for VST3/AU plugin hosting and cosmo-synth-engine for the DSP engine.
 
+use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -246,6 +246,9 @@ pub enum LfoWaveform {
 }
 
 /// LFO target.
+///
+/// Deprecated: destination routing is handled by the modulation matrix.
+/// Kept for compatibility with existing presets/automation.
 #[derive(Copy, Clone, PartialEq, EnumParameter)]
 pub enum LfoTarget {
     #[name = "Pitch"]
@@ -403,13 +406,13 @@ pub struct CzParameters {
     #[parameter(id = "vib_waveform", name = "Waveform", default = 1.0, range = 1.0..=4.0, group = "Vibrato")]
     pub vib_waveform: FloatParameter,
 
-    #[parameter(id = "vib_rate", name = "Rate", default = 30.0, range = 0.0..=99.0, group = "Vibrato")]
+    #[parameter(id = "vib_rate", name = "Rate", default = 55.0, range = 0.0..=99.0, group = "Vibrato")]
     pub vib_rate: FloatParameter,
 
-    #[parameter(id = "vib_depth", name = "Depth", default = 30.0, range = 0.0..=99.0, group = "Vibrato")]
+    #[parameter(id = "vib_depth", name = "Depth", default = 8.0, range = 0.0..=99.0, group = "Vibrato")]
     pub vib_depth: FloatParameter,
 
-    #[parameter(id = "vib_delay", name = "Delay (ms)", default = 0.0, range = 0.0..=5000.0, group = "Vibrato")]
+    #[parameter(id = "vib_delay", name = "Delay (ms)", default = 120.0, range = 0.0..=5000.0, group = "Vibrato")]
     pub vib_delay: FloatParameter,
 
     // Chorus
@@ -449,9 +452,10 @@ pub struct CzParameters {
     #[parameter(id = "lfo_rate", name = "Rate (Hz)", default = 5.0, range = 0.01..=20.0, group = "LFO")]
     pub lfo_rate: FloatParameter,
 
-    #[parameter(id = "lfo_depth", name = "Depth", default = 0.0, range = 0.0..=1.0, group = "LFO")]
+    #[parameter(id = "lfo_depth", name = "Depth", default = 0.2, range = 0.0..=1.0, group = "LFO")]
     pub lfo_depth: FloatParameter,
 
+    // Deprecated parameter: retained to preserve preset and host automation compatibility.
     #[parameter(id = "lfo_target", name = "Target", group = "LFO")]
     pub lfo_target: EnumParameter<LfoTarget>,
 
@@ -527,6 +531,7 @@ impl CzParameters {
     }
 
     fn map_lfo_target(value: LfoTarget) -> cosmo_synth_engine::params::LfoTarget {
+        // Deprecated mapping path, retained for backward compatibility.
         match value {
             LfoTarget::Pitch => cosmo_synth_engine::params::LfoTarget::Pitch,
             LfoTarget::Dcw => cosmo_synth_engine::params::LfoTarget::Dcw,
@@ -1193,15 +1198,21 @@ impl WebViewHandler for CzWebViewHandler {
             "pitchBend" => data
                 .get("value")
                 .and_then(serde_json::Value::as_f64)
-                .map(|value| UiInputEvent::PitchBend { value: value as f32 }),
+                .map(|value| UiInputEvent::PitchBend {
+                    value: value as f32,
+                }),
             "modWheel" => data
                 .get("value")
                 .and_then(serde_json::Value::as_f64)
-                .map(|value| UiInputEvent::ModWheel { value: value as f32 }),
+                .map(|value| UiInputEvent::ModWheel {
+                    value: value as f32,
+                }),
             "aftertouch" => data
                 .get("value")
                 .and_then(serde_json::Value::as_f64)
-                .map(|value| UiInputEvent::Aftertouch { value: value as f32 }),
+                .map(|value| UiInputEvent::Aftertouch {
+                    value: value as f32,
+                }),
             _ => None,
         };
 
@@ -1333,7 +1344,8 @@ impl CzProcessor {
         while let Some(event) = queue.pop_front() {
             match event {
                 UiInputEvent::NoteOn { note, velocity } => {
-                    self.processor.note_on(note, midi_note_to_freq(note), velocity)
+                    self.processor
+                        .note_on(note, midi_note_to_freq(note), velocity)
                 }
                 UiInputEvent::NoteOff { note } => self.processor.note_off(note),
                 UiInputEvent::Sustain { on } => self.processor.set_sustain(on),

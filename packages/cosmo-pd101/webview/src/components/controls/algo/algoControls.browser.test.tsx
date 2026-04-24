@@ -55,10 +55,9 @@ describe("algo controls (browser)", () => {
 		const { rerender } = render(
 			<AlgoControlTooltip description="Helpful info" />,
 		);
-		expect(screen.getByRole("button", { name: "Show control description" })).toHaveAttribute(
-			"data-hover-info",
-			"Helpful info",
-		);
+		expect(
+			screen.getByRole("button", { name: "Show control description" }),
+		).toHaveAttribute("data-hover-info", "Helpful info");
 
 		rerender(<AlgoControlTooltip description={undefined} />);
 		expect(

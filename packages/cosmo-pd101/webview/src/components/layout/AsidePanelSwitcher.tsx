@@ -28,7 +28,14 @@ export type AsidePanelTab =
 	| "delay"
 	| "reverb";
 
-const FX_TAB_IDS = new Set(["phasemod", "chorus", "delay", "reverb"]);
+const TOGGLE_TAB_IDS = new Set([
+	"phasemod",
+	"vibrato",
+	"lfo",
+	"chorus",
+	"delay",
+	"reverb",
+]);
 
 export type AsidePanelTabMeta = {
 	topLabel: string;
@@ -61,6 +68,8 @@ export default function AsidePanelSwitcher<T extends string>({
 	const { value: delayEnabled } = useSynthParam("delayEnabled");
 	const { value: reverbEnabled } = useSynthParam("reverbEnabled");
 	const { setValue: setPhaseModEnabled } = useSynthParam("phaseModEnabled");
+	const { setValue: setVibratoEnabled } = useSynthParam("vibratoEnabled");
+	const { setValue: setLfoEnabled } = useSynthParam("lfoEnabled");
 	const { setValue: setChorusEnabled } = useSynthParam("chorusEnabled");
 	const { setValue: setDelayEnabled } = useSynthParam("delayEnabled");
 	const { setValue: setReverbEnabled } = useSynthParam("reverbEnabled");
@@ -91,12 +100,15 @@ export default function AsidePanelSwitcher<T extends string>({
 	const getTabColor = (tabId: T): CzTabButtonColor => {
 		const normalizedTabId = String(tabId).toLowerCase();
 
-		if (normalizedTabId === "vibrato" || normalizedTabId === "lfo") {
+		if (
+			normalizedTabId === "phasemod" ||
+			normalizedTabId === "vibrato" ||
+			normalizedTabId === "lfo"
+		) {
 			return "red";
 		}
 
 		if (
-			normalizedTabId === "phasemod" ||
 			normalizedTabId === "chorus" ||
 			normalizedTabId === "delay" ||
 			normalizedTabId === "reverb"
@@ -110,12 +122,19 @@ export default function AsidePanelSwitcher<T extends string>({
 		return "black";
 	};
 
-	const isFxTab = (tabId: T): boolean => FX_TAB_IDS.has(String(tabId).toLowerCase());
+	const isToggleTab = (tabId: T): boolean =>
+		TOGGLE_TAB_IDS.has(String(tabId).toLowerCase());
 
-	const toggleFxTab = (tabId: T) => {
+	const toggleTab = (tabId: T) => {
 		switch (String(tabId).toLowerCase()) {
 			case "phasemod":
 				setPhaseModEnabled(!phaseModEnabled);
+				break;
+			case "vibrato":
+				setVibratoEnabled(!vibratoEnabled);
+				break;
+			case "lfo":
+				setLfoEnabled(!lfoEnabled);
 				break;
 			case "chorus":
 				setChorusEnabled(!chorusEnabled);
@@ -130,8 +149,8 @@ export default function AsidePanelSwitcher<T extends string>({
 	};
 
 	const handleTabClick = (tabId: T) => {
-		if (isFxTab(tabId)) {
-			toggleFxTab(tabId);
+		if (isToggleTab(tabId)) {
+			toggleTab(tabId);
 			return;
 		}
 
@@ -162,7 +181,7 @@ export default function AsidePanelSwitcher<T extends string>({
 	const activePanel = panelElements.find(
 		(child) =>
 			(child.type as AsidePanelComponent).panelId === String(activeTab) &&
-			!FX_TAB_IDS.has(String(activeTab).toLowerCase()),
+			!TOGGLE_TAB_IDS.has(String(activeTab).toLowerCase()),
 	);
 
 	const visibleTabs = panelElements.map((child) => {
@@ -181,7 +200,9 @@ export default function AsidePanelSwitcher<T extends string>({
 					<CzTabButton
 						key={tab.id}
 						color={getTabColor(tab.id)}
-						active={isFxTab(tab.id) ? isTabEnabled(tab.id) : activeTab === tab.id}
+						active={
+							isToggleTab(tab.id) ? isTabEnabled(tab.id) : activeTab === tab.id
+						}
 						ledColor={getTabLedColor(tab.id, activeTab === tab.id)}
 						onClick={() => handleTabClick(tab.id)}
 						topLabel={tab.topLabel}

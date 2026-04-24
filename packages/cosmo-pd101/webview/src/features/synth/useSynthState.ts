@@ -174,9 +174,9 @@ export function useSynthState() {
 
 	const [vibratoEnabled, setVibratoEnabled] = useState(false);
 	const [vibratoWave, setVibratoWave] = useState(1);
-	const [vibratoRate, setVibratoRate] = useState(30);
-	const [vibratoDepth, setVibratoDepth] = useState(30);
-	const [vibratoDelay, setVibratoDelay] = useState(0);
+	const [vibratoRate, setVibratoRate] = useState(55);
+	const [vibratoDepth, setVibratoDepth] = useState(8);
+	const [vibratoDelay, setVibratoDelay] = useState(120);
 
 	const [portamentoEnabled, setPortamentoEnabled] = useState(false);
 	const [portamentoMode, setPortamentoMode] = useState<PortamentoMode>("rate");
@@ -186,7 +186,7 @@ export function useSynthState() {
 	const [lfoEnabled, setLfoEnabled] = useState(false);
 	const [lfoWaveform, setLfoWaveform] = useState<LfoWaveform>("sine");
 	const [lfoRate, setLfoRate] = useState(5);
-	const [lfoDepth, setLfoDepth] = useState(0);
+	const [lfoDepth, setLfoDepth] = useState(0.2);
 	const [lfoOffset, setLfoOffset] = useState(0);
 	const [lfoTarget, setLfoTarget] = useState<LfoTarget>("pitch");
 
@@ -501,7 +501,10 @@ export function useSynthState() {
 		);
 		setLine1AlgoControlsB(
 			line1SecondaryAlgo
-				? normalizeAlgoControls(line1SecondaryAlgo, p.line1?.algoControlsB ?? [])
+				? normalizeAlgoControls(
+						line1SecondaryAlgo,
+						p.line1?.algoControlsB ?? [],
+					)
 				: [],
 		);
 		setLine2DcoEnv(p.line2?.dcoEnv ?? DEFAULT_DCO_ENV);
@@ -518,7 +521,10 @@ export function useSynthState() {
 		);
 		setLine2AlgoControlsB(
 			line2SecondaryAlgo
-				? normalizeAlgoControls(line2SecondaryAlgo, p.line2?.algoControlsB ?? [])
+				? normalizeAlgoControls(
+						line2SecondaryAlgo,
+						p.line2?.algoControlsB ?? [],
+					)
 				: [],
 		);
 		setPolyMode((p.polyMode as PolyMode) ?? "poly8");

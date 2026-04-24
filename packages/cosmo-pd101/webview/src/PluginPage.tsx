@@ -149,11 +149,13 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 								}
 								className="h-6 rounded-sm border border-cz-border bg-black/30 px-1.5 text-[0.56rem] font-mono tracking-[0.12em] text-cz-cream/85"
 							>
-								{PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.map((scaleOption) => (
-									<option key={scaleOption} value={scaleOption}>
-										{scaleOption}%
-									</option>
-								))}
+								{PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.map(
+									(scaleOption) => (
+										<option key={scaleOption} value={scaleOption}>
+											{scaleOption}%
+										</option>
+									),
+								)}
 							</select>
 						</div>
 					) : null}

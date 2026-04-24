@@ -20,7 +20,9 @@ test.describe("Algo controls plugin bridge", () => {
 
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
 
-		const curveKnobA = page.getByRole("spinbutton", { name: /^curve$/i }).first();
+		const curveKnobA = page
+			.getByRole("spinbutton", { name: /^curve$/i })
+			.first();
 		await expect(curveKnobA).toBeVisible();
 
 		const boxA = await curveKnobA.boundingBox();
@@ -48,7 +50,9 @@ test.describe("Algo controls plugin bridge", () => {
 				),
 		);
 
-		const blendKnob = page.getByRole("spinbutton", { name: /^blend$/i }).first();
+		const blendKnob = page
+			.getByRole("spinbutton", { name: /^blend$/i })
+			.first();
 		await expect(blendKnob).toBeVisible();
 		const blendBox = await blendKnob.boundingBox();
 		if (!blendBox) throw new Error("Blend knob not found in layout");
@@ -66,7 +70,9 @@ test.describe("Algo controls plugin bridge", () => {
 
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
 
-		const curveKnobB = page.getByRole("spinbutton", { name: /^curve$/i }).nth(1);
+		const curveKnobB = page
+			.getByRole("spinbutton", { name: /^curve$/i })
+			.nth(1);
 		await expect(curveKnobB).toBeVisible();
 
 		const boxB = await curveKnobB.boundingBox();
@@ -109,7 +115,9 @@ test.describe("Algo controls plugin bridge", () => {
 		await curveKnob.hover();
 
 		await expect(
-			page.getByText(/changes how aggressively the phase bends along the curve/i),
+			page.getByText(
+				/changes how aggressively the phase bends along the curve/i,
+			),
 		).toBeVisible();
 	});
 

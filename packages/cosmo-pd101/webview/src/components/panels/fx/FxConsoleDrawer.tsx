@@ -123,175 +123,126 @@ export default function FxConsoleDrawer() {
 		useSynthParam("delayTime");
 	const { value: delayFeedback, setValue: setDelayFeedback } =
 		useSynthParam("delayFeedback");
-	const { value: delayMix, setValue: setDelayMix } =
-		useSynthParam("delayMix");
+	const { value: delayMix, setValue: setDelayMix } = useSynthParam("delayMix");
 	const { value: reverbEnabled, setValue: setReverbEnabled } =
 		useSynthParam("reverbEnabled");
 	const { value: reverbSize, setValue: setReverbSize } =
 		useSynthParam("reverbSize");
 	const { value: reverbMix, setValue: setReverbMix } =
 		useSynthParam("reverbMix");
-	const { value: phaseModEnabled, setValue: setPhaseModEnabled } =
-		useSynthParam("phaseModEnabled");
-	const { value: intPmAmount, setValue: setIntPmAmount } =
-		useSynthParam("intPmAmount");
-	const { value: intPmRatio, setValue: setIntPmRatio } =
-		useSynthParam("intPmRatio");
-	const { value: pmPre, setValue: setPmPre } = useSynthParam("pmPre");
 
 	return (
 		<div className="grid h-full min-h-0 grid-cols-2 auto-rows-fr gap-3">
-				<CompactFxModule
-					title="Chorus"
-					accentClassName="text-cz-light-blue"
-					enabled={chorusEnabled}
-					onToggle={() => setChorusEnabled(!chorusEnabled)}
-					meta="Stereo"
-				>
-					<div className="grid grid-cols-3 gap-2">
-						<ControlKnob
-							value={chorusRate}
-							onChange={setChorusRate}
-							min={0.1}
-							max={5}
-							size={64}
-							color="#7f9de4"
-							label="Rate"
-							valueFormatter={(value) => value.toFixed(1)}
-						/>
-						<ControlKnob
-							value={chorusDepth}
-							onChange={setChorusDepth}
-							min={0}
-							max={3}
-							size={64}
-							color="#7f9de4"
-							label="Depth"
-							valueFormatter={(value) => `${Math.round((value / 3) * 100)}%`}
-						/>
-						<ControlKnob
-							value={chorusMix}
-							onChange={setChorusMix}
-							min={0}
-							max={1}
-							size={64}
-							color="#bfbd30"
-							label="Mix"
-							valueFormatter={(value) => `${Math.round(value * 100)}%`}
-						/>
-					</div>
-				</CompactFxModule>
-				<CompactFxModule
-					title="Delay"
-					accentClassName="text-cz-light-blue"
-					enabled={delayEnabled}
-					onToggle={() => setDelayEnabled(!delayEnabled)}
-					meta="Digital"
-				>
-					<div className="grid grid-cols-3 gap-2">
-						<ControlKnob
-							value={delayTime}
-							onChange={setDelayTime}
-							min={0.01}
-							max={1}
-							size={64}
-							color="#7f9de4"
-							label="Time"
-							valueFormatter={(value) => `${Math.round(value * 1000)}ms`}
-						/>
-						<ControlKnob
-							value={delayFeedback}
-							onChange={setDelayFeedback}
-							min={0}
-							max={0.9}
-							size={64}
-							color="#7f9de4"
-							label="Fdbk"
-							valueFormatter={(value) => `${Math.round(value * 100)}%`}
-						/>
-						<ControlKnob
-							value={delayMix}
-							onChange={setDelayMix}
-							min={0}
-							max={1}
-							size={64}
-							color="#bfbd30"
-							label="Mix"
-							valueFormatter={(value) => `${Math.round(value * 100)}%`}
-						/>
-					</div>
-				</CompactFxModule>
-				<CompactFxModule
-					title="Reverb"
-					accentClassName="text-cz-gold"
-					enabled={reverbEnabled}
-					onToggle={() => setReverbEnabled(!reverbEnabled)}
-					meta="Hall"
-				>
-					<div className="grid grid-cols-2 gap-2">
-						<ControlKnob
-							value={reverbSize}
-							onChange={setReverbSize}
-							min={0}
-							max={1}
-							size={64}
-							color="#bfbd30"
-							label="Size"
-							valueFormatter={(value) => `${Math.round(value * 100)}%`}
-						/>
-						<ControlKnob
-							value={reverbMix}
-							onChange={setReverbMix}
-							min={0}
-							max={1}
-							size={64}
-							color="#3dff3d"
-							label="Mix"
-							valueFormatter={(value) => `${Math.round(value * 100)}%`}
-						/>
-					</div>
-				</CompactFxModule>
-				<CompactFxModule
-					title="Phase Mod"
-					accentClassName="text-cz-light-blue"
-					enabled={phaseModEnabled}
-					onToggle={() => setPhaseModEnabled(!phaseModEnabled)}
-					meta="Internal"
-				>
-					<div className="grid grid-cols-3 gap-2">
-						<ControlKnob
-							value={intPmAmount}
-							onChange={setIntPmAmount}
-							min={0}
-							max={0.3}
-							size={64}
-							color="#7f9de4"
-							label="Amount"
-							valueFormatter={(value) => value.toFixed(2)}
-						/>
-						<ControlKnob
-							value={intPmRatio}
-							onChange={setIntPmRatio}
-							min={0.5}
-							max={4}
-							size={64}
-							color="#bfbd30"
-							label="Ratio"
-							valueFormatter={(value) => value.toFixed(1)}
-						/>
-						<button
-							type="button"
-							onClick={() => setPmPre(!pmPre)}
-							className={`h-16 rounded-lg border px-2 font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] transition-colors ${
-								pmPre
-									? "border-cz-gold bg-cz-gold/15 text-cz-gold"
-									: "border-cz-border bg-black/15 text-cz-cream-dim hover:text-cz-cream"
-							}`}
-						>
-							Pre
-						</button>
-					</div>
-				</CompactFxModule>
+			<CompactFxModule
+				title="Chorus"
+				accentClassName="text-cz-light-blue"
+				enabled={chorusEnabled}
+				onToggle={() => setChorusEnabled(!chorusEnabled)}
+				meta="Stereo"
+			>
+				<div className="grid grid-cols-3 gap-2">
+					<ControlKnob
+						value={chorusRate}
+						onChange={setChorusRate}
+						min={0.1}
+						max={5}
+						size={64}
+						color="#7f9de4"
+						label="Rate"
+						valueFormatter={(value) => value.toFixed(1)}
+					/>
+					<ControlKnob
+						value={chorusDepth}
+						onChange={setChorusDepth}
+						min={0}
+						max={3}
+						size={64}
+						color="#7f9de4"
+						label="Depth"
+						valueFormatter={(value) => `${Math.round((value / 3) * 100)}%`}
+					/>
+					<ControlKnob
+						value={chorusMix}
+						onChange={setChorusMix}
+						min={0}
+						max={1}
+						size={64}
+						color="#bfbd30"
+						label="Mix"
+						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
+				</div>
+			</CompactFxModule>
+			<CompactFxModule
+				title="Delay"
+				accentClassName="text-cz-light-blue"
+				enabled={delayEnabled}
+				onToggle={() => setDelayEnabled(!delayEnabled)}
+				meta="Digital"
+			>
+				<div className="grid grid-cols-3 gap-2">
+					<ControlKnob
+						value={delayTime}
+						onChange={setDelayTime}
+						min={0.01}
+						max={1}
+						size={64}
+						color="#7f9de4"
+						label="Time"
+						valueFormatter={(value) => `${Math.round(value * 1000)}ms`}
+					/>
+					<ControlKnob
+						value={delayFeedback}
+						onChange={setDelayFeedback}
+						min={0}
+						max={0.9}
+						size={64}
+						color="#7f9de4"
+						label="Fdbk"
+						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
+					<ControlKnob
+						value={delayMix}
+						onChange={setDelayMix}
+						min={0}
+						max={1}
+						size={64}
+						color="#bfbd30"
+						label="Mix"
+						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
+				</div>
+			</CompactFxModule>
+			<CompactFxModule
+				title="Reverb"
+				accentClassName="text-cz-gold"
+				enabled={reverbEnabled}
+				onToggle={() => setReverbEnabled(!reverbEnabled)}
+				meta="Hall"
+			>
+				<div className="grid grid-cols-2 gap-2">
+					<ControlKnob
+						value={reverbSize}
+						onChange={setReverbSize}
+						min={0}
+						max={1}
+						size={64}
+						color="#bfbd30"
+						label="Size"
+						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
+					<ControlKnob
+						value={reverbMix}
+						onChange={setReverbMix}
+						min={0}
+						max={1}
+						size={64}
+						color="#3dff3d"
+						label="Mix"
+						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
+				</div>
+			</CompactFxModule>
 		</div>
 	);
 }

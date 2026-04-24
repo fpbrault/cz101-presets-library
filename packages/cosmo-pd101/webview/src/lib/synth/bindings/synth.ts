@@ -105,7 +105,10 @@ export type FilterType = "lp" | "hp" | "bp"
 export type PortamentoMode = "rate" | "time"
 
 /**
- * LFO target
+ * LFO target.
+ * 
+ * Deprecated: per-destination routing should now be done through the modulation matrix.
+ * This enum is kept for backward-compatible preset/state deserialization.
  */
 export type LfoTarget = "pitch" | "dcw" | "dca" | "filter"
 
@@ -161,7 +164,12 @@ rate: number;
 /**
  * Depth [0, 1]
  */
-depth: number; target: LfoTarget; 
+depth: number; 
+/**
+ * Deprecated: use modulation matrix routes for destination selection.
+ * Kept for backward compatibility.
+ */
+target: LfoTarget; 
 /**
  * DC offset/bias applied to LFO output [-1, 1]
  */

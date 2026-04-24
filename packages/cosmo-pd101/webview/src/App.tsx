@@ -60,9 +60,7 @@ export default function App() {
 			<PluginPage
 				utilityExtra={
 					<div className="flex items-center gap-2">
-						<span className="text-cz-cream/55">
-							Build {__CZ_BUILD_LABEL__}
-						</span>
+						<span className="text-cz-cream/55">Build {__CZ_BUILD_LABEL__}</span>
 						<button
 							type="button"
 							onClick={handleManualCheck}
@@ -71,9 +69,7 @@ export default function App() {
 							Check updates
 						</button>
 						{manualStatus ? (
-							<span className="text-cz-cream/70">
-								{manualStatus}
-							</span>
+							<span className="text-cz-cream/70">{manualStatus}</span>
 						) : null}
 					</div>
 				}
