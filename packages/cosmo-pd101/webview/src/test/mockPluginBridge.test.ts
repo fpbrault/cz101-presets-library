@@ -65,7 +65,7 @@ describe("params.set", () => {
 	it("updates virtual param state", () => {
 		window.__BEAMER__?.params.set("volume", 0.7);
 		const state = window.__MOCK_BRIDGE__?.getState() ?? {};
-		expect(state["volume"]).toBeCloseTo(0.7, 5);
+		expect(state.volume).toBeCloseTo(0.7, 5);
 	});
 
 	it("records param:begin and param:end events", () => {

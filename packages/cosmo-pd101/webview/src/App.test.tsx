@@ -20,36 +20,40 @@ describe("App", () => {
 		mockCheckForPluginUpdate.mockReset();
 		mockCheckForPluginUpdate.mockResolvedValue(null);
 	});
-	mockCheckForPluginUpdate.mockResolvedValueOnce({
-		currentVersion: "0.1.0",
-		latestVersion: "0.2.0",
-		releaseUrl: "https://example.com/releases/v0.2.0",
-	});
 
-	render(<App />);
+	it("shows update modal and dismisses it when Later is clicked", async () => {
+		mockCheckForPluginUpdate.mockResolvedValueOnce({
+			currentVersion: "0.1.0",
+			latestVersion: "0.2.0",
+			releaseUrl: "https://example.com/releases/v0.2.0",
+		});
 
-	expect(await screen.findByText("New Version Available")).toBeInTheDocument();
-	fireEvent.click(screen.getByRole("button", { name: "Later" }));
-	await waitFor(() => {
+		render(<App />);
+
+		expect(
+			await screen.findByText("New Version Available"),
+		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Later" }));
+		await waitFor(() => {
 			expect(
 				screen.queryByText("New Version Available"),
 			).not.toBeInTheDocument();
 		});
-});
-
-it("shows an up-to-date message when a manual check finds no update", async () => {
-	mockCheckForPluginUpdate
-		.mockResolvedValueOnce(null)
-		.mockResolvedValueOnce(null);
-
-	render(<App />);
-	fireEvent.click(screen.getByRole("button", { name: /check updates/i }));
-
-	await waitFor(() => {
-		expect(mockCheckForPluginUpdate).toHaveBeenNthCalledWith(2, {
-			manual: true,
-		});
 	});
-	expect(await screen.findByText("You are up to date.")).toBeInTheDocument();
+
+	it("shows an up-to-date message when a manual check finds no update", async () => {
+		mockCheckForPluginUpdate
+			.mockResolvedValueOnce(null)
+			.mockResolvedValueOnce(null);
+
+		render(<App />);
+		fireEvent.click(screen.getByRole("button", { name: /check updates/i }));
+
+		await waitFor(() => {
+			expect(mockCheckForPluginUpdate).toHaveBeenNthCalledWith(2, {
+				manual: true,
+			});
+		});
+		expect(await screen.findByText("You are up to date.")).toBeInTheDocument();
+	});
 });
-})
