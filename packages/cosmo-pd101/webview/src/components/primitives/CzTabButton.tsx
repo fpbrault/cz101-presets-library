@@ -121,7 +121,7 @@ export default function CzTabButton({
 						scaleX: { type: "spring", stiffness: 900, damping: 16 },
 						boxShadow: { duration: 0.12, ease: "easeOut" },
 					}}
-					className={`inline-block h-1 w-3 mb-1 rounded-[1px] ${resolvedLedColor !== "off" ? "bg-cz-led-on" : "bg-cz-led-off"}`}
+					className="inline-block h-1 w-3 mb-1 rounded-[1px]"
 					aria-hidden="true"
 				/>
 			) : null}
