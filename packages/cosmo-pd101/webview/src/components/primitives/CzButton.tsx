@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type React from "react";
 import { useHoverInfo } from "../layout/HoverInfo";
 
@@ -45,18 +46,32 @@ export default function CzButton({
 		: undefined;
 
 	const buttonFace = (
-		<button
+		<motion.button
 			type={type}
 			disabled={disabled}
 			onClick={onClick}
 			data-hover-info={tooltip}
 			{...hoverHandlers}
-			className={`inline-flex h-5 w-8 items-center justify-center px-2 py-0.75 rounded-[3px] border cursor-pointer select-none transition-colors duration-75 shadow-sm active:shadow-inner active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed ${
-				active
-					? "bg-cz-btn border-cz-btn-border text-cz-cream"
-					: "bg-cz-btn border-cz-btn-border text-cz-cream-dim"
+			initial={{
+				boxShadow:
+					"0 3px 0 rgba(0,0,0,0.6), 0 4px 6px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1)",
+				y: 0,
+			}}
+			whileTap={
+				disabled
+					? undefined
+					: {
+							boxShadow:
+								"0 1px 0 rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.25), inset 0 0px 0px rgba(0,0,0,0)",
+							y: 2,
+						}
+			}
+			whileHover={disabled ? undefined : { y: -1 }}
+			transition={{ duration: 0.08, ease: "easeOut" }}
+			className={`inline-flex h-5 w-8 items-center justify-center px-2 py-0.75 rounded-[3px] border cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed bg-cz-btn border-cz-btn-border ${
+				active ? "text-cz-cream" : "text-cz-cream-dim"
 			}`}
-		></button>
+		/>
 	);
 
 	return (
@@ -66,10 +81,27 @@ export default function CzButton({
 		>
 			{/* LED above the button */}
 			{led ? (
-				<span
-					className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
-						active ? "bg-cz-led-on shadow-sm" : "bg-cz-led-off shadow-inner"
-					}`}
+				<motion.span
+					animate={
+						active
+							? {
+									backgroundColor: "var(--color-cz-led-on, #ff3b3b)",
+									boxShadow:
+										"0 0 5px 2px rgba(255,50,50,0.7), inset 0 1px 0 rgba(255,160,160,0.25)",
+									scaleX: 1.18,
+								}
+							: {
+									backgroundColor: "var(--color-cz-led-off, #3a1a1a)",
+									boxShadow: "inset 0 1px 3px rgba(0,0,0,0.7)",
+									scaleX: 1,
+								}
+					}
+					transition={{
+						backgroundColor: { duration: 0.05 },
+						scaleX: { type: "spring", stiffness: 900, damping: 16 },
+						boxShadow: { duration: 0.12, ease: "easeOut" },
+					}}
+					className={`inline-block h-1 w-3 mb-1 rounded-[1px] ${active ? "bg-cz-led-on" : "bg-cz-led-off"}`}
 					aria-hidden="true"
 				/>
 			) : (
