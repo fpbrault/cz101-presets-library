@@ -28,6 +28,15 @@ export type AsidePanelTab =
 	| "delay"
 	| "reverb";
 
+const TOGGLE_TAB_IDS = new Set([
+	"phasemod",
+	"vibrato",
+	"lfo",
+	"chorus",
+	"delay",
+	"reverb",
+]);
+
 export type AsidePanelTabMeta = {
 	topLabel: string;
 	bottomLabel: string;
@@ -58,6 +67,12 @@ export default function AsidePanelSwitcher<T extends string>({
 	const { value: chorusEnabled } = useSynthParam("chorusEnabled");
 	const { value: delayEnabled } = useSynthParam("delayEnabled");
 	const { value: reverbEnabled } = useSynthParam("reverbEnabled");
+	const { setValue: setPhaseModEnabled } = useSynthParam("phaseModEnabled");
+	const { setValue: setVibratoEnabled } = useSynthParam("vibratoEnabled");
+	const { setValue: setLfoEnabled } = useSynthParam("lfoEnabled");
+	const { setValue: setChorusEnabled } = useSynthParam("chorusEnabled");
+	const { setValue: setDelayEnabled } = useSynthParam("delayEnabled");
+	const { setValue: setReverbEnabled } = useSynthParam("reverbEnabled");
 
 	const isTabEnabled = (tabId: T): boolean => {
 		switch (String(tabId).toLowerCase()) {
@@ -107,6 +122,41 @@ export default function AsidePanelSwitcher<T extends string>({
 		return "black";
 	};
 
+	const isToggleTab = (tabId: T): boolean =>
+		TOGGLE_TAB_IDS.has(String(tabId).toLowerCase());
+
+	const toggleTab = (tabId: T) => {
+		switch (String(tabId).toLowerCase()) {
+			case "phasemod":
+				setPhaseModEnabled(!phaseModEnabled);
+				break;
+			case "vibrato":
+				setVibratoEnabled(!vibratoEnabled);
+				break;
+			case "lfo":
+				setLfoEnabled(!lfoEnabled);
+				break;
+			case "chorus":
+				setChorusEnabled(!chorusEnabled);
+				break;
+			case "delay":
+				setDelayEnabled(!delayEnabled);
+				break;
+			case "reverb":
+				setReverbEnabled(!reverbEnabled);
+				break;
+		}
+	};
+
+	const handleTabClick = (tabId: T) => {
+		if (isToggleTab(tabId)) {
+			toggleTab(tabId);
+			return;
+		}
+
+		onTabChange(tabId);
+	};
+
 	const getTabLedColor = (tabId: T, isActive: boolean): CzTabButtonLedColor => {
 		const isEnabled = isTabEnabled(tabId);
 		if (isEnabled && isActive) {
@@ -130,7 +180,8 @@ export default function AsidePanelSwitcher<T extends string>({
 
 	const activePanel = panelElements.find(
 		(child) =>
-			(child.type as AsidePanelComponent).panelId === String(activeTab),
+			(child.type as AsidePanelComponent).panelId === String(activeTab) &&
+			!TOGGLE_TAB_IDS.has(String(activeTab).toLowerCase()),
 	);
 
 	const visibleTabs = panelElements.map((child) => {
@@ -149,9 +200,11 @@ export default function AsidePanelSwitcher<T extends string>({
 					<CzTabButton
 						key={tab.id}
 						color={getTabColor(tab.id)}
-						active={activeTab === tab.id}
+						active={
+							isToggleTab(tab.id) ? isTabEnabled(tab.id) : activeTab === tab.id
+						}
 						ledColor={getTabLedColor(tab.id, activeTab === tab.id)}
-						onClick={() => onTabChange(tab.id)}
+						onClick={() => handleTabClick(tab.id)}
 						topLabel={tab.topLabel}
 						bottomLabel={tab.bottomLabel}
 						buttonClassName="aspect-square h-auto"

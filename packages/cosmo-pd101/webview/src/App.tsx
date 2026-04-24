@@ -15,6 +15,63 @@ export default function App() {
 	const [manualStatus, setManualStatus] = useState<string | null>(null);
 
 	useEffect(() => {
+		const isEditableTarget = (target: EventTarget | null): boolean => {
+			if (!(target instanceof Element)) {
+				return false;
+			}
+			return Boolean(
+				target.closest(
+					"input, textarea, [contenteditable='true'], [data-allow-selection='true']",
+				),
+			);
+		};
+
+		const isInsideEditableSelection = (selection: Selection): boolean => {
+			const anchorNode = selection.anchorNode;
+			const focusNode = selection.focusNode;
+			const anchorElement =
+				anchorNode instanceof Element
+					? anchorNode
+					: anchorNode?.parentElement ?? null;
+			const focusElement =
+				focusNode instanceof Element ? focusNode : focusNode?.parentElement ?? null;
+			return isEditableTarget(anchorElement) || isEditableTarget(focusElement);
+		};
+
+		const handleSelectStart = (event: Event) => {
+			if (!isEditableTarget(event.target)) {
+				event.preventDefault();
+			}
+		};
+
+		const handleDragStart = (event: Event) => {
+			if (!isEditableTarget(event.target)) {
+				event.preventDefault();
+			}
+		};
+
+		const handleSelectionChange = () => {
+			const selection = window.getSelection();
+			if (!selection || selection.isCollapsed) {
+				return;
+			}
+			if (!isInsideEditableSelection(selection)) {
+				selection.removeAllRanges();
+			}
+		};
+
+		document.addEventListener("selectstart", handleSelectStart);
+		document.addEventListener("dragstart", handleDragStart);
+		document.addEventListener("selectionchange", handleSelectionChange);
+
+		return () => {
+			document.removeEventListener("selectstart", handleSelectStart);
+			document.removeEventListener("dragstart", handleDragStart);
+			document.removeEventListener("selectionchange", handleSelectionChange);
+		};
+	}, []);
+
+	useEffect(() => {
 		if (bridgeReadyRef.current) {
 			return;
 		}
@@ -58,22 +115,18 @@ export default function App() {
 	return (
 		<>
 			<PluginPage
-				headerExtra={
-					<div className="flex items-center gap-2 px-8 -mt-2">
-						<span className="text-3xs font-mono uppercase tracking-[0.2em] text-base-content/50">
-							Build {__CZ_BUILD_LABEL__}
-						</span>
+				utilityExtra={
+					<div className="flex items-center gap-2">
+						<span className="text-cz-cream/55">Build {__CZ_BUILD_LABEL__}</span>
 						<button
 							type="button"
 							onClick={handleManualCheck}
-							className="btn btn-xs font-mono btn-ghost opacity-70"
+							className="rounded-sm border border-cz-border bg-black/25 px-1.5 py-0.5 text-[0.54rem] font-mono tracking-[0.14em] text-cz-cream/80 transition-colors hover:text-cz-cream"
 						>
 							Check updates
 						</button>
 						{manualStatus ? (
-							<span className="text-3xs font-mono text-base-content/70">
-								{manualStatus}
-							</span>
+							<span className="text-cz-cream/70">{manualStatus}</span>
 						) : null}
 					</div>
 				}

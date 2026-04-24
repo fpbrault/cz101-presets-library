@@ -79,7 +79,8 @@ export function SharedPhaseDistortionVisualizer({
 		line1CzSlotAWaveform,
 		line1CzSlotBWaveform,
 		line1CzWindow,
-		line1AlgoControls,
+		line1AlgoControlsA,
+		line1AlgoControlsB,
 		line2DcoEnv,
 		setLine2DcoEnv,
 		line2DcwEnv,
@@ -89,7 +90,8 @@ export function SharedPhaseDistortionVisualizer({
 		line2CzSlotAWaveform,
 		line2CzSlotBWaveform,
 		line2CzWindow,
-		line2AlgoControls,
+		line2AlgoControlsA,
+		line2AlgoControlsB,
 		polyMode,
 		legato,
 		velocityTarget,
@@ -146,7 +148,7 @@ export function SharedPhaseDistortionVisualizer({
 			pdVisualizerWorkletUrl,
 		});
 
-	const { activeNotes } = useNoteHandling({
+	const { activeNotes, sendNoteOn, sendNoteOff } = useNoteHandling({
 		workletNodeRef,
 		velocityTarget,
 	});
@@ -191,14 +193,16 @@ export function SharedPhaseDistortionVisualizer({
 		line1CzSlotAWaveform,
 		line1CzSlotBWaveform,
 		line1CzWindow,
-		line1AlgoControls,
+		line1AlgoControlsA,
+		line1AlgoControlsB,
 		line2DcoEnv,
 		line2DcwEnv,
 		line2DcaEnv,
 		line2CzSlotAWaveform,
 		line2CzSlotBWaveform,
 		line2CzWindow,
-		line2AlgoControls,
+		line2AlgoControlsA,
+		line2AlgoControlsB,
 		polyMode,
 		legato,
 		velocityTarget,
@@ -396,6 +400,11 @@ export function SharedPhaseDistortionVisualizer({
 				onLine2DcoEnvChange: handleLine2DcoEnvChange,
 				onLine2DcwEnvChange: handleLine2DcwEnvChange,
 				onLine2DcaEnvChange: handleLine2DcaEnvChange,
+			}}
+			miniKeyboard={{
+				activeNotes,
+				onNoteOn: sendNoteOn,
+				onNoteOff: sendNoteOff,
 			}}
 		/>
 	);

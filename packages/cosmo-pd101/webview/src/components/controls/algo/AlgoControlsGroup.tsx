@@ -10,6 +10,9 @@ import type {
 
 interface AlgoControlsGroupProps {
 	controls: AlgoControlRuntime[];
+	title?: string;
+	disabled?: boolean;
+	embedded?: boolean;
 	controlBindings: Record<string, AlgoControlBinding>;
 	lineIndex: LineIndex;
 	algoParamSlotIndex: Record<string, number>;
@@ -23,6 +26,9 @@ interface AlgoControlsGroupProps {
 
 function AlgoControlsGroupInner({
 	controls,
+	title = "Algo Controls",
+	disabled = false,
+	embedded = false,
 	controlBindings,
 	lineIndex,
 	algoParamSlotIndex,
@@ -31,17 +37,20 @@ function AlgoControlsGroupInner({
 	getActiveSelectOption,
 	applyOptionAssignments,
 }: AlgoControlsGroupProps) {
-	return (
-		<Card variant="subtle" className="p-3 min-h-0 flex flex-col col-span-2">
+	const content = (
+		<>
 			<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-				Algo Controls
+				{title}
 			</div>
 			{controls.length > 0 ? (
-				<div className="flex-1 flex flex-wrap gap-8 justify-center min-h-0 space-y-3 overflow-visible">
+				<div
+					className={`flex-1 grid grid-cols-2 gap-2 justify-center min-h-0 space-y-3 overflow-visible ${disabled ? "pointer-events-none" : ""}`}
+				>
 					{controls.map((control) => (
 						<AlgoControlItem
 							key={control.id}
 							control={control}
+							disabled={disabled}
 							binding={controlBindings[control.id]}
 							lineIndex={lineIndex}
 							algoParamSlotIndex={algoParamSlotIndex}
@@ -57,6 +66,23 @@ function AlgoControlsGroupInner({
 					No controls for this algo
 				</div>
 			)}
+		</>
+	);
+
+	if (embedded) {
+		return (
+			<div className={`min-h-0 flex flex-col ${disabled ? "opacity-45" : ""}`}>
+				{content}
+			</div>
+		);
+	}
+
+	return (
+		<Card
+			variant="subtle"
+			className={`p-3 min-h-0 flex flex-col ${disabled ? "opacity-45" : ""}`}
+		>
+			{content}
 		</Card>
 	);
 }

@@ -332,7 +332,10 @@ export function installMockPluginBridge(): void {
 					return;
 				}
 				if (method === "getAlgoControls") {
-					resolve({ line1: [], line2: [] });
+					resolve({
+						line1: { a: [], b: [] },
+						line2: { a: [], b: [] },
+					});
 					return;
 				}
 				if (method === "setModMatrix") {
@@ -361,7 +364,9 @@ export function installMockPluginBridge(): void {
 
 		// Event system (used by custom plugins, not required for PD-101 tests).
 		on: (_name: string, _cb: (data: unknown) => void) => () => {},
-		emit: (_name: string, _data: unknown) => {},
+		emit: (name: string, data: unknown) => {
+			recordMessage({ type: "event", name, data });
+		},
 
 		// These are replaced by ensureBeamerLegacyBridge() — stubs are fine.
 		_onInit: (_params: BeamerParamInfo[]) => {},

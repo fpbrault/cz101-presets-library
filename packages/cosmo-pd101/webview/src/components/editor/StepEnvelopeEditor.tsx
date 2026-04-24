@@ -395,7 +395,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	return (
 		<Card
 			variant="subtle"
-			className={`bg-base-200/70 shadow-[0_12px_30px_rgba(0,0,0,0.2)] ${
+			className={`bg-base-200/70 shadow-lg ${
 				compact ? "space-y-2" : "space-y-3"
 			}`}
 		>

@@ -13,7 +13,9 @@ export async function waitForBridge(page: Page): Promise<void> {
 
 export async function setupPluginPage(page: Page): Promise<void> {
 	await page.goto("/");
+	await page.waitForLoadState("networkidle");
 	await waitForBridge(page);
+	await expect(page.getByText("COSMO").first()).toBeVisible({ timeout: 5000 });
 	await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
 }
 

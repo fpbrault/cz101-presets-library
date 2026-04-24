@@ -80,8 +80,10 @@ export default function PhaseLinesSection({
 		useSynthParam("line1CzSlotBWaveform");
 	const { value: line1CzWindow, setValue: setLine1CzWindow } =
 		useSynthParam("line1CzWindow");
-	const { value: line1AlgoControls, setValue: setLine1AlgoControls } =
-		useSynthParam("line1AlgoControls");
+	const { value: line1AlgoControlsA, setValue: setLine1AlgoControlsA } =
+		useSynthParam("line1AlgoControlsA");
+	const { value: line1AlgoControlsB, setValue: setLine1AlgoControlsB } =
+		useSynthParam("line1AlgoControlsB");
 	const { value: line2DcoEnv, setValue: setLine2DcoEnv } =
 		useSynthParam("line2DcoEnv");
 	const { value: line2DcwEnv, setValue: setLine2DcwEnv } =
@@ -94,8 +96,10 @@ export default function PhaseLinesSection({
 		useSynthParam("line2CzSlotBWaveform");
 	const { value: line2CzWindow, setValue: setLine2CzWindow } =
 		useSynthParam("line2CzWindow");
-	const { value: line2AlgoControls, setValue: setLine2AlgoControls } =
-		useSynthParam("line2AlgoControls");
+	const { value: line2AlgoControlsA, setValue: setLine2AlgoControlsA } =
+		useSynthParam("line2AlgoControlsA");
+	const { value: line2AlgoControlsB, setValue: setLine2AlgoControlsB } =
+		useSynthParam("line2AlgoControlsB");
 	const { value: line1DcwKeyFollow, setValue: setLine1DcwKeyFollow } =
 		useSynthParam("line1DcwKeyFollow");
 	const { value: line2DcwKeyFollow, setValue: setLine2DcwKeyFollow } =
@@ -132,8 +136,10 @@ export default function PhaseLinesSection({
 		setCzSlotBWaveform: setLine1CzSlotBWaveform,
 		czWindow: line1CzWindow,
 		setCzWindow: setLine1CzWindow,
-		algoControls: line1AlgoControls,
-		setAlgoControls: setLine1AlgoControls,
+		algoControlsA: line1AlgoControlsA,
+		setAlgoControlsA: setLine1AlgoControlsA,
+		algoControlsB: line1AlgoControlsB,
+		setAlgoControlsB: setLine1AlgoControlsB,
 		keyFollow: line1DcwKeyFollow,
 		setKeyFollow: setLine1DcwKeyFollow,
 	};
@@ -169,8 +175,10 @@ export default function PhaseLinesSection({
 		setCzSlotBWaveform: setLine2CzSlotBWaveform,
 		czWindow: line2CzWindow,
 		setCzWindow: setLine2CzWindow,
-		algoControls: line2AlgoControls,
-		setAlgoControls: setLine2AlgoControls,
+		algoControlsA: line2AlgoControlsA,
+		setAlgoControlsA: setLine2AlgoControlsA,
+		algoControlsB: line2AlgoControlsB,
+		setAlgoControlsB: setLine2AlgoControlsB,
 		keyFollow: line2DcwKeyFollow,
 		setKeyFollow: setLine2DcwKeyFollow,
 	};
@@ -286,8 +294,10 @@ export default function PhaseLinesSection({
 						setCzSlotBWaveform={activeLineConfig.setCzSlotBWaveform}
 						czWindow={activeLineConfig.czWindow}
 						setCzWindow={activeLineConfig.setCzWindow}
-						algoControls={activeLineConfig.algoControls}
-						setAlgoControls={activeLineConfig.setAlgoControls}
+						algoControlsA={activeLineConfig.algoControlsA}
+						setAlgoControlsA={activeLineConfig.setAlgoControlsA}
+						algoControlsB={activeLineConfig.algoControlsB}
+						setAlgoControlsB={activeLineConfig.setAlgoControlsB}
 						keyFollow={activeLineConfig.keyFollow}
 						setKeyFollow={activeLineConfig.setKeyFollow}
 						activeSection={activeSection}

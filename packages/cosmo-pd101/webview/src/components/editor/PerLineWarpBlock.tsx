@@ -1,12 +1,12 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import AlgoControlsGroup from "@/components/controls/algo/AlgoControlsGroup";
-import AlgoIconGrid from "@/components/controls/algo/AlgoIconGrid";
 import type {
 	AlgoControlBinding,
 	AlgoControlOptionRuntime,
 	AlgoControlRuntime,
 	LineIndex,
 } from "@/components/controls/algo/algoControlTypes";
+import ControlKnob from "@/components/controls/ControlKnob";
+import AlgoSectionCard from "@/components/editor/AlgoSectionCard";
 import Card from "@/components/primitives/Card";
 import CzButton from "@/components/primitives/CzButton";
 import { getCzPresetDefaults } from "@/lib/synth/algoRef";
@@ -57,8 +57,10 @@ interface PerLineWarpBlockProps {
 	setCzWindow: (v: WindowType) => void;
 	keyFollow: number;
 	setKeyFollow: (v: number) => void;
-	algoControls: AlgoControlValueV1[];
-	setAlgoControls: (value: AlgoControlValueV1[]) => void;
+	algoControlsA: AlgoControlValueV1[];
+	setAlgoControlsA: (value: AlgoControlValueV1[]) => void;
+	algoControlsB: AlgoControlValueV1[];
+	setAlgoControlsB: (value: AlgoControlValueV1[]) => void;
 	/** 1 or 2, used to resolve mod-matrix destinations. Defaults to 1. */
 	lineIndex?: LineIndex;
 	activeSection?: SectionTab;
@@ -106,13 +108,16 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setCzWindow,
 	keyFollow,
 	setKeyFollow,
-	algoControls = [],
-	setAlgoControls = () => {},
+	algoControlsA = [],
+	setAlgoControlsA = () => {},
+	algoControlsB = [],
+	setAlgoControlsB = () => {},
 	lineIndex = 1,
 	activeSection: activeSectionProp,
 }: PerLineWarpBlockProps) {
 	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
 	const activeSection = activeSectionProp;
+	const algoBEnabled = algoBlend > 0.001;
 
 	// Auto-set algo2 to first algo when blend is raised from 0 with nothing selected
 	useEffect(() => {
@@ -164,7 +169,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 					id: control.id,
 					value: control.default ?? control.min ?? 0,
 				}));
-			setAlgoControls(nextDefaults);
+			setAlgoControlsA(nextDefaults);
 			const defaults = getCzPresetDefaults(nextAlgo);
 			if (!defaults) {
 				return;
@@ -176,11 +181,28 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 		},
 		[
 			setAlgo,
-			setAlgoControls,
+			setAlgoControlsA,
 			setCzSlotAWaveform,
 			setCzSlotBWaveform,
 			setCzWindow,
 		],
+	);
+
+	const handleAlgo2Change = useCallback(
+		(nextAlgo: PdAlgo) => {
+			setAlgo2(nextAlgo);
+			const definitions =
+				ALGO_DEFINITIONS_V1 as unknown as AlgoDefinitionRuntime[];
+			const nextDefinition = definitions.find((entry) => entry.id === nextAlgo);
+			const nextDefaults = (nextDefinition?.controls ?? [])
+				.filter((control) => (control.kind ?? "number") === "number")
+				.map((control) => ({
+					id: control.id,
+					value: control.default ?? control.min ?? 0,
+				}));
+			setAlgoControlsB(nextDefaults);
+		},
+		[setAlgo2, setAlgoControlsB],
 	);
 	const czWaveforms: CzWaveform[] = [
 		"saw",
@@ -207,13 +229,17 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	const activeAlgoDefinition = algoDefinitions.find(
 		(entry) => entry.id === algo,
 	);
-	const algoDefinitionControls = activeAlgoDefinition?.controls ?? [];
+	const activeAlgoDefinitionB = algoDefinitions.find(
+		(entry) => entry.id === (algo2 ?? PD_ALGOS[0].value),
+	);
+	const algoDefinitionControlsA = activeAlgoDefinition?.controls ?? [];
+	const algoDefinitionControlsB = activeAlgoDefinitionB?.controls ?? [];
 
 	// Map each "number"-kind control to a 1-based slot index for ModDestination
 	// (line1AlgoParam1…8 / line2AlgoParam1…8). Max 8 slots per line.
 	const algoParamSlotIndex: Record<string, number> = {};
 	let slotCounter = 1;
-	for (const ctrl of algoDefinitionControls) {
+	for (const ctrl of algoDefinitionControlsA) {
 		if ((ctrl.kind ?? "number") === "number") {
 			if (slotCounter <= 8) {
 				algoParamSlotIndex[ctrl.id] = slotCounter++;
@@ -251,35 +277,56 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 		},
 	};
 
-	const getAlgoControlValue = (id: string, fallback: number) => {
-		const existing = algoControls.find((entry) => entry.id === id);
+	const getAlgoControlValue = (
+		entries: AlgoControlValueV1[],
+		id: string,
+		fallback: number,
+	) => {
+		const existing = entries.find((entry) => entry.id === id);
 		return existing ? existing.value : fallback;
 	};
 
-	const setAlgoControlValue = (id: string, value: number) => {
+	const setAlgoControlValue = (
+		entries: AlgoControlValueV1[],
+		setEntries: (value: AlgoControlValueV1[]) => void,
+		id: string,
+		value: number,
+	) => {
 		const nextValue = Number.isFinite(value) ? value : 0;
-		const index = algoControls.findIndex((entry) => entry.id === id);
+		const index = entries.findIndex((entry) => entry.id === id);
 		if (index >= 0) {
-			const next = [...algoControls];
+			const next = [...entries];
 			next[index] = { ...next[index], value: nextValue };
-			setAlgoControls(next);
+			setEntries(next);
 			return;
 		}
-		setAlgoControls([...algoControls, { id, value: nextValue }]);
+		setEntries([...entries, { id, value: nextValue }]);
 	};
 
-	const applyOptionAssignments = (option: AlgoControlOptionRuntime) => {
+	const applyOptionAssignments = (
+		entries: AlgoControlValueV1[],
+		setEntries: (value: AlgoControlValueV1[]) => void,
+		option: AlgoControlOptionRuntime,
+	) => {
 		for (const assignment of option.set) {
 			const binding = controlBindings[assignment.controlId];
 			if (binding?.setNumber) {
 				binding.setNumber(assignment.value);
 				continue;
 			}
-			setAlgoControlValue(assignment.controlId, assignment.value);
+			setAlgoControlValue(
+				entries,
+				setEntries,
+				assignment.controlId,
+				assignment.value,
+			);
 		}
 	};
 
-	const getActiveSelectOption = (control: AlgoControlRuntime) => {
+	const getActiveSelectOption = (
+		entries: AlgoControlValueV1[],
+		control: AlgoControlRuntime,
+	) => {
 		const options = control.options ?? [];
 		const binding = controlBindings[control.id];
 		if (!binding) {
@@ -292,7 +339,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 					option.set.every((assignment) => {
 						const currentValue =
 							controlBindings[assignment.controlId]?.getNumber?.() ??
-							getAlgoControlValue(assignment.controlId, Number.NaN);
+							getAlgoControlValue(entries, assignment.controlId, Number.NaN);
 						if (!Number.isFinite(currentValue)) {
 							return false;
 						}
@@ -303,7 +350,11 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 		}
 
 		const currentIndex = binding.getNumber?.();
-		const dynamicValue = getAlgoControlValue(control.id, control.default ?? 0);
+		const dynamicValue = getAlgoControlValue(
+			entries,
+			control.id,
+			control.default ?? 0,
+		);
 		const selectedIndex = currentIndex ?? dynamicValue;
 		if (selectedIndex === undefined) {
 			return null;
@@ -317,83 +368,127 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 			<div className="flex flex-1 min-h-0 items-stretch">
 				<div className="min-h-0 min-w-0 h-full flex-1 flex flex-col overflow-visible">
 					{activeSection === "algos" ? (
-						<div className="flex-1 min-h-0 flex flex-col p-3">
-							<div className="flex-1 min-h-0 grid gap-4 md:grid-cols-3 md:grid-rows-[auto_minmax(0,1fr)]">
-								<Card variant="subtle" className="p-3 col-span-1">
-									<div className="flex justify-between">
-										<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-											Algo A
-										</div>
-										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
-											{getPdAlgoDef(algo)?.label}
-										</span>
-									</div>
-									<AlgoIconGrid
-										value={algo}
-										onChange={handleAlgoChange}
-										size={36}
-									/>
-								</Card>
-								<Card variant="subtle" className="p-3 col-span-1">
-									<div className="flex justify-between">
-										<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-											Algo B
-										</div>
-										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
-											{algo2 ? getPdAlgoDef(algo2)?.label : undefined}
-										</span>
-									</div>
-									<AlgoIconGrid
-										value={algo2 ?? PD_ALGOS[0].value}
-										onChange={setAlgo2}
-										size={36}
-										disabled={algoBlend === 0}
-									/>
-									<div className="space-y-3 mt-2">
-										<div className="flex items-center justify-between text-3xs uppercase tracking-[0.2em] text-cz-cream">
-											<span>Blend</span>
-											<span>{Math.round(algoBlend * 100)}%</span>
-										</div>
-										<input
-											type="range"
-											min={0}
-											max={100}
-											value={Math.round(algoBlend * 100)}
-											onChange={(e) =>
-												setAlgoBlend(Number(e.target.value) / 100)
-											}
-											className="range range-xs w-full gh"
-											style={{ accentColor: "#9cb937", touchAction: "none" }}
-										/>
-									</div>
-								</Card>
-
-								<PerLineParametersCard
-									color={color}
-									warpAmount={warpAmount}
-									setWarpAmount={setWarpAmount}
-									dcwComp={dcwComp}
-									setDcwComp={setDcwComp}
-									level={level}
-									setLevel={setLevel}
-									octave={octave}
-									setOctave={setOctave}
-									fineDetune={fineDetune}
-									setFineDetune={setFineDetune}
-									dcoDepth={dcoDepth}
-									setDcoDepth={setDcoDepth}
-									lineIndex={lineIndex}
-								/>
-
-								<AlgoControlsGroup
-									controls={algoDefinitionControls}
+						<div className="flex-1 min-h-0 flex flex-col">
+							<div className="flex-1 min-h-0 grid gap-4 xl:grid-cols-[minmax(0,1fr)_17rem_minmax(0,1fr)]">
+								<AlgoSectionCard
+									title="Algo A"
+									algoLabel={getPdAlgoDef(algo)?.label}
+									value={algo}
+									onChange={handleAlgoChange}
+									controls={algoDefinitionControlsA}
 									controlBindings={controlBindings}
 									lineIndex={lineIndex}
 									algoParamSlotIndex={algoParamSlotIndex}
-									getAlgoControlValue={getAlgoControlValue}
-									setAlgoControlValue={setAlgoControlValue}
-									getActiveSelectOption={getActiveSelectOption}
-									applyOptionAssignments={applyOptionAssignments}
+									getAlgoControlValue={(id, fallback) =>
+										getAlgoControlValue(algoControlsA, id, fallback)
+									}
+									setAlgoControlValue={(id, value) =>
+										setAlgoControlValue(
+											algoControlsA,
+											setAlgoControlsA,
+											id,
+											value,
+										)
+									}
+									getActiveSelectOption={(control) =>
+										getActiveSelectOption(algoControlsA, control)
+									}
+									applyOptionAssignments={(option) =>
+										applyOptionAssignments(
+											algoControlsA,
+											setAlgoControlsA,
+											option,
+										)
+									}
+								/>
+								<div className="flex min-h-0 flex-col gap-4">
+									<Card
+										variant="subtle"
+										className="flex flex-col items-center justify-center "
+									>
+										<div className="text-3xs uppercase tracking-[0.24em] text-cz-light-blue">
+											Algo Bridge
+										</div>
+										<ControlKnob
+											label="Blend"
+											value={algoBlend}
+											onChange={setAlgoBlend}
+											min={0}
+											max={1}
+											step={0.01}
+											size={52}
+											defaultValue={0}
+											color="#7f9de4"
+											modulatable="algoBlend"
+											lineIndex={lineIndex}
+											valueFormatter={(value) => `${Math.round(value * 100)}%`}
+										/>
+										<div className="flex w-full items-center justify-between rounded-md border border-cz-border/70 bg-black/20 px-3 py-2 font-mono text-[0.6rem] uppercase tracking-[0.22em] text-cz-cream-dim">
+											<span>A</span>
+											<span className="text-cz-gold">
+												{Math.round((1 - algoBlend) * 100)}%
+											</span>
+											<span>B</span>
+											<span
+												className={
+													algoBEnabled
+														? "text-cz-light-blue"
+														: "text-cz-cream-dim/50"
+												}
+											>
+												{Math.round(algoBlend * 100)}%
+											</span>
+										</div>
+									</Card>
+
+									<PerLineParametersCard
+										color={color}
+										warpAmount={warpAmount}
+										setWarpAmount={setWarpAmount}
+										dcwComp={dcwComp}
+										setDcwComp={setDcwComp}
+										level={level}
+										setLevel={setLevel}
+										octave={octave}
+										setOctave={setOctave}
+										fineDetune={fineDetune}
+										setFineDetune={setFineDetune}
+										dcoDepth={dcoDepth}
+										setDcoDepth={setDcoDepth}
+										lineIndex={lineIndex}
+									/>
+								</div>
+								<AlgoSectionCard
+									title="Algo B"
+									algoLabel={algo2 ? getPdAlgoDef(algo2)?.label : undefined}
+									value={algo2 ?? PD_ALGOS[0].value}
+									onChange={handleAlgo2Change}
+									disabled={!algoBEnabled}
+									controls={algoDefinitionControlsB}
+									controlBindings={{}}
+									lineIndex={lineIndex}
+									algoParamSlotIndex={{}}
+									getAlgoControlValue={(id, fallback) =>
+										getAlgoControlValue(algoControlsB, id, fallback)
+									}
+									setAlgoControlValue={(id, value) =>
+										setAlgoControlValue(
+											algoControlsB,
+											setAlgoControlsB,
+											id,
+											value,
+										)
+									}
+									getActiveSelectOption={(control) =>
+										getActiveSelectOption(algoControlsB, control)
+									}
+									applyOptionAssignments={(option) =>
+										applyOptionAssignments(
+											algoControlsB,
+											setAlgoControlsB,
+											option,
+										)
+									}
 								/>
 							</div>
 						</div>

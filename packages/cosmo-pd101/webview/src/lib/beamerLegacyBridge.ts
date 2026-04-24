@@ -25,6 +25,7 @@ type EnvelopeMap = Partial<Record<EnvelopeId, StepEnvData>>;
 
 type AlgoControlsPayload = {
 	line: 1 | 2;
+	bank?: "a" | "b";
 	controls: AlgoControlValueV1[];
 };
 
@@ -40,6 +41,7 @@ type BeamerRuntime = {
 	_onInit: (params: BeamerParamInfo[]) => void;
 	_onParams: (updates: BeamerParamUpdate) => void;
 	invoke: (method: string, ...args: unknown[]) => Promise<unknown>;
+	emit?: (event: string, data?: unknown) => void;
 	params: {
 		info: (id: string) => BeamerParamInfo | undefined;
 		beginEdit: (id: string) => void;
@@ -262,6 +264,7 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 					.invoke(
 						"setAlgoControls",
 						payload.algo_controls.line,
+						payload.algo_controls.bank ?? "a",
 						payload.algo_controls.controls,
 					)
 					.catch((error) => {
