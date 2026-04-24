@@ -58,14 +58,14 @@ describe("ModulationMenu", () => {
 		expect(onRemoveRoute).toHaveBeenCalledWith(1);
 
 		// Adjust amount on first route using keyboard interaction on knob spinbutton
-		fireEvent.keyDown(screen.getAllByRole("spinbutton", { name: "Amount" })[0], {
-			key: "ArrowDown",
-		});
-		expect(onAmountChange).toHaveBeenCalledTimes(1);
-		expect(onAmountChange).toHaveBeenCalledWith(
-			0,
-			expect.any(Number),
+		fireEvent.keyDown(
+			screen.getAllByRole("spinbutton", { name: "Amount" })[0],
+			{
+				key: "ArrowDown",
+			},
 		);
+		expect(onAmountChange).toHaveBeenCalledTimes(1);
+		expect(onAmountChange).toHaveBeenCalledWith(0, expect.any(Number));
 		expect(onAmountChange.mock.calls[0]?.[1]).toBeLessThan(0.5);
 
 		// Close via header × button
