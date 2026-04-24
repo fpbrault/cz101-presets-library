@@ -1,4 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+	within,
+} from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 import { ModMatrixProvider } from "@/context/ModMatrixContext";
@@ -24,7 +30,7 @@ function ModulationHarness() {
 }
 
 describe("ModulatableControl browser integration", () => {
-	it("adds and removes routes through the modulation menu", () => {
+	it("adds and removes routes through the modulation menu", async () => {
 		render(<ModulationHarness />);
 
 		const modulationButton = screen.getByRole("button", {
@@ -39,7 +45,15 @@ describe("ModulatableControl browser integration", () => {
 		expect(modulationButton).toHaveTextContent("1");
 
 		// Remove the route
-		fireEvent.click(screen.getByRole("button", { name: "Remove route" }));
-		expect(modulationButton).toHaveTextContent("+");
+		const dialog = screen.getByRole("dialog", {
+			name: /modulation for volume/i,
+		});
+		const removeButtons = within(dialog).getAllByRole("button", {
+			name: "Remove route",
+		});
+		fireEvent.click(removeButtons[0]);
+		await waitFor(() => {
+			expect(modulationButton).toHaveTextContent("+");
+		});
 	});
 });
