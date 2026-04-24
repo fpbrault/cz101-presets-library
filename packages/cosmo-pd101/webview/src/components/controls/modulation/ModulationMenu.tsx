@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ModRoute, ModSource } from "@/lib/synth/bindings/synth";
 import ModRouteRow, { MOD_SOURCE_META } from "./ModRouteRow";
 
@@ -30,11 +30,35 @@ export default function ModulationMenu({
 	onAddRoute,
 	onClose,
 }: ModulationMenuProps) {
+	const nextRouteKeyRef = useRef(0);
 	const [selectedSource, setSelectedSource] = useState<ModSource>("lfo1");
+	const [routeKeys, setRouteKeys] = useState<string[]>(() =>
+		routes.map(() => `mod-route-${nextRouteKeyRef.current++}`),
+	);
+
+	useEffect(() => {
+		if (routeKeys.length === routes.length) {
+			return;
+		}
+
+		setRouteKeys((currentKeys) => {
+			if (currentKeys.length > routes.length) {
+				return currentKeys.slice(0, routes.length);
+			}
+
+			return [
+				...currentKeys,
+				...Array.from(
+					{ length: routes.length - currentKeys.length },
+					() => `mod-route-${nextRouteKeyRef.current++}`,
+				),
+			];
+		});
+	}, [routeKeys.length, routes.length]);
 
 	return (
 		<motion.div
-			className="w-[248px] overflow-hidden rounded-xl border border-cz-gold/30 bg-cz-panel shadow-2xl"
+			className="w-62 overflow-hidden rounded-xl border border-cz-gold/30 bg-cz-panel shadow-2xl"
 			role="dialog"
 			aria-label={`Modulation for ${title}`}
 			initial={{ opacity: 0, scale: 0.92, y: -6 }}
@@ -65,13 +89,13 @@ export default function ModulationMenu({
 				{/* Active routes */}
 				{routes.length > 0 ? (
 					<div className="space-y-1.5">
-						<div className="font-mono text-[0.5rem] uppercase tracking-[0.2em] text-cz-cream-dim/60">
+						<div className="font-mono text-5xs uppercase tracking-[0.2em] text-cz-cream-dim/60">
 							Active
 						</div>
 						<AnimatePresence initial={false}>
 							{routes.map((route, idx) => (
 								<motion.div
-									key={`${route.source}-${route.destination}-${idx}`}
+									key={routeKeys[idx]}
 									initial={{ opacity: 0, x: -8 }}
 									animate={{ opacity: 1, x: 0 }}
 									exit={{ opacity: 0, x: 8, height: 0, marginTop: 0 }}
@@ -99,7 +123,7 @@ export default function ModulationMenu({
 
 				{/* Add source */}
 				<div className="border-t border-cz-border/40 pt-2">
-					<div className="font-mono text-[0.5rem] uppercase tracking-[0.2em] text-cz-cream-dim/60 mb-1.5">
+					<div className="mb-1.5 font-mono text-5xs uppercase tracking-[0.2em] text-cz-cream-dim/60">
 						Add source
 					</div>
 					<div className="flex gap-1.5">
@@ -108,7 +132,7 @@ export default function ModulationMenu({
 								value={selectedSource}
 								onChange={(e) => setSelectedSource(e.target.value as ModSource)}
 								aria-label="Select modulation source"
-								className="w-full appearance-none rounded-md border border-cz-border bg-cz-inset px-2 py-1.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-cz-cream outline-none transition-colors hover:border-cz-light-blue/60 focus:border-cz-light-blue"
+								className="w-full appearance-none rounded-md border border-cz-border bg-cz-inset px-2 py-1.5 font-mono text-[0.58rem] uppercase tracking-widest text-cz-cream outline-none transition-colors hover:border-cz-light-blue/60 focus:border-cz-light-blue"
 							>
 								{MOD_SOURCES.map((src) => (
 									<option key={src.value} value={src.value}>
@@ -116,7 +140,7 @@ export default function ModulationMenu({
 									</option>
 								))}
 							</select>
-							<span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[0.5rem] text-cz-cream-dim/60">
+							<span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-5xs text-cz-cream-dim/60">
 								▾
 							</span>
 						</div>

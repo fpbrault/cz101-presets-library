@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import ModRouteRow, {
 	MOD_SOURCE_META,
@@ -176,9 +176,33 @@ function ModModuleFrame({
 function ModMatrixPanel() {
 	const { modMatrix, setModMatrix } = useModMatrix();
 	const routes = modMatrix.routes ?? [];
+	const nextRouteKeyRef = useRef(0);
 
 	const [newSource, setNewSource] = useState<ModSource>("lfo1");
 	const [newDest, setNewDest] = useState<ModDestination>("volume");
+	const [routeKeys, setRouteKeys] = useState<string[]>(() =>
+		routes.map(() => `mod-route-${nextRouteKeyRef.current++}`),
+	);
+
+	useEffect(() => {
+		if (routeKeys.length === routes.length) {
+			return;
+		}
+
+		setRouteKeys((currentKeys) => {
+			if (currentKeys.length > routes.length) {
+				return currentKeys.slice(0, routes.length);
+			}
+
+			return [
+				...currentKeys,
+				...Array.from(
+					{ length: routes.length - currentKeys.length },
+					() => `mod-route-${nextRouteKeyRef.current++}`,
+				),
+			];
+		});
+	}, [routeKeys.length, routes.length]);
 
 	const handleAdd = () => {
 		const route: ModRoute = {
@@ -187,12 +211,19 @@ function ModMatrixPanel() {
 			amount: 0,
 			enabled: true,
 		};
+		setRouteKeys((currentKeys) => [
+			...currentKeys,
+			`mod-route-${nextRouteKeyRef.current++}`,
+		]);
 		setModMatrix({ routes: [...routes, route] });
 	};
 
 	const handleRemove = (idx: number) => {
 		const next = [...routes];
 		next.splice(idx, 1);
+		setRouteKeys((currentKeys) =>
+			currentKeys.filter((_, keyIndex) => keyIndex !== idx),
+		);
 		setModMatrix({ routes: next });
 	};
 
@@ -219,7 +250,7 @@ function ModMatrixPanel() {
 					Mod Matrix
 				</span>
 				{routes.length > 0 && (
-					<span className="rounded-full border border-cz-light-blue/40 bg-cz-light-blue/15 px-1.5 font-mono text-[0.5rem] font-bold text-cz-light-blue">
+					<span className="rounded-full border border-cz-light-blue/40 bg-cz-light-blue/15 px-1.5 font-mono text-5xs font-bold text-cz-light-blue">
 						{routes.length}
 					</span>
 				)}
@@ -241,7 +272,7 @@ function ModMatrixPanel() {
 					)}
 					{routes.map((route, idx) => (
 						<motion.div
-							key={`${route.source}-${route.destination}-${idx}`}
+							key={routeKeys[idx]}
 							initial={{ opacity: 0, x: -10 }}
 							animate={{ opacity: 1, x: 0 }}
 							exit={{ opacity: 0, x: 10, height: 0, marginTop: 0 }}
@@ -262,7 +293,7 @@ function ModMatrixPanel() {
 
 			{/* Add route form */}
 			<div className="mt-2 border-t border-cz-border/40 pt-2 space-y-1.5">
-				<div className="font-mono text-[0.5rem] uppercase tracking-[0.2em] text-cz-cream-dim/60">
+				<div className="font-mono text-5xs uppercase tracking-[0.2em] text-cz-cream-dim/60">
 					Add route
 				</div>
 				<div className="relative">
@@ -278,7 +309,7 @@ function ModMatrixPanel() {
 							</option>
 						))}
 					</select>
-					<span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[0.5rem] text-cz-cream-dim/60">
+					<span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-5xs text-cz-cream-dim/60">
 						▾
 					</span>
 				</div>
@@ -299,7 +330,7 @@ function ModMatrixPanel() {
 							</optgroup>
 						))}
 					</select>
-					<span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[0.5rem] text-cz-cream-dim/60">
+					<span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-5xs text-cz-cream-dim/60">
 						▾
 					</span>
 				</div>
