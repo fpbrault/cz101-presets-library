@@ -5,6 +5,8 @@ export { useAudioEngine } from "./features/synth/hooks/useAudioEngine";
 export { useLcdControlReadout } from "./features/synth/hooks/useLcdControlReadout";
 export { useNoteHandling } from "./features/synth/hooks/useNoteHandling";
 export { useSynthParamsToWorklet } from "./features/synth/hooks/useSynthParamsToWorklet";
+export { getSynthRuntimeCapabilities } from "./features/synth/runtimeCapabilities";
+export { usePluginBridgeSynthEngine } from "./features/synth/engine/pluginBridgeSynthEngineAdapter";
 export { useSynthStore } from "./features/synth/synthStore";
 export type { LibraryPreset } from "./features/synth/types/libraryPreset";
 export { useSynthPresetManager } from "./features/synth/useSynthPresetManager";
@@ -17,7 +19,11 @@ export type {
 	WaveformId,
 } from "./lib/midi/czSysexDecoder";
 export { decodeCzPatch, WF_NAMES } from "./lib/midi/czSysexDecoder";
-export type { StepEnvData } from "./lib/synth/bindings/synth";
+export type {
+	AlgoControlValueV1,
+	ModMatrix,
+	StepEnvData,
+} from "./lib/synth/bindings/synth";
 export { convertDecodedPatchToSynthPreset } from "./lib/synth/czPresetConverter";
 export { DEFAULT_SYNTH_PRESETS } from "./lib/synth/defaultPresets";
 export { noteToFreq } from "./lib/synth/pdAlgorithms";

@@ -141,11 +141,11 @@ jobs:
         shell: bash
 
       - name: Install plugin webview dependencies
-        run: cd packages/cosmo-pd101/webview && bun install
+        run: cd packages/cosmo-pd101-plugin/webview && bun install
         shell: bash
 
       - name: Run plugin webview unit tests
-        run: bun --filter @cosmo/cosmo-pd101 webview:test:unit
+        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:unit
         shell: bash
 
   plugin-webview-browser-tests:
@@ -164,7 +164,7 @@ jobs:
         shell: bash
 
       - name: Install plugin webview dependencies
-        run: cd packages/cosmo-pd101/webview && bun install
+        run: cd packages/cosmo-pd101-plugin/webview && bun install
         shell: bash
 
       - name: Install Playwright Chromium
@@ -172,7 +172,7 @@ jobs:
         shell: bash
 
       - name: Run plugin webview browser tests
-        run: bun --filter @cosmo/cosmo-pd101 webview:test:browser
+        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:browser
         shell: bash
 
   plugin-webview-e2e-tests:
@@ -191,7 +191,7 @@ jobs:
         shell: bash
 
       - name: Install plugin webview dependencies
-        run: cd packages/cosmo-pd101/webview && bun install
+        run: cd packages/cosmo-pd101-plugin/webview && bun install
         shell: bash
 
       - name: Install Playwright Chromium
@@ -199,7 +199,7 @@ jobs:
         shell: bash
 
       - name: Run plugin webview e2e tests
-        run: bun --filter @cosmo/cosmo-pd101 webview:test:e2e
+        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:e2e
         shell: bash
 
   build-plugins:

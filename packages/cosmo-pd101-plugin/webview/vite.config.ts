@@ -9,6 +9,9 @@ import { defineConfig } from "vite";
 const webviewDir = fileURLToPath(new URL(".", import.meta.url));
 const repoRoot = path.resolve(webviewDir, "../../..");
 const cosmoPd101Src = path.join(webviewDir, "src");
+const cosmoPd101LibEntry = fileURLToPath(
+	new URL("../../cosmo-pd101/lib-dist/index.mjs", import.meta.url),
+);
 const rootPackageJsonPath = path.join(repoRoot, "package.json");
 const rootPackageJson = JSON.parse(
 	fs.readFileSync(rootPackageJsonPath, "utf8"),
@@ -45,7 +48,10 @@ export default defineConfig({
 		__CZ_BUILD_LABEL__: JSON.stringify(buildLabel),
 	},
 	resolve: {
-		alias: [{ find: "@", replacement: cosmoPd101Src }],
+		alias: [
+			{ find: "@cosmo/cosmo-pd101", replacement: cosmoPd101LibEntry },
+			{ find: "@", replacement: cosmoPd101Src },
+		],
 		dedupe: ["react", "react-dom"],
 	},
 	server: {

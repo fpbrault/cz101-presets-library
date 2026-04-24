@@ -1,22 +1,12 @@
 {
-	"name": "@cosmo/cosmo-pd101-webview",
+	"name": "@cosmo/cosmo-pd101-plugin-webview",
 	"private": true,
 	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		}
-	},
-	"main": "./dist/index.mjs",
-	"types": "./dist/index.d.mts",
 	"scripts": {
 		"dev": "bunx --bun vite",
 		"dev:test": "VITE_TEST_HARNESS=1 VITE_DEBUG_PANEL=1 bunx --bun vite",
+		"prebuild": "bun --filter @cosmo/cosmo-pd101 build:lib",
 		"build": "bunx --bun vite build",
-		"build:lib": "bunx tsdown src/index.ts --format esm --dts --out-dir lib-dist --clean --no-bundle",
-		"build:lib:watch": "bunx tsdown src/index.ts --format esm --dts --out-dir lib-dist --clean --no-bundle --watch",
-		"gen:bindings": "SPECTA_TS_EXPORT_PATH=./src/lib/synth/bindings/synth.ts cargo run --features specta-bindings --bin export-specta-bindings --manifest-path ../cosmo-synth-engine/Cargo.toml",
 		"test": "bunx vitest --project unit --run",
 		"test:unit": "bunx vitest --project unit --run",
 		"test:unit:watch": "bunx vitest --project unit",
@@ -53,6 +43,7 @@
 		"react-dom": "^18.3.1"
 	},
 	"dependencies": {
+		"@cosmo/cosmo-pd101": "workspace:*",
 		"i18next": "^26.0.6",
 		"motion": "^12.38.0",
 		"react-i18next": "^17.0.4",

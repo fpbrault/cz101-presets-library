@@ -1,0 +1,3 @@
+@import "../../../cosmo-pd101/src/index.css";
+
+@source "./**/*.{js,ts,jsx,tsx}";

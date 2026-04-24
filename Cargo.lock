@@ -632,7 +632,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cosmo-pd101"
+name = "cosmo-pd101-plugin"
 version = "0.1.0"
 dependencies = [
  "beamer",

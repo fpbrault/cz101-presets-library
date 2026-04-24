@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
-const LIB_CRATE_NAME = "cosmo_pd101";
+const LIB_CRATE_NAME = "cosmo_pd101_plugin";
 
 // Parse args
 const args = process.argv.slice(2);
@@ -45,7 +45,7 @@ function run(cmd, env = process.env) {
 function targetRoot() {
 	const fromEnv = process.env.CARGO_TARGET_DIR;
 	if (!fromEnv) {
-		return join(ROOT, "packages", "cosmo-pd101", "target");
+		return join(ROOT, "packages", "cosmo-pd101-plugin", "target");
 	}
 	return fromEnv.startsWith("/") || /^[A-Za-z]:[\\/]/.test(fromEnv)
 		? fromEnv
@@ -138,7 +138,7 @@ if (targetPlatform === "macos") {
 	}
 
 	run(
-		`cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 ${formatFlags.join(" ")} --arch ${archArg} ${profileArg}`.trim(),
+		`cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101-plugin ${formatFlags.join(" ")} --arch ${archArg} ${profileArg}`.trim(),
 	);
 } else {
 	if (targetPlatform !== "windows" && targetPlatform !== "linux") {
@@ -154,7 +154,7 @@ if (targetPlatform === "macos") {
 	for (const target of targets) {
 		ensureRustTarget(target);
 		run(
-			`cargo build -p cosmo-pd101 --features vst3 --target ${target} ${profileArg}`.trim(),
+			`cargo build -p cosmo-pd101-plugin --features vst3 --target ${target} ${profileArg}`.trim(),
 			{
 				...process.env,
 				CARGO_TARGET_DIR: outRoot,
@@ -182,4 +182,4 @@ if (targetPlatform === "macos") {
 	console.log(`==> Created ${bundleDir}`);
 }
 
-console.log(`==> Done. Bundles are in packages/cosmo-pd101/target/${profile}/`);
+console.log(`==> Done. Bundles are in packages/cosmo-pd101-plugin/target/${profile}/`);

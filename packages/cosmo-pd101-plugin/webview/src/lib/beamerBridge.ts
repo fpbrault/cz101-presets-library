@@ -2,7 +2,7 @@ import type {
 	AlgoControlValueV1,
 	ModMatrix,
 	StepEnvData,
-} from "@/lib/synth/bindings/synth";
+} from "@cosmo/cosmo-pd101";
 
 type BeamerParamInfo = {
 	id: number;

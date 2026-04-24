@@ -6,14 +6,16 @@ import {
 	useRef,
 	useState,
 } from "react";
-import type { AsidePanelTab } from "@/components/layout/AsidePanelSwitcher";
-import SynthRenderer from "@/components/renderer/SynthRenderer";
-import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
-import { useNoteHandling } from "@/features/synth/hooks/useNoteHandling";
-import { getSynthRuntimeCapabilities } from "@/features/synth/runtimeCapabilities";
-import { useSynthStore } from "@/features/synth/synthStore";
-import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
-import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
+import {
+	type AsidePanelTab,
+	DEFAULT_SYNTH_PRESETS,
+	getSynthRuntimeCapabilities,
+	SynthRenderer,
+	useLcdControlReadout,
+	useNoteHandling,
+	useSynthPresetManager,
+	useSynthStore,
+} from "@cosmo/cosmo-pd101";
 import { usePluginParamBridge } from "./hooks/usePluginParamBridge";
 
 const UI_SCALE_KEY = "cz-plugin-ui-scale";

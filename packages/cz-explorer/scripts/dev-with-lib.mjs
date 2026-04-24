@@ -6,7 +6,7 @@ const cwd = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(cwd, "..");
 const cosmoPd101WebviewRoot = path.resolve(
 	packageRoot,
-	"../cosmo-pd101/webview",
+	"../cosmo-pd101",
 );
 
 const initialBuild = spawnSync("bun", ["run", "build:lib"], {

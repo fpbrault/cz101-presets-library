@@ -14,11 +14,17 @@ import { defineConfig } from "vitest/config";
  */
 const webviewDir = fileURLToPath(new URL(".", import.meta.url));
 const cosmoPd101Src = path.join(webviewDir, "src");
+const cosmoPd101LibEntry = fileURLToPath(
+	new URL("../../cosmo-pd101/lib-dist/index.mjs", import.meta.url),
+);
 
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
 	resolve: {
-		alias: [{ find: "@", replacement: cosmoPd101Src }],
+		alias: [
+			{ find: "@cosmo/cosmo-pd101", replacement: cosmoPd101LibEntry },
+			{ find: "@", replacement: cosmoPd101Src },
+		],
 	},
 	define: {
 		// Vite defines needed by App.tsx / main.tsx when running under Vitest.

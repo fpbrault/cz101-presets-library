@@ -45,14 +45,14 @@ processor.rs  →  voice.rs  →  oscillator.rs
 2. Apply it in the relevant DSP module (`voice.rs`, `fx.rs`, etc.)
 3. Update `src/preset_wire.rs` if it should be persisted in presets
 4. Update WASM bindings in `src/wasm.rs` if exposed to JS
-5. Update TypeScript bindings in `packages/cosmo-pd101/webview/src/lib/synth/bindings/synth.ts`
+5. Update TypeScript bindings in `packages/cosmo-pd101/src/lib/synth/bindings/synth.ts`
 
 ### Adding a New FX
 1. Implement DSP in `src/fx.rs`
 2. Add parameters to `src/params.rs`
 3. Wire into `src/processor.rs`
 4. Expose via `src/wasm.rs`
-5. Add UI panel in `packages/cosmo-pd101/webview/src/components/panels/fx/`
+5. Add UI panel in `packages/cosmo-pd101/src/components/panels/fx/`
 
 ### Building for WASM
 ```bash
@@ -96,7 +96,7 @@ cd packages/cosmo-synth-engine && cargo test
 
 ## WASM → TypeScript Boundary
 - `src/wasm.rs` exports via `wasm-bindgen`
-- Corresponding TS types in `packages/cosmo-pd101/webview/src/lib/synth/bindings/synth.ts`
+- Corresponding TS types in `packages/cosmo-pd101/src/lib/synth/bindings/synth.ts`
 - Worklet URL exposed via `src/lib/synth/pdVisualizerWorkletUrl.ts`
 
 ## Commands
