@@ -75,6 +75,35 @@ describe("ControlKnob", () => {
 		expect(onChange).toHaveBeenCalledWith(0.1);
 	});
 
+	it("resets to default value on double touch", () => {
+		const onChange = vi.fn();
+		render(
+			<ControlKnob
+				value={0.4}
+				onChange={onChange}
+				label="Resonance"
+				defaultValue={0.1}
+			/>,
+		);
+
+		const knob = screen.getByRole("spinbutton", { name: "Resonance" });
+		fireEvent.pointerDown(knob, {
+			pointerId: 1,
+			pointerType: "touch",
+			clientX: 10,
+			clientY: 10,
+		});
+		fireEvent.pointerUp(window, { pointerId: 1, pointerType: "touch" });
+		fireEvent.pointerDown(knob, {
+			pointerId: 2,
+			pointerType: "touch",
+			clientX: 10,
+			clientY: 10,
+		});
+
+		expect(onChange).toHaveBeenCalledWith(0.1);
+	});
+
 	it("hides value display when valueVisibility is never", () => {
 		render(
 			<ControlKnob

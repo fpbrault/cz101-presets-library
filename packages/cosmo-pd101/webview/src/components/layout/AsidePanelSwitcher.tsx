@@ -28,7 +28,7 @@ export type AsidePanelTab =
 	| "delay"
 	| "reverb";
 
-const FX_TAB_IDS = new Set(["filter", "chorus", "delay", "reverb"]);
+const FX_TAB_IDS = new Set(["phasemod", "chorus", "delay", "reverb"]);
 
 export type AsidePanelTabMeta = {
 	topLabel: string;
@@ -60,7 +60,7 @@ export default function AsidePanelSwitcher<T extends string>({
 	const { value: chorusEnabled } = useSynthParam("chorusEnabled");
 	const { value: delayEnabled } = useSynthParam("delayEnabled");
 	const { value: reverbEnabled } = useSynthParam("reverbEnabled");
-	const { setValue: setFilterEnabled } = useSynthParam("filterEnabled");
+	const { setValue: setPhaseModEnabled } = useSynthParam("phaseModEnabled");
 	const { setValue: setChorusEnabled } = useSynthParam("chorusEnabled");
 	const { setValue: setDelayEnabled } = useSynthParam("delayEnabled");
 	const { setValue: setReverbEnabled } = useSynthParam("reverbEnabled");
@@ -91,15 +91,12 @@ export default function AsidePanelSwitcher<T extends string>({
 	const getTabColor = (tabId: T): CzTabButtonColor => {
 		const normalizedTabId = String(tabId).toLowerCase();
 
-		if (
-			normalizedTabId === "phasemod" ||
-			normalizedTabId === "vibrato" ||
-			normalizedTabId === "lfo"
-		) {
+		if (normalizedTabId === "vibrato" || normalizedTabId === "lfo") {
 			return "red";
 		}
 
 		if (
+			normalizedTabId === "phasemod" ||
 			normalizedTabId === "chorus" ||
 			normalizedTabId === "delay" ||
 			normalizedTabId === "reverb"
@@ -117,8 +114,8 @@ export default function AsidePanelSwitcher<T extends string>({
 
 	const toggleFxTab = (tabId: T) => {
 		switch (String(tabId).toLowerCase()) {
-			case "filter":
-				setFilterEnabled(!filterEnabled);
+			case "phasemod":
+				setPhaseModEnabled(!phaseModEnabled);
 				break;
 			case "chorus":
 				setChorusEnabled(!chorusEnabled);

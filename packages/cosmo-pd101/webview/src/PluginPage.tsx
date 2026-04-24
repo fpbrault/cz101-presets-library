@@ -21,10 +21,10 @@ const PLUGIN_RUNTIME_CAPABILITIES = getSynthRuntimeCapabilities("plugin");
 type UiScale = (typeof PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions)[number];
 
 type PluginPageProps = {
-	headerExtra?: ReactNode;
+	utilityExtra?: ReactNode;
 };
 
-export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
+export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const synthState = useSynthState();
 	const { lineSelect, polyMode, filterEnabled, gatherState, applyPreset } =
 		synthState;
@@ -135,32 +135,29 @@ export default function PluginPage({ headerExtra }: PluginPageProps = {}) {
 				onExportCurrentState: handleExportCurrentState,
 				onImportPreset: handleImportPreset,
 			}}
-			frameClassName="h-full bg-cz-panel flex flex-col overflow-hidden gap-4 w-full"
+			frameClassName="h-full bg-cz-panel flex flex-col overflow-hidden gap-2 w-full"
 			frameStyle={{ zoom: `${uiScale}%` }}
-			headerExtra={
+			bottomBarExtra={
 				<>
 					{PLUGIN_RUNTIME_CAPABILITIES.showUiScaleControl ? (
-						<div className="flex items-center gap-2 px-8 -mt-2">
-							<span className="text-3xs font-mono uppercase tracking-[0.2em] text-base-content/50">
-								UI Scale
-							</span>
-							<div className="flex gap-1">
-								{PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.map(
-									(scaleOption) => (
-										<button
-											key={scaleOption}
-											type="button"
-											className={`btn btn-xs font-mono ${uiScale === scaleOption ? "btn-primary" : "btn-ghost opacity-50"}`}
-											onClick={() => setUiScale(scaleOption as UiScale)}
-										>
-											{scaleOption}%
-										</button>
-									),
-								)}
-							</div>
+						<div className="flex items-center gap-1.5">
+							<span className="text-cz-cream/65">Scale</span>
+							<select
+								value={uiScale}
+								onChange={(event) =>
+									setUiScale(Number(event.target.value) as UiScale)
+								}
+								className="h-6 rounded-sm border border-cz-border bg-black/30 px-1.5 text-[0.56rem] font-mono tracking-[0.12em] text-cz-cream/85"
+							>
+								{PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.map((scaleOption) => (
+									<option key={scaleOption} value={scaleOption}>
+										{scaleOption}%
+									</option>
+								))}
+							</select>
 						</div>
 					) : null}
-					{headerExtra}
+					{utilityExtra}
 				</>
 			}
 			lcdPrimaryText={lcdPrimaryText}

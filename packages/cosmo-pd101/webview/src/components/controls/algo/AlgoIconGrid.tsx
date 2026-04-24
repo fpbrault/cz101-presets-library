@@ -31,7 +31,7 @@ export default function AlgoIconGrid({
 					className={[
 						"flex  items-center justify-center transition-colors focus:outline-none border-t-0 border-b border-l border-r text-cz-gold border-cz-light-blue",
 						isAlgoRefEqual(value, algo.value)
-							? "border-cz-light-blue bg-cz-inset text-white shadow-[0_0_8px_var(--color-cz-gold)/30%]"
+							? "border-cz-light-blue bg-cz-inset text-white shadow-sm"
 							: "border-cz-border bg-cz-surface  hover:border-cz-light-blue hover:text-white",
 					].join(" ")}
 					style={{ height: size, width: size + 4 }}

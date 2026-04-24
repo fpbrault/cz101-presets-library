@@ -1,4 +1,12 @@
 import { AnimatePresence, motion } from "motion/react";
+import {
+	type PointerEvent as ReactPointerEvent,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 type MiniKeyboardOverlayProps = {
 	activeNotes: number[];
@@ -14,35 +22,49 @@ type KeyConfig = {
 	left?: number;
 };
 
-const WHITE_KEYS = [
-	{ note: 48, label: "C" },
-	{ note: 50, label: "D" },
-	{ note: 52, label: "E" },
-	{ note: 53, label: "F" },
-	{ note: 55, label: "G" },
-	{ note: 57, label: "A" },
-	{ note: 59, label: "B" },
-	{ note: 60, label: "C" },
-	{ note: 62, label: "D" },
-	{ note: 64, label: "E" },
-	{ note: 65, label: "F" },
-	{ note: 67, label: "G" },
-	{ note: 69, label: "A" },
-	{ note: 71, label: "B" },
-] as const satisfies ReadonlyArray<KeyConfig>;
+const WHITE_OFFSETS = [0, 2, 4, 5, 7, 9, 11] as const;
+const WHITE_LABELS = ["C", "D", "E", "F", "G", "A", "B"] as const;
+const BLACK_CONFIG = [
+	{ offset: 1, label: "C#", boundary: 1 },
+	{ offset: 3, label: "D#", boundary: 2 },
+	{ offset: 6, label: "F#", boundary: 4 },
+	{ offset: 8, label: "G#", boundary: 5 },
+	{ offset: 10, label: "A#", boundary: 6 },
+] as const;
 
-const BLACK_KEYS = [
-	{ note: 49, label: "C#", black: true, left: 9.2 },
-	{ note: 51, label: "D#", black: true, left: 16.4 },
-	{ note: 54, label: "F#", black: true, left: 31.0 },
-	{ note: 56, label: "G#", black: true, left: 38.2 },
-	{ note: 58, label: "A#", black: true, left: 45.4 },
-	{ note: 61, label: "C#", black: true, left: 59.8 },
-	{ note: 63, label: "D#", black: true, left: 67.0 },
-	{ note: 66, label: "F#", black: true, left: 81.6 },
-	{ note: 68, label: "G#", black: true, left: 88.8 },
-	{ note: 70, label: "A#", black: true, left: 96.0 },
-] as const satisfies ReadonlyArray<KeyConfig>;
+const START_NOTE = 36;
+const KEYBOARD_OCTAVES = 5;
+
+function buildKeyboardLayout(startNote: number, octaves: number) {
+	const whiteKeys: KeyConfig[] = [];
+	const blackKeys: KeyConfig[] = [];
+	const totalWhiteKeys = octaves * WHITE_OFFSETS.length;
+
+	for (let octave = 0; octave < octaves; octave += 1) {
+		const octaveBaseNote = startNote + octave * 12;
+		const whiteBaseIndex = octave * WHITE_OFFSETS.length;
+
+		for (let i = 0; i < WHITE_OFFSETS.length; i += 1) {
+			whiteKeys.push({
+				note: octaveBaseNote + WHITE_OFFSETS[i],
+				label: WHITE_LABELS[i],
+				black: false,
+			});
+		}
+
+		for (const blackKey of BLACK_CONFIG) {
+			const boundary = whiteBaseIndex + blackKey.boundary;
+			blackKeys.push({
+				note: octaveBaseNote + blackKey.offset,
+				label: blackKey.label,
+				black: true,
+				left: (boundary / totalWhiteKeys) * 100,
+			});
+		}
+	}
+
+	return { whiteKeys, blackKeys };
+}
 
 function PianoKey({
 	note,
@@ -50,40 +72,38 @@ function PianoKey({
 	active,
 	black,
 	left,
-	onNoteOn,
-	onNoteOff,
+	onPointerDown,
 }: {
 	note: number;
 	label: string;
 	active: boolean;
 	black?: boolean;
 	left?: number;
-	onNoteOn: (note: number, velocity?: number) => void;
-	onNoteOff: (note: number) => void;
+	onPointerDown: (
+		event: ReactPointerEvent<HTMLButtonElement>,
+		note: number,
+	) => void;
 }) {
 	const keyClassName = black
-		? `absolute top-0 z-10 h-[58%] w-[6.2%] -translate-x-1/2 rounded-b-md border border-cz-border/80 bg-[linear-gradient(180deg,#0e0f12,#1d2230_55%,#13161d)] px-0 pb-2 pt-1 text-[0.46rem] font-mono uppercase tracking-[0.18em] text-cz-light-blue/80 shadow-[0_10px_18px_rgba(0,0,0,0.35)] transition-all ${
-				active ? "border-cz-light-blue bg-[linear-gradient(180deg,#1f2740,#324066_60%,#1a2238)] text-cz-cream" : ""
+		? `absolute top-0 z-10 h-[60%] w-[2.45%] -translate-x-1/2 rounded-b-md border border-cz-border/80 bg-cz-inset px-0 pb-1 pt-0.5 text-[0.42rem] font-mono uppercase tracking-[0.16em] text-cz-light-blue/80 shadow-md transition-all ${
+				active ? "border-cz-light-blue bg-cz-surface" : ""
 			}`
-		: `relative flex h-full flex-1 flex-col justify-end rounded-b-lg border border-cz-border/80 bg-[linear-gradient(180deg,#f2f0e6,#dad5c6_55%,#b7b09d)] px-1 pb-2 pt-2 text-[0.5rem] font-mono uppercase tracking-[0.18em] text-[#302d26] shadow-[0_10px_18px_rgba(0,0,0,0.12)] transition-all ${
-				active ? "translate-y-[1px] border-cz-gold bg-[linear-gradient(180deg,#fff8d6,#e9df9f_58%,#c8b75d)] text-[#232018]" : ""
+		: `relative flex h-full flex-1 flex-col justify-end rounded-b-md border border-cz-border/75 bg-cz-cream px-0.5 pb-1.5 pt-1.5 text-[0.42rem] font-mono uppercase tracking-[0.15em] text-[#302d26] shadow-sm transition-all ${
+				active ? "translate-y-[1px] border-cz-gold bg-cz-gold/70 text-[#232018]" : ""
 			}`;
 
 	return (
 		<button
 			type="button"
 			aria-label={`Play ${label}`}
-			className={keyClassName}
+			className={`${keyClassName} touch-none`}
+			data-mini-note={note}
 			style={black && left !== undefined ? { left: `${left}%` } : undefined}
-			onPointerDown={(event) => {
-				event.preventDefault();
-				onNoteOn(note, 112);
-			}}
-			onPointerUp={() => onNoteOff(note)}
-			onPointerLeave={() => onNoteOff(note)}
-			onPointerCancel={() => onNoteOff(note)}
+			onPointerDown={(event) => onPointerDown(event, note)}
 		>
-			<span className={black ? "mt-auto" : "mt-auto opacity-70"}>{label}</span>
+			<span className={black ? "sr-only" : "mt-auto opacity-75"}>
+				{label === "C" ? label : ""}
+			</span>
 		</button>
 	);
 }
@@ -94,7 +114,113 @@ export default function MiniKeyboardOverlay({
 	onNoteOn,
 	onNoteOff,
 }: MiniKeyboardOverlayProps) {
+	const [pitchWheel, setPitchWheel] = useState(0);
+	const [modWheel, setModWheel] = useState(0);
+	const draggingPointerIdRef = useRef<number | null>(null);
+	const draggingNoteRef = useRef<number | null>(null);
 	const activeSet = new Set(activeNotes);
+	const { whiteKeys, blackKeys } = useMemo(
+		() => buildKeyboardLayout(START_NOTE, KEYBOARD_OCTAVES),
+		[],
+	);
+
+	const playDraggedNote = useCallback(
+		(note: number) => {
+		const previousNote = draggingNoteRef.current;
+		if (previousNote === note) {
+			return;
+		}
+
+		if (previousNote !== null) {
+			onNoteOff(previousNote);
+		}
+
+		draggingNoteRef.current = note;
+		onNoteOn(note, 112);
+		},
+		[onNoteOn, onNoteOff],
+	);
+
+	const stopDragging = useCallback(() => {
+		const previousNote = draggingNoteRef.current;
+		if (previousNote !== null) {
+			onNoteOff(previousNote);
+		}
+
+		draggingPointerIdRef.current = null;
+		draggingNoteRef.current = null;
+	}, [onNoteOff]);
+
+	useEffect(() => {
+		const onWindowPointerMove = (event: PointerEvent) => {
+			if (draggingPointerIdRef.current !== event.pointerId) {
+				return;
+			}
+
+			if (event.pointerType === "mouse" && event.buttons === 0) {
+				stopDragging();
+				return;
+			}
+
+			const elementUnderPointer = document.elementFromPoint(
+				event.clientX,
+				event.clientY,
+			) as HTMLElement | null;
+			const keyElement = elementUnderPointer?.closest<HTMLElement>("[data-mini-note]");
+			if (!keyElement) {
+				return;
+			}
+
+			const noteAttribute = keyElement.dataset.miniNote;
+			if (!noteAttribute) {
+				return;
+			}
+
+			const parsedNote = Number(noteAttribute);
+			if (!Number.isNaN(parsedNote)) {
+				playDraggedNote(parsedNote);
+			}
+		};
+
+		const onWindowPointerUp = (event: PointerEvent) => {
+			if (draggingPointerIdRef.current === event.pointerId) {
+				stopDragging();
+			}
+		};
+
+		const onWindowPointerCancel = (event: PointerEvent) => {
+			if (draggingPointerIdRef.current === event.pointerId) {
+				stopDragging();
+			}
+		};
+
+		window.addEventListener("pointermove", onWindowPointerMove);
+		window.addEventListener("pointerup", onWindowPointerUp);
+		window.addEventListener("pointercancel", onWindowPointerCancel);
+
+		return () => {
+			window.removeEventListener("pointermove", onWindowPointerMove);
+			window.removeEventListener("pointerup", onWindowPointerUp);
+			window.removeEventListener("pointercancel", onWindowPointerCancel);
+		};
+	}, [playDraggedNote, stopDragging]);
+
+	useEffect(() => {
+		if (!visible) {
+			stopDragging();
+		}
+	}, [stopDragging, visible]);
+
+	useEffect(() => () => stopDragging(), [stopDragging]);
+
+	const handleKeyPointerDown = useCallback(
+		(event: ReactPointerEvent<HTMLButtonElement>, note: number) => {
+			event.preventDefault();
+			draggingPointerIdRef.current = event.pointerId;
+			playDraggedNote(note);
+		},
+		[playDraggedNote],
+	);
 
 	return (
 		<AnimatePresence initial={false}>
@@ -105,37 +231,69 @@ export default function MiniKeyboardOverlay({
 					animate={{ opacity: 1, y: 0 }}
 					exit={{ opacity: 0, y: 22 }}
 					transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-					className="pointer-events-none absolute inset-x-4 bottom-9 z-20 flex justify-center"
+					className="pointer-events-none absolute inset-x-0 bottom-8 z-20"
 				>
-					<div className="pointer-events-auto w-full max-w-5xl overflow-hidden rounded-[1.35rem] border border-cz-border bg-[linear-gradient(180deg,rgba(45,46,44,0.96),rgba(27,28,27,0.99))] p-3 shadow-[0_26px_56px_rgba(0,0,0,0.4)] backdrop-blur-sm">
-						<div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[repeating-linear-gradient(90deg,rgba(123,150,226,0.08)_0px,rgba(123,150,226,0.08)_1px,transparent_1px,transparent_22px)] opacity-70" />
-						<div className="relative mb-2 flex items-center justify-between px-1 font-mono text-[0.56rem] uppercase tracking-[0.24em] text-cz-cream/70">
-							<span>Performance Keys</span>
-							<span>{activeNotes.length > 0 ? `Held ${activeNotes.length}` : "Ready"}</span>
-						</div>
-						<div className="relative flex h-28 gap-1 overflow-hidden rounded-xl border border-cz-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.12))] p-2">
-							{WHITE_KEYS.map((key) => (
-								<PianoKey
-									key={key.note}
-									note={key.note}
-									label={key.label}
-									active={activeSet.has(key.note)}
-									onNoteOn={onNoteOn}
-									onNoteOff={onNoteOff}
-								/>
-							))}
-							{BLACK_KEYS.map((key) => (
-								<PianoKey
-									key={key.note}
-									note={key.note}
-									label={key.label}
-									black
-									left={key.left}
-									active={activeSet.has(key.note)}
-									onNoteOn={onNoteOn}
-									onNoteOff={onNoteOff}
-								/>
-							))}
+					<div
+						data-testid="mini-keyboard-overlay"
+						className="pointer-events-auto w-full overflow-hidden rounded-t-[1.05rem] rounded-b-none border border-cz-border border-b-0 bg-cz-body px-0 py-1 shadow-xl backdrop-blur-sm"
+					>
+						<div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-[repeating-linear-gradient(90deg,rgba(123,150,226,0.08)_0px,rgba(123,150,226,0.08)_1px,transparent_1px,transparent_20px)] opacity-55" />
+						<div className="relative flex h-20 gap-2 overflow-hidden rounded-none border border-x-0 border-b-0 border-cz-border/70 bg-cz-inset px-2 ">
+							<div className="flex w-14 shrink-0 items-end gap-1 rounded-md border border-cz-border/60 bg-black/20 px-1.5 pb-1.5 pt-1">
+								<div className="flex flex-1 flex-col items-center gap-1">
+									<input
+										aria-label="Pitch wheel"
+										type="range"
+										min={-1}
+										max={1}
+										step={0.01}
+										value={pitchWheel}
+										onChange={(event) => setPitchWheel(Number(event.target.value))}
+										className="h-12 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
+									/>
+									<span className="text-[0.38rem] uppercase tracking-[0.12em] text-cz-cream/70">
+										P
+									</span>
+								</div>
+								<div className="flex flex-1 flex-col items-center gap-1">
+									<input
+										aria-label="Mod wheel"
+										type="range"
+										min={0}
+										max={1}
+										step={0.01}
+										value={modWheel}
+										onChange={(event) => setModWheel(Number(event.target.value))}
+										className="h-12 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
+									/>
+									<span className="text-[0.38rem] uppercase tracking-[0.12em] text-cz-cream/70">
+										M
+									</span>
+								</div>
+							</div>
+
+							<div className="relative flex min-w-0 flex-1 gap-0.5 overflow-hidden rounded-md border border-cz-border/65 bg-cz-surface p-1">
+								{whiteKeys.map((key) => (
+									<PianoKey
+										key={key.note}
+										note={key.note}
+										label={key.label}
+										active={activeSet.has(key.note)}
+										onPointerDown={handleKeyPointerDown}
+									/>
+								))}
+								{blackKeys.map((key) => (
+									<PianoKey
+										key={key.note}
+										note={key.note}
+										label={key.label}
+										black
+										left={key.left}
+										active={activeSet.has(key.note)}
+										onPointerDown={handleKeyPointerDown}
+									/>
+								))}
+							</div>
 						</div>
 					</div>
 				</motion.div>

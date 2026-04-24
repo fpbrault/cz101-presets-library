@@ -1,13 +1,12 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import AlgoControlsGroup from "@/components/controls/algo/AlgoControlsGroup";
-import AlgoIconGrid from "@/components/controls/algo/AlgoIconGrid";
-import ControlKnob from "@/components/controls/ControlKnob";
 import type {
 	AlgoControlBinding,
 	AlgoControlOptionRuntime,
 	AlgoControlRuntime,
 	LineIndex,
 } from "@/components/controls/algo/algoControlTypes";
+import ControlKnob from "@/components/controls/ControlKnob";
+import AlgoSectionCard from "@/components/editor/AlgoSectionCard";
 import Card from "@/components/primitives/Card";
 import CzButton from "@/components/primitives/CzButton";
 import { getCzPresetDefaults } from "@/lib/synth/algoRef";
@@ -369,56 +368,35 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 			<div className="flex flex-1 min-h-0 items-stretch">
 				<div className="min-h-0 min-w-0 h-full flex-1 flex flex-col overflow-visible">
 					{activeSection === "algos" ? (
-						<div className="flex-1 min-h-0 flex flex-col p-3">
+						<div className="flex-1 min-h-0 flex flex-col">
 							<div className="flex-1 min-h-0 grid gap-4 xl:grid-cols-[minmax(0,1fr)_17rem_minmax(0,1fr)]">
-								<Card variant="subtle" className="p-3 min-h-0 flex flex-col gap-4">
-									<div className="flex justify-between">
-										<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-											Algo A
-										</div>
-										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
-											{getPdAlgoDef(algo)?.label}
-										</span>
-									</div>
-									<AlgoIconGrid
-										value={algo}
-										onChange={handleAlgoChange}
-										size={36}
-									/>
-									<div className="mt-2 border-t border-cz-border/70 pt-4">
-										<AlgoControlsGroup
-											embedded
-											title="Algo A Controls"
-											controls={algoDefinitionControlsA}
-											controlBindings={controlBindings}
-											lineIndex={lineIndex}
-											algoParamSlotIndex={algoParamSlotIndex}
-											getAlgoControlValue={(id, fallback) =>
-												getAlgoControlValue(algoControlsA, id, fallback)
-											}
-											setAlgoControlValue={(id, value) =>
-												setAlgoControlValue(
-													algoControlsA,
-													setAlgoControlsA,
-													id,
-													value,
-												)
-											}
-											getActiveSelectOption={(control) =>
-												getActiveSelectOption(algoControlsA, control)
-											}
-											applyOptionAssignments={(option) =>
-												applyOptionAssignments(
-													algoControlsA,
-													setAlgoControlsA,
-													option,
-												)
-											}
-										/>
-									</div>
-								</Card>
+								<AlgoSectionCard
+									title="Algo A"
+									algoLabel={getPdAlgoDef(algo)?.label}
+									value={algo}
+									onChange={handleAlgoChange}
+									controls={algoDefinitionControlsA}
+									controlBindings={controlBindings}
+									lineIndex={lineIndex}
+									algoParamSlotIndex={algoParamSlotIndex}
+									getAlgoControlValue={(id, fallback) =>
+										getAlgoControlValue(algoControlsA, id, fallback)
+									}
+									setAlgoControlValue={(id, value) =>
+										setAlgoControlValue(algoControlsA, setAlgoControlsA, id, value)
+									}
+									getActiveSelectOption={(control) =>
+										getActiveSelectOption(algoControlsA, control)
+									}
+									applyOptionAssignments={(option) =>
+										applyOptionAssignments(algoControlsA, setAlgoControlsA, option)
+									}
+								/>
 								<div className="flex min-h-0 flex-col gap-4">
-									<Card variant="subtle" className="p-3 flex flex-col items-center justify-center gap-3">
+									<Card
+										variant="subtle"
+										className="flex flex-col items-center justify-center "
+									>
 										<div className="text-3xs uppercase tracking-[0.24em] text-cz-light-blue">
 											Algo Bridge
 										</div>
@@ -438,9 +416,17 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										/>
 										<div className="flex w-full items-center justify-between rounded-md border border-cz-border/70 bg-black/20 px-3 py-2 font-mono text-[0.6rem] uppercase tracking-[0.22em] text-cz-cream-dim">
 											<span>A</span>
-											<span className="text-cz-gold">{Math.round((1 - algoBlend) * 100)}%</span>
+											<span className="text-cz-gold">
+												{Math.round((1 - algoBlend) * 100)}%
+											</span>
 											<span>B</span>
-											<span className={algoBEnabled ? "text-cz-light-blue" : "text-cz-cream-dim/50"}>
+											<span
+												className={
+													algoBEnabled
+														? "text-cz-light-blue"
+														: "text-cz-cream-dim/50"
+												}
+											>
 												{Math.round(algoBlend * 100)}%
 											</span>
 										</div>
@@ -463,62 +449,29 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										lineIndex={lineIndex}
 									/>
 								</div>
-								<Card
-									variant="subtle"
-									className={`p-3 min-h-0 flex flex-col gap-4 transition-opacity ${algoBEnabled ? "" : "opacity-45"}`}
-								>
-									<div className="flex justify-between">
-										<div className="mb-2 text-3xs uppercase tracking-[0.24em] text-cz-cream">
-											Algo B
-										</div>
-										<span className="text-3xs uppercase tracking-[0.2em] text-cz-light-blue font-bold">
-											{algo2 ? getPdAlgoDef(algo2)?.label : undefined}
-										</span>
-									</div>
-									<AlgoIconGrid
-										value={algo2 ?? PD_ALGOS[0].value}
-										onChange={handleAlgo2Change}
-										size={36}
-										disabled={!algoBEnabled}
-									/>
-									<div className="mt-3 rounded-md border border-cz-border/70 bg-black/20 px-3 py-2 text-3xs uppercase tracking-[0.2em] text-cz-cream-dim">
-										{algoBEnabled
-											? "Secondary algorithm is active with its own controls."
-											: "Raise blend above 0 to enable Algo B controls."}
-									</div>
-									<div className="border-t border-cz-border/70 pt-4">
-										<AlgoControlsGroup
-											embedded
-											title="Algo B Controls"
-											disabled={!algoBEnabled}
-											controls={algoDefinitionControlsB}
-											controlBindings={{}}
-											lineIndex={lineIndex}
-											algoParamSlotIndex={{}}
-											getAlgoControlValue={(id, fallback) =>
-												getAlgoControlValue(algoControlsB, id, fallback)
-											}
-											setAlgoControlValue={(id, value) =>
-												setAlgoControlValue(
-													algoControlsB,
-													setAlgoControlsB,
-													id,
-													value,
-												)
-											}
-											getActiveSelectOption={(control) =>
-												getActiveSelectOption(algoControlsB, control)
-											}
-											applyOptionAssignments={(option) =>
-												applyOptionAssignments(
-													algoControlsB,
-													setAlgoControlsB,
-													option,
-												)
-											}
-										/>
-									</div>
-								</Card>
+								<AlgoSectionCard
+									title="Algo B"
+									algoLabel={algo2 ? getPdAlgoDef(algo2)?.label : undefined}
+									value={algo2 ?? PD_ALGOS[0].value}
+									onChange={handleAlgo2Change}
+									disabled={!algoBEnabled}
+									controls={algoDefinitionControlsB}
+									controlBindings={{}}
+									lineIndex={lineIndex}
+									algoParamSlotIndex={{}}
+									getAlgoControlValue={(id, fallback) =>
+										getAlgoControlValue(algoControlsB, id, fallback)
+									}
+									setAlgoControlValue={(id, value) =>
+										setAlgoControlValue(algoControlsB, setAlgoControlsB, id, value)
+									}
+									getActiveSelectOption={(control) =>
+										getActiveSelectOption(algoControlsB, control)
+									}
+									applyOptionAssignments={(option) =>
+										applyOptionAssignments(algoControlsB, setAlgoControlsB, option)
+									}
+								/>
 							</div>
 						</div>
 					) : (

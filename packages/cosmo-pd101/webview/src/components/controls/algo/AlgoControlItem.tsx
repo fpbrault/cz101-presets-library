@@ -1,4 +1,5 @@
 import { memo } from "react";
+import AlgoControlDropdown from "./AlgoControlDropdown";
 import AlgoControlNumber from "./AlgoControlNumber";
 import AlgoControlSelect from "./AlgoControlSelect";
 import AlgoControlToggle from "./AlgoControlToggle";
@@ -37,6 +38,18 @@ function AlgoControlItemInner({
 	const controlKind = control.kind ?? "number";
 
 	if (controlKind === "select") {
+		if (control.controlType === "dropdown") {
+			return (
+				<AlgoControlDropdown
+					control={control}
+					disabled={disabled}
+					binding={binding}
+					getActiveSelectOption={getActiveSelectOption}
+					applyOptionAssignments={applyOptionAssignments}
+				/>
+			);
+		}
+
 		return (
 			<AlgoControlSelect
 				control={control}

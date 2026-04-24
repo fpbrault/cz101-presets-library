@@ -87,6 +87,32 @@ describe("algo controls (browser)", () => {
 		);
 	});
 
+	it("renders and updates dropdown select controls", () => {
+		const setNumber = vi.fn();
+		const applyOptionAssignments = vi.fn();
+		render(
+			<AlgoControlItem
+				binding={{ setNumber }}
+				lineIndex={1}
+				algoParamSlotIndex={{}}
+				getAlgoControlValue={() => 0}
+				setAlgoControlValue={() => {}}
+				getActiveSelectOption={() => selectControl.options[0]}
+				applyOptionAssignments={applyOptionAssignments}
+				control={{ ...selectControl, controlType: "dropdown" }}
+			/>,
+		);
+
+		const dropdown = screen.getByRole("combobox");
+		fireEvent.change(dropdown, { target: { value: "a" } });
+		expect(setNumber).toHaveBeenCalledWith(0);
+
+		fireEvent.change(dropdown, { target: { value: "b" } });
+		expect(applyOptionAssignments).toHaveBeenCalledWith(
+			selectControl.options[1],
+		);
+	});
+
 	it("renders and updates toggle controls", () => {
 		const setToggle = vi.fn();
 		render(

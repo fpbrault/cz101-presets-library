@@ -51,7 +51,7 @@ export default function CzButton({
 			onClick={onClick}
 			data-hover-info={tooltip}
 			{...hoverHandlers}
-			className={`inline-flex h-5 w-8 items-center justify-center px-2 py-0.75 rounded-[3px] border cursor-pointer select-none transition-colors duration-75 shadow-[0_2px_0_#111,inset_0_1px_0_rgba(255,255,255,0.06)] active:shadow-[0_1px_0_#111,inset_0_1px_2px_rgba(0,0,0,0.4)] active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed ${
+			className={`inline-flex h-5 w-8 items-center justify-center px-2 py-0.75 rounded-[3px] border cursor-pointer select-none transition-colors duration-75 shadow-sm active:shadow-inner active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed ${
 				active
 					? "bg-cz-btn border-cz-btn-border text-cz-cream"
 					: "bg-cz-btn border-cz-btn-border text-cz-cream-dim"
@@ -69,8 +69,8 @@ export default function CzButton({
 				<span
 					className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
 						active
-							? "bg-cz-led-on shadow-[0_0_4px_1px_rgba(255,30,30,0.55),inset_0_1px_0_rgba(255,180,180,0.3)]"
-							: "bg-cz-led-off shadow-[inset_0_1px_1px_rgba(0,0,0,0.6)]"
+							? "bg-cz-led-on shadow-sm"
+							: "bg-cz-led-off shadow-inner"
 					}`}
 					aria-hidden="true"
 				/>

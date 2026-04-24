@@ -1,17 +1,6 @@
 import ControlKnob from "@/components/controls/ControlKnob";
 import { useSynthParam } from "@/features/synth/SynthParamController";
 
-const FX_METER_SEGMENTS = [
-	"seg-a",
-	"seg-b",
-	"seg-c",
-	"seg-d",
-	"seg-e",
-	"seg-f",
-	"seg-g",
-	"seg-h",
-] as const;
-
 type FxModuleFrameProps = {
 	title: string;
 	accentClassName: string;
@@ -34,58 +23,54 @@ function FxModuleFrame({
 	return (
 		<section
 			className={[
-				"relative overflow-hidden rounded-2xl border border-cz-border bg-[linear-gradient(180deg,rgba(39,39,41,0.98),rgba(22,22,22,0.98))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_14px_30px_rgba(0,0,0,0.35)]",
+				enabled
+					? "relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-cz-gold/45 bg-cz-panel/80 p-3 shadow-xl"
+					: "relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-cz-border bg-cz-surface p-3 shadow-lg",
 				className,
 			]
 				.filter(Boolean)
 				.join(" ")}
 		>
-			<div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-white/8" />
-			<div className="mb-3 flex items-start justify-between gap-3">
-				<div>
-					<div className="text-[0.55rem] font-mono uppercase tracking-[0.36em] text-cz-cream-dim">
-						Processor
-					</div>
+			<div className="mb-4 flex items-start justify-between gap-3">
+				<div className="min-w-0">
 					<div
 						className={[
-							"mt-1 font-mono text-sm font-bold uppercase tracking-[0.34em]",
+							"font-mono text-sm font-bold uppercase tracking-[0.3em]",
+							enabled ? "opacity-100" : "opacity-85",
 							accentClassName,
 						].join(" ")}
 					>
 						{title}
 					</div>
-				</div>
-				<div className="flex items-start gap-3">
-					<div className="grid grid-cols-4 gap-1 rounded-sm border border-cz-border bg-black/20 p-1">
-						{FX_METER_SEGMENTS.map((segmentId, index) => (
-							<span
-								key={`${title}-${segmentId}`}
-								className={`h-1.5 w-4 rounded-[1px] ${enabled && index < 5 ? "bg-cz-gold/80" : "bg-white/8"}`}
-							/>
-						))}
-					</div>
-					<button
-						type="button"
-						onClick={onToggle}
-						className={`min-w-18 rounded-md border px-2 py-1 font-mono text-[0.6rem] font-bold uppercase tracking-[0.22em] transition-colors ${
-							enabled
-								? "border-cz-gold bg-cz-gold/15 text-cz-gold"
-								: "border-cz-border bg-black/15 text-cz-cream-dim hover:text-cz-cream"
+					<div
+						className={`mt-1 text-[0.55rem] font-mono uppercase tracking-[0.22em] ${
+							enabled ? "text-cz-cream/85" : "text-cz-cream-dim"
 						}`}
 					>
-						{enabled ? "On" : "Off"}
-					</button>
+						{meta}
+					</div>
 				</div>
+				<button
+					type="button"
+					onClick={onToggle}
+					className={`min-w-16 rounded-md border px-2 py-1 font-mono text-[0.6rem] font-bold uppercase tracking-[0.22em] transition-colors ${
+						enabled
+							? "border-cz-gold bg-cz-gold/15 text-cz-gold"
+							: "border-cz-border bg-black/15 text-cz-cream-dim hover:text-cz-cream"
+					}`}
+				>
+					{enabled ? "On" : "Off"}
+				</button>
 			</div>
-			<div className="mb-3 flex items-center justify-between rounded-md border border-cz-border/70 bg-black/20 px-2 py-1">
-				<div className="text-[0.55rem] font-mono uppercase tracking-[0.26em] text-cz-light-blue">
-					Bus Status
-				</div>
-				<div className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-cz-cream-dim">
-					{meta}
-				</div>
+			<div
+				className={`flex min-h-0 flex-1 items-center justify-center rounded-xl border px-3 py-4 transition-colors ${
+					enabled
+						? "border-cz-gold/50 bg-cz-inset"
+						: "border-cz-border/70 bg-cz-inset/70"
+				}`}
+			>
+				{children}
 			</div>
-			{children}
 		</section>
 	);
 }
@@ -118,9 +103,7 @@ function CompactFxModule({
 			meta={meta}
 			className={className}
 		>
-			<div className="rounded-xl border border-cz-border bg-[#2f2f31] px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-				<div className="flex items-center justify-center gap-3">{children}</div>
-			</div>
+			<div className="flex items-center justify-center gap-3">{children}</div>
 		</FxModuleFrame>
 	);
 }
@@ -148,16 +131,22 @@ export default function FxConsoleDrawer() {
 		useSynthParam("reverbSize");
 	const { value: reverbMix, setValue: setReverbMix } =
 		useSynthParam("reverbMix");
+	const { value: phaseModEnabled, setValue: setPhaseModEnabled } =
+		useSynthParam("phaseModEnabled");
+	const { value: intPmAmount, setValue: setIntPmAmount } =
+		useSynthParam("intPmAmount");
+	const { value: intPmRatio, setValue: setIntPmRatio } =
+		useSynthParam("intPmRatio");
+	const { value: pmPre, setValue: setPmPre } = useSynthParam("pmPre");
 
 	return (
-		<div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.08fr_0.92fr] xl:grid-cols-[1.15fr_0.92fr_0.92fr]">
+		<div className="grid h-full min-h-0 grid-cols-2 auto-rows-fr gap-3">
 				<CompactFxModule
 					title="Chorus"
 					accentClassName="text-cz-light-blue"
 					enabled={chorusEnabled}
 					onToggle={() => setChorusEnabled(!chorusEnabled)}
 					meta="Stereo"
-					className="lg:row-span-2"
 				>
 					<div className="grid grid-cols-3 gap-2">
 						<ControlKnob
@@ -165,7 +154,7 @@ export default function FxConsoleDrawer() {
 							onChange={setChorusRate}
 							min={0.1}
 							max={5}
-							size={38}
+							size={64}
 							color="#7f9de4"
 							label="Rate"
 							valueFormatter={(value) => value.toFixed(1)}
@@ -175,7 +164,7 @@ export default function FxConsoleDrawer() {
 							onChange={setChorusDepth}
 							min={0}
 							max={3}
-							size={38}
+							size={64}
 							color="#7f9de4"
 							label="Depth"
 							valueFormatter={(value) => `${Math.round((value / 3) * 100)}%`}
@@ -185,7 +174,7 @@ export default function FxConsoleDrawer() {
 							onChange={setChorusMix}
 							min={0}
 							max={1}
-							size={38}
+							size={64}
 							color="#bfbd30"
 							label="Mix"
 							valueFormatter={(value) => `${Math.round(value * 100)}%`}
@@ -205,7 +194,7 @@ export default function FxConsoleDrawer() {
 							onChange={setDelayTime}
 							min={0.01}
 							max={1}
-							size={36}
+							size={64}
 							color="#7f9de4"
 							label="Time"
 							valueFormatter={(value) => `${Math.round(value * 1000)}ms`}
@@ -215,7 +204,7 @@ export default function FxConsoleDrawer() {
 							onChange={setDelayFeedback}
 							min={0}
 							max={0.9}
-							size={36}
+							size={64}
 							color="#7f9de4"
 							label="Fdbk"
 							valueFormatter={(value) => `${Math.round(value * 100)}%`}
@@ -225,7 +214,7 @@ export default function FxConsoleDrawer() {
 							onChange={setDelayMix}
 							min={0}
 							max={1}
-							size={36}
+							size={64}
 							color="#bfbd30"
 							label="Mix"
 							valueFormatter={(value) => `${Math.round(value * 100)}%`}
@@ -245,7 +234,7 @@ export default function FxConsoleDrawer() {
 							onChange={setReverbSize}
 							min={0}
 							max={1}
-							size={38}
+							size={64}
 							color="#bfbd30"
 							label="Size"
 							valueFormatter={(value) => `${Math.round(value * 100)}%`}
@@ -255,11 +244,52 @@ export default function FxConsoleDrawer() {
 							onChange={setReverbMix}
 							min={0}
 							max={1}
-							size={38}
+							size={64}
 							color="#3dff3d"
 							label="Mix"
 							valueFormatter={(value) => `${Math.round(value * 100)}%`}
 						/>
+					</div>
+				</CompactFxModule>
+				<CompactFxModule
+					title="Phase Mod"
+					accentClassName="text-cz-light-blue"
+					enabled={phaseModEnabled}
+					onToggle={() => setPhaseModEnabled(!phaseModEnabled)}
+					meta="Internal"
+				>
+					<div className="grid grid-cols-3 gap-2">
+						<ControlKnob
+							value={intPmAmount}
+							onChange={setIntPmAmount}
+							min={0}
+							max={0.3}
+							size={64}
+							color="#7f9de4"
+							label="Amount"
+							valueFormatter={(value) => value.toFixed(2)}
+						/>
+						<ControlKnob
+							value={intPmRatio}
+							onChange={setIntPmRatio}
+							min={0.5}
+							max={4}
+							size={64}
+							color="#bfbd30"
+							label="Ratio"
+							valueFormatter={(value) => value.toFixed(1)}
+						/>
+						<button
+							type="button"
+							onClick={() => setPmPre(!pmPre)}
+							className={`h-16 rounded-lg border px-2 font-mono text-[0.58rem] font-bold uppercase tracking-[0.2em] transition-colors ${
+								pmPre
+									? "border-cz-gold bg-cz-gold/15 text-cz-gold"
+									: "border-cz-border bg-black/15 text-cz-cream-dim hover:text-cz-cream"
+							}`}
+						>
+							Pre
+						</button>
 					</div>
 				</CompactFxModule>
 		</div>

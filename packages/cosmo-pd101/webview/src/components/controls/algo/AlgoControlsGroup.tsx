@@ -44,7 +44,7 @@ function AlgoControlsGroupInner({
 			</div>
 			{controls.length > 0 ? (
 				<div
-					className={`flex-1 flex flex-wrap gap-8 justify-center min-h-0 space-y-3 overflow-visible ${disabled ? "pointer-events-none" : ""}`}
+					className={`flex-1 grid grid-cols-2 gap-2 justify-center min-h-0 space-y-3 overflow-visible ${disabled ? "pointer-events-none" : ""}`}
 				>
 					{controls.map((control) => (
 						<AlgoControlItem

@@ -40,6 +40,7 @@ type SynthRendererProps = {
 	frameClassName: string;
 	frameStyle?: CSSProperties;
 	headerExtra?: ReactNode;
+	bottomBarExtra?: ReactNode;
 	lcdPrimaryText: string;
 	lcdSecondaryText: string;
 	lcdTransientReadout?: {
@@ -75,6 +76,7 @@ export default function SynthRenderer({
 	frameClassName,
 	frameStyle,
 	headerExtra,
+	bottomBarExtra,
 	lcdPrimaryText,
 	lcdSecondaryText,
 	lcdTransientReadout = null,
@@ -96,6 +98,7 @@ export default function SynthRenderer({
 				frameClassName={frameClassName}
 				frameStyle={frameStyle}
 				headerExtra={headerExtra}
+				bottomBarExtra={bottomBarExtra}
 				lcdPrimaryText={lcdPrimaryText}
 				lcdSecondaryText={lcdSecondaryText}
 				lcdTransientReadout={lcdTransientReadout}
@@ -119,6 +122,7 @@ function SynthRendererContent({
 	frameClassName,
 	frameStyle,
 	headerExtra,
+	bottomBarExtra,
 	lcdPrimaryText,
 	lcdSecondaryText,
 	lcdTransientReadout = null,
@@ -149,14 +153,14 @@ function SynthRendererContent({
 				onControlReadout={onControlReadout}
 			>
 				<div className={`${frameClassName} relative`} style={frameStyle}>
-					<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(191,189,48,0.07),transparent_18%),radial-gradient(circle_at_78%_18%,rgba(127,157,228,0.12),transparent_20%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_16%,transparent_84%,rgba(255,255,255,0.02))]" />
-					<div className="pointer-events-none absolute inset-x-0 top-[5.8rem] bottom-10 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.018)_0px,rgba(255,255,255,0.018)_1px,transparent_1px,transparent_32px)] opacity-45" />
+					<div className="pointer-events-none absolute inset-0" />
+					<div className="pointer-events-none absolute inset-x-0 top-[5.8rem] bottom-10" />
 					<SynthHeader {...headerProps} />
 					{headerExtra}
-					<div className="relative z-10 px-1 grid flex-1 min-h-0 min-w-0 w-full gap-4 grid-cols-[320px_minmax(0,1fr)] overflow-hidden">
-						<aside className="overflow-y-auto min-h-0 rounded-[1.15rem] border border-cz-border/80 bg-[linear-gradient(180deg,rgba(27,27,28,0.95),rgba(15,15,16,0.98))] px-0 pb-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_18px_34px_rgba(0,0,0,0.24)] [scrollbar-gutter:stable]">
-							<div className="pointer-events-none sticky top-0 z-0 h-10 bg-[repeating-linear-gradient(90deg,rgba(191,189,48,0.06)_0px,rgba(191,189,48,0.06)_1px,transparent_1px,transparent_18px)] opacity-60" />
-							<div className="px-4 -mt-1 mx-auto">
+					<div className="relative z-10 px-1 grid flex-1 min-h-0 min-w-0 w-full gap-2 xl:gap-3 grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] overflow-hidden">
+						<aside className="overflow-y-auto min-h-0 rounded-[1.15rem] border border-cz-border/80 bg-cz-inset px-0 pb-2 shadow-lg [scrollbar-gutter:stable]">
+					
+							<div className="px-4 mt-4 mx-auto">
 								<SynthLcdDisplay
 									primaryText={lcdPrimaryText}
 									secondaryText={lcdSecondaryText}
@@ -187,14 +191,14 @@ function SynthRendererContent({
 						</aside>
 
 						<main className="flex min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-							<div className="ml-auto flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-3 rounded-[1.2rem] border border-cz-border/80 bg-[linear-gradient(180deg,rgba(36,37,39,0.94),rgba(25,25,27,0.98))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_22px_40px_rgba(0,0,0,0.24)]">
-								<div className="pointer-events-none absolute inset-x-4 top-0 h-12 rounded-t-[1.2rem] bg-[repeating-linear-gradient(90deg,rgba(127,157,228,0.06)_0px,rgba(127,157,228,0.06)_1px,transparent_1px,transparent_24px)] opacity-70" />
-								<div className="relative shrink-0 rounded-md border border-cz-border bg-[linear-gradient(180deg,rgba(25,25,25,0.92),rgba(37,37,39,0.98))] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-									<div className="flex flex-wrap items-end justify-end gap-x-4 gap-y-2">
+							<div className="flex w-full max-w-none min-h-0 flex-1 flex-col gap-2 rounded-[1.2rem] border border-cz-border/80 bg-cz-surface p-2 xl:p-3 2xl:mx-auto 2xl:max-w-5xl shadow-xl">
+								<div className="pointer-events-none absolute inset-x-4 top-0 h-12 rounded-t-[1.2rem] opacity-70" />
+								<div className="relative shrink-0 rounded-md border border-cz-border bg-cz-body px-2 py-2 xl:px-3 shadow-inner">
+									<div className="flex flex-wrap items-end justify-end gap-x-2 gap-y-2 xl:gap-x-4">
 										<LineSelectControl />
 										<ModModeControl />
 										<SynthSingleCycleDisplay />
-										<div className="flex items-end gap-2 border-l border-cz-border pl-3">
+										<div className="flex items-end gap-2 border-l border-cz-border pl-2 xl:pl-3">
 											<CzButton
 												active={mainPanelMode === "phase"}
 												onClick={() => setMainPanelMode("phase")}
@@ -217,8 +221,8 @@ function SynthRendererContent({
 									</div>
 								</div>
 
-								<div className="relative flex-1 min-h-0 min-w-0 overflow-hidden rounded-[1rem] border border-cz-border/75 bg-[linear-gradient(180deg,rgba(49,49,49,0.28),rgba(22,22,24,0.16))] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-									<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(127,157,228,0.12),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_14%,transparent_86%,rgba(255,255,255,0.02))]" />
+								<div className="relative flex-1 min-h-0 min-w-0 overflow-hidden rounded-2xl border border-cz-border/75 bg-cz-panel/30 p-2 shadow-inner">
+									<div className="pointer-events-none absolute inset-0" />
 									<PhaseLinesSection
 										className="h-full min-h-0 max-h-164"
 										envOverrideHandlers={envOverrideHandlers}
@@ -227,17 +231,22 @@ function SynthRendererContent({
 										{mainPanelMode === "fx" ? (
 											<motion.div
 												key="fx-drawer"
-												initial={{ opacity: 0, y: -14, scaleY: 0.92 }}
-												animate={{ opacity: 1, y: 0, scaleY: 1 }}
-												exit={{ opacity: 0, y: -10, scaleY: 0.94 }}
-												transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+												initial={{ y: "-100%" }}
+												animate={{ y: 0 }}
+												exit={{ y: "-100%" }}
+												transition={{
+													type: "spring",
+													stiffness: 220,
+													damping: 30,
+													mass: 1,
+												}}
 												style={{ transformOrigin: "top center" }}
-												className="absolute inset-x-0 top-0 z-10 overflow-hidden px-2 pt-2"
+												className="absolute inset-0 z-10 overflow-hidden p-2"
 											>
-												<div className="relative rounded-lg border border-cz-border bg-[#171716] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.32)]">
-													<div className="pointer-events-none absolute inset-0 rounded-lg bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_18%,transparent_82%,rgba(255,255,255,0.02))]" />
-													<div className="pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-lg bg-[repeating-linear-gradient(90deg,rgba(127,157,228,0.05)_0px,rgba(127,157,228,0.05)_1px,transparent_1px,transparent_28px)] opacity-60" />
-													<div className="relative">
+												<div className="relative flex h-full min-h-0 flex-col rounded-lg border border-cz-border bg-cz-body p-3 shadow-xl">
+													<div className="pointer-events-none absolute inset-0 rounded-lg bg-white/5" />
+													<div className="pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-lg opacity-60" />
+													<div className="relative min-h-0 flex-1">
 														<FxConsoleDrawer />
 													</div>
 												</div>
@@ -256,9 +265,14 @@ function SynthRendererContent({
 							onNoteOff={miniKeyboard.onNoteOff}
 						/>
 					) : null}
-					<div className="relative z-20 mx-1 mt-1 flex h-8 items-center gap-3 rounded-sm border border-cz-border/80 bg-[linear-gradient(180deg,rgba(17,17,16,0.97),rgba(28,28,27,0.95))] px-3 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-cz-cream/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+					<div className="relative z-20 mt-1 flex min-h-8 flex-wrap items-center gap-x-3 gap-y-1 rounded-t-sm border border-cz-border/80 bg-cz-body px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-cz-cream/80 shadow-inner">
 						<span className="text-cz-light-blue/80">Info</span>
 						<span className="min-w-0 flex-1 truncate">{infoText}</span>
+						{bottomBarExtra ? (
+							<div className="flex items-center gap-2 text-[0.54rem] tracking-[0.18em]">
+								{bottomBarExtra}
+							</div>
+						) : null}
 						{miniKeyboard ? (
 							<button
 								type="button"
