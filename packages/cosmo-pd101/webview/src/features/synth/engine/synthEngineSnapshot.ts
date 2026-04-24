@@ -1,22 +1,21 @@
-import type { UseSynthStateResult } from "@/features/synth/useSynthState";
-import type { SynthParams } from "@/lib/synth/bindings/synth";
+import type { SynthParams, SynthPresetV1 } from "@/lib/synth/bindings/synth";
 
 export type SynthEngineSnapshot = {
 	params: SynthParams;
 };
 
 type CreateSynthEngineSnapshotParams = {
-	synthState: UseSynthStateResult;
+	gatherState: () => SynthPresetV1;
 	effectivePitchHz: number;
 	extPmAmount: number;
 };
 
 export function createSynthEngineSnapshot({
-	synthState,
+	gatherState,
 	effectivePitchHz,
 	extPmAmount,
 }: CreateSynthEngineSnapshotParams): SynthEngineSnapshot {
-	const { params } = synthState.gatherState();
+	const { params } = gatherState();
 
 	return {
 		params: {

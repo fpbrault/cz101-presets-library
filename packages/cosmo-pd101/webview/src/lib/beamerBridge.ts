@@ -21,7 +21,7 @@ type BeamerParamInfo = {
 
 type BeamerParamUpdate = Record<string, [number, number, string]>;
 
-export type EnvelopeMap = Partial<Record<EnvelopeId, StepEnvData>>;
+type EnvelopeMap = Partial<Record<EnvelopeId, StepEnvData>>;
 
 type AlgoControlsPayload = {
 	line: 1 | 2;
@@ -29,7 +29,7 @@ type AlgoControlsPayload = {
 	controls: AlgoControlValueV1[];
 };
 
-export type EnvelopeId =
+type EnvelopeId =
 	| "l1_dco"
 	| "l1_dcw"
 	| "l1_dca"
@@ -194,8 +194,17 @@ function installBridgeIpc(runtime: BeamerRuntime) {
 }
 
 function syncExistingParams(runtime: BeamerRuntime) {
+	const allParams =
+		runtime.params && typeof runtime.params.all === "function"
+			? runtime.params.all.bind(runtime.params)
+			: null;
+
+	if (!allParams) {
+		return;
+	}
+
 	const payload: Record<string, number> = {};
-	for (const info of runtime.params.all()) {
+	for (const info of allParams()) {
 		runtimeStringIdsByNumericId[info.id] = info.stringId;
 		payload[info.stringId] = info.plainValue;
 	}

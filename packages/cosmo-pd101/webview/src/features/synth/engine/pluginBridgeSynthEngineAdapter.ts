@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
 	type SynthEngineAdapter,
-	useSynthEngineController,
+	SynthEngineController,
 } from "@/features/synth/engine/synthEngineAdapter";
 import { createSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { type SynthStore, useSynthStore } from "@/features/synth/synthStore";
@@ -22,7 +22,14 @@ import type {
 	SynthParams,
 	VelocityTarget,
 } from "@/lib/synth/bindings/synth";
-import type { EnvelopeId } from "../../lib/beamerLegacyBridge";
+
+type EnvelopeId =
+	| "l1_dco"
+	| "l1_dcw"
+	| "l1_dca"
+	| "l2_dco"
+	| "l2_dcw"
+	| "l2_dca";
 
 // ---------------------------------------------------------------------------
 // Enum ↔ integer maps
@@ -582,7 +589,7 @@ function sendModMatrix(matrix: ModMatrix) {
 // ---------------------------------------------------------------------------
 
 export function usePluginBridgeSynthEngine(): void {
-	const synthState = useSynthStore();
+	const gatherState = useSynthStore((s) => s.gatherState);
 
 	const sentParamsRef = useRef<Map<string, number>>(new Map());
 	const sentEnvelopesRef = useRef<Map<EnvelopeId, string>>(new Map());
@@ -644,17 +651,27 @@ export function usePluginBridgeSynthEngine(): void {
 		[queueParam, queueEnvelope, queueAlgoControls, queueModMatrix],
 	);
 
-	const snapshot = useMemo(
-		() =>
-			createSynthEngineSnapshot({
-				synthState,
+	// Lifecycle: connect / dispose
+	useEffect(() => {
+		const controller = new SynthEngineController(adapter);
+		controller.connect();
+		return () => controller.dispose();
+	}, [adapter]);
+
+	// Outbound sync: subscribe directly to Zustand so every state change
+	// flows to the host without causing component re-renders.
+	useEffect(() => {
+		const sync = () => {
+			const snapshot = createSynthEngineSnapshot({
+				gatherState,
 				effectivePitchHz: 220,
 				extPmAmount: 0,
-			}),
-		[synthState],
-	);
-
-	useSynthEngineController({ adapter, snapshot });
+			});
+			adapter.sync(snapshot);
+		};
+		sync();
+		return useSynthStore.subscribe(sync);
+	}, [adapter, gatherState]);
 
 	// Inbound: Rust → React state via __czOnParams (string ID → plain value)
 	useEffect(() => {
@@ -674,7 +691,7 @@ export function usePluginBridgeSynthEngine(): void {
 		return () => {
 			window.__czOnParams = undefined;
 		};
-	}, []); // synthStateRef always holds the latest synthState
+	}, []);
 
 	// Inbound: initial envelope state from Rust
 	useEffect(() => {
@@ -700,7 +717,7 @@ export function usePluginBridgeSynthEngine(): void {
 		return () => {
 			cancelled = true;
 		};
-	}, []); // synthStateRef always holds the latest synthState
+	}, []);
 
 	// Inbound: initial mod matrix state from Rust
 	useEffect(() => {
@@ -720,5 +737,5 @@ export function usePluginBridgeSynthEngine(): void {
 		return () => {
 			cancelled = true;
 		};
-	}, []); // synthStateRef always holds the latest synthState
+	}, []);
 }

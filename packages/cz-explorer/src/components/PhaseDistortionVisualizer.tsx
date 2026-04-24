@@ -86,13 +86,12 @@ export function SharedPhaseDistortionVisualizer({
 		activeNotes.length > 0 ? activeNotes[activeNotes.length - 1] : null;
 	const currentFreq = heldNote != null ? noteToFreq(heldNote) : 220;
 
-	const synthState = useSynthStore();
 	useSynthParamsToWorklet({
 		workletNodeRef,
 		paramsRef,
 		effectivePitchHz: currentFreq,
 		extPmAmount,
-		synthState,
+		gatherState,
 	});
 
 	const handleLoadLibraryPreset = useCallback(

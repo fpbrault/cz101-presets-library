@@ -1,8 +1,9 @@
-import { useMemo } from "react";
-import { useSynthEngineController } from "@/features/synth/engine/synthEngineAdapter";
+import { useEffect, useMemo } from "react";
+import { SynthEngineController } from "@/features/synth/engine/synthEngineAdapter";
 import { createSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { createWorkletSynthEngineAdapter } from "@/features/synth/engine/workletSynthEngineAdapter";
-import type { UseSynthStateResult } from "@/features/synth/useSynthState";
+import { useSynthStore } from "@/features/synth/synthStore";
+import type { SynthPresetV1 } from "@/lib/synth/bindings/synth";
 import type { EngineParams } from "./useAudioEngine";
 
 type UseSynthParamsToWorkletParams = {
@@ -10,7 +11,7 @@ type UseSynthParamsToWorkletParams = {
 	paramsRef: React.MutableRefObject<EngineParams>;
 	effectivePitchHz: number;
 	extPmAmount: number;
-	synthState: UseSynthStateResult;
+	gatherState: () => SynthPresetV1;
 };
 
 export function useSynthParamsToWorklet({
@@ -18,22 +19,32 @@ export function useSynthParamsToWorklet({
 	paramsRef,
 	effectivePitchHz,
 	extPmAmount,
-	synthState,
+	gatherState,
 }: UseSynthParamsToWorkletParams) {
 	const adapter = useMemo(
 		() => createWorkletSynthEngineAdapter({ workletNodeRef, paramsRef }),
 		[workletNodeRef, paramsRef],
 	);
 
-	const snapshot = useMemo(
-		() =>
-			createSynthEngineSnapshot({
-				synthState,
+	// Lifecycle: connect / dispose
+	useEffect(() => {
+		const controller = new SynthEngineController(adapter);
+		controller.connect();
+		return () => controller.dispose();
+	}, [adapter]);
+
+	// Outbound sync: subscribe to Zustand so every state change syncs to
+	// the worklet. Also re-run when effectivePitchHz / extPmAmount change.
+	useEffect(() => {
+		const sync = () => {
+			const snapshot = createSynthEngineSnapshot({
+				gatherState,
 				effectivePitchHz,
 				extPmAmount,
-			}),
-		[synthState, effectivePitchHz, extPmAmount],
-	);
-
-	useSynthEngineController({ adapter, snapshot });
+			});
+			adapter.sync(snapshot);
+		};
+		sync();
+		return useSynthStore.subscribe(sync);
+	}, [adapter, gatherState, effectivePitchHz, extPmAmount]);
 }

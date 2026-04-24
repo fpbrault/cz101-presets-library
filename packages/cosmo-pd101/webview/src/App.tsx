@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import PluginPage from "./PluginPage";
 import "@/index.css";
-import { ensureBeamerBridge } from "./lib/beamerLegacyBridge";
 import {
 	checkForPluginUpdate,
 	type PluginUpdateInfo,
@@ -10,7 +9,6 @@ import {
 declare const __CZ_BUILD_LABEL__: string;
 
 export default function App() {
-	const bridgeReadyRef = useRef(false);
 	const [updateInfo, setUpdateInfo] = useState<PluginUpdateInfo | null>(null);
 	const [manualStatus, setManualStatus] = useState<string | null>(null);
 
@@ -70,28 +68,6 @@ export default function App() {
 			document.removeEventListener("selectstart", handleSelectStart);
 			document.removeEventListener("dragstart", handleDragStart);
 			document.removeEventListener("selectionchange", handleSelectionChange);
-		};
-	}, []);
-
-	useEffect(() => {
-		if (bridgeReadyRef.current) {
-			return;
-		}
-
-		if (ensureBeamerBridge()) {
-			bridgeReadyRef.current = true;
-			return;
-		}
-
-		const intervalId = window.setInterval(() => {
-			if (ensureBeamerBridge()) {
-				bridgeReadyRef.current = true;
-				window.clearInterval(intervalId);
-			}
-		}, 50);
-
-		return () => {
-			window.clearInterval(intervalId);
 		};
 	}, []);
 

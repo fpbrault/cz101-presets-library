@@ -12,7 +12,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// Shared types (structural copies of the private types in beamerLegacyBridge)
+// Shared types (structural copies of the private types in beamerBridge)
 // ---------------------------------------------------------------------------
 
 interface BeamerParamInfo {
@@ -95,7 +95,7 @@ declare global {
 // ---------------------------------------------------------------------------
 // Default parameter set
 // Provides the params used by the E2E spec and a representative global set.
-// Other params return undefined from info(), which beamerLegacyBridge skips.
+// Other params return undefined from info(), which beamerBridge skips.
 // ---------------------------------------------------------------------------
 
 /** Legacy numeric ID → BeamerParamInfo lookup used to build the mock runtime. */
@@ -268,7 +268,7 @@ export function installMockPluginBridge(): void {
 
 	// ---------------------------------------------------------------------------
 	// Synthetic window.__BEAMER__ runtime
-	// Structurally matches the BeamerRuntime type consumed by beamerLegacyBridge.
+	// Structurally matches the BeamerRuntime type consumed by beamerBridge.
 	// ---------------------------------------------------------------------------
 
 	window.__BEAMER__ = {
@@ -308,7 +308,7 @@ export function installMockPluginBridge(): void {
 				if (p) recordMessage({ type: "param:end", id: p.id, stringId });
 			},
 
-			// Unused by beamerLegacyBridge but part of the full runtime shape.
+			// Unused by beamerBridge but part of the full runtime shape.
 			on: (_stringId: string, _cb: (v: number) => void) => () => {},
 
 			all: () => Object.values(paramsByStringId),

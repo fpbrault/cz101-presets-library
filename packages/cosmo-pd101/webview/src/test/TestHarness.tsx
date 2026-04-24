@@ -54,10 +54,10 @@ function MessageRow({ msg }: { msg: MockBridgeMessage }) {
 export default function TestHarness() {
 	const [panelOpen, setPanelOpen] = useState(DEBUG_PANEL_DEFAULT_OPEN);
 	const [messages, setMessages] = useState<MockBridgeMessage[]>([]);
-	const [virtualState, setVirtualState] = useState<Record<number, number>>({});
+	const [virtualState, setVirtualState] = useState<Record<string, number>>({});
 
 	// Inbound simulation form state
-	const [pushLegacyId, setPushLegacyId] = useState("0");
+	const [pushParamId, setPushParamId] = useState("0");
 	const [pushValue, setPushValue] = useState("0.5");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -85,12 +85,15 @@ export default function TestHarness() {
 	}, [messages]);
 
 	const handlePushParam = useCallback(() => {
-		const id = Number.parseInt(pushLegacyId, 10);
+		const numericId = Number.parseInt(pushParamId, 10);
+		const id: string | number = Number.isNaN(numericId)
+			? pushParamId
+			: numericId;
 		const val = Number.parseFloat(pushValue);
-		if (!Number.isNaN(id) && !Number.isNaN(val)) {
+		if (!Number.isNaN(val)) {
 			window.__MOCK_BRIDGE__?.pushParamUpdate(id, val);
 		}
-	}, [pushLegacyId, pushValue]);
+	}, [pushParamId, pushValue]);
 
 	const handleClearMessages = useCallback(() => {
 		window.__MOCK_BRIDGE__?.clearMessages();
@@ -155,13 +158,13 @@ export default function TestHarness() {
 					{/* Inbound push controls */}
 					<div className="border-b border-base-content/10 px-3 py-1.5">
 						<div className="mb-1 font-mono text-3xs uppercase tracking-wider text-base-content/50">
-							Push Inbound (Legacy ID → Value)
+							Push Inbound (Numeric or String ID → Value)
 						</div>
 						<div className="flex gap-1">
 							<input
-								type="number"
-								value={pushLegacyId}
-								onChange={(e) => setPushLegacyId(e.target.value)}
+								type="text"
+								value={pushParamId}
+								onChange={(e) => setPushParamId(e.target.value)}
 								className="w-16 rounded border border-base-content/20 bg-base-200 px-1 font-mono text-2xs text-base-content outline-none focus:border-primary"
 								placeholder="ID"
 								data-testid="debug-push-id"
