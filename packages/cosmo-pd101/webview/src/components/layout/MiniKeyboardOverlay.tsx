@@ -35,6 +35,11 @@ const BLACK_CONFIG = [
 const START_NOTE = 36;
 const KEYBOARD_OCTAVES = 4;
 
+const WHITE_KEY_CLASS_NAME =
+	"relative flex h-full flex-1 flex-col justify-end rounded-b-xs border border-cz-border/75 bg-white shadow-sm transition-all";
+const BLACK_KEY_CLASS_NAME =
+	"absolute top-0 z-10 h-3/5 w-[2.45%] -translate-x-1/2 rounded-b-xs border border-cz-border/80 bg-cz-inset shadow-md transition-all";
+
 function buildKeyboardLayout(startNote: number, octaves: number) {
 	const whiteKeys: KeyConfig[] = [];
 	const blackKeys: KeyConfig[] = [];
@@ -84,28 +89,20 @@ function PianoKey({
 		note: number,
 	) => void;
 }) {
-	const keyClassName = black
-		? `absolute top-0 z-10 h-[60%] w-[2.45%] -translate-x-1/2 rounded-b-md border border-cz-border/80 bg-cz-inset px-0 pb-1 pt-0.5 text-[0.42rem] font-mono uppercase tracking-[0.16em] text-cz-light-blue/80 shadow-md transition-all ${
-				active ? "border-cz-light-blue bg-cz-surface" : ""
-			}`
-		: `relative flex h-full flex-1 flex-col justify-end rounded-b-md border border-cz-border/75 bg-cz-cream px-0.5 pb-1.5 pt-1.5 text-[0.42rem] font-mono uppercase tracking-[0.15em] text-[#302d26] shadow-sm transition-all ${
-				active
-					? "translate-y-[1px] border-cz-gold bg-cz-gold/70 text-[#232018]"
-					: ""
-			}`;
+	const keyClassName = black ? BLACK_KEY_CLASS_NAME : WHITE_KEY_CLASS_NAME;
+	const activeClassName = black
+		? "border-cz-light-blue bg-cz-surface"
+		: "translate-y-px border-cz-gold bg-cz-gold/70";
 
 	return (
 		<button
 			type="button"
 			aria-label={`Play ${label}`}
-			className={`${keyClassName} touch-none`}
+			className={`${keyClassName} ${active ? activeClassName : ""} touch-none`}
 			data-mini-note={note}
 			style={black && left !== undefined ? { left: `${left}%` } : undefined}
 			onPointerDown={(event) => onPointerDown(event, note)}
 		>
-			<span className={black ? "sr-only" : "mt-auto opacity-75"}>
-				{label === "C" ? label : ""}
-			</span>
 		</button>
 	);
 }
@@ -238,10 +235,10 @@ export default function MiniKeyboardOverlay({
 				>
 					<div
 						data-testid="mini-keyboard-overlay"
-						className="pointer-events-auto w-full overflow-hidden rounded-t-[1.05rem] rounded-b-none border border-cz-border border-b-0 bg-cz-body px-0 py-1 shadow-xl backdrop-blur-sm"
+						className="pointer-events-auto w-full overflow-hidden rounded-t-2xl rounded-b-none border border-cz-border border-b-0 bg-cz-body px-0 py-1 shadow-xl backdrop-blur-sm"
 					>
-						<div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-[repeating-linear-gradient(90deg,rgba(123,150,226,0.08)_0px,rgba(123,150,226,0.08)_1px,transparent_1px,transparent_20px)] opacity-55" />
-						<div className="relative flex h-30 gap-2 overflow-hidden rounded-none border border-x-0 border-b-0 border-cz-border/70 bg-cz-inset px-2 ">
+						<div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-cz-light-blue/10 opacity-50" />
+						<div className="relative flex h-32 gap-2 overflow-hidden rounded-none border border-x-0 border-b-0 border-cz-border/70 bg-cz-inset px-2">
 							<div className="flex w-14 shrink-0 items-end gap-1 rounded-md border border-cz-border/60 bg-black/20 px-1.5 pb-1.5 pt-1">
 								<div className="flex flex-1 flex-col items-center gap-1">
 									<input
@@ -254,9 +251,9 @@ export default function MiniKeyboardOverlay({
 										onChange={(event) =>
 											setPitchWheel(Number(event.target.value))
 										}
-										className="h-12 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
+										className="h-24 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
 									/>
-									<span className="text-[0.38rem] uppercase tracking-[0.12em] text-cz-cream/70">
+									<span className="text-5xs font-mono uppercase tracking-wider text-cz-cream/70">
 										P
 									</span>
 								</div>
@@ -271,9 +268,9 @@ export default function MiniKeyboardOverlay({
 										onChange={(event) =>
 											setModWheel(Number(event.target.value))
 										}
-										className="h-12 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
+										className="h-24 w-3 cursor-pointer appearance-none bg-transparent [writing-mode:bt-lr] [-webkit-appearance:slider-vertical]"
 									/>
-									<span className="text-[0.38rem] uppercase tracking-[0.12em] text-cz-cream/70">
+									<span className="text-5xs font-mono uppercase tracking-wider text-cz-cream/70">
 										M
 									</span>
 								</div>
