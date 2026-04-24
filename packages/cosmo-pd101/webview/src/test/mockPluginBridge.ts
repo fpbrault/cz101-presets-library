@@ -12,7 +12,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// Shared types (structural copies of the private types in beamerLegacyBridge)
+// Shared types (structural copies of the private types in beamerBridge)
 // ---------------------------------------------------------------------------
 
 interface BeamerParamInfo {
@@ -50,10 +50,11 @@ export interface MockBridgeHandle {
 	clearMessages(): void;
 
 	/**
-	 * Push an inbound param update (simulates Rust → UI) via the legacy
-	 * numeric param ID path (window.__czOnParams).
+	 * Push an inbound param update (simulates Rust → UI) via __czOnParams.
+	 * @param idOrStringId  Numeric legacy param ID (0 = volume, 102, 202, etc.) or Beamer string param ID (e.g. "volume", "cho_mix")
+	 * @param value     Plain (un-normalized) value
 	 */
-	pushParamUpdate(legacyId: number, value: number): void;
+	pushParamUpdate(idOrStringId: string | number, value: number): void;
 
 	/**
 	 * Push an inbound param update through the Beamer runtime _onParams path.
@@ -62,14 +63,15 @@ export interface MockBridgeHandle {
 	pushBeamerParamUpdate(update: BeamerParamUpdate): void;
 
 	/**
-	 * Alias for test ergonomics: sends a legacy-format message through
-	 * window.ipc (if installed) or falls back to pushParamUpdate.
-	 * Tests the full alias → installLegacyIpc → runtime.params.set chain.
+	 * Send an outbound param set through window.ipc (if installed), testing the
+	 * full UI → bridge → runtime.params.set chain.
+	 * @param idOrStringId  Numeric legacy param ID (0, 102, 202, etc.) or Beamer string ID ("volume", "cho_mix")
+	 * @param value     Plain (un-normalized) value
 	 */
-	setParameter(parameterId: number, value: number): void;
+	setParameter(idOrStringId: string | number, value: number): void;
 
-	/** Return a snapshot of the virtual DSP param state (normalized 0–1 by Beamer numeric ID). */
-	getState(): Record<number, number>;
+	/** Return a snapshot of the virtual DSP param state (normalized 0–1 by string ID). */
+	getState(): Record<string, number>;
 
 	/** Subscribe to outbound message events. Returns an unsubscribe function. */
 	onMessage(cb: (msg: MockBridgeMessage) => void): () => void;
@@ -93,7 +95,7 @@ declare global {
 // ---------------------------------------------------------------------------
 // Default parameter set
 // Provides the params used by the E2E spec and a representative global set.
-// Other params return undefined from info(), which beamerLegacyBridge skips.
+// Other params return undefined from info(), which beamerBridge skips.
 // ---------------------------------------------------------------------------
 
 /** Legacy numeric ID → BeamerParamInfo lookup used to build the mock runtime. */
@@ -241,8 +243,8 @@ export function installMockPluginBridge(): void {
 	let pendingInvokeReject: ((error: string) => void) | null = null;
 	let virtualModMatrix: { routes: unknown[] } = { routes: [] };
 
-	// Virtual param state: Beamer numeric ID → normalized value
-	const virtualParamState: Record<number, number> = {};
+	// Virtual param state: string ID → normalized value
+	const virtualParamState: Record<string, number> = {};
 	const paramsByStringId: Record<string, BeamerParamInfo> = {};
 	const paramsById: Record<number, BeamerParamInfo> = {};
 
@@ -250,7 +252,7 @@ export function installMockPluginBridge(): void {
 		const entry = { ...p };
 		paramsByStringId[p.stringId] = entry;
 		paramsById[p.id] = entry;
-		virtualParamState[p.id] = p.value;
+		virtualParamState[p.stringId] = p.value;
 	}
 
 	function recordMessage(msg: MockBridgeMessage): void {
@@ -266,7 +268,7 @@ export function installMockPluginBridge(): void {
 
 	// ---------------------------------------------------------------------------
 	// Synthetic window.__BEAMER__ runtime
-	// Structurally matches the BeamerRuntime type consumed by beamerLegacyBridge.
+	// Structurally matches the BeamerRuntime type consumed by beamerBridge.
 	// ---------------------------------------------------------------------------
 
 	window.__BEAMER__ = {
@@ -287,7 +289,7 @@ export function installMockPluginBridge(): void {
 				if (!p) return;
 				p.value = normalizedValue;
 				p.plainValue = p.min + normalizedValue * (p.max - p.min);
-				virtualParamState[p.id] = normalizedValue;
+				virtualParamState[stringId] = normalizedValue;
 				recordMessage({
 					type: "param:set",
 					id: p.id,
@@ -306,7 +308,7 @@ export function installMockPluginBridge(): void {
 				if (p) recordMessage({ type: "param:end", id: p.id, stringId });
 			},
 
-			// Unused by beamerLegacyBridge but part of the full runtime shape.
+			// Unused by beamerBridge but part of the full runtime shape.
 			on: (_stringId: string, _cb: (v: number) => void) => () => {},
 
 			all: () => Object.values(paramsByStringId),
@@ -368,7 +370,7 @@ export function installMockPluginBridge(): void {
 			recordMessage({ type: "event", name, data });
 		},
 
-		// These are replaced by ensureBeamerLegacyBridge() — stubs are fine.
+		// These are replaced by ensureBeamerBridge() — stubs are fine.
 		_onInit: (_params: BeamerParamInfo[]) => {},
 		_onParams: (_update: BeamerParamUpdate) => {},
 	} as unknown as NonNullable<Window["__BEAMER__"]>;
@@ -386,26 +388,34 @@ export function installMockPluginBridge(): void {
 			messages.length = 0;
 		},
 
-		pushParamUpdate(legacyId: number, value: number): void {
+		pushParamUpdate(idOrStringId: string | number, value: number): void {
+			const stringId =
+				typeof idOrStringId === "number"
+					? (paramsById[idOrStringId]?.stringId ?? String(idOrStringId))
+					: idOrStringId;
+
 			if (window.__czOnParams) {
-				window.__czOnParams(JSON.stringify({ [legacyId]: value }));
+				window.__czOnParams(JSON.stringify({ [stringId]: value }));
 			}
 		},
 
 		pushBeamerParamUpdate(update: BeamerParamUpdate): void {
-			// Directly invoke the _onParams handler installed by beamerLegacyBridge.
+			// Directly invoke the _onParams handler installed by ensureBeamerBridge.
 			window.__BEAMER__?._onParams(update);
 		},
 
-		setParameter(parameterId: number, value: number): void {
+		setParameter(idOrStringId: string | number, value: number): void {
+			const stringId =
+				typeof idOrStringId === "number"
+					? (paramsById[idOrStringId]?.stringId ?? String(idOrStringId))
+					: idOrStringId;
+
 			if (window.ipc) {
-				// Full alias → installLegacyIpc → runtime.params path.
-				window.ipc.postMessage(
-					JSON.stringify({ parameter_id: parameterId, value }),
-				);
+				// Full path: UI → installBridgeIpc → runtime.params.set.
+				window.ipc.postMessage(JSON.stringify({ param_id: stringId, value }));
 			} else {
 				// Bridge not yet installed — fall back to direct push.
-				this.pushParamUpdate(parameterId, value);
+				this.pushParamUpdate(stringId, value);
 			}
 		},
 

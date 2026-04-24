@@ -11,8 +11,8 @@ import SynthRenderer from "@/components/renderer/SynthRenderer";
 import { useLcdControlReadout } from "@/features/synth/hooks/useLcdControlReadout";
 import { useNoteHandling } from "@/features/synth/hooks/useNoteHandling";
 import { getSynthRuntimeCapabilities } from "@/features/synth/runtimeCapabilities";
+import { useSynthStore } from "@/features/synth/synthStore";
 import { useSynthPresetManager } from "@/features/synth/useSynthPresetManager";
-import { useSynthState } from "@/features/synth/useSynthState";
 import { DEFAULT_SYNTH_PRESETS } from "@/lib/synth/defaultPresets";
 import { usePluginParamBridge } from "./hooks/usePluginParamBridge";
 
@@ -25,9 +25,12 @@ type PluginPageProps = {
 };
 
 export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
-	const synthState = useSynthState();
-	const { lineSelect, polyMode, filterEnabled, gatherState, applyPreset } =
-		synthState;
+	const lineSelect = useSynthStore((s) => s.lineSelect);
+	const polyMode = useSynthStore((s) => s.polyMode);
+	const filterEnabled = useSynthStore((s) => s.filterEnabled);
+	const gatherState = useSynthStore((s) => s.gatherState);
+	const applyPreset = useSynthStore((s) => s.applyPreset);
+	const velocityTarget = useSynthStore((s) => s.velocityTarget);
 
 	const [uiScale, setUiScale] = useState<UiScale>(() => {
 		const saved = localStorage.getItem(UI_SCALE_KEY);
@@ -43,13 +46,13 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 		useState<AsidePanelTab>("global");
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 	const { activeNotes, sendNoteOn, sendNoteOff } = useNoteHandling({
-		velocityTarget: synthState.velocityTarget,
+		velocityTarget,
 		eventSink: (type, payload) => {
 			window.__BEAMER__?.emit?.(type, payload);
 		},
 	});
 
-	usePluginParamBridge(synthState);
+	usePluginParamBridge();
 
 	const subscribeScopeFrames = useCallback(
 		(
@@ -118,7 +121,6 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 
 	return (
 		<SynthRenderer
-			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
 				activeEntryId: activePresetId,

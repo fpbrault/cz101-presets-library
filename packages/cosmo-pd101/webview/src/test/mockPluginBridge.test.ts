@@ -65,7 +65,7 @@ describe("params.set", () => {
 	it("updates virtual param state", () => {
 		window.__BEAMER__?.params.set("volume", 0.7);
 		const state = window.__MOCK_BRIDGE__?.getState() ?? {};
-		expect(state[0]).toBeCloseTo(0.7, 5);
+		expect(state.volume).toBeCloseTo(0.7, 5);
 	});
 
 	it("records param:begin and param:end events", () => {
@@ -151,9 +151,9 @@ describe("pushParamUpdate", () => {
 		const handler = vi.fn();
 		window.__czOnParams = handler;
 
-		window.__MOCK_BRIDGE__?.pushParamUpdate(0, 0.6);
+		window.__MOCK_BRIDGE__?.pushParamUpdate("volume", 0.6);
 
-		expect(handler).toHaveBeenCalledWith(JSON.stringify({ 0: 0.6 }));
+		expect(handler).toHaveBeenCalledWith(JSON.stringify({ volume: 0.6 }));
 	});
 
 	it("does not throw when __czOnParams is not set", () => {
@@ -172,19 +172,19 @@ describe("setParameter alias", () => {
 		window.__czOnParams = handler;
 		window.ipc = undefined as unknown as typeof window.ipc;
 
-		window.__MOCK_BRIDGE__?.setParameter(0, 0.4);
+		window.__MOCK_BRIDGE__?.setParameter("volume", 0.4);
 
-		expect(handler).toHaveBeenCalledWith(JSON.stringify({ 0: 0.4 }));
+		expect(handler).toHaveBeenCalledWith(JSON.stringify({ volume: 0.4 }));
 	});
 
 	it("routes through window.ipc.postMessage when installed", () => {
 		const spy = vi.fn();
 		window.ipc = { postMessage: spy };
 
-		window.__MOCK_BRIDGE__?.setParameter(0, 0.9);
+		window.__MOCK_BRIDGE__?.setParameter("volume", 0.9);
 
 		expect(spy).toHaveBeenCalledWith(
-			JSON.stringify({ parameter_id: 0, value: 0.9 }),
+			JSON.stringify({ param_id: "volume", value: 0.9 }),
 		);
 	});
 });

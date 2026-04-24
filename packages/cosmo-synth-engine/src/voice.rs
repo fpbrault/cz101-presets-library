@@ -620,7 +620,11 @@ fn build_phase_frame(
     sources: &ModSources,
 ) -> PhaseFrame {
     let int_pm_mod = mod_value_for(ModDestination::IntPmAmount, &p.mod_matrix, sources);
-    let int_pm_amount = (p.int_pm_amount + int_pm_mod).clamp(-1.0, 1.0);
+    let int_pm_amount = if p.int_pm_enabled {
+        (p.int_pm_amount + int_pm_mod).clamp(-1.0, 1.0)
+    } else {
+        0.0
+    };
     let pm_delta = (base_freq * p.int_pm_ratio) / sr;
     let phi1 = wrap01(voice.phi1);
     let phi2 = wrap01(voice.phi2);

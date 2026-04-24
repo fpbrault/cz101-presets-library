@@ -31,12 +31,11 @@ import SynthHeader, {
 import CzButton from "@/components/primitives/CzButton";
 import { ModMatrixProvider } from "@/context/ModMatrixContext";
 import { SynthParamControllerProvider } from "@/features/synth/SynthParamController";
-import type { UseSynthStateResult } from "@/features/synth/useSynthState";
+import { useSynthStore } from "@/features/synth/synthStore";
 import { HoverInfoProvider, useHoverInfo } from "../layout/HoverInfo";
 import MiniKeyboardOverlay from "../layout/MiniKeyboardOverlay";
 
 type SynthRendererProps = {
-	synthState: UseSynthStateResult;
 	headerProps: SynthHeaderProps;
 	frameClassName: string;
 	frameStyle?: CSSProperties;
@@ -72,7 +71,6 @@ type SynthRendererProps = {
 type MainPanelMode = "phase" | "fx" | "mod";
 
 export default function SynthRenderer({
-	synthState,
 	headerProps,
 	frameClassName,
 	frameStyle,
@@ -94,7 +92,6 @@ export default function SynthRenderer({
 	return (
 		<HoverInfoProvider>
 			<SynthRendererContent
-				synthState={synthState}
 				headerProps={headerProps}
 				frameClassName={frameClassName}
 				frameStyle={frameStyle}
@@ -118,7 +115,6 @@ export default function SynthRenderer({
 }
 
 function SynthRendererContent({
-	synthState,
 	headerProps,
 	frameClassName,
 	frameStyle,
@@ -137,7 +133,8 @@ function SynthRendererContent({
 	onControlReadout,
 	miniKeyboard,
 }: SynthRendererProps) {
-	const { modMatrix, setModMatrix } = synthState;
+	const modMatrix = useSynthStore((s) => s.modMatrix);
+	const setModMatrix = useSynthStore((s) => s.setModMatrix);
 	const [mainPanelMode, setMainPanelMode] = useState<MainPanelMode>("phase");
 	const [keyboardVisible, setKeyboardVisible] = useState(true);
 	const { hoverInfo } = useHoverInfo();
@@ -149,10 +146,7 @@ function SynthRendererContent({
 
 	return (
 		<ModMatrixProvider modMatrix={modMatrix} setModMatrix={setModMatrix}>
-			<SynthParamControllerProvider
-				synthState={synthState}
-				onControlReadout={onControlReadout}
-			>
+			<SynthParamControllerProvider onControlReadout={onControlReadout}>
 				<div
 					className={`${frameClassName} relative select-none`}
 					style={frameStyle}

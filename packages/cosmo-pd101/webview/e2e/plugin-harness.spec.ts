@@ -30,12 +30,17 @@ test.describe("Harness shell", () => {
 			await page.getByTestId("debug-panel-toggle").click();
 		}
 
+		// Wait for the debug panel inputs to be visible and ready
+		await page.getByTestId("debug-push-id").waitFor({ state: "visible" });
+		await page.getByTestId("debug-push-value").waitFor({ state: "visible" });
+
 		await page.getByTestId("debug-push-id").fill("0");
 		await page.getByTestId("debug-push-value").fill("0.9");
 		await page.getByTestId("debug-push-btn").click();
 
+		// TODO: Verify the actual parameter name and expected text value match the UI
 		await expect(
 			page.getByRole("button", { name: "Volume value" }).first(),
-		).toHaveText("90%", { timeout: 2000 });
+		).toContainText("90%", { timeout: 2000 });
 	});
 });

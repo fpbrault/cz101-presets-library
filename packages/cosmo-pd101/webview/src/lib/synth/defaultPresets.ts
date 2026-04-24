@@ -5,6 +5,720 @@ import type { SynthPresetV1 } from "@/lib/synth/bindings/synth";
  * Converted to canonical SynthPresetV1 format.
  */
 export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
+	Clav2: {
+		schemaVersion: 1,
+		params: {
+			lineSelect: "L1+L2'",
+			modMode: "ring",
+			octave: 0,
+			line1: {
+				algo: "pinch",
+				algo2: "karpunk",
+				algoBlend: 0.2,
+				dcwComp: 0,
+				window: "off",
+				dcaBase: 1,
+				dcwBase: 1,
+				dcoDepth: 12,
+				modulation: 0,
+				detuneCents: 0,
+				octave: -2,
+				dcoEnv: {
+					steps: [
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 4,
+					loop: false,
+				},
+				dcwEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 22,
+							rate: 60,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				dcaEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 90,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 79,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 0,
+							rate: 71,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				keyFollow: 9,
+				cz: {
+					slotAWaveform: "saw",
+					slotBWaveform: "saw",
+					window: "off",
+				},
+				algoControls: [
+					{
+						id: "pinchFocus",
+						value: 0.38006591796875,
+					},
+					{
+						id: "pinchAsym",
+						value: 0,
+					},
+					{
+						id: "pinchCurve",
+						value: 0.5058797200520834,
+					},
+					{
+						id: "pinchDrive",
+						value: 0.12292480468749999,
+					},
+				],
+			},
+			line2: {
+				algo: "cz101",
+				algo2: "bend",
+				algoBlend: 0.61,
+				dcwComp: 0,
+				window: "off",
+				dcaBase: 1,
+				dcwBase: 1,
+				dcoDepth: 12,
+				modulation: 0,
+				detuneCents: 4624,
+				octave: 0,
+				dcoEnv: {
+					steps: [
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 4,
+					loop: false,
+				},
+				dcwEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 22,
+							rate: 60,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				dcaEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 90,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 79,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 0,
+							rate: 71,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				keyFollow: 9,
+				cz: {
+					slotAWaveform: "saw",
+					slotBWaveform: "saw",
+					window: "off",
+				},
+				algoControls: [],
+			},
+			intPmAmount: 0,
+			intPmRatio: 2,
+			extPmAmount: 0,
+			pmPre: true,
+			frequency: 440,
+			volume: 1,
+			polyMode: "poly8",
+			legato: false,
+			velocityTarget: "off",
+			chorus: {
+				rate: 0.8,
+				depth: 1,
+				mix: 0,
+			},
+			delay: {
+				time: 0.3,
+				feedback: 0.35,
+				mix: 0,
+			},
+			reverb: {
+				size: 0.5,
+				mix: 0,
+			},
+			vibrato: {
+				enabled: false,
+				waveform: 1,
+				rate: 30,
+				depth: 30,
+				delay: 0,
+			},
+			portamento: {
+				enabled: false,
+				mode: "rate",
+				rate: 50,
+				time: 0.5,
+			},
+			lfo: {
+				enabled: false,
+				waveform: "sine",
+				rate: 5,
+				depth: 0.28284801136363635,
+				offset: 0,
+				target: "filter",
+			},
+			filter: {
+				enabled: false,
+				type: "lp",
+				cutoff: 5000,
+				resonance: 0,
+				envAmount: 0,
+			},
+			pitchBendRange: 2,
+			modWheelVibratoDepth: 0,
+			modMatrix: {
+				routes: [
+					{
+						source: "velocity",
+						destination: "line1AlgoParam4",
+						amount: 0.79,
+						enabled: true,
+					},
+				],
+			},
+		},
+	},
+	Fas: {
+		schemaVersion: 1,
+		params: {
+			lineSelect: "L1+L2",
+			modMode: "normal",
+			octave: 0,
+			line1: {
+				algo: "fold",
+				algo2: null,
+				algoBlend: 0,
+				dcwComp: 0,
+				window: "off",
+				dcaBase: 1,
+				dcwBase: 1,
+				dcoDepth: 12,
+				modulation: 0,
+				detuneCents: 0,
+				octave: 0,
+				dcoEnv: {
+					steps: [
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 4,
+					loop: false,
+				},
+				dcwEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 22,
+							rate: 60,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				dcaEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 90,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 79,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 0,
+							rate: 71,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				keyFollow: 0,
+				cz: {
+					slotAWaveform: "saw",
+					slotBWaveform: "saw",
+					window: "off",
+				},
+				algoControls: [
+					{
+						id: "foldStages",
+						value: 0.75,
+					},
+					{
+						id: "foldTilt",
+						value: 0.3,
+					},
+					{
+						id: "foldSymmetry",
+						value: 0.29,
+					},
+					{
+						id: "foldSoftness",
+						value: 0.81,
+					},
+				],
+			},
+			line2: {
+				algo: "cz101",
+				algo2: null,
+				algoBlend: 0,
+				dcwComp: 0,
+				window: "off",
+				dcaBase: 1,
+				dcwBase: 1,
+				dcoDepth: 12,
+				modulation: 0,
+				detuneCents: 0,
+				octave: 0,
+				dcoEnv: {
+					steps: [
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+						{
+							level: 0,
+							rate: 50,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 4,
+					loop: false,
+				},
+				dcwEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 22,
+							rate: 60,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				dcaEnv: {
+					steps: [
+						{
+							level: 99,
+							rate: 90,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 79,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 99,
+							rate: 99,
+						},
+						{
+							level: 0,
+							rate: 71,
+						},
+					],
+					sustainStep: 1,
+					stepCount: 3,
+					loop: false,
+				},
+				keyFollow: 0,
+				cz: {
+					slotAWaveform: "saw",
+					slotBWaveform: "saw",
+					window: "off",
+				},
+				algoControls: [],
+			},
+			intPmAmount: 0,
+			intPmRatio: 2,
+			extPmAmount: 0,
+			pmPre: true,
+			frequency: 440,
+			volume: 1,
+			polyMode: "poly8",
+			legato: false,
+			velocityTarget: "amp",
+			chorus: {
+				rate: 0.8,
+				depth: 1,
+				mix: 0,
+			},
+			delay: {
+				time: 0.3,
+				feedback: 0.35,
+				mix: 0,
+			},
+			reverb: {
+				size: 0.5,
+				mix: 0,
+			},
+			vibrato: {
+				enabled: false,
+				waveform: 1,
+				rate: 30,
+				depth: 30,
+				delay: 0,
+			},
+			portamento: {
+				enabled: false,
+				mode: "rate",
+				rate: 50,
+				time: 0.5,
+			},
+			lfo: {
+				enabled: false,
+				waveform: "sine",
+				rate: 5,
+				depth: 0,
+				offset: 0,
+				target: "pitch",
+			},
+			filter: {
+				enabled: false,
+				type: "lp",
+				cutoff: 5000,
+				resonance: 0,
+				envAmount: 0,
+			},
+			pitchBendRange: 2,
+			modWheelVibratoDepth: 0,
+		},
+	},
 	Wow: {
 		schemaVersion: 1,
 		params: {
@@ -279,6 +993,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 4,
 			extPmAmount: 0,
@@ -289,16 +1004,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "amp",
 			chorus: {
+				enabled: false,
 				rate: 2.1,
 				depth: 1,
 				mix: 0,
 			},
 			delay: {
+				enabled: false,
 				time: 0.3,
 				feedback: 0.35,
 				mix: 0,
 			},
 			reverb: {
+				enabled: false,
 				size: 0,
 				mix: 0,
 			},
@@ -608,6 +1326,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 1.9931265024038458,
 			extPmAmount: 0,
@@ -618,16 +1337,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "off",
 			chorus: {
+				enabled: false,
 				rate: 1.0637961647727274,
 				depth: 0.5464311079545454,
 				mix: 0.24906782670454547,
 			},
 			delay: {
+				enabled: false,
 				time: 0.5631665039062499,
 				feedback: 0.14724469866071424,
 				mix: 0.265625,
 			},
 			reverb: {
+				enabled: false,
 				size: 0.5,
 				mix: 0,
 			},
@@ -937,6 +1659,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 2,
 			extPmAmount: 0,
@@ -947,16 +1670,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "amp",
 			chorus: {
+				enabled: false,
 				rate: 0.8,
 				depth: 3,
 				mix: 0,
 			},
 			delay: {
+				enabled: false,
 				time: 0.3,
 				feedback: 0.35,
 				mix: 0,
 			},
 			reverb: {
+				enabled: false,
 				size: 0.5,
 				mix: 0,
 			},
@@ -1266,6 +1992,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 0.5,
 			extPmAmount: 0,
@@ -1276,16 +2003,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "off",
 			chorus: {
+				enabled: false,
 				rate: 2.1,
 				depth: 0.6099520596590908,
 				mix: 1,
 			},
 			delay: {
+				enabled: false,
 				time: 0.554091796875,
 				feedback: 0.3257254464285714,
 				mix: 0,
 			},
 			reverb: {
+				enabled: false,
 				size: 0.5,
 				mix: 0,
 			},
@@ -1595,6 +2325,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 2,
 			extPmAmount: 0,
@@ -1605,16 +2336,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "amp",
 			chorus: {
+				enabled: false,
 				rate: 0.8,
 				depth: 1,
 				mix: 0,
 			},
 			delay: {
+				enabled: false,
 				time: 0.3,
 				feedback: 0.35,
 				mix: 0,
 			},
 			reverb: {
+				enabled: false,
 				size: 0.5,
 				mix: 0,
 			},
@@ -1924,6 +2658,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 2.5,
 			extPmAmount: 0,
@@ -1934,16 +2669,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "amp",
 			chorus: {
+				enabled: false,
 				rate: 0.8,
 				depth: 3,
 				mix: 0.61,
 			},
 			delay: {
+				enabled: false,
 				time: 0.41,
 				feedback: 0.35,
 				mix: 0.27,
 			},
 			reverb: {
+				enabled: false,
 				size: 0.5,
 				mix: 0,
 			},
@@ -2253,6 +2991,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 2,
 			extPmAmount: 0,
@@ -2263,16 +3002,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "amp",
 			chorus: {
+				enabled: false,
 				rate: 1.3945556640625,
 				depth: 0.325039950284091,
 				mix: 0,
 			},
 			delay: {
+				enabled: false,
 				time: 0.3,
 				feedback: 0.35,
 				mix: 0.3723810369318182,
 			},
 			reverb: {
+				enabled: false,
 				size: 0.7802734375,
 				mix: 0,
 			},
@@ -2582,6 +3324,7 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 					window: "off",
 				},
 			},
+			intPmEnabled: false,
 			intPmAmount: 0,
 			intPmRatio: 4,
 			extPmAmount: 0,
@@ -2592,16 +3335,19 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			legato: false,
 			velocityTarget: "amp",
 			chorus: {
+				enabled: false,
 				rate: 2.1,
 				depth: 1,
 				mix: 0.54,
 			},
 			delay: {
+				enabled: false,
 				time: 0.3,
 				feedback: 0.35,
 				mix: 0.17,
 			},
 			reverb: {
+				enabled: false,
 				size: 0.5,
 				mix: 0,
 			},

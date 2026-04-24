@@ -5,6 +5,7 @@ export { useAudioEngine } from "./features/synth/hooks/useAudioEngine";
 export { useLcdControlReadout } from "./features/synth/hooks/useLcdControlReadout";
 export { useNoteHandling } from "./features/synth/hooks/useNoteHandling";
 export { useSynthParamsToWorklet } from "./features/synth/hooks/useSynthParamsToWorklet";
+export { useSynthStore } from "./features/synth/synthStore";
 export type { LibraryPreset } from "./features/synth/types/libraryPreset";
 export { useSynthPresetManager } from "./features/synth/useSynthPresetManager";
 export { useSynthState } from "./features/synth/useSynthState";

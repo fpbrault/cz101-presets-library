@@ -1,15 +1,8 @@
-import {
-	act,
-	fireEvent,
-	render,
-	screen,
-	waitFor,
-} from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
-const mockEnsureBeamerLegacyBridge = vi.hoisted(() => vi.fn());
 const mockCheckForPluginUpdate = vi.hoisted(() => vi.fn());
 
 vi.mock("./PluginPage", () => ({
@@ -18,44 +11,17 @@ vi.mock("./PluginPage", () => ({
 	),
 }));
 
-vi.mock("./lib/beamerLegacyBridge", () => ({
-	ensureBeamerLegacyBridge: mockEnsureBeamerLegacyBridge,
-}));
-
 vi.mock("./update/checkPluginUpdate", () => ({
 	checkForPluginUpdate: mockCheckForPluginUpdate,
 }));
 
 describe("App", () => {
 	beforeEach(() => {
-		mockEnsureBeamerLegacyBridge.mockReset();
-		mockEnsureBeamerLegacyBridge.mockReturnValue(true);
 		mockCheckForPluginUpdate.mockReset();
 		mockCheckForPluginUpdate.mockResolvedValue(null);
 	});
 
-	afterEach(() => {
-		vi.useRealTimers();
-	});
-
-	it("polls for the legacy bridge until it becomes ready", () => {
-		vi.useFakeTimers();
-		mockEnsureBeamerLegacyBridge
-			.mockReturnValueOnce(false)
-			.mockReturnValueOnce(true);
-
-		const { unmount } = render(<App />);
-		expect(mockEnsureBeamerLegacyBridge).toHaveBeenCalledTimes(1);
-
-		act(() => {
-			vi.advanceTimersByTime(50);
-		});
-
-		expect(mockEnsureBeamerLegacyBridge).toHaveBeenCalledTimes(2);
-		unmount();
-	});
-
-	it("shows and dismisses an available update from the initial check", async () => {
+	it("shows update modal and dismisses it when Later is clicked", async () => {
 		mockCheckForPluginUpdate.mockResolvedValueOnce({
 			currentVersion: "0.1.0",
 			latestVersion: "0.2.0",

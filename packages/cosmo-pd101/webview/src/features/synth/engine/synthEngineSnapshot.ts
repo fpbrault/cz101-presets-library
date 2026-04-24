@@ -1,105 +1,40 @@
-import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
-import type {
-	Algo,
-	AlgoControlValueV1,
-	CzWaveform,
-	FilterType,
-	LfoTarget,
-	LfoWaveform,
-	LineSelect,
-	ModMatrix,
-	ModMode,
-	PortamentoMode,
-	StepEnvData,
-	WindowType,
-} from "@/lib/synth/bindings/synth";
+import type { SynthParams, SynthPresetV1 } from "@/lib/synth/bindings/synth";
 
-type BuildSynthEngineSnapshotParams = {
-	effectivePitchHz: number;
-	extPmAmount: number;
-	lineSelect: LineSelect;
-	modMode: ModMode;
-	warpAAmount: number;
-	warpBAmount: number;
-	line1Level: number;
-	line2Level: number;
-	warpAAlgo: Algo;
-	warpBAlgo: Algo;
-	intPmAmount: number;
-	intPmRatio: number;
-	phaseModEnabled: boolean;
-	pmPre: boolean;
-	windowType: WindowType;
-	volume: number;
-	line1Detune: number;
-	line2Detune: number;
-	line1Octave: number;
-	line2Octave: number;
-	line1DcoEnv: StepEnvData;
-	line1DcwEnv: StepEnvData;
-	line1DcaEnv: StepEnvData;
-	line1CzSlotAWaveform: CzWaveform;
-	line1CzSlotBWaveform: CzWaveform;
-	line1CzWindow: WindowType;
-	line1AlgoControlsA: AlgoControlValueV1[];
-	line1AlgoControlsB: AlgoControlValueV1[];
-	line2DcoEnv: StepEnvData;
-	line2DcwEnv: StepEnvData;
-	line2DcaEnv: StepEnvData;
-	line2CzSlotAWaveform: CzWaveform;
-	line2CzSlotBWaveform: CzWaveform;
-	line2CzWindow: WindowType;
-	line2AlgoControlsA: AlgoControlValueV1[];
-	line2AlgoControlsB: AlgoControlValueV1[];
-	polyMode: PolyMode;
-	legato: boolean;
-	velocityTarget: VelocityTarget;
-	chorusRate: number;
-	chorusDepth: number;
-	chorusEnabled: boolean;
-	chorusMix: number;
-	delayTime: number;
-	delayFeedback: number;
-	delayEnabled: boolean;
-	delayMix: number;
-	reverbSize: number;
-	reverbEnabled: boolean;
-	reverbMix: number;
-	algo2A: Algo | null;
-	algo2B: Algo | null;
-	algoBlendA: number;
-	algoBlendB: number;
-	line1DcwKeyFollow: number;
-	line2DcwKeyFollow: number;
-	vibratoEnabled: boolean;
-	vibratoWave: number;
-	vibratoRate: number;
-	vibratoDepth: number;
-	vibratoDelay: number;
-	portamentoEnabled: boolean;
-	portamentoMode: PortamentoMode;
-	portamentoRate: number;
-	portamentoTime: number;
-	lfoEnabled: boolean;
-	lfoWaveform: LfoWaveform;
-	lfoRate: number;
-	lfoDepth: number;
-	lfoOffset: number;
-	lfoTarget: LfoTarget;
-	filterEnabled: boolean;
-	filterType: FilterType;
-	filterCutoff: number;
-	filterResonance: number;
-	filterEnvAmount: number;
-	pitchBendRange: number;
-	modWheelVibratoDepth: number;
-	modMatrix: ModMatrix;
+export type SynthEngineSnapshot = {
+	params: SynthParams;
 };
 
-export type SynthEngineSnapshot = BuildSynthEngineSnapshotParams;
+type CreateSynthEngineSnapshotParams = {
+	gatherState: () => SynthPresetV1;
+	effectivePitchHz: number;
+	extPmAmount: number;
+};
 
-export function buildSynthEngineSnapshot(
-	params: BuildSynthEngineSnapshotParams,
-): SynthEngineSnapshot {
-	return params;
+export function createSynthEngineSnapshot({
+	gatherState,
+	effectivePitchHz,
+	extPmAmount,
+}: CreateSynthEngineSnapshotParams): SynthEngineSnapshot {
+	const { params } = gatherState();
+
+	return {
+		params: {
+			...params,
+			frequency: effectivePitchHz,
+			extPmAmount,
+			line1: {
+				...params.line1,
+				algoControlsA: params.line1.algoControlsA ?? [],
+				algoControlsB: params.line1.algoControlsB ?? [],
+			},
+			line2: {
+				...params.line2,
+				algoControlsA: params.line2.algoControlsA ?? [],
+				algoControlsB: params.line2.algoControlsB ?? [],
+			},
+			modMatrix: {
+				routes: params.modMatrix?.routes ?? [],
+			},
+		},
+	};
 }

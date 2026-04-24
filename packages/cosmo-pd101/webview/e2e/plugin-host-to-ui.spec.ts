@@ -27,7 +27,7 @@ test.describe("Host to UI inbound updates", () => {
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.pushParamUpdate(0, 0.42));
 
 		const dspState = page.getByTestId("debug-dsp-state");
-		await expect(dspState).toContainText("id:0", { timeout: 2000 });
+		await expect(dspState).toContainText("id:volume", { timeout: 2000 });
 	});
 
 	test("pushBeamerParamUpdate through _onParams updates the debug panel", async ({
