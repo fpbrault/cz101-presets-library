@@ -153,7 +153,10 @@ function SynthRendererContent({
 				synthState={synthState}
 				onControlReadout={onControlReadout}
 			>
-				<div className={`${frameClassName} relative select-none`} style={frameStyle}>
+				<div
+					className={`${frameClassName} relative select-none`}
+					style={frameStyle}
+				>
 					<div className="pointer-events-none absolute inset-0" />
 					<div className="pointer-events-none absolute inset-x-0 top-[5.8rem] bottom-10" />
 					<SynthHeader {...headerProps} />

@@ -32,9 +32,11 @@ export default function App() {
 			const anchorElement =
 				anchorNode instanceof Element
 					? anchorNode
-					: anchorNode?.parentElement ?? null;
+					: (anchorNode?.parentElement ?? null);
 			const focusElement =
-				focusNode instanceof Element ? focusNode : focusNode?.parentElement ?? null;
+				focusNode instanceof Element
+					? focusNode
+					: (focusNode?.parentElement ?? null);
 			return isEditableTarget(anchorElement) || isEditableTarget(focusElement);
 		};
 
