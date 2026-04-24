@@ -172,10 +172,6 @@ export function convertDecodedPatchToSynthPreset(
 	p.volume = 0.8;
 	p.line1.dcaBase = 1;
 	p.line2.dcaBase = 1;
-	p.line1.dcoDepth = 12;
-	p.line2.dcoDepth = 12;
-	p.line1.dcwComp = 0.0;
-	p.line2.dcwComp = 0.0;
 	p.chorus.rate = 0;
 	p.chorus.depth = 0;
 	p.chorus.mix = 0;

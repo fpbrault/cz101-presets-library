@@ -48,9 +48,7 @@ import {
 	P_INT_PM_RATIO,
 	P_L1_ALGO_BLEND,
 	P_L1_DCA_BASE,
-	P_L1_DCO_DEPTH,
 	P_L1_DCW_BASE,
-	P_L1_DCW_COMP,
 	P_L1_DETUNE,
 	P_L1_KEY_FOLLOW,
 	P_L1_OCTAVE,
@@ -59,9 +57,7 @@ import {
 	P_L1_WAVEFORM,
 	P_L2_ALGO_BLEND,
 	P_L2_DCA_BASE,
-	P_L2_DCO_DEPTH,
 	P_L2_DCW_BASE,
-	P_L2_DCW_COMP,
 	P_L2_DETUNE,
 	P_L2_KEY_FOLLOW,
 	P_L2_OCTAVE,
@@ -187,14 +183,6 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		setLine1Detune,
 		line2Detune,
 		setLine2Detune,
-		line1DcoDepth,
-		setLine1DcoDepth,
-		line2DcoDepth,
-		setLine2DcoDepth,
-		line1DcwComp,
-		setLine1DcwComp,
-		line2DcwComp,
-		setLine2DcwComp,
 		line1DcoEnv,
 		setLine1DcoEnv,
 		line1DcwEnv,
@@ -384,10 +372,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				queueParam(P_L1_WARP_ALGO, algoKeyToId(snapshot.warpAAlgo));
 				queueParam(P_L1_DCW_BASE, snapshot.warpAAmount);
 				queueParam(P_L1_DCA_BASE, snapshot.line1Level);
-				queueParam(P_L1_DCO_DEPTH, snapshot.line1DcoDepth);
 				queueParam(P_L1_OCTAVE, snapshot.line1Octave);
 				queueParam(P_L1_DETUNE, snapshot.line1Detune);
-				queueParam(P_L1_DCW_COMP, snapshot.line1DcwComp);
 				queueParam(P_L1_KEY_FOLLOW, snapshot.line1DcwKeyFollow);
 				queueParam(P_L1_ALGO_BLEND, snapshot.algoBlendA);
 				queueParam(
@@ -401,10 +387,8 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				queueParam(P_L2_WARP_ALGO, algoKeyToId(snapshot.warpBAlgo));
 				queueParam(P_L2_DCW_BASE, snapshot.warpBAmount);
 				queueParam(P_L2_DCA_BASE, snapshot.line2Level);
-				queueParam(P_L2_DCO_DEPTH, snapshot.line2DcoDepth);
 				queueParam(P_L2_OCTAVE, snapshot.line2Octave);
 				queueParam(P_L2_DETUNE, snapshot.line2Detune);
-				queueParam(P_L2_DCW_COMP, snapshot.line2DcwComp);
 				queueParam(P_L2_KEY_FOLLOW, snapshot.line2DcwKeyFollow);
 				queueParam(P_L2_ALGO_BLEND, snapshot.algoBlendB);
 				queueParam(
@@ -483,10 +467,6 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 				warpBAmount,
 				line1Level,
 				line2Level,
-				line1DcoDepth,
-				line2DcoDepth,
-				line1DcwComp,
-				line2DcwComp,
 				warpAAlgo,
 				warpBAlgo,
 				intPmAmount,
@@ -566,10 +546,6 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 			warpBAmount,
 			line1Level,
 			line2Level,
-			line1DcoDepth,
-			line2DcoDepth,
-			line1DcwComp,
-			line2DcwComp,
 			warpAAlgo,
 			warpBAlgo,
 			intPmAmount,
@@ -704,17 +680,11 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 						case P_L1_DCA_BASE:
 							setLine1Level(value);
 							break;
-						case P_L1_DCO_DEPTH:
-							setLine1DcoDepth(value);
-							break;
 						case P_L1_OCTAVE:
 							setLine1Octave(value);
 							break;
 						case P_L1_DETUNE:
 							setLine1Detune(value);
-							break;
-						case P_L1_DCW_COMP:
-							setLine1DcwComp(value);
 							break;
 						case P_L1_KEY_FOLLOW:
 							setLine1DcwKeyFollow(value);
@@ -752,17 +722,11 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 						case P_L2_DCA_BASE:
 							setLine2Level(value);
 							break;
-						case P_L2_DCO_DEPTH:
-							setLine2DcoDepth(value);
-							break;
 						case P_L2_OCTAVE:
 							setLine2Octave(value);
 							break;
 						case P_L2_DETUNE:
 							setLine2Detune(value);
-							break;
-						case P_L2_DCW_COMP:
-							setLine2DcwComp(value);
 							break;
 						case P_L2_KEY_FOLLOW:
 							setLine2DcwKeyFollow(value);
@@ -889,8 +853,6 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		setLine1Level,
 		setLine1Octave,
 		setLine1Detune,
-		setLine1DcoDepth,
-		setLine1DcwComp,
 		setLine1DcwKeyFollow,
 		setWarpAAlgo,
 		setWarpAAmount,
@@ -899,8 +861,6 @@ export function usePluginParamBridge(synthState: UseSynthStateResult) {
 		setLine2Level,
 		setLine2Octave,
 		setLine2Detune,
-		setLine2DcoDepth,
-		setLine2DcwComp,
 		setLine2DcwKeyFollow,
 		setWarpBAlgo,
 		setWarpBAmount,

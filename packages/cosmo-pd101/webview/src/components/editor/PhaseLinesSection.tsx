@@ -48,10 +48,6 @@ export default function PhaseLinesSection({
 		useSynthParam("algoBlendA");
 	const { value: algoBlendB, setValue: setAlgoBlendB } =
 		useSynthParam("algoBlendB");
-	const { value: line1DcwComp, setValue: setLine1DcwComp } =
-		useSynthParam("line1DcwComp");
-	const { value: line2DcwComp, setValue: setLine2DcwComp } =
-		useSynthParam("line2DcwComp");
 	const { value: line1Level, setValue: setLine1Level } =
 		useSynthParam("line1Level");
 	const { value: line2Level, setValue: setLine2Level } =
@@ -64,10 +60,6 @@ export default function PhaseLinesSection({
 		useSynthParam("line1Detune");
 	const { value: line2Detune, setValue: setLine2Detune } =
 		useSynthParam("line2Detune");
-	const { value: line1DcoDepth, setValue: setLine1DcoDepth } =
-		useSynthParam("line1DcoDepth");
-	const { value: line2DcoDepth, setValue: setLine2DcoDepth } =
-		useSynthParam("line2DcoDepth");
 	const { value: line1DcoEnv, setValue: setLine1DcoEnv } =
 		useSynthParam("line1DcoEnv");
 	const { value: line1DcwEnv, setValue: setLine1DcwEnv } =
@@ -114,16 +106,12 @@ export default function PhaseLinesSection({
 		setAlgo2: setAlgo2A as (value: Algo | null) => void,
 		algoBlend: algoBlendA,
 		setAlgoBlend: setAlgoBlendA,
-		dcwComp: line1DcwComp,
-		setDcwComp: setLine1DcwComp,
 		level: line1Level,
 		setLevel: setLine1Level,
 		octave: line1Octave,
 		setOctave: setLine1Octave,
 		fineDetune: line1Detune,
 		setFineDetune: setLine1Detune,
-		dcoDepth: line1DcoDepth,
-		setDcoDepth: setLine1DcoDepth,
 		dcoEnv: line1DcoEnv,
 		setDcoEnv: envOverrideHandlers?.onLine1DcoEnvChange ?? setLine1DcoEnv,
 		dcwEnv: line1DcwEnv,
@@ -153,16 +141,12 @@ export default function PhaseLinesSection({
 		setAlgo2: setAlgo2B as (value: Algo | null) => void,
 		algoBlend: algoBlendB,
 		setAlgoBlend: setAlgoBlendB,
-		dcwComp: line2DcwComp,
-		setDcwComp: setLine2DcwComp,
 		level: line2Level,
 		setLevel: setLine2Level,
 		octave: line2Octave,
 		setOctave: setLine2Octave,
 		fineDetune: line2Detune,
 		setFineDetune: setLine2Detune,
-		dcoDepth: line2DcoDepth,
-		setDcoDepth: setLine2DcoDepth,
 		dcoEnv: line2DcoEnv,
 		setDcoEnv: envOverrideHandlers?.onLine2DcoEnvChange ?? setLine2DcoEnv,
 		dcwEnv: line2DcwEnv,
@@ -272,16 +256,12 @@ export default function PhaseLinesSection({
 						setAlgoBlend={activeLineConfig.setAlgoBlend}
 						warpAmount={activeLineConfig.warpAmount}
 						setWarpAmount={activeLineConfig.setWarpAmount}
-						dcwComp={activeLineConfig.dcwComp}
-						setDcwComp={activeLineConfig.setDcwComp}
 						level={activeLineConfig.level}
 						setLevel={activeLineConfig.setLevel}
 						octave={activeLineConfig.octave}
 						setOctave={activeLineConfig.setOctave}
 						fineDetune={activeLineConfig.fineDetune}
 						setFineDetune={activeLineConfig.setFineDetune}
-						dcoDepth={activeLineConfig.dcoDepth}
-						setDcoDepth={activeLineConfig.setDcoDepth}
 						dcoEnv={activeLineConfig.dcoEnv}
 						setDcoEnv={activeLineConfig.setDcoEnv}
 						dcwEnv={activeLineConfig.dcwEnv}

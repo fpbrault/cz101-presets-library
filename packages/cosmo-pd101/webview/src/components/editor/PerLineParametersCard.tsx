@@ -6,16 +6,12 @@ interface PerLineParametersCardProps {
 	color: string;
 	warpAmount: number;
 	setWarpAmount: (value: number) => void;
-	dcwComp: number;
-	setDcwComp: (value: number) => void;
 	level: number;
 	setLevel: (value: number) => void;
 	octave: number;
 	setOctave: (value: number) => void;
 	fineDetune: number;
 	setFineDetune: (value: number) => void;
-	dcoDepth: number;
-	setDcoDepth: (value: number) => void;
 	lineIndex: 1 | 2;
 }
 
@@ -23,16 +19,12 @@ function PerLineParametersCardInner({
 	color,
 	warpAmount,
 	setWarpAmount,
-	dcwComp,
-	setDcwComp,
 	level,
 	setLevel,
 	octave,
 	setOctave,
 	fineDetune,
 	setFineDetune,
-	dcoDepth,
-	setDcoDepth,
 	lineIndex,
 }: PerLineParametersCardProps) {
 	const controls = [
@@ -47,18 +39,6 @@ function PerLineParametersCardInner({
 			fmt: (value: number) => value.toFixed(2),
 			onChange: setWarpAmount,
 			modDest: "dcwBase",
-		},
-		{
-			label: "DCW Comp",
-			value: dcwComp,
-			min: 0,
-			max: 1,
-			defaultValue: 0,
-			step: 0.01,
-			color: "#7f9de4",
-			fmt: (value: number) => `${Math.round(value * 100)}%`,
-			onChange: setDcwComp,
-			modDest: "dcwComp",
 		},
 		{
 			label: "Level",
@@ -96,18 +76,6 @@ function PerLineParametersCardInner({
 			onChange: (value: number) => setFineDetune(Math.round(value)),
 			modDest: "detune",
 		},
-		{
-			label: "DCO Rng",
-			value: dcoDepth,
-			min: 0,
-			max: 24,
-			defaultValue: 24,
-			step: 1,
-			color: "#9cb937",
-			fmt: (value: number) => `${Math.round(value)} st`,
-			onChange: (value: number) => setDcoDepth(Math.round(value)),
-			modDest: "dcoDepth",
-		},
 	] as const;
 
 	return (
@@ -115,7 +83,7 @@ function PerLineParametersCardInner({
 			<div className="mb-3 text-3xs uppercase tracking-[0.24em] text-cz-cream">
 				Parameters
 			</div>
-			<div className="flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 gap-3 place-items-center content-start">
+			<div className="flex-1 min-h-0 grid grid-cols-2  gap-3 place-items-center content-start">
 				{controls.map(
 					({
 						label,

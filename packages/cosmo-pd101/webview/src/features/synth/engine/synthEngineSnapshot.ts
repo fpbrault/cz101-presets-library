@@ -23,10 +23,6 @@ type BuildSynthEngineSnapshotParams = {
 	warpBAmount: number;
 	line1Level: number;
 	line2Level: number;
-	line1DcoDepth: number;
-	line2DcoDepth: number;
-	line1DcwComp: number;
-	line2DcwComp: number;
 	warpAAlgo: Algo;
 	warpBAlgo: Algo;
 	intPmAmount: number;

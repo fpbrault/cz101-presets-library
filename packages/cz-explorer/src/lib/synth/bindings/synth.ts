@@ -255,11 +255,9 @@ export type LineParams = {
 	algo: Algo;
 	algo2: Algo | null;
 	algoBlend: number;
-	dcwComp: number;
 	window: WindowType;
 	dcaBase: number;
 	dcwBase: number;
-	dcoDepth: number;
 	modulation: number;
 	detuneCents: number;
 	octave: number;
@@ -362,9 +360,7 @@ export type ModDestination =
 	| "intPmAmount"
 	| "line1DcwBase"
 	| "line1DcaBase"
-	| "line1DcoDepth"
 	| "line1AlgoBlend"
-	| "line1DcwComp"
 	| "line1Detune"
 	| "line1Octave"
 	| "line1AlgoParam1"
@@ -377,9 +373,7 @@ export type ModDestination =
 	| "line1AlgoParam8"
 	| "line2DcwBase"
 	| "line2DcaBase"
-	| "line2DcoDepth"
 	| "line2AlgoBlend"
-	| "line2DcwComp"
 	| "line2Detune"
 	| "line2Octave"
 	| "line2AlgoParam1"

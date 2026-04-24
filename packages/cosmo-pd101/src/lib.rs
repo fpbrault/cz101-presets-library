@@ -338,17 +338,11 @@ pub struct CzParameters {
     #[parameter(id = "l1_dca_base", name = "Level", default = 1.0, range = 0.0..=1.0, group = "Line 1")]
     pub l1_dca_base: FloatParameter,
 
-    #[parameter(id = "l1_dco_depth", name = "DCO Depth", default = 0.0, range = 0.0..=24.0, group = "Line 1")]
-    pub l1_dco_depth: FloatParameter,
-
     #[parameter(id = "l1_octave", name = "Octave", default = 0.0, range = -2.0..=2.0, group = "Line 1")]
     pub l1_octave: FloatParameter,
 
     #[parameter(id = "l1_detune", name = "Detune (cents)", default = 0.0, range = -100.0..=100.0, group = "Line 1")]
     pub l1_detune: FloatParameter,
-
-    #[parameter(id = "l1_dcw_comp", name = "DCW Comp", default = 0.0, range = 0.0..=1.0, group = "Line 1")]
-    pub l1_dcw_comp: FloatParameter,
 
     #[parameter(id = "l1_key_follow", name = "Key Follow", default = 0.0, range = 0.0..=10.0, group = "Line 1")]
     pub l1_key_follow: FloatParameter,
@@ -375,17 +369,11 @@ pub struct CzParameters {
     #[parameter(id = "l2_dca_base", name = "Level", default = 1.0, range = 0.0..=1.0, group = "Line 2")]
     pub l2_dca_base: FloatParameter,
 
-    #[parameter(id = "l2_dco_depth", name = "DCO Depth", default = 0.0, range = 0.0..=24.0, group = "Line 2")]
-    pub l2_dco_depth: FloatParameter,
-
     #[parameter(id = "l2_octave", name = "Octave", default = 0.0, range = -2.0..=2.0, group = "Line 2")]
     pub l2_octave: FloatParameter,
 
     #[parameter(id = "l2_detune", name = "Detune (cents)", default = 0.0, range = -100.0..=100.0, group = "Line 2")]
     pub l2_detune: FloatParameter,
-
-    #[parameter(id = "l2_dcw_comp", name = "DCW Comp", default = 0.0, range = 0.0..=1.0, group = "Line 2")]
-    pub l2_dcw_comp: FloatParameter,
 
     #[parameter(id = "l2_key_follow", name = "Key Follow", default = 0.0, range = 0.0..=10.0, group = "Line 2")]
     pub l2_key_follow: FloatParameter,
@@ -616,10 +604,8 @@ impl CzParameters {
         params.line1.algo = Self::map_warp_algo(self.l1_warp_algo.get());
         params.line1.dcw_base = self.l1_dcw_base.get() as f32;
         params.line1.dca_base = self.l1_dca_base.get() as f32;
-        params.line1.dco_depth = self.l1_dco_depth.get() as f32;
         params.line1.octave = self.l1_octave.get() as f32;
         params.line1.detune_cents = self.l1_detune.get() as f32;
-        params.line1.dcw_comp = self.l1_dcw_comp.get() as f32;
         params.line1.key_follow = self.l1_key_follow.get() as f32;
         params.line1.modulation = self.l1_modulation.get() as f32;
         params.line1.algo_blend = self.l1_algo_blend.get() as f32;
@@ -630,10 +616,8 @@ impl CzParameters {
         params.line2.algo = Self::map_warp_algo(self.l2_warp_algo.get());
         params.line2.dcw_base = self.l2_dcw_base.get() as f32;
         params.line2.dca_base = self.l2_dca_base.get() as f32;
-        params.line2.dco_depth = self.l2_dco_depth.get() as f32;
         params.line2.octave = self.l2_octave.get() as f32;
         params.line2.detune_cents = self.l2_detune.get() as f32;
-        params.line2.dcw_comp = self.l2_dcw_comp.get() as f32;
         params.line2.key_follow = self.l2_key_follow.get() as f32;
         params.line2.modulation = self.l2_modulation.get() as f32;
         params.line2.algo_blend = self.l2_algo_blend.get() as f32;
@@ -773,11 +757,9 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         algo: _l1_algo,
         algo2: _l1_algo2,
         algo_blend: _l1_blend,
-        dcw_comp: _l1_dcw_comp,
         window: _l1_window,
         dca_base: _l1_dca,
         dcw_base: _l1_dcw,
-        dco_depth: _l1_dco,
         modulation: _l1_mod,
         detune_cents: _l1_detune,
         octave: _l1_octave,
@@ -799,11 +781,9 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         algo: _l2_algo,
         algo2: _l2_algo2,
         algo_blend: _l2_blend,
-        dcw_comp: _l2_dcw_comp,
         window: _l2_window,
         dca_base: _l2_dca,
         dcw_base: _l2_dcw,
-        dco_depth: _l2_dco,
         modulation: _l2_mod,
         detune_cents: _l2_detune,
         octave: _l2_octave,

@@ -33,16 +33,12 @@ interface PerLineWarpBlockProps {
 	setAlgoBlend: (v: number) => void;
 	warpAmount: number;
 	setWarpAmount: (v: number) => void;
-	dcwComp: number;
-	setDcwComp: (v: number) => void;
 	level: number;
 	setLevel: (v: number) => void;
 	octave: number;
 	setOctave: (v: number) => void;
 	fineDetune: number;
 	setFineDetune: (v: number) => void;
-	dcoDepth: number;
-	setDcoDepth: (v: number) => void;
 	dcoEnv: StepEnvData;
 	setDcoEnv: (e: StepEnvData) => void;
 	dcwEnv: StepEnvData;
@@ -84,16 +80,12 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	setAlgoBlend,
 	warpAmount,
 	setWarpAmount,
-	dcwComp,
-	setDcwComp,
 	level,
 	setLevel,
 	octave,
 	setOctave,
 	fineDetune,
 	setFineDetune,
-	dcoDepth,
-	setDcoDepth,
 	dcoEnv,
 	setDcoEnv,
 	dcwEnv,
@@ -445,16 +437,12 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										color={color}
 										warpAmount={warpAmount}
 										setWarpAmount={setWarpAmount}
-										dcwComp={dcwComp}
-										setDcwComp={setDcwComp}
 										level={level}
 										setLevel={setLevel}
 										octave={octave}
 										setOctave={setOctave}
 										fineDetune={fineDetune}
 										setFineDetune={setFineDetune}
-										dcoDepth={dcoDepth}
-										setDcoDepth={setDcoDepth}
 										lineIndex={lineIndex}
 									/>
 								</div>

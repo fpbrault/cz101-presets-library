@@ -110,8 +110,6 @@ export function useSynthState() {
 	const [line1Level, setLine1Level] = useState(1);
 	const [line1Octave, setLine1Octave] = useState(0);
 	const [line1Detune, setLine1Detune] = useState(0);
-	const [line1DcoDepth, setLine1DcoDepth] = useState(0);
-	const [line1DcwComp, setLine1DcwComp] = useState(0);
 	const [line1DcwKeyFollow, setLine1DcwKeyFollow] = useState(0);
 	const [line1DcaKeyFollow, setLine1DcaKeyFollow] = useState(0);
 	const [line1DcoEnv, setLine1DcoEnv] = useState<StepEnvData>(DEFAULT_DCO_ENV);
@@ -132,8 +130,6 @@ export function useSynthState() {
 	const [line2Level, setLine2Level] = useState(1);
 	const [line2Octave, setLine2Octave] = useState(0);
 	const [line2Detune, setLine2Detune] = useState(0);
-	const [line2DcoDepth, setLine2DcoDepth] = useState(0);
-	const [line2DcwComp, setLine2DcwComp] = useState(0);
 	const [line2DcwKeyFollow, setLine2DcwKeyFollow] = useState(0);
 	const [line2DcaKeyFollow, setLine2DcaKeyFollow] = useState(0);
 	const [line2DcoEnv, setLine2DcoEnv] = useState<StepEnvData>(DEFAULT_DCO_ENV);
@@ -226,11 +222,9 @@ export function useSynthState() {
 					algo: warpAAlgo,
 					algo2: algo2A,
 					algoBlend: algoBlendA,
-					dcwComp: line1DcwComp,
 					window: windowType,
 					dcaBase: line1Level,
 					dcwBase: warpAAmount,
-					dcoDepth: line1DcoDepth,
 					modulation: 0,
 					detuneCents: line1Detune,
 					octave: line1Octave,
@@ -250,11 +244,9 @@ export function useSynthState() {
 					algo: warpBAlgo,
 					algo2: algo2B,
 					algoBlend: algoBlendB,
-					dcwComp: line2DcwComp,
 					window: windowType,
 					dcaBase: line2Level,
 					dcwBase: warpBAmount,
-					dcoDepth: line2DcoDepth,
 					modulation: 0,
 					detuneCents: line2Detune,
 					octave: line2Octave,
@@ -359,9 +351,7 @@ export function useSynthState() {
 		line1AlgoControlsA,
 		line1AlgoControlsB,
 		line1DcaEnv,
-		line1DcoDepth,
 		line1DcoEnv,
-		line1DcwComp,
 		line1DcwEnv,
 		line1DcwKeyFollow,
 		line1Detune,
@@ -373,9 +363,7 @@ export function useSynthState() {
 		line2AlgoControlsA,
 		line2AlgoControlsB,
 		line2DcaEnv,
-		line2DcoDepth,
 		line2DcoEnv,
-		line2DcwComp,
 		line2DcwEnv,
 		line2DcwKeyFollow,
 		line2Detune,
@@ -483,10 +471,6 @@ export function useSynthState() {
 		setLine2Octave(safe(p.line2?.octave, 0));
 		setLine1Detune(safe(p.line1?.detuneCents, 0));
 		setLine2Detune(safe(p.line2?.detuneCents, 0));
-		setLine1DcoDepth(safe(p.line1?.dcoDepth, 0));
-		setLine2DcoDepth(safe(p.line2?.dcoDepth, 0));
-		setLine1DcwComp(safe(p.line1?.dcwComp, 0));
-		setLine2DcwComp(safe(p.line2?.dcwComp, 0));
 		setLine1DcoEnv(p.line1?.dcoEnv ?? DEFAULT_DCO_ENV);
 		setLine1DcwEnv(p.line1?.dcwEnv ?? DEFAULT_DCW_ENV);
 		setLine1DcaEnv(p.line1?.dcaEnv ?? DEFAULT_DCA_ENV);
@@ -611,10 +595,6 @@ export function useSynthState() {
 		setLine1Octave,
 		line1Detune,
 		setLine1Detune,
-		line1DcoDepth,
-		setLine1DcoDepth,
-		line1DcwComp,
-		setLine1DcwComp,
 		line1DcwKeyFollow,
 		setLine1DcwKeyFollow,
 		line1DcaKeyFollow,
@@ -641,10 +621,6 @@ export function useSynthState() {
 		setLine2Octave,
 		line2Detune,
 		setLine2Detune,
-		line2DcoDepth,
-		setLine2DcoDepth,
-		line2DcwComp,
-		setLine2DcwComp,
 		line2DcwKeyFollow,
 		setLine2DcwKeyFollow,
 		line2DcaKeyFollow,
