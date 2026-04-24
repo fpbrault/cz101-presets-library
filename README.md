@@ -94,11 +94,16 @@ For database migration details, see [docs/db-migrations.md](docs/db-migrations.m
 - **Tauri 2** wrapping the cz-explorer web app.
 - Provides native file system and MIDI access.
 
-### Plugin / Synth Library (`packages/cosmo-pd101`)
+### Synth Library (`packages/cosmo-pd101`)
+
+- Reusable React/TypeScript synth UI and domain library.
+- `packages/cosmo-pd101/src/index.ts` exports synth-specific React components (`SynthRenderer`), hooks (`useAudioEngine`, `useSynthState`, etc.), SysEx decoder utilities, preset storage/conversion utilities, and shared types consumed by `cz-explorer` and the plugin webview.
+
+### Plugin (`packages/cosmo-pd101-plugin`)
 
 - **beamer** framework: VST3 + AUv2 + AUv3 from a single Rust codebase.
-- Embeds the cosmo-synth-engine and exposes the React/Vite GUI via WebView IPC.
-- Also acts as a **library**: `packages/cosmo-pd101/webview/src/index.ts` exports synth-specific React components (`SynthRenderer`), hooks (`useAudioEngine`, `useSynthState`, etc.), SysEx decoder utilities, and shared types consumed by `cz-explorer`.
+- Embeds the cosmo-synth-engine and a thin React/Vite WebView app via WebView IPC.
+- The plugin `webview/` stays as a direct child of the Rust crate for Beamer asset embedding and imports reusable UI from `@cosmo/cosmo-pd101`.
 
 ### Database
 

@@ -2,7 +2,7 @@
 members = [
     "packages/cz-explorer-desktop",
     "packages/cosmo-synth-engine",
-    "packages/cosmo-pd101",
+    "packages/cosmo-pd101-plugin",
     "packages/xtask",
 ]
 resolver = "2"

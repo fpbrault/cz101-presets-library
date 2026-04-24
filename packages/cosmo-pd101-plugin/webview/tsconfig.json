@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"ignoreDeprecations": "6.0",
+		"baseUrl": ".",
+		"paths": {
+			"@cosmo/cosmo-pd101": ["../../cosmo-pd101/lib-dist/index.d.mts"],
+			"@/lib/synth/*": ["./src/lib/synth/*"],
+			"@/lib/midi/*": ["./src/lib/midi/*"],
+			"@/lib/*": ["./src/lib/*"],
+			"@/*": ["./src/*"]
+		},
+		"jsx": "react-jsx",
+		"strict": true,
+		"skipLibCheck": true,
+		"isolatedModules": true,
+		"noEmit": true
+	},
+	"include": ["src"]
+}

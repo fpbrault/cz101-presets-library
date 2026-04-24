@@ -1,0 +1,68 @@
+import path from "node:path";
+import { fileURLToPath, URL } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
+import { defineConfig } from "vitest/config";
+
+/**
+ * Vitest configuration for the cosmo-pd101 webview mock-host harness.
+ *
+ * Alias order mirrors vite.config.ts: own src.
+ *
+ * Run with:   bun run test:unit
+ */
+const webviewDir = fileURLToPath(new URL(".", import.meta.url));
+const cosmoPd101Src = path.join(webviewDir, "src");
+const cosmoPd101LibEntry = fileURLToPath(
+	new URL("../../cosmo-pd101/lib-dist/index.mjs", import.meta.url),
+);
+
+export default defineConfig({
+	plugins: [react(), tailwindcss()],
+	resolve: {
+		alias: [
+			{ find: "@cosmo/cosmo-pd101", replacement: cosmoPd101LibEntry },
+			{ find: "@", replacement: cosmoPd101Src },
+		],
+	},
+	define: {
+		// Vite defines needed by App.tsx / main.tsx when running under Vitest.
+		__CZ_BUILD_LABEL__: JSON.stringify("test"),
+		__CZ_APP_VERSION__: JSON.stringify("0.0.0"),
+	},
+	test: {
+		globals: true,
+		projects: [
+			{
+				extends: true,
+				test: {
+					name: "unit",
+					environment: "happy-dom",
+					include: ["src/**/*.{test,spec}.{ts,tsx}"],
+					exclude: ["src/**/*.browser.test.{ts,tsx}"],
+					setupFiles: ["./src/test/setupTests.ts"],
+				},
+			},
+			{
+				extends: true,
+				test: {
+					name: "browser",
+					include: ["src/**/*.browser.test.{ts,tsx}"],
+					setupFiles: ["./src/test/setupBrowserTests.ts"],
+					browser: {
+						enabled: true,
+						provider: playwright(),
+						instances: [{ browser: "chromium" }],
+						screenshotDirectory:
+							"../.vitest-attachments/screenshots/cosmo-pd101-plugin-webview",
+						screenshotFailures: false,
+						locators: {
+							testIdAttribute: "data-testid",
+						},
+					},
+				},
+			},
+		],
+	},
+});

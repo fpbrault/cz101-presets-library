@@ -125,8 +125,36 @@ jobs:
         run: bun --filter @cosmo/cz-explorer test:browser
         shell: bash
 
+  cosmo-pd101-lib:
+    name: Build cosmo-pd101 library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Restore cosmo-pd101 lib-dist cache
+        id: cosmo-pd101-lib-cache
+        uses: actions/cache@v4
+        with:
+          path: packages/cosmo-pd101/lib-dist
+          key: cosmo-pd101-lib-dist-${{ runner.os }}-${{ hashFiles('bun.lock', 'packages/cosmo-pd101/package.json', 'packages/cosmo-pd101/tsconfig.json', 'packages/cosmo-pd101/src/**') }}
+
+      - name: Build cosmo-pd101 lib-dist
+        if: steps.cosmo-pd101-lib-cache.outputs.cache-hit != 'true'
+        run: bun --filter @cosmo/cosmo-pd101 build:lib
+        shell: bash
+
   plugin-webview-unit-tests:
     name: Plugin Webview Unit Tests
+    needs: cosmo-pd101-lib
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -141,15 +169,23 @@ jobs:
         shell: bash
 
       - name: Install plugin webview dependencies
-        run: cd packages/cosmo-pd101/webview && bun install
+        run: cd packages/cosmo-pd101-plugin/webview && bun install
         shell: bash
 
+      - name: Restore cosmo-pd101 lib-dist
+        uses: actions/cache/restore@v4
+        with:
+          path: packages/cosmo-pd101/lib-dist
+          key: cosmo-pd101-lib-dist-${{ runner.os }}-${{ hashFiles('bun.lock', 'packages/cosmo-pd101/package.json', 'packages/cosmo-pd101/tsconfig.json', 'packages/cosmo-pd101/src/**') }}
+          fail-on-cache-miss: true
+
       - name: Run plugin webview unit tests
-        run: bun --filter @cosmo/cosmo-pd101 webview:test:unit
+        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:unit
         shell: bash
 
   plugin-webview-browser-tests:
     name: Plugin Webview Browser Tests (Vitest Browser Mode)
+    needs: cosmo-pd101-lib
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -164,19 +200,27 @@ jobs:
         shell: bash
 
       - name: Install plugin webview dependencies
-        run: cd packages/cosmo-pd101/webview && bun install
+        run: cd packages/cosmo-pd101-plugin/webview && bun install
         shell: bash
+
+      - name: Restore cosmo-pd101 lib-dist
+        uses: actions/cache/restore@v4
+        with:
+          path: packages/cosmo-pd101/lib-dist
+          key: cosmo-pd101-lib-dist-${{ runner.os }}-${{ hashFiles('bun.lock', 'packages/cosmo-pd101/package.json', 'packages/cosmo-pd101/tsconfig.json', 'packages/cosmo-pd101/src/**') }}
+          fail-on-cache-miss: true
 
       - name: Install Playwright Chromium
         run: bunx playwright install chromium chromium-headless-shell --with-deps
         shell: bash
 
       - name: Run plugin webview browser tests
-        run: bun --filter @cosmo/cosmo-pd101 webview:test:browser
+        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:browser
         shell: bash
 
   plugin-webview-e2e-tests:
     name: Plugin Webview E2E Tests
+    needs: cosmo-pd101-lib
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -191,15 +235,22 @@ jobs:
         shell: bash
 
       - name: Install plugin webview dependencies
-        run: cd packages/cosmo-pd101/webview && bun install
+        run: cd packages/cosmo-pd101-plugin/webview && bun install
         shell: bash
+
+      - name: Restore cosmo-pd101 lib-dist
+        uses: actions/cache/restore@v4
+        with:
+          path: packages/cosmo-pd101/lib-dist
+          key: cosmo-pd101-lib-dist-${{ runner.os }}-${{ hashFiles('bun.lock', 'packages/cosmo-pd101/package.json', 'packages/cosmo-pd101/tsconfig.json', 'packages/cosmo-pd101/src/**') }}
+          fail-on-cache-miss: true
 
       - name: Install Playwright Chromium
         run: bunx playwright install chromium chromium-headless-shell --with-deps
         shell: bash
 
       - name: Run plugin webview e2e tests
-        run: bun --filter @cosmo/cosmo-pd101 webview:test:e2e
+        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:e2e
         shell: bash
 
   build-plugins:

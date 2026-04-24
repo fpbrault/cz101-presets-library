@@ -57,10 +57,7 @@ function wasmDevPlugin() {
 }
 
 const spectaTsBindingsOutFile = fileURLToPath(
-	new URL(
-		"../cosmo-pd101/webview/src/lib/synth/bindings/synth.ts",
-		import.meta.url,
-	),
+	new URL("../cosmo-pd101/src/lib/synth/bindings/synth.ts", import.meta.url),
 );
 const cosmoSynthEngineDir = fileURLToPath(
 	new URL("../cosmo-synth-engine", import.meta.url),
@@ -128,7 +125,7 @@ export default defineConfig(async () => ({
 			{
 				find: "@cosmo/cosmo-pd101",
 				replacement: fileURLToPath(
-					new URL("../cosmo-pd101/webview/lib-dist/index.mjs", import.meta.url),
+					new URL("../cosmo-pd101/lib-dist/index.mjs", import.meta.url),
 				),
 			},
 			{

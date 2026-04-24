@@ -60,4 +60,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: specta-bindings
-          path: packages/cosmo-pd101/webview/src/lib/synth/bindings/synth.ts
+          path: packages/cosmo-pd101/src/lib/synth/bindings/synth.ts

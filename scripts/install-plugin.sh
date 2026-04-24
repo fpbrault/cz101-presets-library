@@ -26,7 +26,7 @@ if [[ -n "${CARGO_TARGET_DIR:-}" ]]; then
     TARGET_ROOT="$RUST_WORKSPACE/$CARGO_TARGET_DIR"
   fi
 else
-  TARGET_ROOT="$RUST_WORKSPACE/packages/cosmo-pd101/target"
+  TARGET_ROOT="$RUST_WORKSPACE/packages/cosmo-pd101-plugin/target"
 fi
 
 TARGET_DIR="$TARGET_ROOT/$PROFILE"

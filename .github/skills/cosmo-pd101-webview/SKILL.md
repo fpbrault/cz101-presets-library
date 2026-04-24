@@ -3,20 +3,21 @@ name: cosmo-pd101-webview
 description: "Work in the cosmo-pd101 webview package — the reusable synth UI library and plugin host. Use when: building or editing synth UI components (controls, editor, panels); working with hooks like useAudioEngine, useSynthState, useSynthPresetManager; modifying the public library API (index.ts exports); adding new synth parameters; working with SysEx/MIDI decoding; updating the lib-dist build; writing tests for synth components or hooks."
 ---
 
-# cosmo-pd101 Webview Package
+# cosmo-pd101 Shared Library and Plugin Webview
 
-Reusable React synth UI library consumed by `cz-explorer`. Located at `packages/cosmo-pd101/webview/`.
+Reusable React synth UI library consumed by `cz-explorer` and the plugin webview. The shared library lives at `packages/cosmo-pd101/`; the Beamer plugin shell lives at `packages/cosmo-pd101-plugin/webview/`.
 
 ## Package Overview
 
 | Layer | Path | Purpose |
 |-------|------|---------|
-| Components | `src/components/` | Synth UI: controls, editor, renderer, panels, layout |
-| Features | `src/features/synth/` | Synth domain: hooks, engine, preset manager, types |
-| Context | `src/context/` | `ModMatrixContext` and others |
-| Lib | `src/lib/midi/` | `czSysexDecoder` — CZ SysEx decoder |
-| Lib | `src/lib/synth/` | Synth bindings, preset converter, PD algorithms, worklet URLs |
-| Public API | `src/index.ts` | Exports consumed by `cz-explorer` |
+| Components | `packages/cosmo-pd101/src/components/` | Synth UI: controls, editor, renderer, panels, layout |
+| Features | `packages/cosmo-pd101/src/features/synth/` | Synth domain: hooks, engine, preset manager, types |
+| Context | `packages/cosmo-pd101/src/context/` | `ModMatrixContext` and others |
+| Lib | `packages/cosmo-pd101/src/lib/midi/` | `czSysexDecoder` — CZ SysEx decoder |
+| Lib | `packages/cosmo-pd101/src/lib/synth/` | Synth bindings, preset converter, PD algorithms, worklet URLs |
+| Plugin shell | `packages/cosmo-pd101-plugin/webview/src/` | App bootstrap, Beamer bridge, plugin-only tests/update checks |
+| Public API | `packages/cosmo-pd101/src/index.ts` | Exports consumed by `cz-explorer` and plugin webview |
 
 ### Key Subdirectories
 
@@ -55,10 +56,10 @@ src/components/
 - Wrap expensive components with `React.memo()`
 
 ### Updating the Public API
-- `src/index.ts` is the single public entry point
+- `packages/cosmo-pd101/src/index.ts` is the single public entry point
 - Only export what `cz-explorer` actually needs
 - After changes, the lib-dist build rebuilds automatically in dev (`bun run dev`)
-- Manually rebuild: `bun run build` inside `packages/cosmo-pd101/webview/`
+- Manually rebuild: `bun --filter @cosmo/cosmo-pd101 build:lib`
 
 ### Working with SysEx
 - Decoder: `src/lib/midi/czSysexDecoder.ts`

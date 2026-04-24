@@ -5,25 +5,13 @@ import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
-/**
- * Vitest configuration for the cosmo-pd101 webview mock-host harness.
- *
- * Alias order mirrors vite.config.ts: own src.
- *
- * Run with:   bun run test:unit
- */
-const webviewDir = fileURLToPath(new URL(".", import.meta.url));
-const cosmoPd101Src = path.join(webviewDir, "src");
+const packageDir = fileURLToPath(new URL(".", import.meta.url));
+const cosmoPd101Src = path.join(packageDir, "src");
 
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
 	resolve: {
 		alias: [{ find: "@", replacement: cosmoPd101Src }],
-	},
-	define: {
-		// Vite defines needed by App.tsx / main.tsx when running under Vitest.
-		__CZ_BUILD_LABEL__: JSON.stringify("test"),
-		__CZ_APP_VERSION__: JSON.stringify("0.0.0"),
 	},
 	test: {
 		globals: true,
@@ -49,7 +37,7 @@ export default defineConfig({
 						provider: playwright(),
 						instances: [{ browser: "chromium" }],
 						screenshotDirectory:
-							"../.vitest-attachments/screenshots/cosmo-pd101-webview",
+							"../.vitest-attachments/screenshots/cosmo-pd101",
 						screenshotFailures: false,
 						locators: {
 							testIdAttribute: "data-testid",

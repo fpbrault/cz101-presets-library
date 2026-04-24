@@ -4,13 +4,10 @@ import { fileURLToPath } from "node:url";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(cwd, "..");
-const cosmoPd101WebviewRoot = path.resolve(
-	packageRoot,
-	"../cosmo-pd101/webview",
-);
+const cosmoPd101Root = path.resolve(packageRoot, "../cosmo-pd101");
 
 const initialBuild = spawnSync("bun", ["run", "build:lib"], {
-	cwd: cosmoPd101WebviewRoot,
+	cwd: cosmoPd101Root,
 	stdio: "inherit",
 	shell: process.platform === "win32",
 });
@@ -34,11 +31,7 @@ const run = (command, args, childCwd) => {
 	return child;
 };
 
-const libWatcher = run(
-	"bun",
-	["run", "build:lib:watch"],
-	cosmoPd101WebviewRoot,
-);
+const libWatcher = run("bun", ["run", "build:lib:watch"], cosmoPd101Root);
 
 const viteDev = run("bun", ["x", "vite"], packageRoot);
 

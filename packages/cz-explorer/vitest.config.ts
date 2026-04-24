@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 
 const explorerSrc = fileURLToPath(new URL("./src", import.meta.url));
 const cosmoPd101LibEntry = fileURLToPath(
-	new URL("../cosmo-pd101/webview/lib-dist/index.mjs", import.meta.url),
+	new URL("../cosmo-pd101/lib-dist/index.mjs", import.meta.url),
 );
 const tailwindPlugins = tailwindcss() as unknown as [];
 

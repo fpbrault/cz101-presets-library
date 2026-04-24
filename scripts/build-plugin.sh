@@ -63,8 +63,8 @@ if [[ "$PLATFORM" == "macos" ]]; then
     ensure_rust_target "aarch64-apple-darwin"
   fi
 
-  echo "    Using beamer xtask: cargo xtask bundle cosmo-pd101 ${FORMAT_FLAGS[*]} --arch $ARCH"
-  cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101 "${FORMAT_FLAGS[@]}" --arch "$ARCH" $PROFILE_ARG
+  echo "    Using beamer xtask: cargo xtask bundle cosmo-pd101-plugin ${FORMAT_FLAGS[*]} --arch $ARCH"
+  cargo run --target-dir packages/xtask/target -p xtask -- bundle cosmo-pd101-plugin "${FORMAT_FLAGS[@]}" --arch "$ARCH" $PROFILE_ARG
 else
   if [[ "$PLATFORM" != "windows" && "$PLATFORM" != "linux" ]]; then
     echo "ERROR: unsupported plugin platform '$PLATFORM'. Use PLUGIN_PLATFORM=macos|windows|linux." >&2
@@ -72,18 +72,18 @@ else
   fi
 
   echo "    Using direct cargo build for VST3 (non-macOS)"
-  cargo build -p cosmo-pd101 --features vst3 $PROFILE_ARG
+  cargo build -p cosmo-pd101-plugin --features vst3 $PROFILE_ARG
 
-  TARGET_DIR="$RUST_WORKSPACE/packages/cosmo-pd101/target/$PROFILE"
+  TARGET_DIR="$RUST_WORKSPACE/packages/cosmo-pd101-plugin/target/$PROFILE"
   BUNDLE_DIR="$TARGET_DIR/$PLUGIN_BASENAME.vst3"
 
   if [[ "$PLATFORM" == "linux" ]]; then
     PLATFORM_SUBDIR="x86_64-linux"
-    SRC_BIN="$TARGET_DIR/libcosmo_pd101.so"
+    SRC_BIN="$TARGET_DIR/libcosmo_pd101_plugin.so"
     DST_BIN="$BUNDLE_DIR/Contents/$PLATFORM_SUBDIR/$PLUGIN_BASENAME.so"
   else
     PLATFORM_SUBDIR="x86_64-win"
-    SRC_BIN="$TARGET_DIR/cosmo_pd101.dll"
+    SRC_BIN="$TARGET_DIR/cosmo_pd101_plugin.dll"
     DST_BIN="$BUNDLE_DIR/Contents/$PLATFORM_SUBDIR/$PLUGIN_BASENAME.vst3"
   fi
 
@@ -98,5 +98,5 @@ else
   echo "    -> Created $BUNDLE_DIR"
 fi
 
-echo "==> Done. Bundles are in $RUST_WORKSPACE/packages/cosmo-pd101/target/$PROFILE/"
+echo "==> Done. Bundles are in $RUST_WORKSPACE/packages/cosmo-pd101-plugin/target/$PROFILE/"
 echo "    Run 'bun run plugin:install' to copy to system plugin dirs."

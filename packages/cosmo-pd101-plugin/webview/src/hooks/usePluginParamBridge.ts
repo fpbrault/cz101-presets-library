@@ -1,5 +1,5 @@
+import { usePluginBridgeSynthEngine } from "@cosmo/cosmo-pd101";
 import { useEffect, useRef } from "react";
-import { usePluginBridgeSynthEngine } from "@/features/synth/engine/pluginBridgeSynthEngineAdapter";
 import { ensureBeamerBridge } from "@/lib/beamerBridge";
 
 export function usePluginParamBridge(): void {

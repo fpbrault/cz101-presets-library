@@ -1,5 +1,5 @@
 [package]
-name = "cosmo-pd101"
+name = "cosmo-pd101-plugin"
 version = "0.1.0"
 edition = "2021"
 description = "Cosmo PD-101 synthesizer VST3/AU plugin"
@@ -15,7 +15,7 @@ auv2 = ["au"]
 auv3 = ["au"]
 # Enable Safari Web Inspector on the plugin WebView and load UI from the repo's
 # dist/ directory (instead of the AU bundle).  Build with:
-#   cargo build -p cosmo-pd101 --features debug_gui
+#   cargo build -p cosmo-pd101-plugin --features debug_gui
 debug_gui = []
 
 [dependencies]
