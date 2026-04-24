@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Card, { joinClasses } from "@/components/primitives/Card";
 import CzTabButton from "@/components/primitives/CzTabButton";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import type { PhaseLinePanelTab } from "@/features/synth/synthUiStore";
+import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import type { Algo, StepEnvData } from "@/lib/synth/bindings/synth";
 import { PerLineWarpBlock } from "./PerLineWarpBlock";
 
@@ -22,18 +24,11 @@ export type PhaseLinesSectionProps = {
 	envOverrideHandlers?: EnvOverrideHandlers;
 };
 
-type SidePanelTab =
-	| "line1-algos"
-	| "line2-algos"
-	| "line1-envelopes"
-	| "line2-envelopes";
-
 export default function PhaseLinesSection({
 	onActiveTabChange,
 	className,
 	envOverrideHandlers,
 }: PhaseLinesSectionProps) {
-	const { value: lineSelect } = useSynthParam("lineSelect");
 	const { value: warpAAmount, setValue: setWarpAAmount } =
 		useSynthParam("warpAAmount");
 	const { value: warpBAmount, setValue: setWarpBAmount } =
@@ -167,10 +162,8 @@ export default function PhaseLinesSection({
 		setKeyFollow: setLine2DcwKeyFollow,
 	};
 
-	const showLineA = lineSelect !== "L2";
-	const [activeTab, setActiveTab] = useState<SidePanelTab>(
-		showLineA ? "line1-algos" : "line2-algos",
-	);
+	const activeTab = useSynthUiStore((s) => s.phaseLinePanelTab);
+	const setActiveTab = useSynthUiStore((s) => s.setPhaseLinePanelTab);
 
 	const activeLine: "line1" | "line2" = activeTab.startsWith("line1")
 		? "line1"
@@ -190,7 +183,7 @@ export default function PhaseLinesSection({
 		label: "L1" | "L2";
 		color: "red" | "blue";
 		tabs: Array<{
-			id: SidePanelTab;
+			id: PhaseLinePanelTab;
 			bottomLabel: string;
 		}>;
 	}> = [

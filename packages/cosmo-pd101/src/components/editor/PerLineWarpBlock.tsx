@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect } from "react";
 import type {
 	AlgoControlBinding,
 	AlgoControlOptionRuntime,
@@ -9,6 +9,8 @@ import ControlKnob from "@/components/controls/ControlKnob";
 import AlgoSectionCard from "@/components/editor/AlgoSectionCard";
 import Card from "@/components/primitives/Card";
 import CzButton from "@/components/primitives/CzButton";
+import type { EnvTab } from "@/features/synth/synthUiStore";
+import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import { getCzPresetDefaults } from "@/lib/synth/algoRef";
 import type {
 	AlgoControlValueV1,
@@ -62,7 +64,6 @@ interface PerLineWarpBlockProps {
 	activeSection?: SectionTab;
 }
 
-type EnvTab = "dco" | "dcw" | "dca";
 type SectionTab = "algos" | "envelopes";
 type AlgoDefinitionRuntime = {
 	id: PdAlgo;
@@ -107,7 +108,8 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 	lineIndex = 1,
 	activeSection: activeSectionProp,
 }: PerLineWarpBlockProps) {
-	const [activeEnvTab, setActiveEnvTab] = useState<EnvTab>("dcw");
+	const activeEnvTab = useSynthUiStore((s) => s.activeEnvTab);
+	const setActiveEnvTab = useSynthUiStore((s) => s.setActiveEnvTab);
 	const activeSection = activeSectionProp;
 	const algoBEnabled = algoBlend > 0.001;
 

@@ -1,5 +1,4 @@
 import {
-	type AsidePanelTab,
 	convertDecodedPatchToSynthPreset,
 	DEFAULT_SYNTH_PRESETS,
 	decodeCzPatch,
@@ -7,6 +6,7 @@ import {
 	noteToFreq,
 	pdVisualizerWorkletUrl,
 	type StepEnvData,
+	SYNTH_UI_STATE_STORAGE_KEY,
 	SynthRenderer,
 	synthBindingsUrl,
 	synthWasmUrl,
@@ -16,12 +16,14 @@ import {
 	useSynthParamsToWorklet,
 	useSynthPresetManager,
 	useSynthStore,
+	useSynthUiStore,
 } from "@cosmo/cosmo-pd101";
 import { useQuery } from "@tanstack/react-query";
 import {
 	type CSSProperties,
 	type ReactNode,
 	useCallback,
+	useEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -64,8 +66,20 @@ export function SharedPhaseDistortionVisualizer({
 	const applyPreset = useSynthStore((s) => s.applyPreset);
 
 	const [extPmAmount] = useState(0);
-	const [activeAsidePanel, setActiveAsidePanel] =
-		useState<AsidePanelTab>("scope");
+	const activeAsidePanel = useSynthUiStore((s) => s.activeAsidePanel);
+	const setActiveAsidePanel = useSynthUiStore((s) => s.setActiveAsidePanel);
+
+	useEffect(() => {
+		try {
+			if (localStorage.getItem(SYNTH_UI_STATE_STORAGE_KEY) !== null) {
+				return;
+			}
+		} catch {
+			return;
+		}
+
+		setActiveAsidePanel("scope");
+	}, [setActiveAsidePanel]);
 
 	const { audioCtxRef, analyserNodeRef, workletNodeRef, paramsRef } =
 		useAudioEngine({
