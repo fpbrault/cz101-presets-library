@@ -7,6 +7,16 @@ export { useNoteHandling } from "./features/synth/hooks/useNoteHandling";
 export { useSynthParamsToWorklet } from "./features/synth/hooks/useSynthParamsToWorklet";
 export { getSynthRuntimeCapabilities } from "./features/synth/runtimeCapabilities";
 export { useSynthStore } from "./features/synth/synthStore";
+export type {
+	EnvTab,
+	MainPanelMode,
+	PhaseLinePanelTab,
+	SynthUiStore,
+} from "./features/synth/synthUiStore";
+export {
+	SYNTH_UI_STATE_STORAGE_KEY,
+	useSynthUiStore,
+} from "./features/synth/synthUiStore";
 export type { LibraryPreset } from "./features/synth/types/libraryPreset";
 export { useSynthPresetManager } from "./features/synth/useSynthPresetManager";
 export { useSynthState } from "./features/synth/useSynthState";

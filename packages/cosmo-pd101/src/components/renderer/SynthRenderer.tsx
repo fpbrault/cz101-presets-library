@@ -1,10 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import {
-	type CSSProperties,
-	type ReactNode,
-	type RefObject,
-	useState,
-} from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import LineSelectControl from "@/components/controls/LineSelectControl";
 import ModModeControl from "@/components/controls/ModModeControl";
 import type { EnvOverrideHandlers } from "@/components/editor/PhaseLinesSection";
@@ -32,6 +27,7 @@ import CzButton from "@/components/primitives/CzButton";
 import { ModMatrixProvider } from "@/context/ModMatrixContext";
 import { SynthParamControllerProvider } from "@/features/synth/SynthParamController";
 import { useSynthStore } from "@/features/synth/synthStore";
+import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import { HoverInfoProvider, useHoverInfo } from "../layout/HoverInfo";
 import MiniKeyboardOverlay from "../layout/MiniKeyboardOverlay";
 
@@ -67,8 +63,6 @@ type SynthRendererProps = {
 		onNoteOff: (note: number) => void;
 	};
 };
-
-type MainPanelMode = "phase" | "fx" | "mod";
 
 export default function SynthRenderer({
 	headerProps,
@@ -135,8 +129,10 @@ function SynthRendererContent({
 }: SynthRendererProps) {
 	const modMatrix = useSynthStore((s) => s.modMatrix);
 	const setModMatrix = useSynthStore((s) => s.setModMatrix);
-	const [mainPanelMode, setMainPanelMode] = useState<MainPanelMode>("phase");
-	const [keyboardVisible, setKeyboardVisible] = useState(true);
+	const mainPanelMode = useSynthUiStore((s) => s.mainPanelMode);
+	const setMainPanelMode = useSynthUiStore((s) => s.setMainPanelMode);
+	const keyboardVisible = useSynthUiStore((s) => s.keyboardVisible);
+	const setKeyboardVisible = useSynthUiStore((s) => s.setKeyboardVisible);
 	const { hoverInfo } = useHoverInfo();
 	const infoText = hoverInfo
 		? hoverInfo
@@ -206,8 +202,8 @@ function SynthRendererContent({
 											<CzButton
 												active={mainPanelMode === "fx"}
 												onClick={() =>
-													setMainPanelMode((current) =>
-														current === "fx" ? "phase" : "fx",
+													setMainPanelMode(
+														mainPanelMode === "fx" ? "phase" : "fx",
 													)
 												}
 												className="[&_button]:w-18"
@@ -217,8 +213,8 @@ function SynthRendererContent({
 											<CzButton
 												active={mainPanelMode === "mod"}
 												onClick={() =>
-													setMainPanelMode((current) =>
-														current === "mod" ? "phase" : "mod",
+													setMainPanelMode(
+														mainPanelMode === "mod" ? "phase" : "mod",
 													)
 												}
 												className="[&_button]:w-18"
@@ -288,7 +284,7 @@ function SynthRendererContent({
 						{miniKeyboard ? (
 							<button
 								type="button"
-								onClick={() => setKeyboardVisible((current) => !current)}
+								onClick={() => setKeyboardVisible(!keyboardVisible)}
 								className={`rounded-sm border px-2 py-1 text-[0.56rem] uppercase tracking-[0.24em] transition-colors ${
 									keyboardVisible
 										? "border-cz-gold bg-cz-gold/10 text-cz-gold"

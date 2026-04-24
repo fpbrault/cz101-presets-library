@@ -1,5 +1,4 @@
 import {
-	type AsidePanelTab,
 	DEFAULT_SYNTH_PRESETS,
 	getSynthRuntimeCapabilities,
 	SynthRenderer,
@@ -7,6 +6,7 @@ import {
 	useNoteHandling,
 	useSynthPresetManager,
 	useSynthStore,
+	useSynthUiStore,
 } from "@cosmo/cosmo-pd101";
 import {
 	type ReactNode,
@@ -44,8 +44,8 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const [scopeActiveHz, setScopeActiveHz] = useState(220);
 	const analyserNodeRef = useRef<AnalyserNode | null>(null);
 	const audioCtxRef = useRef<AudioContext | null>(null);
-	const [activeAsidePanel, setActiveAsidePanel] =
-		useState<AsidePanelTab>("global");
+	const activeAsidePanel = useSynthUiStore((s) => s.activeAsidePanel);
+	const setActiveAsidePanel = useSynthUiStore((s) => s.setActiveAsidePanel);
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 	const { activeNotes, sendNoteOn, sendNoteOff } = useNoteHandling({
 		velocityTarget,
