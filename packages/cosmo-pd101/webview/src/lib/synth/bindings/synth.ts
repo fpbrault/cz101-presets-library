@@ -3,1663 +3,1436 @@
 /**
  * A single step in a step envelope
  */
-export type EnvStep = {
-	/**
-	 * Internal machine level [0, 127].
-	 */
-	level: number;
-	/**
-	 * Internal machine rate [0, 127].
-	 */
-	rate: number;
-};
+export type EnvStep = { 
+/**
+ * Internal machine level [0, 127].
+ */
+level: number; 
+/**
+ * Internal machine rate [0, 127].
+ */
+rate: number }
 
 /**
  * Step envelope data (CZ-style)
- *
+ * 
  * Field names match the JS `StepEnvData` type exactly (camelCase).
  * `steps` is always stored as a fixed [EnvStep; 8] internally; JS may
  * send a shorter array which gets padded with silent steps.
  */
-export type StepEnvData = {
-	steps: EnvStep[];
-	/**
-	 * Which step to sustain on (0-based index into steps)
-	 */
-	sustainStep: number;
-	/**
-	 * Number of active steps (JS `stepCount`)
-	 */
-	stepCount: number;
-	/**
-	 * Whether envelope loops after end
-	 */
-	loop: boolean;
-};
+export type StepEnvData = { steps: EnvStep[]; 
+/**
+ * Which step to sustain on (0-based index into steps)
+ */
+sustainStep: number; 
+/**
+ * Number of active steps (JS `stepCount`)
+ */
+stepCount: number; 
+/**
+ * Whether envelope loops after end
+ */
+loop: boolean }
 
 /**
  * Front-panel CZ algorithm shortcuts.
- *
+ * 
  * These map to a `(CzWaveform, WindowType)` pair.
  */
-export type CzAlgo =
-	| "saw"
-	| "square"
-	| "pulse"
-	| "doubleSine"
-	| "sawPulse"
-	| "reso1"
-	| "reso2"
-	| "reso3";
+export type CzAlgo = "saw" | "square" | "pulse" | "doubleSine" | "sawPulse" | "reso1" | "reso2" | "reso3"
 
 /**
  * Low-level CZ waveform selector.
  */
-export type CzWaveform =
-	| "saw"
-	| "square"
-	| "pulse"
-	| "null"
-	| "sinePulse"
-	| "sawPulse"
-	| "multiSine"
-	| "pulse2";
+export type CzWaveform = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2"
 
 /**
  * Per-line CZ slot controls.
- *
+ * 
  * Slot A/Slot B alternate per cycle in CZ mode. Setting both slots to the
  * same waveform effectively yields single-wave behavior.
  */
-export type CzLineParams = {
-	slotAWaveform: CzWaveform;
-	slotBWaveform: CzWaveform;
-	window: WindowType;
-};
+export type CzLineParams = { slotAWaveform: CzWaveform; slotBWaveform: CzWaveform; window: WindowType }
 
 /**
  * Flat algorithm selector — unifies CZ waveforms and warp variants.
  * Serializes as plain camelCase string (e.g., "saw", "bend", "sync").
  */
-export type Algo =
-	| "saw"
-	| "square"
-	| "pulse"
-	| "null"
-	| "sinePulse"
-	| "sawPulse"
-	| "multiSine"
-	| "pulse2"
-	| "cz101"
-	| "bend"
-	| "sync"
-	| "pinch"
-	| "fold"
-	| "skew"
-	| "quantize"
-	| "twist"
-	| "clip"
-	| "ripple"
-	| "mirror"
-	| "fof"
-	| "karpunk"
-	| "sine";
+export type Algo = "saw" | "square" | "pulse" | "null" | "sinePulse" | "sawPulse" | "multiSine" | "pulse2" | "cz101" | "bend" | "sync" | "pinch" | "fold" | "skew" | "quantize" | "twist" | "clip" | "ripple" | "mirror" | "fof" | "karpunk" | "sine"
 
 /**
  * Window type applied to oscillator output
  */
-export type WindowType =
-	| "off"
-	| "saw"
-	| "triangle"
-	| "trapezoid"
-	| "pulse"
-	| "doubleSaw";
+export type WindowType = "off" | "saw" | "triangle" | "trapezoid" | "pulse" | "doubleSaw"
 
 /**
  * Line select
  */
-export type LineSelect = "L1+L2" | "L1" | "L2" | "L1+L1'" | "L1+L2'";
+export type LineSelect = "L1+L2" | "L1" | "L2" | "L1+L1'" | "L1+L2'"
 
 /**
  * Modulation mode
  */
-export type ModMode = "normal" | "ring" | "noise";
+export type ModMode = "normal" | "ring" | "noise"
 
 /**
  * Polyphony mode
  */
-export type PolyMode = "poly8" | "mono";
+export type PolyMode = "poly8" | "mono"
 
 /**
  * Velocity routing target
  */
-export type VelocityTarget =
-	| "amp"
-	| "dcw"
-	| "both"
-	/**
-	 * JS "off" means velocity is ignored (worklet passes 0 velocity)
-	 */
-	| "off";
+export type VelocityTarget = "amp" | "dcw" | "both" | 
+/**
+ * JS "off" means velocity is ignored (worklet passes 0 velocity)
+ */
+"off"
 
 /**
  * LFO waveform
  */
-export type LfoWaveform = "sine" | "triangle" | "square" | "saw";
+export type LfoWaveform = "sine" | "triangle" | "square" | "saw"
 
 /**
  * Filter type
  */
-export type FilterType = "lp" | "hp" | "bp";
+export type FilterType = "lp" | "hp" | "bp"
 
 /**
  * Portamento mode
  */
-export type PortamentoMode = "rate" | "time";
+export type PortamentoMode = "rate" | "time"
 
 /**
  * LFO target.
- *
+ * 
  * Deprecated: per-destination routing should now be done through the modulation matrix.
  * This enum is kept for backward-compatible preset/state deserialization.
  */
-export type LfoTarget = "pitch" | "dcw" | "dca" | "filter";
+export type LfoTarget = "pitch" | "dcw" | "dca" | "filter"
 
 /**
  * Chorus parameters
  */
-export type ChorusParams = { rate: number; depth: number; mix: number };
+export type ChorusParams = { rate: number; depth: number; mix: number }
 
 /**
  * Delay parameters
  */
-export type DelayParams = { time: number; feedback: number; mix: number };
+export type DelayParams = { time: number; feedback: number; mix: number }
 
 /**
  * Reverb parameters
  */
-export type ReverbParams = { size: number; mix: number };
+export type ReverbParams = { size: number; mix: number }
 
 /**
  * Vibrato parameters
  */
-export type VibratoParams = {
-	enabled: boolean;
-	/**
-	 * Waveform as integer 1-4 (JS sends a number: 1=sine 2=tri 3=sq 4=saw)
-	 */
-	waveform: number;
-	/**
-	 * Rate in Hz
-	 */
-	rate: number;
-	/**
-	 * Depth in "per mille" (divide by 1000 for pitch multiplier)
-	 */
-	depth: number;
-	/**
-	 * Delay in milliseconds
-	 */
-	delay: number;
-};
+export type VibratoParams = { enabled: boolean; 
+/**
+ * Waveform as integer 1-4 (JS sends a number: 1=sine 2=tri 3=sq 4=saw)
+ */
+waveform: number; 
+/**
+ * Rate in Hz
+ */
+rate: number; 
+/**
+ * Depth in "per mille" (divide by 1000 for pitch multiplier)
+ */
+depth: number; 
+/**
+ * Delay in milliseconds
+ */
+delay: number }
 
 /**
  * Portamento parameters
  */
-export type PortamentoParams = {
-	enabled: boolean;
-	mode: PortamentoMode;
-	rate: number;
-	time: number;
-};
+export type PortamentoParams = { enabled: boolean; mode: PortamentoMode; rate: number; time: number }
 
 /**
  * LFO parameters
  */
-export type LfoParams = {
-	enabled: boolean;
-	waveform: LfoWaveform;
-	/**
-	 * Rate in Hz
-	 */
-	rate: number;
-	/**
-	 * Depth [0, 1]
-	 */
-	depth: number;
-	/**
-	 * Deprecated: use modulation matrix routes for destination selection.
-	 * Kept for backward compatibility.
-	 */
-	target: LfoTarget;
-	/**
-	 * DC offset/bias applied to LFO output [-1, 1]
-	 */
-	offset?: number;
-};
+export type LfoParams = { enabled: boolean; waveform: LfoWaveform; 
+/**
+ * Rate in Hz
+ */
+rate: number; 
+/**
+ * Depth [0, 1]
+ */
+depth: number; 
+/**
+ * Deprecated: use modulation matrix routes for destination selection.
+ * Kept for backward compatibility.
+ */
+target: LfoTarget; 
+/**
+ * DC offset/bias applied to LFO output [-1, 1]
+ */
+offset?: number }
 
 /**
  * Filter parameters
  */
-export type FilterParams = {
-	enabled: boolean;
-	type: FilterType;
-	cutoff: number;
-	resonance: number;
-	envAmount: number;
-};
+export type FilterParams = { enabled: boolean; type: FilterType; cutoff: number; resonance: number; envAmount: number }
 
 /**
  * One algorithm-specific control value persisted on a line.
  */
-export type AlgoControlValueV1 = { id: string; value: number };
+export type AlgoControlValueV1 = { id: string; value: number }
 
 /**
  * Per-line parameters
  */
-export type LineParams = {
-	algo: Algo;
-	algo2: Algo | null;
-	algoBlend: number;
-	window: WindowType;
-	dcaBase: number;
-	dcwBase: number;
-	modulation: number;
-	detuneCents: number;
-	octave: number;
-	dcoEnv: StepEnvData;
-	dcwEnv: StepEnvData;
-	dcaEnv: StepEnvData;
-	keyFollow: number;
-	cz?: CzLineParams;
-	algoControlsA?: AlgoControlValueV1[] | null;
-	algoControlsB?: AlgoControlValueV1[] | null;
-};
+export type LineParams = { algo: Algo; algo2: Algo | null; algoBlend: number; window: WindowType; dcaBase: number; dcwBase: number; modulation: number; detuneCents: number; octave: number; dcoEnv: StepEnvData; dcwEnv: StepEnvData; dcaEnv: StepEnvData; keyFollow: number; cz?: CzLineParams; algoControlsA?: AlgoControlValueV1[] | null; algoControlsB?: AlgoControlValueV1[] | null }
 
 /**
  * Describes one control surfaced by an algorithm package.
  */
-export type AlgoControlKindV1 = "number" | "select" | "toggle";
+export type AlgoControlKindV1 = "number" | "select" | "toggle"
 
 /**
  * Intended presentation for a control in synth UIs.
  */
-export type AlgoControlPresentationV1 =
-	| "knob"
-	| "slider"
-	| "buttonGroup"
-	| "dropdown";
+export type AlgoControlPresentationV1 = "knob" | "slider" | "buttonGroup" | "dropdown"
 
 /**
  * Assignment emitted by a select option to update one or more numeric controls.
  */
-export type AlgoControlAssignmentV1 = { controlId: string; value: number };
+export type AlgoControlAssignmentV1 = { controlId: string; value: number }
 
 /**
  * One selectable option for list-based controls.
  */
-export type AlgoControlOptionV1 = {
-	value: string;
-	label: string;
-	set: AlgoControlAssignmentV1[];
-};
+export type AlgoControlOptionV1 = { value: string; label: string; set: AlgoControlAssignmentV1[] }
 
 /**
  * Describes one control surfaced by an algorithm package.
  */
-export type AlgoControlV1 = {
-	id: string;
-	label: string;
-	description: string;
-	kind: AlgoControlKindV1;
-	controlType: AlgoControlPresentationV1;
-	bipolar: boolean;
-	iconName: string | null;
-	min: number | null;
-	max: number | null;
-	default: number | null;
-	defaultToggle: boolean | null;
-	options: AlgoControlOptionV1[];
-};
+export type AlgoControlV1 = { id: string; label: string; description: string; kind: AlgoControlKindV1; controlType: AlgoControlPresentationV1; bipolar: boolean; iconName: string | null; min: number | null; max: number | null; default: number | null; defaultToggle: boolean | null; options: AlgoControlOptionV1[] }
 
 /**
  * Complete algorithm package definition.
  */
-export type AlgoDefinitionV1 = {
-	id: Algo;
-	name: string;
-	iconPath: string;
-	visible: boolean;
-	controls: AlgoControlV1[];
-};
+export type AlgoDefinitionV1 = { id: Algo; name: string; iconPath: string; visible: boolean; controls: AlgoControlV1[] }
 
 /**
  * UI catalog entry for algorithm pickers.
- *
+ * 
  * This is exported to TypeScript so frontend option labels/icons are Rust-owned.
  */
-export type AlgoUiEntryV1 = {
-	id: Algo;
-	label: string;
-	iconPath: string;
-	visible: boolean;
-};
+export type AlgoUiEntryV1 = { id: Algo; label: string; iconPath: string; visible: boolean }
 
 /**
  * Modulation source selector for modulation matrix routes.
  */
-export type ModSource =
-	| "lfo1"
-	/**
-	 * LFO2 is currently a placeholder source and evaluates to 0.0 in DSP.
-	 */
-	| "lfo2"
-	| "velocity"
-	| "modWheel"
-	| "aftertouch";
+export type ModSource = "lfo1" | 
+/**
+ * LFO2 is currently a placeholder source and evaluates to 0.0 in DSP.
+ */
+"lfo2" | "velocity" | "modWheel" | "aftertouch"
 
 /**
  * Modulation destination selector for modulation matrix routes.
  */
-export type ModDestination =
-	| "volume"
-	| "pitch"
-	| "intPmAmount"
-	| "line1DcwBase"
-	| "line1DcaBase"
-	| "line1AlgoBlend"
-	| "line1Detune"
-	| "line1Octave"
-	| "line1AlgoParam1"
-	| "line1AlgoParam2"
-	| "line1AlgoParam3"
-	| "line1AlgoParam4"
-	| "line1AlgoParam5"
-	| "line1AlgoParam6"
-	| "line1AlgoParam7"
-	| "line1AlgoParam8"
-	| "line2DcwBase"
-	| "line2DcaBase"
-	| "line2AlgoBlend"
-	| "line2Detune"
-	| "line2Octave"
-	| "line2AlgoParam1"
-	| "line2AlgoParam2"
-	| "line2AlgoParam3"
-	| "line2AlgoParam4"
-	| "line2AlgoParam5"
-	| "line2AlgoParam6"
-	| "line2AlgoParam7"
-	| "line2AlgoParam8"
-	| "filterCutoff"
-	| "filterResonance"
-	| "filterEnvAmount"
-	| "chorusMix"
-	| "delayMix"
-	| "reverbMix"
-	| "vibratoDepth"
-	| "lfoDepth"
-	| "lfoRate";
+export type ModDestination = "volume" | "pitch" | "intPmAmount" | "line1DcwBase" | "line1DcaBase" | "line1AlgoBlend" | "line1Detune" | "line1Octave" | "line1AlgoParam1" | "line1AlgoParam2" | "line1AlgoParam3" | "line1AlgoParam4" | "line1AlgoParam5" | "line1AlgoParam6" | "line1AlgoParam7" | "line1AlgoParam8" | "line2DcwBase" | "line2DcaBase" | "line2AlgoBlend" | "line2Detune" | "line2Octave" | "line2AlgoParam1" | "line2AlgoParam2" | "line2AlgoParam3" | "line2AlgoParam4" | "line2AlgoParam5" | "line2AlgoParam6" | "line2AlgoParam7" | "line2AlgoParam8" | "filterCutoff" | "filterResonance" | "filterEnvAmount" | "chorusMix" | "delayMix" | "reverbMix" | "vibratoDepth" | "lfoDepth" | "lfoRate"
 
 /**
  * A single modulation route assignment.
  */
-export type ModRoute = {
-	source: ModSource;
-	destination: ModDestination;
-	/**
-	 * Modulation amount in range [-1.0, 1.0].
-	 */
-	amount: number;
-	enabled: boolean;
-};
+export type ModRoute = { source: ModSource; destination: ModDestination; 
+/**
+ * Modulation amount in range [-1.0, 1.0].
+ */
+amount: number; enabled: boolean }
 
 /**
  * Collection of modulation routes.
  */
-export type ModMatrix = { routes?: ModRoute[] };
+export type ModMatrix = { routes?: ModRoute[] }
 
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
-export type SynthParams = {
-	lineSelect: LineSelect;
-	modMode: ModMode;
-	ringGain?: number;
-	octave: number;
-	line1: LineParams;
-	line2: LineParams;
-	intPmAmount: number;
-	intPmRatio: number;
-	extPmAmount: number;
-	pmPre: boolean;
-	frequency: number;
-	volume: number;
-	polyMode: PolyMode;
-	legato: boolean;
-	velocityTarget: VelocityTarget;
-	chorus: ChorusParams;
-	delay: DelayParams;
-	reverb: ReverbParams;
-	vibrato: VibratoParams;
-	portamento: PortamentoParams;
-	lfo: LfoParams;
-	filter: FilterParams;
-	/**
-	 * Pitch bend wheel range in semitones (1-24). Default 2.
-	 */
-	pitchBendRange?: number;
-	/**
-	 * How much the mod wheel adds to vibrato depth (0-99 UI units).
-	 * When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
-	 */
-	modWheelVibratoDepth?: number;
-	/**
-	 * Modulation matrix routes for source-to-destination parameter modulation.
-	 */
-	modMatrix?: ModMatrix;
-};
+export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; filter: FilterParams; 
+/**
+ * Pitch bend wheel range in semitones (1-24). Default 2.
+ */
+pitchBendRange?: number; 
+/**
+ * How much the mod wheel adds to vibrato depth (0-99 UI units).
+ * When mod wheel is at max (1.0), vibrato depth is boosted by this amount.
+ */
+modWheelVibratoDepth?: number; 
+/**
+ * Modulation matrix routes for source-to-destination parameter modulation.
+ */
+modMatrix?: ModMatrix }
 
 /**
  * Canonical, versioned synth preset wire contract.
  */
-export type SynthPresetV1 = { schemaVersion?: number; params: SynthParams };
+export type SynthPresetV1 = { schemaVersion?: number; params: SynthParams }
 
 /**
  * A named CZ waveform combination preset (slot A waveform, slot B waveform, window function).
  */
-export type CzPresetV1 = {
-	id: string;
-	label: string;
-	waveform1: CzWaveform;
-	waveform2: CzWaveform;
-	windowFunction: WindowType;
-};
+export type CzPresetV1 = { id: string; label: string; waveform1: CzWaveform; waveform2: CzWaveform; windowFunction: WindowType }
+
+
 
 /** Rust-owned algorithm UI catalog. */
 export const ALGO_UI_CATALOG_V1: AlgoUiEntryV1[] = [
-	{
-		id: "cz101",
-		label: "CZ101",
-		iconPath: "M4,12 L20,12",
-		visible: true,
-	},
-	{
-		id: "bend",
-		label: "Bend",
-		iconPath: "M4,18 C10,18 14,10 20,4",
-		visible: true,
-	},
-	{
-		id: "sync",
-		label: "Sync",
-		iconPath: "M4,20 L8,4 L8,20 L12,4 L12,20 L16,4 L16,20 L20,4",
-		visible: true,
-	},
-	{
-		id: "pinch",
-		label: "Pinch",
-		iconPath: "M4,12 C8,4 10,12 12,12 C14,12 16,20 20,12",
-		visible: true,
-	},
-	{
-		id: "fold",
-		label: "Fold",
-		iconPath: "M4,20 L8,4 L12,20 L16,4 L20,20",
-		visible: true,
-	},
-	{
-		id: "skew",
-		label: "Skew",
-		iconPath: "M4,20 L10,6 L20,4",
-		visible: true,
-	},
-	{
-		id: "twist",
-		label: "Twist",
-		iconPath: "M4,12 C8,2 16,22 20,12",
-		visible: true,
-	},
-	{
-		id: "clip",
-		label: "Clip",
-		iconPath: "M4,16 L8,16 L8,8 L16,8 L16,16 L20,16",
-		visible: true,
-	},
-	{
-		id: "ripple",
-		label: "Ripple",
-		iconPath: "M4,12 C6,8 8,16 10,12 C12,8 14,16 16,12 C18,8 19,13 20,12",
-		visible: true,
-	},
-	{
-		id: "mirror",
-		label: "Mirror",
-		iconPath: "M4,20 L12,4 L20,20",
-		visible: true,
-	},
-	{
-		id: "karpunk",
-		label: "Karpunk",
-		iconPath: "M4,16 C8,2 12,22 16,8 L20,12",
-		visible: true,
-	},
-	{
-		id: "fof",
-		label: "FOF",
-		iconPath: "M4,16 C8,4 10,4 12,16 C14,4 16,4 20,16",
-		visible: true,
-	},
+  {
+    "id": "cz101",
+    "label": "CZ101",
+    "iconPath": "M4,12 L20,12",
+    "visible": true
+  },
+  {
+    "id": "bend",
+    "label": "Bend",
+    "iconPath": "M4,18 C10,18 14,10 20,4",
+    "visible": true
+  },
+  {
+    "id": "sync",
+    "label": "Sync",
+    "iconPath": "M4,20 L8,4 L8,20 L12,4 L12,20 L16,4 L16,20 L20,4",
+    "visible": true
+  },
+  {
+    "id": "pinch",
+    "label": "Pinch",
+    "iconPath": "M4,12 C8,4 10,12 12,12 C14,12 16,20 20,12",
+    "visible": true
+  },
+  {
+    "id": "fold",
+    "label": "Fold",
+    "iconPath": "M4,20 L8,4 L12,20 L16,4 L20,20",
+    "visible": true
+  },
+  {
+    "id": "skew",
+    "label": "Skew",
+    "iconPath": "M4,20 L10,6 L20,4",
+    "visible": true
+  },
+  {
+    "id": "twist",
+    "label": "Twist",
+    "iconPath": "M4,12 C8,2 16,22 20,12",
+    "visible": true
+  },
+  {
+    "id": "clip",
+    "label": "Clip",
+    "iconPath": "M4,16 L8,16 L8,8 L16,8 L16,16 L20,16",
+    "visible": true
+  },
+  {
+    "id": "ripple",
+    "label": "Ripple",
+    "iconPath": "M4,12 C6,8 8,16 10,12 C12,8 14,16 16,12 C18,8 19,13 20,12",
+    "visible": true
+  },
+  {
+    "id": "mirror",
+    "label": "Mirror",
+    "iconPath": "M4,20 L12,4 L20,20",
+    "visible": true
+  },
+  {
+    "id": "karpunk",
+    "label": "Karpunk",
+    "iconPath": "M4,16 C8,2 12,22 16,8 L20,12",
+    "visible": true
+  },
+  {
+    "id": "fof",
+    "label": "FOF",
+    "iconPath": "M4,16 C8,4 10,4 12,16 C14,4 16,4 20,16",
+    "visible": true
+  }
 ];
 
 /** Rust-owned algorithm definitions and control defaults. */
 export const ALGO_DEFINITIONS_V1 = [
-	{
-		id: "cz101",
-		name: "CZ101",
-		iconPath: "M4,12 L20,12",
-		visible: true,
-		controls: [
-			{
-				id: "preset",
-				label: "Preset",
-				description: "Loads a predefined CZ waveform and window combination.",
-				kind: "select",
-				controlType: "dropdown",
-				bipolar: false,
-				iconName: null,
-				min: null,
-				max: null,
-				default: 0.0,
-				defaultToggle: null,
-				options: [
-					{
-						value: "czSaw",
-						label: "CZ Saw",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 0.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 0.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 0.0,
-							},
-						],
-					},
-					{
-						value: "czSquare",
-						label: "CZ Square",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 1.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 1.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 0.0,
-							},
-						],
-					},
-					{
-						value: "czPulse",
-						label: "CZ Pulse",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 2.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 2.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 0.0,
-							},
-						],
-					},
-					{
-						value: "czDoubleSine",
-						label: "CZ Double Sine",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 4.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 4.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 0.0,
-							},
-						],
-					},
-					{
-						value: "czSawPulse",
-						label: "CZ Saw Pulse",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 5.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 5.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 0.0,
-							},
-						],
-					},
-					{
-						value: "czReso1",
-						label: "CZ Reso 1",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 6.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 6.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 1.0,
-							},
-						],
-					},
-					{
-						value: "czReso2",
-						label: "CZ Reso 2",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 6.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 6.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 2.0,
-							},
-						],
-					},
-					{
-						value: "czReso3",
-						label: "CZ Reso 3",
-						set: [
-							{
-								controlId: "waveform1",
-								value: 6.0,
-							},
-							{
-								controlId: "waveform2",
-								value: 6.0,
-							},
-							{
-								controlId: "windowFunction",
-								value: 3.0,
-							},
-						],
-					},
-				],
-			},
-			{
-				id: "waveform1",
-				label: "Waveform 1",
-				description: "Selects the first CZ waveform slot used by the line.",
-				kind: "select",
-				controlType: "dropdown",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 7.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [
-					{
-						value: "saw",
-						label: "Saw",
-						set: [],
-					},
-					{
-						value: "square",
-						label: "Square",
-						set: [],
-					},
-					{
-						value: "pulse",
-						label: "Pulse",
-						set: [],
-					},
-					{
-						value: "null",
-						label: "Null",
-						set: [],
-					},
-					{
-						value: "sinePulse",
-						label: "Sine Pulse",
-						set: [],
-					},
-					{
-						value: "sawPulse",
-						label: "Saw Pulse",
-						set: [],
-					},
-					{
-						value: "multiSine",
-						label: "Multi Sine",
-						set: [],
-					},
-					{
-						value: "pulse2",
-						label: "Pulse 2",
-						set: [],
-					},
-				],
-			},
-			{
-				id: "waveform2",
-				label: "Waveform 2",
-				description: "Selects the second CZ waveform slot used by the line.",
-				kind: "select",
-				controlType: "dropdown",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 7.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [
-					{
-						value: "saw",
-						label: "Saw",
-						set: [],
-					},
-					{
-						value: "square",
-						label: "Square",
-						set: [],
-					},
-					{
-						value: "pulse",
-						label: "Pulse",
-						set: [],
-					},
-					{
-						value: "null",
-						label: "Null",
-						set: [],
-					},
-					{
-						value: "sinePulse",
-						label: "Sine Pulse",
-						set: [],
-					},
-					{
-						value: "sawPulse",
-						label: "Saw Pulse",
-						set: [],
-					},
-					{
-						value: "multiSine",
-						label: "Multi Sine",
-						set: [],
-					},
-					{
-						value: "pulse2",
-						label: "Pulse 2",
-						set: [],
-					},
-				],
-			},
-			{
-				id: "windowFunction",
-				label: "Window Function",
-				description:
-					"Chooses the CZ windowing shape applied to the oscillator cycle.",
-				kind: "select",
-				controlType: "dropdown",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 5.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [
-					{
-						value: "off",
-						label: "Off",
-						set: [],
-					},
-					{
-						value: "saw",
-						label: "Saw",
-						set: [],
-					},
-					{
-						value: "triangle",
-						label: "Triangle",
-						set: [],
-					},
-					{
-						value: "trapezoid",
-						label: "Trapezoid",
-						set: [],
-					},
-					{
-						value: "pulse",
-						label: "Pulse",
-						set: [],
-					},
-					{
-						value: "doubleSaw",
-						label: "Double Saw",
-						set: [],
-					},
-				],
-			},
-		],
-	},
-	{
-		id: "bend",
-		name: "Bend",
-		iconPath: "M4,18 C10,18 14,10 20,4",
-		visible: true,
-		controls: [
-			{
-				id: "bendCurve",
-				label: "Curve",
-				description:
-					"Changes how aggressively the phase bends along the curve.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "bendBias",
-				label: "Bias",
-				description: "Offsets the bend toward the start or end of the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "bendKnee",
-				label: "Knee",
-				description:
-					"Shapes the transition point between the flatter and steeper bend regions.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "sync",
-		name: "Sync",
-		iconPath: "M4,20 L8,4 L8,20 L12,4 L12,20 L16,4 L16,20 L20,4",
-		visible: true,
-		controls: [
-			{
-				id: "syncRatio",
-				label: "Ratio",
-				description:
-					"Sets how many internal sync resets occur within one cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "syncPhase",
-				label: "Phase",
-				description: "Offsets where the sync restart begins inside the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "syncCurve",
-				label: "Curve",
-				description: "Shapes the post-sync ramp after each internal reset.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "syncWindow",
-				label: "Window",
-				description:
-					"Controls how strongly the sync-shaped phase replaces the original phase.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "pinch",
-		name: "Pinch",
-		iconPath: "M4,12 C8,4 10,12 12,12 C14,12 16,20 20,12",
-		visible: true,
-		controls: [
-			{
-				id: "pinchFocus",
-				label: "Focus",
-				description:
-					"Moves the pinch center toward the start or end of the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "pinchAsym",
-				label: "Asym",
-				description:
-					"Adds asymmetry so one side of the pinch shifts more than the other.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "pinchCurve",
-				label: "Curve",
-				description: "Changes the curvature of the pinched center region.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "pinchDrive",
-				label: "Drive",
-				description:
-					"Pushes the pinch harder for a tighter, more exaggerated distortion.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "fold",
-		name: "Fold",
-		iconPath: "M4,20 L8,4 L12,20 L16,4 L20,20",
-		visible: true,
-		controls: [
-			{
-				id: "foldStages",
-				label: "Stages",
-				description: "Sets how many fold passes are applied across the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "foldTilt",
-				label: "Tilt",
-				description:
-					"Moves the fold pivot toward the start or end of the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "foldSymmetry",
-				label: "Symmetry",
-				description:
-					"Offsets fold balance to make one side of the cycle fold harder than the other.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "foldSoftness",
-				label: "Softness",
-				description: "Softens each fold pass so the phase wraps less abruptly.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "skew",
-		name: "Skew",
-		iconPath: "M4,20 L10,6 L20,4",
-		visible: true,
-		controls: [
-			{
-				id: "skewBias",
-				label: "Bias",
-				description:
-					"Moves the breakpoint where the skewed ramp changes slope.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.2,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "skewCurve",
-				label: "Curve",
-				description:
-					"Adjusts the curvature on both sides of the skew breakpoint.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "skewSpread",
-				label: "Spread",
-				description:
-					"Redistributes how much of the cycle is assigned to each side of the skew.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "skewTilt",
-				label: "Tilt",
-				description:
-					"Tilts the skewed ramp so one side becomes steeper than the other.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "twist",
-		name: "Twist",
-		iconPath: "M4,12 C8,2 16,22 20,12",
-		visible: true,
-		controls: [
-			{
-				id: "twistHarmonics",
-				label: "Harm",
-				description:
-					"Sets the internal modulation harmonic used to twist the phase.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "twistDepth",
-				label: "Depth",
-				description:
-					"Controls how far the phase is displaced by the twist modulator.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "twistPhase",
-				label: "Phase",
-				description:
-					"Offsets the phase of the internal twist modulation signal.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "twistShape",
-				label: "Shape",
-				description:
-					"Changes the contour of the twist modulation from smooth to sharp.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "clip",
-		name: "Clip",
-		iconPath: "M4,16 L8,16 L8,8 L16,8 L16,16 L20,16",
-		visible: true,
-		controls: [
-			{
-				id: "clipDrive",
-				label: "Drive",
-				description:
-					"Increases the gain before clipping for a stronger flattened peak.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "clipShape",
-				label: "Shape",
-				description: "Sets the clip threshold width from narrow to wide.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "clipBias",
-				label: "Bias",
-				description:
-					"Offsets the clipped region toward the start or end of the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "clipSoft",
-				label: "Soft",
-				description:
-					"Blends from hard clipping into a softer rounded saturation.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "ripple",
-		name: "Ripple",
-		iconPath: "M4,12 C6,8 8,16 10,12 C12,8 14,16 16,12 C18,8 19,13 20,12",
-		visible: true,
-		controls: [
-			{
-				id: "rippleFreq",
-				label: "Freq",
-				description:
-					"Sets how many ripple oscillations appear across the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "rippleDepth",
-				label: "Depth",
-				description:
-					"Controls the amplitude of the ripple imposed on the phase.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "ripplePhase",
-				label: "Phase",
-				description:
-					"Offsets where the ripple pattern begins inside the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "rippleShape",
-				label: "Shape",
-				description:
-					"Changes the ripple from a smooth sine to a sharper contour.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "mirror",
-		name: "Mirror",
-		iconPath: "M4,20 L12,4 L20,20",
-		visible: true,
-		controls: [
-			{
-				id: "mirrorCenter",
-				label: "Center",
-				description: "Chooses the pivot around which the phase is mirrored.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "mirrorBlend",
-				label: "Blend",
-				description:
-					"Controls how strongly the mirrored phase replaces the original phase.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "mirrorClip",
-				label: "Clip",
-				description:
-					"Clamps the mirrored excursion for a tighter folded reflection.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "mirrorSkew",
-				label: "Skew",
-				description:
-					"Skews the mirrored side so reflection distance changes across the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "karpunk",
-		name: "Karpunk",
-		iconPath: "M4,16 C8,2 12,22 16,8 L20,12",
-		visible: true,
-		controls: [
-			{
-				id: "karpunkDamp",
-				label: "Damp",
-				description:
-					"Controls how quickly high-frequency energy is damped in the string model.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "karpunkBright",
-				label: "Bright",
-				description:
-					"Adjusts the brightness of the feedback filter inside the string loop.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "karpunkDecay",
-				label: "Decay",
-				description:
-					"Sets how long the plucked string sustains before fading out.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "karpunkExcite",
-				label: "Excite",
-				description:
-					"Injects fresh noise into the delay line for a noisier or raspier pluck.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
-	{
-		id: "fof",
-		name: "FOF",
-		iconPath: "M4,16 C8,4 10,4 12,16 C14,4 16,4 20,16",
-		visible: true,
-		controls: [
-			{
-				id: "fofRatio",
-				label: "Ratio",
-				description:
-					"Sets the internal carrier multiplier used for the formant-like repetition.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "fofTightness",
-				label: "Tight",
-				description: "Narrows or widens the Gaussian-like formant window.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: false,
-				iconName: null,
-				min: 0.0,
-				max: 1.0,
-				default: 0.5,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "fofOffset",
-				label: "Offset",
-				description:
-					"Offsets the repeated carrier phase before the formant window is applied.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-			{
-				id: "fofSkew",
-				label: "Skew",
-				description:
-					"Moves the center of the formant window toward the start or end of the cycle.",
-				kind: "number",
-				controlType: "knob",
-				bipolar: true,
-				iconName: null,
-				min: -1.0,
-				max: 1.0,
-				default: 0.0,
-				defaultToggle: null,
-				options: [],
-			},
-		],
-	},
+  {
+    "id": "cz101",
+    "name": "CZ101",
+    "iconPath": "M4,12 L20,12",
+    "visible": true,
+    "controls": [
+      {
+        "id": "preset",
+        "label": "Preset",
+        "description": "Loads a predefined CZ waveform and window combination.",
+        "kind": "select",
+        "controlType": "dropdown",
+        "bipolar": false,
+        "iconName": null,
+        "min": null,
+        "max": null,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "czSaw",
+            "label": "CZ Saw",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 0.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 0.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czSquare",
+            "label": "CZ Square",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 1.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 1.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czPulse",
+            "label": "CZ Pulse",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 2.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 2.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czDoubleSine",
+            "label": "CZ Double Sine",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 4.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 4.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czSawPulse",
+            "label": "CZ Saw Pulse",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 5.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 5.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 0.0
+              }
+            ]
+          },
+          {
+            "value": "czReso1",
+            "label": "CZ Reso 1",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 6.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 6.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 1.0
+              }
+            ]
+          },
+          {
+            "value": "czReso2",
+            "label": "CZ Reso 2",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 6.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 6.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 2.0
+              }
+            ]
+          },
+          {
+            "value": "czReso3",
+            "label": "CZ Reso 3",
+            "set": [
+              {
+                "controlId": "waveform1",
+                "value": 6.0
+              },
+              {
+                "controlId": "waveform2",
+                "value": 6.0
+              },
+              {
+                "controlId": "windowFunction",
+                "value": 3.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "waveform1",
+        "label": "Waveform 1",
+        "description": "Selects the first CZ waveform slot used by the line.",
+        "kind": "select",
+        "controlType": "dropdown",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 7.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "saw",
+            "label": "Saw",
+            "set": []
+          },
+          {
+            "value": "square",
+            "label": "Square",
+            "set": []
+          },
+          {
+            "value": "pulse",
+            "label": "Pulse",
+            "set": []
+          },
+          {
+            "value": "null",
+            "label": "Null",
+            "set": []
+          },
+          {
+            "value": "sinePulse",
+            "label": "Sine Pulse",
+            "set": []
+          },
+          {
+            "value": "sawPulse",
+            "label": "Saw Pulse",
+            "set": []
+          },
+          {
+            "value": "multiSine",
+            "label": "Multi Sine",
+            "set": []
+          },
+          {
+            "value": "pulse2",
+            "label": "Pulse 2",
+            "set": []
+          }
+        ]
+      },
+      {
+        "id": "waveform2",
+        "label": "Waveform 2",
+        "description": "Selects the second CZ waveform slot used by the line.",
+        "kind": "select",
+        "controlType": "dropdown",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 7.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "saw",
+            "label": "Saw",
+            "set": []
+          },
+          {
+            "value": "square",
+            "label": "Square",
+            "set": []
+          },
+          {
+            "value": "pulse",
+            "label": "Pulse",
+            "set": []
+          },
+          {
+            "value": "null",
+            "label": "Null",
+            "set": []
+          },
+          {
+            "value": "sinePulse",
+            "label": "Sine Pulse",
+            "set": []
+          },
+          {
+            "value": "sawPulse",
+            "label": "Saw Pulse",
+            "set": []
+          },
+          {
+            "value": "multiSine",
+            "label": "Multi Sine",
+            "set": []
+          },
+          {
+            "value": "pulse2",
+            "label": "Pulse 2",
+            "set": []
+          }
+        ]
+      },
+      {
+        "id": "windowFunction",
+        "label": "Window Function",
+        "description": "Chooses the CZ windowing shape applied to the oscillator cycle.",
+        "kind": "select",
+        "controlType": "dropdown",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 5.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": [
+          {
+            "value": "off",
+            "label": "Off",
+            "set": []
+          },
+          {
+            "value": "saw",
+            "label": "Saw",
+            "set": []
+          },
+          {
+            "value": "triangle",
+            "label": "Triangle",
+            "set": []
+          },
+          {
+            "value": "trapezoid",
+            "label": "Trapezoid",
+            "set": []
+          },
+          {
+            "value": "pulse",
+            "label": "Pulse",
+            "set": []
+          },
+          {
+            "value": "doubleSaw",
+            "label": "Double Saw",
+            "set": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bend",
+    "name": "Bend",
+    "iconPath": "M4,18 C10,18 14,10 20,4",
+    "visible": true,
+    "controls": [
+      {
+        "id": "bendCurve",
+        "label": "Curve",
+        "description": "Changes how aggressively the phase bends along the curve.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "bendBias",
+        "label": "Bias",
+        "description": "Offsets the bend toward the start or end of the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "bendKnee",
+        "label": "Knee",
+        "description": "Shapes the transition point between the flatter and steeper bend regions.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "sync",
+    "name": "Sync",
+    "iconPath": "M4,20 L8,4 L8,20 L12,4 L12,20 L16,4 L16,20 L20,4",
+    "visible": true,
+    "controls": [
+      {
+        "id": "syncRatio",
+        "label": "Ratio",
+        "description": "Sets how many internal sync resets occur within one cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "syncPhase",
+        "label": "Phase",
+        "description": "Offsets where the sync restart begins inside the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "syncCurve",
+        "label": "Curve",
+        "description": "Shapes the post-sync ramp after each internal reset.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "syncWindow",
+        "label": "Window",
+        "description": "Controls how strongly the sync-shaped phase replaces the original phase.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "pinch",
+    "name": "Pinch",
+    "iconPath": "M4,12 C8,4 10,12 12,12 C14,12 16,20 20,12",
+    "visible": true,
+    "controls": [
+      {
+        "id": "pinchFocus",
+        "label": "Focus",
+        "description": "Moves the pinch center toward the start or end of the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "pinchAsym",
+        "label": "Asym",
+        "description": "Adds asymmetry so one side of the pinch shifts more than the other.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "pinchCurve",
+        "label": "Curve",
+        "description": "Changes the curvature of the pinched center region.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "pinchDrive",
+        "label": "Drive",
+        "description": "Pushes the pinch harder for a tighter, more exaggerated distortion.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "fold",
+    "name": "Fold",
+    "iconPath": "M4,20 L8,4 L12,20 L16,4 L20,20",
+    "visible": true,
+    "controls": [
+      {
+        "id": "foldStages",
+        "label": "Stages",
+        "description": "Sets how many fold passes are applied across the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "foldTilt",
+        "label": "Tilt",
+        "description": "Moves the fold pivot toward the start or end of the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "foldSymmetry",
+        "label": "Symmetry",
+        "description": "Offsets fold balance to make one side of the cycle fold harder than the other.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "foldSoftness",
+        "label": "Softness",
+        "description": "Softens each fold pass so the phase wraps less abruptly.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "skew",
+    "name": "Skew",
+    "iconPath": "M4,20 L10,6 L20,4",
+    "visible": true,
+    "controls": [
+      {
+        "id": "skewBias",
+        "label": "Bias",
+        "description": "Moves the breakpoint where the skewed ramp changes slope.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.2,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "skewCurve",
+        "label": "Curve",
+        "description": "Adjusts the curvature on both sides of the skew breakpoint.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "skewSpread",
+        "label": "Spread",
+        "description": "Redistributes how much of the cycle is assigned to each side of the skew.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "skewTilt",
+        "label": "Tilt",
+        "description": "Tilts the skewed ramp so one side becomes steeper than the other.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "twist",
+    "name": "Twist",
+    "iconPath": "M4,12 C8,2 16,22 20,12",
+    "visible": true,
+    "controls": [
+      {
+        "id": "twistHarmonics",
+        "label": "Harm",
+        "description": "Sets the internal modulation harmonic used to twist the phase.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "twistDepth",
+        "label": "Depth",
+        "description": "Controls how far the phase is displaced by the twist modulator.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "twistPhase",
+        "label": "Phase",
+        "description": "Offsets the phase of the internal twist modulation signal.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "twistShape",
+        "label": "Shape",
+        "description": "Changes the contour of the twist modulation from smooth to sharp.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "clip",
+    "name": "Clip",
+    "iconPath": "M4,16 L8,16 L8,8 L16,8 L16,16 L20,16",
+    "visible": true,
+    "controls": [
+      {
+        "id": "clipDrive",
+        "label": "Drive",
+        "description": "Increases the gain before clipping for a stronger flattened peak.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "clipShape",
+        "label": "Shape",
+        "description": "Sets the clip threshold width from narrow to wide.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "clipBias",
+        "label": "Bias",
+        "description": "Offsets the clipped region toward the start or end of the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "clipSoft",
+        "label": "Soft",
+        "description": "Blends from hard clipping into a softer rounded saturation.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "ripple",
+    "name": "Ripple",
+    "iconPath": "M4,12 C6,8 8,16 10,12 C12,8 14,16 16,12 C18,8 19,13 20,12",
+    "visible": true,
+    "controls": [
+      {
+        "id": "rippleFreq",
+        "label": "Freq",
+        "description": "Sets how many ripple oscillations appear across the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "rippleDepth",
+        "label": "Depth",
+        "description": "Controls the amplitude of the ripple imposed on the phase.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "ripplePhase",
+        "label": "Phase",
+        "description": "Offsets where the ripple pattern begins inside the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "rippleShape",
+        "label": "Shape",
+        "description": "Changes the ripple from a smooth sine to a sharper contour.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "mirror",
+    "name": "Mirror",
+    "iconPath": "M4,20 L12,4 L20,20",
+    "visible": true,
+    "controls": [
+      {
+        "id": "mirrorCenter",
+        "label": "Center",
+        "description": "Chooses the pivot around which the phase is mirrored.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "mirrorBlend",
+        "label": "Blend",
+        "description": "Controls how strongly the mirrored phase replaces the original phase.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "mirrorClip",
+        "label": "Clip",
+        "description": "Clamps the mirrored excursion for a tighter folded reflection.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "mirrorSkew",
+        "label": "Skew",
+        "description": "Skews the mirrored side so reflection distance changes across the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "karpunk",
+    "name": "Karpunk",
+    "iconPath": "M4,16 C8,2 12,22 16,8 L20,12",
+    "visible": true,
+    "controls": [
+      {
+        "id": "karpunkDamp",
+        "label": "Damp",
+        "description": "Controls how quickly high-frequency energy is damped in the string model.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "karpunkBright",
+        "label": "Bright",
+        "description": "Adjusts the brightness of the feedback filter inside the string loop.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "karpunkDecay",
+        "label": "Decay",
+        "description": "Sets how long the plucked string sustains before fading out.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "karpunkExcite",
+        "label": "Excite",
+        "description": "Injects fresh noise into the delay line for a noisier or raspier pluck.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": "fof",
+    "name": "FOF",
+    "iconPath": "M4,16 C8,4 10,4 12,16 C14,4 16,4 20,16",
+    "visible": true,
+    "controls": [
+      {
+        "id": "fofRatio",
+        "label": "Ratio",
+        "description": "Sets the internal carrier multiplier used for the formant-like repetition.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "fofTightness",
+        "label": "Tight",
+        "description": "Narrows or widens the Gaussian-like formant window.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": false,
+        "iconName": null,
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.5,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "fofOffset",
+        "label": "Offset",
+        "description": "Offsets the repeated carrier phase before the formant window is applied.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      },
+      {
+        "id": "fofSkew",
+        "label": "Skew",
+        "description": "Moves the center of the formant window toward the start or end of the cycle.",
+        "kind": "number",
+        "controlType": "knob",
+        "bipolar": true,
+        "iconName": null,
+        "min": -1.0,
+        "max": 1.0,
+        "default": 0.0,
+        "defaultToggle": null,
+        "options": []
+      }
+    ]
+  }
 ];
 
 /** Rust-owned CZ waveform combination presets. */
 export const CZ_PRESETS: CzPresetV1[] = [
-	{
-		id: "czSaw",
-		label: "CZ Saw",
-		waveform1: "saw",
-		waveform2: "saw",
-		windowFunction: "off",
-	},
-	{
-		id: "czSquare",
-		label: "CZ Square",
-		waveform1: "square",
-		waveform2: "square",
-		windowFunction: "off",
-	},
-	{
-		id: "czPulse",
-		label: "CZ Pulse",
-		waveform1: "pulse",
-		waveform2: "pulse",
-		windowFunction: "off",
-	},
-	{
-		id: "czDoubleSine",
-		label: "CZ Double Sine",
-		waveform1: "sinePulse",
-		waveform2: "sinePulse",
-		windowFunction: "off",
-	},
-	{
-		id: "czSawPulse",
-		label: "CZ Saw Pulse",
-		waveform1: "sawPulse",
-		waveform2: "sawPulse",
-		windowFunction: "off",
-	},
-	{
-		id: "czReso1",
-		label: "CZ Reso 1",
-		waveform1: "multiSine",
-		waveform2: "multiSine",
-		windowFunction: "saw",
-	},
-	{
-		id: "czReso2",
-		label: "CZ Reso 2",
-		waveform1: "multiSine",
-		waveform2: "multiSine",
-		windowFunction: "triangle",
-	},
-	{
-		id: "czReso3",
-		label: "CZ Reso 3",
-		waveform1: "multiSine",
-		waveform2: "multiSine",
-		windowFunction: "trapezoid",
-	},
+  {
+    "id": "czSaw",
+    "label": "CZ Saw",
+    "waveform1": "saw",
+    "waveform2": "saw",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czSquare",
+    "label": "CZ Square",
+    "waveform1": "square",
+    "waveform2": "square",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czPulse",
+    "label": "CZ Pulse",
+    "waveform1": "pulse",
+    "waveform2": "pulse",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czDoubleSine",
+    "label": "CZ Double Sine",
+    "waveform1": "sinePulse",
+    "waveform2": "sinePulse",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czSawPulse",
+    "label": "CZ Saw Pulse",
+    "waveform1": "sawPulse",
+    "waveform2": "sawPulse",
+    "windowFunction": "off"
+  },
+  {
+    "id": "czReso1",
+    "label": "CZ Reso 1",
+    "waveform1": "multiSine",
+    "waveform2": "multiSine",
+    "windowFunction": "saw"
+  },
+  {
+    "id": "czReso2",
+    "label": "CZ Reso 2",
+    "waveform1": "multiSine",
+    "waveform2": "multiSine",
+    "windowFunction": "triangle"
+  },
+  {
+    "id": "czReso3",
+    "label": "CZ Reso 3",
+    "waveform1": "multiSine",
+    "waveform2": "multiSine",
+    "windowFunction": "trapezoid"
+  }
 ];
