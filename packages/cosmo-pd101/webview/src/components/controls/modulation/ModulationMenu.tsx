@@ -56,6 +56,21 @@ export default function ModulationMenu({
 		});
 	}, [routeKeys.length, routes.length]);
 
+	const handleAddRoute = () => {
+		setRouteKeys((currentKeys) => [
+			...currentKeys,
+			`mod-route-${nextRouteKeyRef.current++}`,
+		]);
+		onAddRoute(selectedSource);
+	};
+
+	const handleRemoveRoute = (index: number) => {
+		setRouteKeys((currentKeys) =>
+			currentKeys.filter((_, keyIndex) => keyIndex !== index),
+		);
+		onRemoveRoute(index);
+	};
+
 	return (
 		<motion.div
 			className="w-62 overflow-hidden rounded-xl border border-cz-gold/30 bg-cz-panel shadow-2xl"
@@ -108,7 +123,7 @@ export default function ModulationMenu({
 									<ModRouteRow
 										route={route}
 										onToggleEnabled={() => onToggleEnabled(idx)}
-										onRemove={() => onRemoveRoute(idx)}
+										onRemove={() => handleRemoveRoute(idx)}
 										onAmountChange={(amount) => onAmountChange(idx, amount)}
 									/>
 								</motion.div>
@@ -146,7 +161,7 @@ export default function ModulationMenu({
 						</div>
 						<button
 							type="button"
-							onClick={() => onAddRoute(selectedSource)}
+							onClick={handleAddRoute}
 							className={`shrink-0 rounded-md border px-2.5 py-1 font-mono text-[0.55rem] font-bold uppercase tracking-[0.15em] transition-colors ${
 								MOD_SOURCE_META[selectedSource].colorClass
 							} border-current/30 bg-current/10 hover:bg-current/20`}
