@@ -135,7 +135,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 				onExportCurrentState: handleExportCurrentState,
 				onImportPreset: handleImportPreset,
 			}}
-			frameClassName="h-full bg-cz-panel flex flex-col overflow-hidden gap-2 w-full"
+			frameClassName="h-full bg-cz-panel flex flex-col overflow-hidden w-full"
 			frameStyle={{ zoom: `${uiScale}%` }}
 			bottomBarExtra={
 				<>
