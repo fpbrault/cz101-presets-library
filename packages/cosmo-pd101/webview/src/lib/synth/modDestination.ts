@@ -6,9 +6,7 @@ const DIRECT_DESTINATIONS: ReadonlySet<ModDestination> = new Set([
 	"intPmAmount",
 	"line1DcwBase",
 	"line1DcaBase",
-	"line1DcoDepth",
 	"line1AlgoBlend",
-	"line1DcwComp",
 	"line1Detune",
 	"line1Octave",
 	"line1AlgoParam1",
@@ -21,9 +19,7 @@ const DIRECT_DESTINATIONS: ReadonlySet<ModDestination> = new Set([
 	"line1AlgoParam8",
 	"line2DcwBase",
 	"line2DcaBase",
-	"line2DcoDepth",
 	"line2AlgoBlend",
-	"line2DcwComp",
 	"line2Detune",
 	"line2Octave",
 	"line2AlgoParam1",
@@ -48,9 +44,7 @@ const DIRECT_DESTINATIONS: ReadonlySet<ModDestination> = new Set([
 export type LineScopedModTarget =
 	| "dcwBase"
 	| "dcaBase"
-	| "dcoDepth"
 	| "algoBlend"
-	| "dcwComp"
 	| "detune"
 	| "octave";
 
@@ -97,12 +91,8 @@ export function resolveModDestination(
 			return `${linePrefix}DcwBase` as ModDestination;
 		case "dcaBase":
 			return `${linePrefix}DcaBase` as ModDestination;
-		case "dcoDepth":
-			return `${linePrefix}DcoDepth` as ModDestination;
 		case "algoBlend":
 			return `${linePrefix}AlgoBlend` as ModDestination;
-		case "dcwComp":
-			return `${linePrefix}DcwComp` as ModDestination;
 		case "detune":
 			return `${linePrefix}Detune` as ModDestination;
 		case "octave":

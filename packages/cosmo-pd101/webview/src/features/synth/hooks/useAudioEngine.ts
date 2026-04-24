@@ -87,9 +87,7 @@ export type LineParams = {
 	};
 	dcaBase: number;
 	dcwBase: number;
-	dcoDepth: number;
 	modulation: number;
-	dcwComp: number;
 	detuneCents: number;
 	octave: number;
 	dcoEnv: StepEnvData;
@@ -111,9 +109,7 @@ const DEFAULT_LINE_PARAMS: LineParams = {
 	},
 	dcaBase: 1.0,
 	dcwBase: 0,
-	dcoDepth: 12,
 	modulation: 0,
-	dcwComp: 0,
 	detuneCents: 0,
 	octave: 0,
 	dcoEnv: {

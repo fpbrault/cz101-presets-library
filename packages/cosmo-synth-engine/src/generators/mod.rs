@@ -262,20 +262,6 @@ pub const WARP_AMOUNT_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     default_toggle: None,
     options: &NO_CONTROL_OPTIONS,
 };
-pub const DCW_COMP_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
-    id: "dcwComp",
-    label: "DCW Comp",
-    description: "Compensates output level as the distortion envelope opens and closes.",
-    kind: AlgoControlKindV1::Number,
-    control_type: AlgoControlPresentationV1::Knob,
-    bipolar: false,
-    icon_name: None,
-    min: Some(0.0),
-    max: Some(1.0),
-    default: Some(0.0),
-    default_toggle: None,
-    options: &NO_CONTROL_OPTIONS,
-};
 pub const LEVEL_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     id: "level",
     label: "Level",
@@ -315,20 +301,6 @@ pub const FINE_DETUNE_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
     min: Some(-50.0),
     max: Some(50.0),
     default: Some(0.0),
-    default_toggle: None,
-    options: &NO_CONTROL_OPTIONS,
-};
-pub const DCO_DEPTH_NUMBER_CONTROL: AlgoControlV1 = AlgoControlV1 {
-    id: "dcoDepth",
-    label: "DCO Range",
-    description: "Sets the pitch-envelope range or oscillator excursion in semitones.",
-    kind: AlgoControlKindV1::Number,
-    control_type: AlgoControlPresentationV1::Knob,
-    bipolar: false,
-    icon_name: Some("range"),
-    min: Some(0.0),
-    max: Some(24.0),
-    default: Some(12.0),
     default_toggle: None,
     options: &NO_CONTROL_OPTIONS,
 };

@@ -202,8 +202,6 @@ impl Default for Voice {
 struct EnvelopeSnapshot {
     dco1_env: f32,
     dco2_env: f32,
-    dcw1_env: f32,
-    dcw2_env: f32,
     dca1: f32,
     dca2: f32,
     dcw1: f32,
@@ -383,8 +381,6 @@ fn advance_envelopes(voice: &mut Voice, p: &SynthParams, sr: f32) -> EnvelopeSna
     EnvelopeSnapshot {
         dco1_env: voice.line1_env.dco.output,
         dco2_env: voice.line2_env.dco.output,
-        dcw1_env: voice.line1_env.dcw.output,
-        dcw2_env: voice.line2_env.dcw.output,
         dca1: voice.line1_env.dca.output,
         dca2: voice.line2_env.dca.output,
         dcw1: l1.dcw_base * voice.line1_env.dcw.output,
@@ -426,8 +422,8 @@ fn build_signal_state(
     let l1 = &p.line1;
     let l2 = &p.line2;
     let matrix = &p.mod_matrix;
-    let compensated_dca1 = compensated_dca_level(l1, env.dca1, env.dcw1_env);
-    let compensated_dca2 = compensated_dca_level(l2, env.dca2, env.dcw2_env);
+    let dca1_level = l1.dca_base * env.dca1;
+    let dca2_level = l2.dca_base * env.dca2;
     let vel = voice.velocity;
     let vel_amp = match p.velocity_target {
         VelocityTarget::Amp | VelocityTarget::Both => vel,
@@ -449,19 +445,14 @@ fn build_signal_state(
         effective_freq2: line_frequency(base_freq, l2, env.dco2_env),
         final_dcw1: (env.dcw1 * vel_dcw + dcw1_mod).clamp(0.0, 1.0),
         final_dcw2: (env.dcw2 * vel_dcw + dcw2_mod).clamp(0.0, 1.0),
-        final_dca1: (compensated_dca1 * vel_amp + dca1_mod).max(0.0),
-        final_dca2: (compensated_dca2 * vel_amp + dca2_mod).max(0.0),
+        final_dca1: (dca1_level * vel_amp + dca1_mod).max(0.0),
+        final_dca2: (dca2_level * vel_amp + dca2_mod).max(0.0),
     }
-}
-
-fn compensated_dca_level(line: &LineParams, dca_env: f32, dcw_env: f32) -> f32 {
-    let dca_level = line.dca_base * dca_env;
-    dca_level * (1.0 - line.dcw_comp + line.dcw_comp * dcw_env)
 }
 
 /// Maps a normalized DCO envelope output (0.0–1.0) to a 0.0–1.0 normalized pitch
 /// position using the CZ-101 piecewise non-linear pitch curve, then scales by
-/// `dco_depth` (in semitones) to produce the final semitone offset.
+/// a fixed 36-semitone range to produce the final semitone offset.
 ///
 /// The CZ-101 display levels 0–99 map to pitch as follows:
 ///   - Levels  0–64: linear, 1 semitone per 8 levels  (max 8 st)
@@ -482,7 +473,8 @@ fn cz_dco_env_normalized(dco_env: f32) -> f32 {
 }
 
 fn line_frequency(base_freq: f32, line: &LineParams, dco_env: f32) -> f32 {
-    let dco_semitones = cz_dco_env_normalized(dco_env) * line.dco_depth;
+    const DCO_RANGE_SEMITONES: f32 = 36.0;
+    let dco_semitones = cz_dco_env_normalized(dco_env) * DCO_RANGE_SEMITONES;
     base_freq
         * libm::powf(2.0, line.octave + line.detune_cents / 1200.0)
         * libm::powf(2.0, dco_semitones / 12.0)
@@ -893,16 +885,14 @@ mod tests {
         ]
     }
 
-    fn all_destinations() -> [ModDestination; 42] {
+    fn all_destinations() -> [ModDestination; 38] {
         [
             ModDestination::Volume,
             ModDestination::Pitch,
             ModDestination::IntPmAmount,
             ModDestination::Line1DcwBase,
             ModDestination::Line1DcaBase,
-            ModDestination::Line1DcoDepth,
             ModDestination::Line1AlgoBlend,
-            ModDestination::Line1DcwComp,
             ModDestination::Line1Detune,
             ModDestination::Line1Octave,
             ModDestination::Line1AlgoParam1,
@@ -915,9 +905,7 @@ mod tests {
             ModDestination::Line1AlgoParam8,
             ModDestination::Line2DcwBase,
             ModDestination::Line2DcaBase,
-            ModDestination::Line2DcoDepth,
             ModDestination::Line2AlgoBlend,
-            ModDestination::Line2DcwComp,
             ModDestination::Line2Detune,
             ModDestination::Line2Octave,
             ModDestination::Line2AlgoParam1,
