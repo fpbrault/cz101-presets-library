@@ -33,7 +33,7 @@ const BLACK_CONFIG = [
 ] as const;
 
 const START_NOTE = 36;
-const KEYBOARD_OCTAVES = 5;
+const KEYBOARD_OCTAVES = 4;
 
 function buildKeyboardLayout(startNote: number, octaves: number) {
 	const whiteKeys: KeyConfig[] = [];
@@ -241,7 +241,7 @@ export default function MiniKeyboardOverlay({
 						className="pointer-events-auto w-full overflow-hidden rounded-t-[1.05rem] rounded-b-none border border-cz-border border-b-0 bg-cz-body px-0 py-1 shadow-xl backdrop-blur-sm"
 					>
 						<div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-[repeating-linear-gradient(90deg,rgba(123,150,226,0.08)_0px,rgba(123,150,226,0.08)_1px,transparent_1px,transparent_20px)] opacity-55" />
-						<div className="relative flex h-20 gap-2 overflow-hidden rounded-none border border-x-0 border-b-0 border-cz-border/70 bg-cz-inset px-2 ">
+						<div className="relative flex h-30 gap-2 overflow-hidden rounded-none border border-x-0 border-b-0 border-cz-border/70 bg-cz-inset px-2 ">
 							<div className="flex w-14 shrink-0 items-end gap-1 rounded-md border border-cz-border/60 bg-black/20 px-1.5 pb-1.5 pt-1">
 								<div className="flex flex-1 flex-col items-center gap-1">
 									<input
