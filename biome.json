@@ -12,7 +12,8 @@
 			"!!**/lib-dist",
 			"!!**/target",
 			"!!vendor",
-			"!!packages/cz-explorer/public/cosmo-synth-engine-wasm"
+			"!!packages/cz-explorer/public/cosmo-synth-engine-wasm",
+			"!!**/bindings/*.ts"
 		],
 		"maxSize": 20000000
 	},
