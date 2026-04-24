@@ -1,4 +1,14 @@
-import { memo, type ReactNode, useCallback, useMemo, useState } from "react";
+import { AnimatePresence } from "motion/react";
+import {
+	memo,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { useModMatrix } from "@/context/ModMatrixContext";
 import type {
 	ModDestination,
@@ -18,6 +28,10 @@ interface ModulatableControlProps {
 	iconStyle?: React.CSSProperties;
 }
 
+/** Panel dimensions used for edge-flip calculation. */
+const PANEL_WIDTH = 248;
+const PANEL_HEIGHT_ESTIMATE = 320;
+
 /**
  * Wraps any synth control (knob, slider) with a modulation indicator badge
  * and an affordance to add/edit/remove mod-matrix routes for the control's
@@ -32,6 +46,14 @@ const ModulatableControl = memo(function ModulatableControl({
 }: ModulatableControlProps) {
 	const { modMatrix, setModMatrix } = useModMatrix();
 	const [popoverOpen, setPopoverOpen] = useState(false);
+	const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
+		position: "fixed",
+		zIndex: 9999,
+		top: 0,
+		left: 0,
+	});
+	const triggerRef = useRef<HTMLButtonElement | null>(null);
+	const panelRef = useRef<HTMLDivElement | null>(null);
 	const routes = modMatrix.routes ?? [];
 
 	const activeRoutes = useMemo(
@@ -102,6 +124,54 @@ const ModulatableControl = memo(function ModulatableControl({
 
 	const hasActiveRoutes = activeRoutes.length > 0;
 
+	/** Compute viewport-fixed panel position diagonally from the badge button. */
+	const openPopover = useCallback(() => {
+		const btn = triggerRef.current;
+		if (!btn) {
+			setPopoverOpen(true);
+			return;
+		}
+		const r = btn.getBoundingClientRect();
+		const vw = window.innerWidth;
+		const vh = window.innerHeight;
+		const GAP = 4;
+
+		// Horizontal: prefer right of badge, flip left if not enough space
+		const openRight = r.right + GAP + PANEL_WIDTH <= vw;
+		const hStyle: React.CSSProperties = openRight
+			? { left: r.right + GAP }
+			: { left: Math.max(GAP, r.left - PANEL_WIDTH - GAP) };
+
+		// Vertical: prefer below badge, flip above if not enough space
+		const openBelow = r.bottom + GAP + PANEL_HEIGHT_ESTIMATE <= vh;
+		const vStyle: React.CSSProperties = openBelow
+			? { top: r.bottom + GAP }
+			: { bottom: vh - r.top + GAP };
+
+		setPanelStyle({ position: "fixed", zIndex: 9999, ...hStyle, ...vStyle });
+		setPopoverOpen(true);
+	}, []);
+
+	const closePopover = useCallback(() => setPopoverOpen(false), []);
+
+	// Close on outside click (capture phase so it fires before any bubbling stops)
+	useEffect(() => {
+		if (!popoverOpen) return;
+		const handler = (e: PointerEvent) => {
+			const target = e.target as Node | null;
+			if (
+				panelRef.current &&
+				!panelRef.current.contains(target) &&
+				triggerRef.current &&
+				!triggerRef.current.contains(target)
+			) {
+				closePopover();
+			}
+		};
+		document.addEventListener("pointerdown", handler, true);
+		return () => document.removeEventListener("pointerdown", handler, true);
+	}, [popoverOpen, closePopover]);
+
 	return (
 		<div className="group relative inline-block">
 			{children}
@@ -109,22 +179,32 @@ const ModulatableControl = memo(function ModulatableControl({
 				hasActiveRoutes={hasActiveRoutes}
 				routeCount={activeRoutes.length}
 				label={`Modulation for ${label ?? destinationId}`}
-				onClick={() => setPopoverOpen((v) => !v)}
+				onClick={() => (popoverOpen ? closePopover() : openPopover())}
 				forceVisible={popoverOpen}
 				className={iconClassName}
 				style={iconStyle}
+				triggerRef={(el) => {
+					triggerRef.current = el;
+				}}
 			/>
 
-			{popoverOpen && (
-				<ModulationMenu
-					title={label ?? destinationId}
-					routes={activeRoutes}
-					onToggleEnabled={handleToggleEnabled}
-					onRemoveRoute={handleRemoveRoute}
-					onAmountChange={handleAmountChange}
-					onAddRoute={handleAddRoute}
-					onClose={() => setPopoverOpen(false)}
-				/>
+			{createPortal(
+				<AnimatePresence>
+					{popoverOpen && (
+						<div ref={panelRef} style={panelStyle}>
+							<ModulationMenu
+								title={label ?? destinationId}
+								routes={activeRoutes}
+								onToggleEnabled={handleToggleEnabled}
+								onRemoveRoute={handleRemoveRoute}
+								onAmountChange={handleAmountChange}
+								onAddRoute={handleAddRoute}
+								onClose={closePopover}
+							/>
+						</div>
+					)}
+				</AnimatePresence>,
+				document.body,
 			)}
 		</div>
 	);
