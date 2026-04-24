@@ -101,7 +101,7 @@ export default function CzButton({
 						scaleX: { type: "spring", stiffness: 900, damping: 16 },
 						boxShadow: { duration: 0.12, ease: "easeOut" },
 					}}
-					className="inline-block h-1 w-3 mb-1 rounded-[1px]"
+					className={`inline-block h-1 w-3 mb-1 rounded-[1px] ${active ? "bg-cz-led-on" : "bg-cz-led-off"}`}
 					aria-hidden="true"
 				/>
 			) : (
