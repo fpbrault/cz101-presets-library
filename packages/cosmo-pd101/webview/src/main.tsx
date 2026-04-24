@@ -23,7 +23,7 @@ async function init() {
 				import("./test/TestHarness"),
 			]);
 		// Install the mock __BEAMER__ runtime before React renders so that
-		// ensureBeamerLegacyBridge() inside App finds it immediately.
+		// ensureBeamerBridge() inside App finds it immediately.
 		installMockPluginBridge();
 		RootComponent = TestHarness;
 	}

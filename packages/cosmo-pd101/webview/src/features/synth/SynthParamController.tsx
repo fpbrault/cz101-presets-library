@@ -8,6 +8,7 @@ import {
 	useState,
 } from "react";
 import { useOptionalModMatrix } from "@/context/ModMatrixContext";
+import { useSynthStore } from "@/features/synth/synthStore";
 import type { UseSynthStateResult } from "@/features/synth/useSynthState";
 import type { ModDestination, ModSource } from "@/lib/synth/bindings/synth";
 import {
@@ -130,13 +131,11 @@ const SynthParamControllerContext = createContext<SynthParamController | null>(
 
 type SynthParamControllerProviderProps = {
 	children: ReactNode;
-	synthState: UseSynthStateResult;
 	onControlReadout?: (key: string, value: ReadoutValue) => void;
 };
 
 export function SynthParamControllerProvider({
 	children,
-	synthState,
 	onControlReadout,
 }: SynthParamControllerProviderProps) {
 	const maybeModMatrix = useOptionalModMatrix();
@@ -148,17 +147,22 @@ export function SynthParamControllerProvider({
 		typeof performance !== "undefined" ? performance.now() / 1000 : 0,
 	);
 
+	// Read LFO params from the store with selective subscriptions.
+	const lfoEnabled = useSynthStore((s) => s.lfoEnabled);
+	const lfoRate = useSynthStore((s) => s.lfoRate);
+	const lfoWaveform = useSynthStore((s) => s.lfoWaveform);
+
 	const getParam = useCallback(
 		<K extends SynthParamKey>(key: K): UseSynthStateResult[K] => {
-			return synthState[key];
+			return useSynthStore.getState()[key] as UseSynthStateResult[K];
 		},
-		[synthState],
+		[],
 	);
 
 	const setParam = useCallback(
 		<K extends SynthParamKey>(key: K, value: UseSynthStateResult[K]) => {
 			const setterName = SYNTH_PARAM_SETTERS[key];
-			const setter = synthState[setterName] as (
+			const setter = useSynthStore.getState()[setterName] as (
 				next: UseSynthStateResult[K],
 			) => void;
 			setter(value);
@@ -171,7 +175,7 @@ export function SynthParamControllerProvider({
 				onControlReadout?.(key, value as ReadoutValue);
 			}
 		},
-		[synthState, onControlReadout],
+		[onControlReadout],
 	);
 
 	const hasAnyLfo1Routes = useMemo(() => {
@@ -179,9 +183,7 @@ export function SynthParamControllerProvider({
 	}, [modRoutes]);
 
 	useEffect(() => {
-		if (
-			!(hasAnyLfo1Routes && synthState.lfoEnabled && synthState.lfoRate > 0)
-		) {
+		if (!(hasAnyLfo1Routes && lfoEnabled && lfoRate > 0)) {
 			return;
 		}
 
@@ -194,7 +196,7 @@ export function SynthParamControllerProvider({
 		return () => {
 			window.cancelAnimationFrame(rafId);
 		};
-	}, [hasAnyLfo1Routes, synthState.lfoEnabled, synthState.lfoRate]);
+	}, [hasAnyLfo1Routes, lfoEnabled, lfoRate]);
 
 	useEffect(() => {
 		const onModSource = (event: Event) => {
@@ -227,12 +229,12 @@ export function SynthParamControllerProvider({
 		};
 	}, []);
 
-	const lfoPhase = (((animTimeSec * synthState.lfoRate) % 1) + 1) % 1;
+	const lfoPhase = (((animTimeSec * lfoRate) % 1) + 1) % 1;
 	const liveLfo1Value = (() => {
-		if (!synthState.lfoEnabled) {
+		if (!lfoEnabled) {
 			return 0;
 		}
-		switch (synthState.lfoWaveform) {
+		switch (lfoWaveform) {
 			case "triangle":
 				return lfoPhase < 0.5 ? 4 * lfoPhase - 1 : 3 - 4 * lfoPhase;
 			case "square":
@@ -343,6 +345,8 @@ export function useSynthParam<K extends SynthParamKey>(
 	value: UseSynthStateResult[K];
 	setValue: (value: UseSynthStateResult[K]) => void;
 } {
+	// Selective subscription — only re-renders when `key` changes in the store.
+	const value = useSynthStore((s) => s[key] as UseSynthStateResult[K]);
 	const controller = useContext(SynthParamControllerContext);
 	if (!controller) {
 		throw new Error(
@@ -351,16 +355,16 @@ export function useSynthParam<K extends SynthParamKey>(
 	}
 
 	return {
-		value: controller.getParam(key),
-		setValue: (value) => controller.setParam(key, value),
+		value,
+		setValue: (v) => controller.setParam(key, v),
 	};
 }
 
 export function useOptionalSynthParam<K extends SynthParamKey>(
 	key: K,
 ): UseSynthStateResult[K] | undefined {
-	const controller = useContext(SynthParamControllerContext);
-	return controller?.getParam(key);
+	// Selective subscription even in the optional variant.
+	return useSynthStore((s) => s[key] as UseSynthStateResult[K]);
 }
 
 export function useOptionalSynthController() {

@@ -17,6 +17,7 @@
 		"build:lib": "bunx tsdown src/index.ts --format esm --dts --out-dir lib-dist --clean --no-bundle",
 		"build:lib:watch": "bunx tsdown src/index.ts --format esm --dts --out-dir lib-dist --clean --no-bundle --watch",
 		"gen:bindings": "SPECTA_TS_EXPORT_PATH=./src/lib/synth/bindings/synth.ts cargo run --features specta-bindings --bin export-specta-bindings --manifest-path ../cosmo-synth-engine/Cargo.toml",
+		"test": "bunx vitest --project unit --run",
 		"test:unit": "bunx vitest --project unit --run",
 		"test:unit:watch": "bunx vitest --project unit",
 		"test:browser": "bunx vitest --project browser --run",
@@ -54,6 +55,7 @@
 	"dependencies": {
 		"i18next": "^26.0.6",
 		"motion": "^12.38.0",
-		"react-i18next": "^17.0.4"
+		"react-i18next": "^17.0.4",
+		"zustand": "^5.0.12"
 	}
 }

@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
-const mockEnsureBeamerLegacyBridge = vi.hoisted(() => vi.fn());
+const mockEnsureBeamerBridge = vi.hoisted(() => vi.fn());
 const mockCheckForPluginUpdate = vi.hoisted(() => vi.fn());
 
 vi.mock("./PluginPage", () => ({
@@ -19,7 +19,7 @@ vi.mock("./PluginPage", () => ({
 }));
 
 vi.mock("./lib/beamerLegacyBridge", () => ({
-	ensureBeamerLegacyBridge: mockEnsureBeamerLegacyBridge,
+	ensureBeamerBridge: mockEnsureBeamerBridge,
 }));
 
 vi.mock("./update/checkPluginUpdate", () => ({
@@ -28,8 +28,8 @@ vi.mock("./update/checkPluginUpdate", () => ({
 
 describe("App", () => {
 	beforeEach(() => {
-		mockEnsureBeamerLegacyBridge.mockReset();
-		mockEnsureBeamerLegacyBridge.mockReturnValue(true);
+		mockEnsureBeamerBridge.mockReset();
+		mockEnsureBeamerBridge.mockReturnValue(true);
 		mockCheckForPluginUpdate.mockReset();
 		mockCheckForPluginUpdate.mockResolvedValue(null);
 	});
@@ -40,18 +40,16 @@ describe("App", () => {
 
 	it("polls for the legacy bridge until it becomes ready", () => {
 		vi.useFakeTimers();
-		mockEnsureBeamerLegacyBridge
-			.mockReturnValueOnce(false)
-			.mockReturnValueOnce(true);
+		mockEnsureBeamerBridge.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
 		const { unmount } = render(<App />);
-		expect(mockEnsureBeamerLegacyBridge).toHaveBeenCalledTimes(1);
+		expect(mockEnsureBeamerBridge).toHaveBeenCalledTimes(1);
 
 		act(() => {
 			vi.advanceTimersByTime(50);
 		});
 
-		expect(mockEnsureBeamerLegacyBridge).toHaveBeenCalledTimes(2);
+		expect(mockEnsureBeamerBridge).toHaveBeenCalledTimes(2);
 		unmount();
 	});
 

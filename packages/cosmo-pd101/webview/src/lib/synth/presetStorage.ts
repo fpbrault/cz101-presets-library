@@ -94,16 +94,19 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 		legato: false,
 		velocityTarget: "amp",
 		chorus: {
+			enabled: false,
 			rate: 0.8,
 			depth: 1,
 			mix: 0,
 		},
 		delay: {
+			enabled: false,
 			time: 0.3,
 			feedback: 0.35,
 			mix: 0,
 		},
 		reverb: {
+			enabled: false,
 			size: 0.5,
 			mix: 0,
 		},

@@ -414,6 +414,8 @@ impl Default for LineParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct ChorusParams {
+    #[serde(default)]
+    pub enabled: bool,
     pub rate: f32,
     pub depth: f32,
     pub mix: f32,
@@ -422,6 +424,7 @@ pub struct ChorusParams {
 impl Default for ChorusParams {
     fn default() -> Self {
         Self {
+            enabled: false,
             rate: 0.8,
             depth: 0.003,
             mix: 0.0,
@@ -433,6 +436,8 @@ impl Default for ChorusParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct DelayParams {
+    #[serde(default)]
+    pub enabled: bool,
     pub time: f32,
     pub feedback: f32,
     pub mix: f32,
@@ -441,6 +446,7 @@ pub struct DelayParams {
 impl Default for DelayParams {
     fn default() -> Self {
         Self {
+            enabled: false,
             time: 0.3,
             feedback: 0.35,
             mix: 0.0,
@@ -452,6 +458,8 @@ impl Default for DelayParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct ReverbParams {
+    #[serde(default)]
+    pub enabled: bool,
     pub size: f32,
     pub mix: f32,
 }
@@ -459,6 +467,7 @@ pub struct ReverbParams {
 impl Default for ReverbParams {
     fn default() -> Self {
         Self {
+            enabled: false,
             size: 0.5,
             mix: 0.0,
         }
@@ -688,6 +697,8 @@ pub struct SynthParams {
     pub octave: f32,
     pub line1: LineParams,
     pub line2: LineParams,
+    #[serde(default)]
+    pub int_pm_enabled: bool,
     pub int_pm_amount: f32,
     pub int_pm_ratio: f32,
     pub ext_pm_amount: f32,
@@ -733,6 +744,7 @@ impl Default for SynthParams {
             octave: 0.0,
             line1: LineParams::default(),
             line2: LineParams::default(),
+            int_pm_enabled: false,
             int_pm_amount: 0.0,
             int_pm_ratio: 1.0,
             ext_pm_amount: 0.0,
