@@ -51,10 +51,10 @@ export interface MockBridgeHandle {
 
 	/**
 	 * Push an inbound param update (simulates Rust → UI) via __czOnParams.
-	 * @param stringId  Beamer string param ID (e.g. "volume", "cho_mix")
+	 * @param idOrStringId  Numeric legacy param ID (0 = volume, 102, 202, etc.) or Beamer string param ID (e.g. "volume", "cho_mix")
 	 * @param value     Plain (un-normalized) value
 	 */
-	pushParamUpdate(stringId: string, value: number): void;
+	pushParamUpdate(idOrStringId: string | number, value: number): void;
 
 	/**
 	 * Push an inbound param update through the Beamer runtime _onParams path.
@@ -65,10 +65,10 @@ export interface MockBridgeHandle {
 	/**
 	 * Send an outbound param set through window.ipc (if installed), testing the
 	 * full UI → bridge → runtime.params.set chain.
-	 * @param stringId  Beamer string param ID (e.g. "volume", "cho_mix")
+	 * @param idOrStringId  Numeric legacy param ID (0, 102, 202, etc.) or Beamer string ID ("volume", "cho_mix")
 	 * @param value     Plain (un-normalized) value
 	 */
-	setParameter(stringId: string, value: number): void;
+	setParameter(idOrStringId: string | number, value: number): void;
 
 	/** Return a snapshot of the virtual DSP param state (normalized 0–1 by string ID). */
 	getState(): Record<string, number>;
@@ -388,7 +388,11 @@ export function installMockPluginBridge(): void {
 			messages.length = 0;
 		},
 
-		pushParamUpdate(stringId: string, value: number): void {
+		pushParamUpdate(idOrStringId: string | number, value: number): void {
+			const stringId = typeof idOrStringId === "number" 
+				? paramsById[idOrStringId]?.stringId ?? String(idOrStringId)
+				: idOrStringId;
+			
 			if (window.__czOnParams) {
 				window.__czOnParams(JSON.stringify({ [stringId]: value }));
 			}
@@ -399,7 +403,11 @@ export function installMockPluginBridge(): void {
 			window.__BEAMER__?._onParams(update);
 		},
 
-		setParameter(stringId: string, value: number): void {
+		setParameter(idOrStringId: string | number, value: number): void {
+			const stringId = typeof idOrStringId === "number" 
+				? paramsById[idOrStringId]?.stringId ?? String(idOrStringId)
+				: idOrStringId;
+			
 			if (window.ipc) {
 				// Full path: UI → installBridgeIpc → runtime.params.set.
 				window.ipc.postMessage(JSON.stringify({ param_id: stringId, value }));
