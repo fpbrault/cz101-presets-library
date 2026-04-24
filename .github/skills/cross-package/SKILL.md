@@ -56,7 +56,7 @@ New synth parameter from DSP to UI:
 | 4 | `cosmo-pd101/src/features/synth/hooks/useSynthParamsToWorklet.ts` | Pass to worklet |
 | 5 | `cosmo-pd101/src/lib/synth/czPresetConverter.ts` | Map from SysEx if applicable |
 | 6 | `cosmo-pd101/src/components/panels/` | Add UI control |
-| 7 | `cosmo-pd101/webview/src/index.ts` | Export if cz-explorer needs it |
+| 7 | `cosmo-pd101/src/index.ts` | Export if cz-explorer needs it |
 
 ## Tracing a Feature Across Packages
 

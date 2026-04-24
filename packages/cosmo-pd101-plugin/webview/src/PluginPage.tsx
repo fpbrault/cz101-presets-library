@@ -1,12 +1,4 @@
 import {
-	type ReactNode,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
-import {
 	type AsidePanelTab,
 	DEFAULT_SYNTH_PRESETS,
 	getSynthRuntimeCapabilities,
@@ -16,6 +8,14 @@ import {
 	useSynthPresetManager,
 	useSynthStore,
 } from "@cosmo/cosmo-pd101";
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { usePluginParamBridge } from "./hooks/usePluginParamBridge";
 
 const UI_SCALE_KEY = "cz-plugin-ui-scale";

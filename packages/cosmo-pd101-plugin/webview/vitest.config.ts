@@ -55,7 +55,7 @@ export default defineConfig({
 						provider: playwright(),
 						instances: [{ browser: "chromium" }],
 						screenshotDirectory:
-							"../.vitest-attachments/screenshots/cosmo-pd101-webview",
+							"../.vitest-attachments/screenshots/cosmo-pd101-plugin-webview",
 						screenshotFailures: false,
 						locators: {
 							testIdAttribute: "data-testid",

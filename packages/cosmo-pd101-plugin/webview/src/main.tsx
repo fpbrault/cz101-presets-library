@@ -1,6 +1,6 @@
+import { initI18n } from "@cosmo/cosmo-pd101";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { initI18n } from "./i18n";
 import "./index.css";
 import App from "./App";
 

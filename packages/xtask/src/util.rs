@@ -135,7 +135,7 @@ pub fn cargo_target_dir_for_package(workspace_root: &Path, package: &str) -> Pat
 
 /// Returns the package-local Cargo target directory.
 ///
-/// Example: <workspace>/packages/cosmo-pd101/target
+/// Example: <workspace>/packages/cosmo-pd101-plugin/target
 #[must_use]
 pub fn package_target_dir(workspace_root: &Path, package: &str) -> PathBuf {
     workspace_root.join("packages").join(package).join("target")
@@ -143,7 +143,7 @@ pub fn package_target_dir(workspace_root: &Path, package: &str) -> PathBuf {
 
 /// Returns the package-local Cargo profile output directory.
 ///
-/// Example: <workspace>/packages/cosmo-pd101/target/release
+/// Example: <workspace>/packages/cosmo-pd101-plugin/target/release
 #[must_use]
 pub fn _package_profile_target_dir(workspace_root: &Path, package: &str, profile: &str) -> PathBuf {
     package_target_dir(workspace_root, package).join(profile)

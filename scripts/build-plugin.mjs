@@ -182,4 +182,6 @@ if (targetPlatform === "macos") {
 	console.log(`==> Created ${bundleDir}`);
 }
 
-console.log(`==> Done. Bundles are in packages/cosmo-pd101-plugin/target/${profile}/`);
+console.log(
+	`==> Done. Bundles are in packages/cosmo-pd101-plugin/target/${profile}/`,
+);
