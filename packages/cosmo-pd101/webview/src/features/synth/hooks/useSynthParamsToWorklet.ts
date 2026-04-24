@@ -1,364 +1,38 @@
 import { useMemo } from "react";
 import { useSynthEngineController } from "@/features/synth/engine/synthEngineAdapter";
-import { buildSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
+import type { SynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { createWorkletSynthEngineAdapter } from "@/features/synth/engine/workletSynthEngineAdapter";
-import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
-import type {
-	Algo,
-	AlgoControlValueV1,
-	CzWaveform,
-	FilterType,
-	LfoTarget,
-	LfoWaveform,
-	LineSelect,
-	ModMatrix,
-	ModMode,
-	PortamentoMode,
-	StepEnvData,
-	WindowType,
-} from "@/lib/synth/bindings/synth";
+import type { UseSynthStateResult } from "@/features/synth/useSynthState";
 import type { EngineParams } from "./useAudioEngine";
 
 type UseSynthParamsToWorkletParams = {
 	workletNodeRef: React.MutableRefObject<AudioWorkletNode | null>;
 	paramsRef: React.MutableRefObject<EngineParams>;
 	effectivePitchHz: number;
-	lineSelect: LineSelect;
-	modMode: ModMode;
-	warpAAmount: number;
-	warpBAmount: number;
-	line1Level: number;
-	line2Level: number;
-	warpAAlgo: Algo;
-	warpBAlgo: Algo;
-	intPmAmount: number;
-	intPmRatio: number;
-	phaseModEnabled: boolean;
 	extPmAmount: number;
-	pmPre: boolean;
-	windowType: WindowType;
-	volume: number;
-	line1Detune: number;
-	line2Detune: number;
-	line1Octave: number;
-	line2Octave: number;
-	line1DcoEnv: StepEnvData;
-	line1DcwEnv: StepEnvData;
-	line1DcaEnv: StepEnvData;
-	line1CzSlotAWaveform: CzWaveform;
-	line1CzSlotBWaveform: CzWaveform;
-	line1CzWindow: WindowType;
-	line1AlgoControlsA: AlgoControlValueV1[];
-	line1AlgoControlsB: AlgoControlValueV1[];
-	line2DcoEnv: StepEnvData;
-	line2DcwEnv: StepEnvData;
-	line2DcaEnv: StepEnvData;
-	line2CzSlotAWaveform: CzWaveform;
-	line2CzSlotBWaveform: CzWaveform;
-	line2CzWindow: WindowType;
-	line2AlgoControlsA: AlgoControlValueV1[];
-	line2AlgoControlsB: AlgoControlValueV1[];
-	polyMode: PolyMode;
-	legato: boolean;
-	velocityTarget: VelocityTarget;
-	chorusRate: number;
-	chorusDepth: number;
-	chorusEnabled: boolean;
-	chorusMix: number;
-	delayTime: number;
-	delayFeedback: number;
-	delayEnabled: boolean;
-	delayMix: number;
-	reverbSize: number;
-	reverbEnabled: boolean;
-	reverbMix: number;
-	algo2A: Algo | null;
-	algo2B: Algo | null;
-	algoBlendA: number;
-	algoBlendB: number;
-	line1DcwKeyFollow: number;
-	line2DcwKeyFollow: number;
-	vibratoEnabled: boolean;
-	vibratoWave: number;
-	vibratoRate: number;
-	vibratoDepth: number;
-	vibratoDelay: number;
-	portamentoEnabled: boolean;
-	portamentoMode: PortamentoMode;
-	portamentoRate: number;
-	portamentoTime: number;
-	lfoEnabled: boolean;
-	lfoWaveform: LfoWaveform;
-	lfoRate: number;
-	lfoDepth: number;
-	lfoOffset: number;
-	lfoTarget: LfoTarget;
-	filterEnabled: boolean;
-	filterType: FilterType;
-	filterCutoff: number;
-	filterResonance: number;
-	filterEnvAmount: number;
-	pitchBendRange: number;
-	modWheelVibratoDepth: number;
-	modMatrix: ModMatrix;
+	synthState: UseSynthStateResult;
 };
 
 export function useSynthParamsToWorklet({
 	workletNodeRef,
 	paramsRef,
 	effectivePitchHz,
-	lineSelect,
-	modMode,
-	warpAAmount,
-	warpBAmount,
-	line1Level,
-	line2Level,
-	warpAAlgo,
-	warpBAlgo,
-	intPmAmount,
-	intPmRatio,
-	phaseModEnabled,
 	extPmAmount,
-	pmPre,
-	windowType,
-	volume,
-	line1Detune,
-	line2Detune,
-	line1Octave,
-	line2Octave,
-	line1DcoEnv,
-	line1DcwEnv,
-	line1DcaEnv,
-	line1CzSlotAWaveform,
-	line1CzSlotBWaveform,
-	line1CzWindow,
-	line1AlgoControlsA,
-	line1AlgoControlsB,
-	line2DcoEnv,
-	line2DcwEnv,
-	line2DcaEnv,
-	line2CzSlotAWaveform,
-	line2CzSlotBWaveform,
-	line2CzWindow,
-	line2AlgoControlsA,
-	line2AlgoControlsB,
-	polyMode,
-	legato,
-	velocityTarget,
-	chorusRate,
-	chorusDepth,
-	chorusEnabled,
-	chorusMix,
-	delayTime,
-	delayFeedback,
-	delayEnabled,
-	delayMix,
-	reverbSize,
-	reverbEnabled,
-	reverbMix,
-	algo2A,
-	algo2B,
-	algoBlendA,
-	algoBlendB,
-	line1DcwKeyFollow,
-	line2DcwKeyFollow,
-	vibratoEnabled,
-	vibratoWave,
-	vibratoRate,
-	vibratoDepth,
-	vibratoDelay,
-	portamentoEnabled,
-	portamentoMode,
-	portamentoRate,
-	portamentoTime,
-	lfoEnabled,
-	lfoWaveform,
-	lfoRate,
-	lfoDepth,
-	lfoOffset,
-	lfoTarget,
-	filterEnabled,
-	filterType,
-	filterCutoff,
-	filterResonance,
-	filterEnvAmount,
-	pitchBendRange,
-	modWheelVibratoDepth,
-	modMatrix,
+	synthState,
 }: UseSynthParamsToWorkletParams) {
 	const adapter = useMemo(
-		() =>
-			createWorkletSynthEngineAdapter({
-				workletNodeRef,
-				paramsRef,
-			}),
+		() => createWorkletSynthEngineAdapter({ workletNodeRef, paramsRef }),
 		[workletNodeRef, paramsRef],
 	);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: synthState.gatherState is a stable proxy — it changes identity whenever any individual state value changes
 	const snapshot = useMemo(
-		() =>
-			buildSynthEngineSnapshot({
-				effectivePitchHz,
-				extPmAmount,
-				lineSelect,
-				modMode,
-				warpAAmount,
-				warpBAmount,
-				line1Level,
-				line2Level,
-				warpAAlgo,
-				warpBAlgo,
-				intPmAmount,
-				intPmRatio,
-				phaseModEnabled,
-				pmPre,
-				windowType,
-				volume,
-				line1Detune,
-				line2Detune,
-				line1Octave,
-				line2Octave,
-				line1DcoEnv,
-				line1DcwEnv,
-				line1DcaEnv,
-				line1CzSlotAWaveform,
-				line1CzSlotBWaveform,
-				line1CzWindow,
-				line1AlgoControlsA,
-				line1AlgoControlsB,
-				line2DcoEnv,
-				line2DcwEnv,
-				line2DcaEnv,
-				line2CzSlotAWaveform,
-				line2CzSlotBWaveform,
-				line2CzWindow,
-				line2AlgoControlsA,
-				line2AlgoControlsB,
-				polyMode,
-				legato,
-				velocityTarget,
-				chorusRate,
-				chorusDepth,
-				chorusEnabled,
-				chorusMix,
-				delayTime,
-				delayFeedback,
-				delayEnabled,
-				delayMix,
-				reverbSize,
-				reverbEnabled,
-				reverbMix,
-				algo2A,
-				algo2B,
-				algoBlendA,
-				algoBlendB,
-				line1DcwKeyFollow,
-				line2DcwKeyFollow,
-				vibratoEnabled,
-				vibratoWave,
-				vibratoRate,
-				vibratoDepth,
-				vibratoDelay,
-				portamentoEnabled,
-				portamentoMode,
-				portamentoRate,
-				portamentoTime,
-				lfoEnabled,
-				lfoWaveform,
-				lfoRate,
-				lfoDepth,
-				lfoOffset,
-				lfoTarget,
-				filterEnabled,
-				filterType,
-				filterCutoff,
-				filterResonance,
-				filterEnvAmount,
-				pitchBendRange,
-				modWheelVibratoDepth,
-				modMatrix,
-			}),
-		[
+		(): SynthEngineSnapshot => ({
+			...synthState,
 			effectivePitchHz,
 			extPmAmount,
-			lineSelect,
-			modMode,
-			warpAAmount,
-			warpBAmount,
-			line1Level,
-			line2Level,
-			warpAAlgo,
-			warpBAlgo,
-			intPmAmount,
-			intPmRatio,
-			phaseModEnabled,
-			pmPre,
-			windowType,
-			volume,
-			line1Detune,
-			line2Detune,
-			line1Octave,
-			line2Octave,
-			line1DcoEnv,
-			line1DcwEnv,
-			line1DcaEnv,
-			line1CzSlotAWaveform,
-			line1CzSlotBWaveform,
-			line1CzWindow,
-			line1AlgoControlsA,
-			line1AlgoControlsB,
-			line2DcoEnv,
-			line2DcwEnv,
-			line2DcaEnv,
-			line2CzSlotAWaveform,
-			line2CzSlotBWaveform,
-			line2CzWindow,
-			line2AlgoControlsA,
-			line2AlgoControlsB,
-			polyMode,
-			legato,
-			velocityTarget,
-			chorusRate,
-			chorusDepth,
-			chorusEnabled,
-			chorusMix,
-			delayTime,
-			delayFeedback,
-			delayEnabled,
-			delayMix,
-			reverbSize,
-			reverbEnabled,
-			reverbMix,
-			algo2A,
-			algo2B,
-			algoBlendA,
-			algoBlendB,
-			line1DcwKeyFollow,
-			line2DcwKeyFollow,
-			vibratoEnabled,
-			vibratoWave,
-			vibratoRate,
-			vibratoDepth,
-			vibratoDelay,
-			portamentoEnabled,
-			portamentoMode,
-			portamentoRate,
-			portamentoTime,
-			lfoEnabled,
-			lfoWaveform,
-			lfoRate,
-			lfoDepth,
-			lfoOffset,
-			lfoTarget,
-			filterEnabled,
-			filterType,
-			filterCutoff,
-			filterResonance,
-			filterEnvAmount,
-			pitchBendRange,
-			modWheelVibratoDepth,
-			modMatrix,
-		],
+		}),
+		[synthState.gatherState, effectivePitchHz, extPmAmount],
 	);
 
 	useSynthEngineController({ adapter, snapshot });

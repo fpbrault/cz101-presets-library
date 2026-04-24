@@ -97,9 +97,3 @@ type BuildSynthEngineSnapshotParams = {
 };
 
 export type SynthEngineSnapshot = BuildSynthEngineSnapshotParams;
-
-export function buildSynthEngineSnapshot(
-	params: BuildSynthEngineSnapshotParams,
-): SynthEngineSnapshot {
-	return params;
-}
