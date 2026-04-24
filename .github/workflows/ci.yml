@@ -148,6 +148,33 @@ jobs:
         run: bun --filter @cosmo/cosmo-pd101 webview:test:unit
         shell: bash
 
+  plugin-webview-browser-tests:
+    name: Plugin Webview Browser Tests (Vitest Browser Mode)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Install plugin webview dependencies
+        run: cd packages/cosmo-pd101/webview && bun install
+        shell: bash
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install chromium chromium-headless-shell --with-deps
+        shell: bash
+
+      - name: Run plugin webview browser tests
+        run: bun --filter @cosmo/cosmo-pd101 webview:test:browser
+        shell: bash
+
   plugin-webview-e2e-tests:
     name: Plugin Webview E2E Tests
     runs-on: ubuntu-latest
