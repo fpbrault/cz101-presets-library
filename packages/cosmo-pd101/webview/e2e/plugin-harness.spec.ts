@@ -35,7 +35,7 @@ test.describe("Harness shell", () => {
 		await page.getByTestId("debug-push-btn").click();
 
 		await expect(
-			page.getByRole("button", { name: /90%/i }).first(),
-		).toBeVisible({ timeout: 2000 });
+			page.getByRole("button", { name: "Volume value" }).first(),
+		).toHaveText("90%", { timeout: 2000 });
 	});
 });

@@ -71,6 +71,34 @@
 /* ─── CZ-101 hardware component classes ─────────────────────────────────── */
 
 @layer components {
+	/* Knob variants used by ControlKnob/KnobView from cosmo-pd101 webview. */
+	.knob-variant-default {
+		--knob-track-color: rgba(255, 255, 255, 0.1);
+		--knob-value-color: var(--color-cz-gold);
+		--knob-indicator-color: var(--color-cz-gold);
+		--knob-mod-color: #67c7ff;
+		--knob-bg: rgba(24, 24, 35, 0.95);
+		--knob-border: rgba(255, 255, 255, 0.08);
+	}
+
+	.knob-variant-accent {
+		--knob-track-color: rgba(255, 255, 255, 0.1);
+		--knob-value-color: var(--color-cz-light-blue);
+		--knob-indicator-color: var(--color-cz-light-blue);
+		--knob-mod-color: #67c7ff;
+		--knob-bg: rgba(24, 24, 35, 0.95);
+		--knob-border: rgba(255, 255, 255, 0.08);
+	}
+
+	.knob-variant-muted {
+		--knob-track-color: rgba(255, 255, 255, 0.06);
+		--knob-value-color: rgba(191, 189, 48, 0.5);
+		--knob-indicator-color: rgba(191, 189, 48, 0.5);
+		--knob-mod-color: rgba(103, 199, 255, 0.55);
+		--knob-bg: rgba(24, 24, 35, 0.85);
+		--knob-border: rgba(255, 255, 255, 0.05);
+	}
+
 	/* Section header bar — mimics the blue labeled bars on the CZ hardware */
 	.cz-light-blue {
 		@apply flex items-center gap-2 py-[0.15rem] px-2 font-mono text-[0.8rem] text-center justify-center font-bold tracking-[0.28em] uppercase text-cz-gold;

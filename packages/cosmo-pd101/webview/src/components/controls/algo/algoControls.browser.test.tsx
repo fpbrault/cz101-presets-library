@@ -57,7 +57,7 @@ describe("algo controls (browser)", () => {
 		);
 		expect(
 			screen.getByRole("button", { name: "Show control description" }),
-		).toBeInTheDocument();
+		).toHaveAttribute("data-hover-info", "Helpful info");
 
 		rerender(<AlgoControlTooltip description={undefined} />);
 		expect(
@@ -81,6 +81,32 @@ describe("algo controls (browser)", () => {
 		fireEvent.click(screen.getAllByRole("button")[0]);
 		expect(setNumber).toHaveBeenCalledWith(0);
 		fireEvent.click(screen.getAllByRole("button")[1]);
+		expect(applyOptionAssignments).toHaveBeenCalledWith(
+			selectControl.options[1],
+		);
+	});
+
+	it("renders and updates dropdown select controls", () => {
+		const setNumber = vi.fn();
+		const applyOptionAssignments = vi.fn();
+		render(
+			<AlgoControlItem
+				binding={{ setNumber }}
+				lineIndex={1}
+				algoParamSlotIndex={{}}
+				getAlgoControlValue={() => 0}
+				setAlgoControlValue={() => {}}
+				getActiveSelectOption={() => selectControl.options[0]}
+				applyOptionAssignments={applyOptionAssignments}
+				control={{ ...selectControl, controlType: "dropdown" }}
+			/>,
+		);
+
+		const dropdown = screen.getByRole("combobox");
+		fireEvent.change(dropdown, { target: { value: "a" } });
+		expect(setNumber).toHaveBeenCalledWith(0);
+
+		fireEvent.change(dropdown, { target: { value: "b" } });
 		expect(applyOptionAssignments).toHaveBeenCalledWith(
 			selectControl.options[1],
 		);

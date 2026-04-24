@@ -36,7 +36,8 @@ pub struct LineRenderConfig<'a> {
     pub final_dca: f32,
     pub effective_freq: f32,
     pub sample_rate: f32,
-    pub algo_controls: Option<&'a [AlgoControlValueV1]>,
+    pub primary_algo_controls: Option<&'a [AlgoControlValueV1]>,
+    pub secondary_algo_controls: Option<&'a [AlgoControlValueV1]>,
     pub algo_param_mods: [f32; 8],
 }
 
@@ -67,7 +68,8 @@ impl<'a> LineRenderConfig<'a> {
             final_dca,
             effective_freq,
             sample_rate,
-            algo_controls: line.algo_controls.as_deref(),
+            primary_algo_controls: line.algo_controls_a.as_deref(),
+            secondary_algo_controls: line.algo_controls_b.as_deref(),
             algo_param_mods,
         }
     }
@@ -121,7 +123,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
             config.primary_algo,
             config.phase,
             primary_dcw,
-            config.algo_controls,
+            config.primary_algo_controls,
             config.algo_param_mods,
             None,
         );
@@ -129,7 +131,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
             secondary_algo,
             config.phase,
             secondary_dcw,
-            config.algo_controls,
+            config.secondary_algo_controls,
             config.algo_param_mods,
             None,
         );
@@ -139,7 +141,7 @@ fn render_line_stateless(config: LineRenderConfig<'_>) -> (f32, Option<f32>) {
             config.primary_algo,
             config.phase,
             config.final_dcw,
-            config.algo_controls,
+            config.primary_algo_controls,
             config.algo_param_mods,
             None,
         )
@@ -684,7 +686,8 @@ mod tests {
             final_dca: 1.0,
             effective_freq: 220.0,
             sample_rate: 44100.0,
-            algo_controls: None,
+            primary_algo_controls: None,
+            secondary_algo_controls: None,
             algo_param_mods: [0.0; 8],
         };
 

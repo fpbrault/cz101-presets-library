@@ -57,6 +57,23 @@
 	::file-selector-button {
 		border-color: var(--color-gray-200, currentcolor);
 	}
+
+	/* Prevent long-press drag selection across the synth UI, especially on touch devices. */
+	#root,
+	#root * {
+		-webkit-touch-callout: none;
+		-webkit-user-drag: none;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	/* Keep text inputs editable/selectable for rename/search dialogs. */
+	#root input,
+	#root textarea,
+	#root [contenteditable="true"] {
+		-webkit-user-select: text;
+		user-select: text;
+	}
 }
 
 @layer components {

@@ -33,6 +33,6 @@ describe("CzButton", () => {
 
 		const button = screen.getByRole("button");
 		expect(button).toBeDisabled();
-		expect(button.closest("[data-tip='Helpful']")).not.toBeNull();
+		expect(button).toHaveAttribute("data-hover-info", "Helpful");
 	});
 });

@@ -39,7 +39,7 @@ export default function SynthHeader({
 	trailingContent,
 }: SynthHeaderProps) {
 	return (
-		<header className="shrink-0 flex flex-col gap-3 border-b-4 border-cz-border bg-cz-body px-8 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex-row lg:items-center lg:justify-between">
+		<header className="shrink-0 flex flex-col gap-3 border-b-4 border-cz-border bg-cz-body px-8 py-2 shadow-inner lg:flex-row lg:items-center lg:justify-between">
 			{/* Hardware nameplate logo */}
 			<div className="flex items-center gap-4 shrink-0">
 				<div className="flex flex-col items-start leading-none select-none">

@@ -6,6 +6,10 @@ vi.mock("./AlgoControlSelect", () => ({
 	default: () => <div data-testid="select-control" />,
 }));
 
+vi.mock("./AlgoControlDropdown", () => ({
+	default: () => <div data-testid="dropdown-control" />,
+}));
+
 vi.mock("./AlgoControlNumber", () => ({
 	default: () => <div data-testid="number-control" />,
 }));
@@ -33,6 +37,21 @@ describe("AlgoControlItem", () => {
 			/>,
 		);
 		expect(screen.getByTestId("select-control")).toBeInTheDocument();
+	});
+
+	it("renders dropdown control for dropdown presentation", () => {
+		render(
+			<AlgoControlItem
+				{...baseProps}
+				control={{
+					id: "x",
+					label: "X",
+					kind: "select",
+					controlType: "dropdown",
+				}}
+			/>,
+		);
+		expect(screen.getByTestId("dropdown-control")).toBeInTheDocument();
 	});
 
 	it("renders number control by default", () => {

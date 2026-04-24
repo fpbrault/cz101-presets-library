@@ -746,11 +746,16 @@ fn select_line_sources(
                 line1_algo_param_mods,
             );
             let algo_prime = cfg.secondary_algo.unwrap_or(cfg.primary_algo);
+            let algo_prime_controls = if cfg.secondary_algo.is_some() {
+                cfg.secondary_algo_controls
+            } else {
+                cfg.primary_algo_controls
+            };
             let s1_prime = generators::render_algo_sample(
                 algo_prime,
                 phi1,
                 0.0,
-                cfg.algo_controls,
+                algo_prime_controls,
                 cfg.algo_param_mods,
                 ks_raw1,
             ) * final_dca1;
@@ -769,11 +774,16 @@ fn select_line_sources(
                 line2_algo_param_mods,
             );
             let algo_prime = cfg.secondary_algo.unwrap_or(cfg.primary_algo);
+            let algo_prime_controls = if cfg.secondary_algo.is_some() {
+                cfg.secondary_algo_controls
+            } else {
+                cfg.primary_algo_controls
+            };
             let s2_prime = generators::render_algo_sample(
                 algo_prime,
                 phi1,
                 0.0,
-                cfg.algo_controls,
+                algo_prime_controls,
                 cfg.algo_param_mods,
                 ks_raw2,
             ) * final_dca2;

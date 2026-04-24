@@ -69,6 +69,7 @@ export function useKnobInteraction({
 	const [editing, setEditing] = useState(false);
 	const [editValue, setEditValue] = useState("");
 	const inputRef = useRef<HTMLInputElement>(null);
+	const lastTouchTapAtRef = useRef(0);
 
 	const dragState = useRef<{
 		mode: "linear" | "angular";
@@ -93,10 +94,15 @@ export function useKnobInteraction({
 			const svg = svgRef.current;
 			if (!svg) return { x: clientX, y: clientY };
 			const pt = svg.createSVGPoint();
+			if (typeof pt.matrixTransform !== "function") {
+				return { x: clientX, y: clientY };
+			}
 			pt.x = clientX;
 			pt.y = clientY;
 			const ctm = svg.getScreenCTM();
-			if (!ctm) return { x: clientX, y: clientY };
+			if (!ctm || typeof ctm.inverse !== "function") {
+				return { x: clientX, y: clientY };
+			}
 			const svgPt = pt.matrixTransform(ctm.inverse());
 			return { x: svgPt.x, y: svgPt.y };
 		},
@@ -106,6 +112,22 @@ export function useKnobInteraction({
 	const onPointerDown = useCallback(
 		(e: React.PointerEvent) => {
 			if (disabled) return;
+
+			if (e.pointerType === "touch") {
+				const now = Date.now();
+				const isDoubleTouch = now - lastTouchTapAtRef.current <= 300;
+				lastTouchTapAtRef.current = now;
+
+				if (isDoubleTouch && defaultValue !== undefined) {
+					e.preventDefault();
+					dragState.current = null;
+					setDragging(false);
+					emit(defaultValue);
+					lastTouchTapAtRef.current = 0;
+					return;
+				}
+			}
+
 			e.preventDefault();
 			(e.currentTarget as Element).setPointerCapture(e.pointerId);
 			const pt = toSvgPoint(e.clientX, e.clientY);
@@ -121,7 +143,7 @@ export function useKnobInteraction({
 			};
 			setDragging(true);
 		},
-		[disabled, toSvgPoint, value, min, max, arcGeometry],
+		[disabled, defaultValue, toSvgPoint, value, min, max, arcGeometry, emit],
 	);
 
 	const onDoubleClick = useCallback(

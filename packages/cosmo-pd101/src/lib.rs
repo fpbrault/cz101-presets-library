@@ -2,6 +2,7 @@
 //!
 //! Uses beamer for VST3/AU plugin hosting and cosmo-synth-engine for the DSP engine.
 
+use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::{Arc, Mutex, RwLock};
@@ -104,6 +105,17 @@ impl ScopeFrame {
 
 /// Thread-safe scope buffer shared between the audio thread and the GUI thread.
 type ScopeBuffer = Arc<Mutex<ScopeFrame>>;
+type UiInputQueue = Arc<Mutex<VecDeque<UiInputEvent>>>;
+
+#[derive(Debug, Clone, Copy)]
+enum UiInputEvent {
+    NoteOn { note: u8, velocity: f32 },
+    NoteOff { note: u8 },
+    Sustain { on: bool },
+    PitchBend { value: f32 },
+    ModWheel { value: f32 },
+    Aftertouch { value: f32 },
+}
 
 // =============================================================================
 // Enum Types for EnumParameter
@@ -234,6 +246,9 @@ pub enum LfoWaveform {
 }
 
 /// LFO target.
+///
+/// Deprecated: destination routing is handled by the modulation matrix.
+/// Kept for compatibility with existing presets/automation.
 #[derive(Copy, Clone, PartialEq, EnumParameter)]
 pub enum LfoTarget {
     #[name = "Pitch"]
@@ -391,13 +406,13 @@ pub struct CzParameters {
     #[parameter(id = "vib_waveform", name = "Waveform", default = 1.0, range = 1.0..=4.0, group = "Vibrato")]
     pub vib_waveform: FloatParameter,
 
-    #[parameter(id = "vib_rate", name = "Rate", default = 30.0, range = 0.0..=99.0, group = "Vibrato")]
+    #[parameter(id = "vib_rate", name = "Rate", default = 55.0, range = 0.0..=99.0, group = "Vibrato")]
     pub vib_rate: FloatParameter,
 
-    #[parameter(id = "vib_depth", name = "Depth", default = 30.0, range = 0.0..=99.0, group = "Vibrato")]
+    #[parameter(id = "vib_depth", name = "Depth", default = 8.0, range = 0.0..=99.0, group = "Vibrato")]
     pub vib_depth: FloatParameter,
 
-    #[parameter(id = "vib_delay", name = "Delay (ms)", default = 0.0, range = 0.0..=5000.0, group = "Vibrato")]
+    #[parameter(id = "vib_delay", name = "Delay (ms)", default = 120.0, range = 0.0..=5000.0, group = "Vibrato")]
     pub vib_delay: FloatParameter,
 
     // Chorus
@@ -437,9 +452,10 @@ pub struct CzParameters {
     #[parameter(id = "lfo_rate", name = "Rate (Hz)", default = 5.0, range = 0.01..=20.0, group = "LFO")]
     pub lfo_rate: FloatParameter,
 
-    #[parameter(id = "lfo_depth", name = "Depth", default = 0.0, range = 0.0..=1.0, group = "LFO")]
+    #[parameter(id = "lfo_depth", name = "Depth", default = 0.2, range = 0.0..=1.0, group = "LFO")]
     pub lfo_depth: FloatParameter,
 
+    // Deprecated parameter: retained to preserve preset and host automation compatibility.
     #[parameter(id = "lfo_target", name = "Target", group = "LFO")]
     pub lfo_target: EnumParameter<LfoTarget>,
 
@@ -515,6 +531,7 @@ impl CzParameters {
     }
 
     fn map_lfo_target(value: LfoTarget) -> cosmo_synth_engine::params::LfoTarget {
+        // Deprecated mapping path, retained for backward compatibility.
         match value {
             LfoTarget::Pitch => cosmo_synth_engine::params::LfoTarget::Pitch,
             LfoTarget::Dcw => cosmo_synth_engine::params::LfoTarget::Dcw,
@@ -769,7 +786,8 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         dca_env: _,
         key_follow: _l1_kf,
         cz: _l1_cz,
-        algo_controls: _l1_algo_controls, // not yet a VST param — routed via IPC
+        algo_controls_a: _l1_algo_controls_a, // not yet a VST param — routed via IPC
+        algo_controls_b: _l1_algo_controls_b, // not yet a VST param — routed via IPC
     } = line1;
     let CzLineParams {
         slot_a_waveform: _l1_slot_a,
@@ -794,7 +812,8 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         dca_env: _,
         key_follow: _l2_kf,
         cz: _l2_cz,
-        algo_controls: _l2_algo_controls, // not yet a VST param — routed via IPC
+        algo_controls_a: _l2_algo_controls_a, // not yet a VST param — routed via IPC
+        algo_controls_b: _l2_algo_controls_b, // not yet a VST param — routed via IPC
     } = line2;
     let CzLineParams {
         slot_a_waveform: _l2_slot_a,
@@ -879,20 +898,31 @@ impl EnvelopeState {
 
 #[derive(Clone, Default)]
 struct AlgoControlsState {
-    line1: Vec<AlgoControlValueV1>,
-    line2: Vec<AlgoControlValueV1>,
+    line1_a: Vec<AlgoControlValueV1>,
+    line1_b: Vec<AlgoControlValueV1>,
+    line2_a: Vec<AlgoControlValueV1>,
+    line2_b: Vec<AlgoControlValueV1>,
 }
 
 impl AlgoControlsState {
     fn apply_to(&self, params: &mut SynthParams) {
-        params.line1.algo_controls = Some(self.line1.clone());
-        params.line2.algo_controls = Some(self.line2.clone());
+        params.line1.algo_controls_a = Some(self.line1_a.clone());
+        params.line1.algo_controls_b = Some(self.line1_b.clone());
+        params.line2.algo_controls_a = Some(self.line2_a.clone());
+        params.line2.algo_controls_b = Some(self.line2_b.clone());
     }
 
-    fn set(&mut self, line: u8, controls: Vec<AlgoControlValueV1>) -> Result<(), String> {
-        match line {
-            1 => self.line1 = controls,
-            2 => self.line2 = controls,
+    fn set(
+        &mut self,
+        line: u8,
+        bank: &str,
+        controls: Vec<AlgoControlValueV1>,
+    ) -> Result<(), String> {
+        match (line, bank) {
+            (1, "a") => self.line1_a = controls,
+            (1, "b") => self.line1_b = controls,
+            (2, "a") => self.line2_a = controls,
+            (2, "b") => self.line2_b = controls,
             _ => return Err(format!("unknown algo controls line: {line}")),
         }
 
@@ -901,8 +931,8 @@ impl AlgoControlsState {
 
     fn to_json(&self) -> serde_json::Value {
         serde_json::json!({
-            "line1": self.line1,
-            "line2": self.line2,
+            "line1": { "a": self.line1_a, "b": self.line1_b },
+            "line2": { "a": self.line2_a, "b": self.line2_b },
         })
     }
 }
@@ -931,6 +961,7 @@ struct CzWebViewHandler {
     algo_controls: Arc<RwLock<AlgoControlsState>>,
     mod_matrix: Arc<RwLock<ModMatrixState>>,
     scope_buffer: ScopeBuffer,
+    ui_input_queue: UiInputQueue,
 }
 
 impl CzWebViewHandler {
@@ -963,7 +994,7 @@ impl CzWebViewHandler {
 
     fn parse_set_algo_controls_args(
         args: &[serde_json::Value],
-    ) -> Result<(u8, Vec<AlgoControlValueV1>), String> {
+    ) -> Result<(u8, String, Vec<AlgoControlValueV1>), String> {
         if args.len() == 2 {
             let line = args[0]
                 .as_u64()
@@ -971,7 +1002,21 @@ impl CzWebViewHandler {
                 as u8;
             let controls: Vec<AlgoControlValueV1> = serde_json::from_value(args[1].clone())
                 .map_err(|error| format!("invalid algo controls payload: {error}"))?;
-            return Ok((line, controls));
+            return Ok((line, "a".to_string(), controls));
+        }
+
+        if args.len() == 3 {
+            let line = args[0]
+                .as_u64()
+                .ok_or_else(|| "setAlgoControls expects line as first argument".to_string())?
+                as u8;
+            let bank = args[1]
+                .as_str()
+                .ok_or_else(|| "setAlgoControls expects bank as second argument".to_string())?
+                .to_string();
+            let controls: Vec<AlgoControlValueV1> = serde_json::from_value(args[2].clone())
+                .map_err(|error| format!("invalid algo controls payload: {error}"))?;
+            return Ok((line, bank, controls));
         }
 
         let payload = args
@@ -989,9 +1034,14 @@ impl CzWebViewHandler {
             .or_else(|| payload.get("algo_controls"))
             .cloned()
             .ok_or_else(|| "setAlgoControls payload is missing controls".to_string())?;
+        let bank = payload
+            .get("bank")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("a")
+            .to_string();
         let controls: Vec<AlgoControlValueV1> = serde_json::from_value(controls_value)
             .map_err(|error| format!("invalid algo controls payload: {error}"))?;
-        Ok((line, controls))
+        Ok((line, bank, controls))
     }
 
     fn parse_set_mod_matrix_args(args: &[serde_json::Value]) -> Result<ModMatrix, String> {
@@ -1045,13 +1095,13 @@ impl WebViewHandler for CzWebViewHandler {
                 Ok(serde_json::Value::Null)
             }
             "setAlgoControls" => {
-                let (line, controls) = Self::parse_set_algo_controls_args(args)?;
+                let (line, bank, controls) = Self::parse_set_algo_controls_args(args)?;
                 let mut algo_controls = self
                     .algo_controls
                     .write()
                     .map_err(|_| "algo controls store is poisoned".to_string())?;
-                algo_controls.set(line, controls)?;
-                append_log(&format!("setAlgoControls line={line}"));
+                algo_controls.set(line, &bank, controls)?;
+                append_log(&format!("setAlgoControls line={line} bank={bank}"));
                 Ok(serde_json::Value::Null)
             }
             "setModMatrix" => {
@@ -1119,6 +1169,58 @@ impl WebViewHandler for CzWebViewHandler {
             }
         }
     }
+
+    fn on_event(&self, name: &str, data: &serde_json::Value) {
+        let Ok(mut queue) = self.ui_input_queue.lock() else {
+            return;
+        };
+
+        let maybe_event = match name {
+            "noteOn" => {
+                let note = data.get("note").and_then(serde_json::Value::as_u64);
+                let velocity = data.get("velocity").and_then(serde_json::Value::as_f64);
+                match (note, velocity) {
+                    (Some(note), Some(velocity)) => Some(UiInputEvent::NoteOn {
+                        note: note as u8,
+                        velocity: velocity as f32,
+                    }),
+                    _ => None,
+                }
+            }
+            "noteOff" => data
+                .get("note")
+                .and_then(serde_json::Value::as_u64)
+                .map(|note| UiInputEvent::NoteOff { note: note as u8 }),
+            "sustain" => data
+                .get("on")
+                .and_then(serde_json::Value::as_bool)
+                .map(|on| UiInputEvent::Sustain { on }),
+            "pitchBend" => data
+                .get("value")
+                .and_then(serde_json::Value::as_f64)
+                .map(|value| UiInputEvent::PitchBend {
+                    value: value as f32,
+                }),
+            "modWheel" => data
+                .get("value")
+                .and_then(serde_json::Value::as_f64)
+                .map(|value| UiInputEvent::ModWheel {
+                    value: value as f32,
+                }),
+            "aftertouch" => data
+                .get("value")
+                .and_then(serde_json::Value::as_f64)
+                .map(|value| UiInputEvent::Aftertouch {
+                    value: value as f32,
+                }),
+            _ => None,
+        };
+
+        if let Some(event) = maybe_event {
+            append_log(&format!("webview event name={name}"));
+            queue.push_back(event);
+        }
+    }
 }
 
 // =============================================================================
@@ -1134,6 +1236,7 @@ pub struct CzDescriptor {
     algo_controls: Arc<RwLock<AlgoControlsState>>,
     mod_matrix: Arc<RwLock<ModMatrixState>>,
     scope_buffer: ScopeBuffer,
+    ui_input_queue: UiInputQueue,
 }
 
 impl Descriptor for CzDescriptor {
@@ -1167,6 +1270,7 @@ impl Descriptor for CzDescriptor {
             algo_controls: self.algo_controls.clone(),
             mod_matrix: self.mod_matrix.clone(),
             scope_buffer: self.scope_buffer.clone(),
+            ui_input_queue: self.ui_input_queue.clone(),
         }))
     }
 
@@ -1207,6 +1311,7 @@ impl Descriptor for CzDescriptor {
             mod_matrix: self.mod_matrix,
             cached_mod_matrix,
             scope_buffer: self.scope_buffer,
+            ui_input_queue: self.ui_input_queue,
         }
     }
 }
@@ -1227,6 +1332,29 @@ pub struct CzProcessor {
     mod_matrix: Arc<RwLock<ModMatrixState>>,
     cached_mod_matrix: ModMatrixState,
     scope_buffer: ScopeBuffer,
+    ui_input_queue: UiInputQueue,
+}
+
+impl CzProcessor {
+    fn drain_ui_input_events(&mut self) {
+        let Ok(mut queue) = self.ui_input_queue.lock() else {
+            return;
+        };
+
+        while let Some(event) = queue.pop_front() {
+            match event {
+                UiInputEvent::NoteOn { note, velocity } => {
+                    self.processor
+                        .note_on(note, midi_note_to_freq(note), velocity)
+                }
+                UiInputEvent::NoteOff { note } => self.processor.note_off(note),
+                UiInputEvent::Sustain { on } => self.processor.set_sustain(on),
+                UiInputEvent::PitchBend { value } => self.processor.set_pitch_bend(value),
+                UiInputEvent::ModWheel { value } => self.processor.set_mod_wheel(value),
+                UiInputEvent::Aftertouch { value } => self.processor.set_aftertouch(value),
+            }
+        }
+    }
 }
 
 impl Processor for CzProcessor {
@@ -1254,6 +1382,7 @@ impl Processor for CzProcessor {
         self.cached_algo_controls.apply_to(&mut synth_params);
         self.cached_mod_matrix.apply_to(&mut synth_params);
         self.processor.set_params(synth_params);
+        self.drain_ui_input_events();
 
         let num_samples = buffer.num_samples();
         let num_channels = buffer.num_output_channels();
@@ -1401,22 +1530,22 @@ mod tests {
             value: 0.75,
         }];
 
-        state.set(1, line1).unwrap();
-        state.set(2, line2).unwrap();
+        state.set(1, "a", line1).unwrap();
+        state.set(2, "b", line2).unwrap();
 
         let mut params = SynthParams::default();
         state.apply_to(&mut params);
 
-        let applied_line1 = params.line1.algo_controls.as_ref().unwrap();
-        let applied_line2 = params.line2.algo_controls.as_ref().unwrap();
+        let applied_line1 = params.line1.algo_controls_a.as_ref().unwrap();
+        let applied_line2 = params.line2.algo_controls_b.as_ref().unwrap();
         assert_eq!(applied_line1.len(), 1);
         assert_eq!(applied_line1[0].id, "warp");
         assert_eq!(applied_line1[0].value, 0.25);
         assert_eq!(applied_line2.len(), 1);
         assert_eq!(applied_line2[0].id, "bias");
         assert_eq!(applied_line2[0].value, 0.75);
-        assert_eq!(state.to_json()["line1"][0]["id"], json!("warp"));
-        assert_eq!(state.to_json()["line2"][0]["value"], json!(0.75));
-        assert!(state.set(3, Vec::new()).is_err());
+        assert_eq!(state.to_json()["line1"]["a"][0]["id"], json!("warp"));
+        assert_eq!(state.to_json()["line2"]["b"][0]["value"], json!(0.75));
+        assert!(state.set(3, "a", Vec::new()).is_err());
     }
 }
