@@ -21,7 +21,7 @@ type BeamerParamInfo = {
 
 type BeamerParamUpdate = Record<string, [number, number, string]>;
 
-type EnvelopeMap = Partial<Record<EnvelopeId, StepEnvData>>;
+export type EnvelopeMap = Partial<Record<EnvelopeId, StepEnvData>>;
 
 type AlgoControlsPayload = {
 	line: 1 | 2;
@@ -29,7 +29,7 @@ type AlgoControlsPayload = {
 	controls: AlgoControlValueV1[];
 };
 
-type EnvelopeId =
+export type EnvelopeId =
 	| "l1_dco"
 	| "l1_dcw"
 	| "l1_dca"
@@ -44,6 +44,7 @@ type BeamerRuntime = {
 	emit?: (event: string, data?: unknown) => void;
 	params: {
 		info: (id: string) => BeamerParamInfo | undefined;
+		all: () => BeamerParamInfo[];
 		beginEdit: (id: string) => void;
 		set: (id: string, normalized: number) => void;
 		endEdit: (id: string) => void;
@@ -61,80 +62,10 @@ declare global {
 	}
 }
 
-const LEGACY_PARAM_IDS: Record<number, string> = {
-	0: "volume",
-	1: "octave",
-	2: "line_select",
-	3: "mod_mode",
-	4: "poly_mode",
-	5: "legato",
-	6: "vel_target",
-	7: "int_pm_amount",
-	8: "int_pm_ratio",
-	10: "pm_pre",
-	100: "l1_waveform",
-	101: "l1_warp_algo",
-	102: "l1_dcw_base",
-	103: "l1_dca_base",
-	105: "l1_octave",
-	106: "l1_detune",
-	108: "l1_key_follow",
-	110: "l1_algo_blend",
-	111: "l1_warp_algo2",
-	200: "l2_waveform",
-	201: "l2_warp_algo",
-	202: "l2_dcw_base",
-	203: "l2_dca_base",
-	205: "l2_octave",
-	206: "l2_detune",
-	208: "l2_key_follow",
-	210: "l2_algo_blend",
-	211: "l2_warp_algo2",
-	300: "vib_enabled",
-	301: "vib_waveform",
-	302: "vib_rate",
-	303: "vib_depth",
-	304: "vib_delay",
-	400: "cho_mix",
-	401: "cho_rate",
-	402: "cho_depth",
-	500: "del_mix",
-	501: "del_time",
-	502: "del_feedback",
-	600: "rev_mix",
-	601: "rev_size",
-	700: "lfo_enabled",
-	701: "lfo_waveform",
-	702: "lfo_rate",
-	703: "lfo_depth",
-	704: "lfo_target",
-	800: "fil_enabled",
-	801: "fil_cutoff",
-	802: "fil_resonance",
-	803: "fil_env_amount",
-	804: "fil_type",
-	900: "port_enabled",
-	901: "port_mode",
-	902: "port_time",
-};
-
-const legacyIdsByStringId = Object.fromEntries(
-	Object.entries(LEGACY_PARAM_IDS).map(([legacyId, stringId]) => [
-		stringId,
-		Number(legacyId),
-	]),
-) as Record<string, number>;
-
-type ParamTransform = {
-	legacyToRuntime?: (legacyValue: number) => number;
-	runtimeToLegacy?: (runtimeValue: number) => number;
-};
-
-const PARAM_TRANSFORMS: Partial<Record<string, ParamTransform>> = {};
-
 let installed = false;
-let latestLegacyParams: Record<number, number> = {};
+let latestParams: Record<string, number> = {};
 let currentParamHandler: ((json: string) => void) | undefined;
+// Beamer may send numeric-string keys in _onParams; cache the id→stringId mapping.
 const runtimeStringIdsByNumericId: Record<number, string> = {};
 
 function clamp(value: number, min: number, max: number): number {
@@ -145,28 +76,15 @@ function toNormalized(plainValue: number, info: BeamerParamInfo): number {
 	if (info.max === info.min) {
 		return info.defaultValue;
 	}
-
 	return clamp((plainValue - info.min) / (info.max - info.min), 0, 1);
 }
 
-function toLegacyPlainValue(stringId: string, runtimeValue: number): number {
-	return (
-		PARAM_TRANSFORMS[stringId]?.runtimeToLegacy?.(runtimeValue) ?? runtimeValue
-	);
-}
-
-function toRuntimePlainValue(stringId: string, legacyValue: number): number {
-	return (
-		PARAM_TRANSFORMS[stringId]?.legacyToRuntime?.(legacyValue) ?? legacyValue
-	);
-}
-
-function emitLegacyParams(payload: Record<number, number>) {
-	latestLegacyParams = { ...latestLegacyParams, ...payload };
+function emitParams(payload: Record<string, number>) {
+	latestParams = { ...latestParams, ...payload };
 	currentParamHandler?.(JSON.stringify(payload));
 }
 
-function installLegacyParamProperty() {
+function installParamProperty() {
 	const descriptor = Object.getOwnPropertyDescriptor(window, "__czOnParams");
 	if (descriptor?.get || descriptor?.set) {
 		return;
@@ -181,77 +99,55 @@ function installLegacyParamProperty() {
 			currentParamHandler = handler;
 			if (
 				typeof handler === "function" &&
-				Object.keys(latestLegacyParams).length > 0
+				Object.keys(latestParams).length > 0
 			) {
-				queueMicrotask(() => handler(JSON.stringify(latestLegacyParams)));
+				queueMicrotask(() => handler(JSON.stringify(latestParams)));
 			}
 		},
 	});
 }
 
 function onInit(params: BeamerParamInfo[]) {
-	const legacyPayload: Record<number, number> = {};
-
+	const payload: Record<string, number> = {};
 	for (const info of params) {
 		runtimeStringIdsByNumericId[info.id] = info.stringId;
-		const legacyId = legacyIdsByStringId[info.stringId];
-		if (legacyId === undefined) {
-			continue;
-		}
-		legacyPayload[legacyId] = toLegacyPlainValue(
-			info.stringId,
-			info.plainValue,
-		);
+		payload[info.stringId] = info.plainValue;
 	}
-
-	emitLegacyParams(legacyPayload);
+	emitParams(payload);
 }
 
 function onParams(update: BeamerParamUpdate) {
-	const legacyPayload: Record<number, number> = {};
-
+	const payload: Record<string, number> = {};
 	for (const [rawId, [, plainValue]] of Object.entries(update)) {
 		const numericId = Number(rawId);
 		const stringId = Number.isNaN(numericId)
 			? rawId
 			: (runtimeStringIdsByNumericId[numericId] ?? rawId);
-		const legacyId = legacyIdsByStringId[stringId] ?? numericId;
-		if (legacyId === undefined || Number.isNaN(legacyId)) {
-			continue;
-		}
-		legacyPayload[legacyId] = toLegacyPlainValue(stringId, plainValue);
+		payload[stringId] = plainValue;
 	}
-
-	if (Object.keys(legacyPayload).length > 0) {
-		emitLegacyParams(legacyPayload);
+	if (Object.keys(payload).length > 0) {
+		emitParams(payload);
 	}
 }
 
-function installLegacyIpc(runtime: BeamerRuntime) {
+function installBridgeIpc(runtime: BeamerRuntime) {
 	window.ipc = {
 		postMessage(message: string) {
 			const payload = JSON.parse(message) as
-				| { parameter_id: number; value: number }
+				| { param_id: string; value: number }
 				| { envelope_id: EnvelopeId; data: StepEnvData }
 				| { algo_controls: AlgoControlsPayload }
 				| { mod_matrix: ModMatrix };
 
-			if ("parameter_id" in payload) {
-				const stringId = LEGACY_PARAM_IDS[payload.parameter_id];
-				if (!stringId) {
-					return;
-				}
-
-				const info = runtime.params.info(stringId);
+			if ("param_id" in payload) {
+				const info = runtime.params.info(payload.param_id);
 				if (!info) {
 					return;
 				}
-
-				const runtimePlainValue = toRuntimePlainValue(stringId, payload.value);
-				const normalized = toNormalized(runtimePlainValue, info);
-				runtime.params.beginEdit(stringId);
-				runtime.params.set(stringId, normalized);
-				runtime.params.endEdit(stringId);
+				const normalized = toNormalized(payload.value, info);
+				runtime.params.beginEdit(payload.param_id);
+				runtime.params.set(payload.param_id, normalized);
+				runtime.params.endEdit(payload.param_id);
 				return;
 			}
 
@@ -264,10 +160,7 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 						payload.algo_controls.controls,
 					)
 					.catch((error) => {
-						console.error(
-							"[beamerLegacyBridge] Failed to send algo controls",
-							error,
-						);
+						console.error("[beamerBridge] Failed to send algo controls", error);
 					});
 				return;
 			}
@@ -276,10 +169,7 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 				void runtime
 					.invoke("setModMatrix", payload.mod_matrix)
 					.catch((error) => {
-						console.error(
-							"[beamerLegacyBridge] Failed to send mod matrix",
-							error,
-						);
+						console.error("[beamerBridge] Failed to send mod matrix", error);
 					});
 				return;
 			}
@@ -287,7 +177,7 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 			void runtime
 				.invoke("setEnvelope", payload.envelope_id, payload.data)
 				.catch((error) => {
-					console.error("[beamerLegacyBridge] Failed to send envelope", error);
+					console.error("[beamerBridge] Failed to send envelope", error);
 				});
 		},
 	};
@@ -304,27 +194,17 @@ function installLegacyIpc(runtime: BeamerRuntime) {
 }
 
 function syncExistingParams(runtime: BeamerRuntime) {
-	const legacyPayload: Record<number, number> = {};
-
-	for (const [legacyId, stringId] of Object.entries(LEGACY_PARAM_IDS)) {
-		const info = runtime.params.info(stringId);
-		if (!info) {
-			continue;
-		}
-
+	const payload: Record<string, number> = {};
+	for (const info of runtime.params.all()) {
 		runtimeStringIdsByNumericId[info.id] = info.stringId;
-		legacyPayload[Number(legacyId)] = toLegacyPlainValue(
-			stringId,
-			info.plainValue,
-		);
+		payload[info.stringId] = info.plainValue;
 	}
-
-	if (Object.keys(legacyPayload).length > 0) {
-		emitLegacyParams(legacyPayload);
+	if (Object.keys(payload).length > 0) {
+		emitParams(payload);
 	}
 }
 
-export function ensureBeamerLegacyBridge(): boolean {
+export function ensureBeamerBridge(): boolean {
 	if (installed) {
 		return true;
 	}
@@ -335,7 +215,7 @@ export function ensureBeamerLegacyBridge(): boolean {
 	}
 
 	installed = true;
-	installLegacyParamProperty();
+	installParamProperty();
 
 	const originalOnInit = runtime._onInit.bind(runtime);
 	runtime._onInit = (params) => {
@@ -349,7 +229,7 @@ export function ensureBeamerLegacyBridge(): boolean {
 		onParams(update);
 	};
 
-	installLegacyIpc(runtime);
+	installBridgeIpc(runtime);
 	syncExistingParams(runtime);
 	installScopePolling(runtime);
 

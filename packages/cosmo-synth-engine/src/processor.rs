@@ -89,12 +89,15 @@ impl CosmoProcessor {
     /// Copy FX-relevant fields from `self.params` into the `FxChain`.
     pub fn update_fx(&mut self) {
         let p = &self.params;
+        self.fx.chorus_enabled = p.chorus.enabled;
         self.fx.chorus_rate = p.chorus.rate;
         self.fx.chorus_depth = p.chorus.depth;
         self.fx.chorus_mix = p.chorus.mix;
+        self.fx.delay_enabled = p.delay.enabled;
         self.fx.delay_time = p.delay.time;
         self.fx.delay_feedback = p.delay.feedback;
         self.fx.delay_mix = p.delay.mix;
+        self.fx.reverb_enabled = p.reverb.enabled;
         self.fx.reverb_size = p.reverb.size;
         self.fx.reverb_mix = p.reverb.mix;
     }

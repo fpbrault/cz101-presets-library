@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useSynthEngineController } from "@/features/synth/engine/synthEngineAdapter";
-import type { SynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
+import { createSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { createWorkletSynthEngineAdapter } from "@/features/synth/engine/workletSynthEngineAdapter";
 import type { UseSynthStateResult } from "@/features/synth/useSynthState";
 import type { EngineParams } from "./useAudioEngine";
@@ -25,14 +25,14 @@ export function useSynthParamsToWorklet({
 		[workletNodeRef, paramsRef],
 	);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: synthState.gatherState is a stable proxy — it changes identity whenever any individual state value changes
 	const snapshot = useMemo(
-		(): SynthEngineSnapshot => ({
-			...synthState,
-			effectivePitchHz,
-			extPmAmount,
-		}),
-		[synthState.gatherState, effectivePitchHz, extPmAmount],
+		() =>
+			createSynthEngineSnapshot({
+				synthState,
+				effectivePitchHz,
+				extPmAmount,
+			}),
+		[synthState, effectivePitchHz, extPmAmount],
 	);
 
 	useSynthEngineController({ adapter, snapshot });

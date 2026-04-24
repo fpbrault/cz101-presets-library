@@ -125,6 +125,7 @@ pub struct FxChain {
     pub chorus_rate: f32,
     pub chorus_depth: f32,
     pub chorus_mix: f32,
+    pub chorus_enabled: bool,
     smooth_chorus_depth: f32,
 
     // Simple delay
@@ -132,6 +133,7 @@ pub struct FxChain {
     pub delay_time: f32,
     pub delay_feedback: f32,
     pub delay_mix: f32,
+    pub delay_enabled: bool,
     smooth_delay_samples: f32,
 
     // Freeverb-style reverb
@@ -139,6 +141,7 @@ pub struct FxChain {
     pub reverb_allpass: [AllPassFilter; 4],
     pub reverb_mix: f32,
     pub reverb_size: f32,
+    pub reverb_enabled: bool,
 
     sample_rate: f32,
 }
@@ -186,18 +189,21 @@ impl FxChain {
             chorus_rate: 0.8,
             chorus_depth: 0.003,
             chorus_mix: 0.0,
+            chorus_enabled: false,
             smooth_chorus_depth: 0.003,
 
             delay_line,
             delay_time: 0.3,
             delay_feedback: 0.35,
             delay_mix: 0.0,
+            delay_enabled: false,
             smooth_delay_samples: libm::roundf(0.3 * sr) as f32,
 
             reverb_combs,
             reverb_allpass,
             reverb_mix: 0.0,
             reverb_size: 0.5,
+            reverb_enabled: false,
 
             sample_rate: sr,
         }
@@ -212,7 +218,7 @@ impl FxChain {
     ///
     /// LFO-modulated delay line with equal-power crossfade and smoothed depth.
     pub fn process_chorus(&mut self, sample: f32) -> f32 {
-        if self.chorus_mix <= 0.0 {
+        if !self.chorus_enabled || self.chorus_mix <= 0.0 {
             return sample;
         }
         self.smooth_chorus_depth =
@@ -239,7 +245,7 @@ impl FxChain {
 
     /// Process simple feedback delay with smoothed delay time.
     pub fn process_delay(&mut self, sample: f32) -> f32 {
-        if self.delay_mix <= 0.0 {
+        if !self.delay_enabled || self.delay_mix <= 0.0 {
             return sample;
         }
         self.smooth_delay_samples = Self::smooth(
@@ -264,7 +270,7 @@ impl FxChain {
 
     /// Process Freeverb-style reverb with equal-power wet/dry mix.
     pub fn process_reverb(&mut self, sample: f32) -> f32 {
-        if self.reverb_mix <= 0.0 {
+        if !self.reverb_enabled || self.reverb_mix <= 0.0 {
             return sample;
         }
         let size = self.reverb_size;

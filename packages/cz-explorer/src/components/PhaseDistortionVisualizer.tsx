@@ -213,7 +213,6 @@ export function SharedPhaseDistortionVisualizer({
 
 	return (
 		<SynthRenderer
-			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
 				activeEntryId: activePresetId,

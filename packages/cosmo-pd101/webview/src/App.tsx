@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import PluginPage from "./PluginPage";
 import "@/index.css";
-import { ensureBeamerLegacyBridge } from "./lib/beamerLegacyBridge";
+import { ensureBeamerBridge } from "./lib/beamerLegacyBridge";
 import {
 	checkForPluginUpdate,
 	type PluginUpdateInfo,
@@ -78,13 +78,13 @@ export default function App() {
 			return;
 		}
 
-		if (ensureBeamerLegacyBridge()) {
+		if (ensureBeamerBridge()) {
 			bridgeReadyRef.current = true;
 			return;
 		}
 
 		const intervalId = window.setInterval(() => {
-			if (ensureBeamerLegacyBridge()) {
+			if (ensureBeamerBridge()) {
 				bridgeReadyRef.current = true;
 				window.clearInterval(intervalId);
 			}

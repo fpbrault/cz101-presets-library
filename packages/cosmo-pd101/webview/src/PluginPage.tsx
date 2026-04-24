@@ -49,7 +49,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 		},
 	});
 
-	usePluginParamBridge(synthState);
+	usePluginParamBridge();
 
 	const subscribeScopeFrames = useCallback(
 		(
@@ -118,7 +118,6 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 
 	return (
 		<SynthRenderer
-			synthState={synthState}
 			headerProps={{
 				allEntries: allPresetEntries,
 				activeEntryId: activePresetId,

@@ -313,6 +313,9 @@ pub struct CzParameters {
     #[parameter(id = "vel_target", name = "Velocity Target", group = "Global")]
     pub vel_target: EnumParameter<VelocityTarget>,
 
+    #[parameter(id = "int_pm_enabled", name = "Int PM Enabled", default = 0.0, range = 0.0..=1.0)]
+    pub int_pm_enabled: FloatParameter,
+
     #[parameter(id = "int_pm_amount", name = "Int PM Amount", default = 0.0, range = 0.0..=1.0)]
     pub int_pm_amount: FloatParameter,
 
@@ -404,6 +407,9 @@ pub struct CzParameters {
     pub vib_delay: FloatParameter,
 
     // Chorus
+    #[parameter(id = "cho_enabled", name = "Enabled", default = 0.0, range = 0.0..=1.0, group = "Chorus")]
+    pub cho_enabled: FloatParameter,
+
     #[parameter(id = "cho_mix", name = "Mix", default = 0.0, range = 0.0..=1.0, group = "Chorus")]
     pub cho_mix: FloatParameter,
 
@@ -414,6 +420,9 @@ pub struct CzParameters {
     pub cho_depth: FloatParameter,
 
     // Delay
+    #[parameter(id = "del_enabled", name = "Enabled", default = 0.0, range = 0.0..=1.0, group = "Delay")]
+    pub del_enabled: FloatParameter,
+
     #[parameter(id = "del_mix", name = "Mix", default = 0.0, range = 0.0..=1.0, group = "Delay")]
     pub del_mix: FloatParameter,
 
@@ -424,6 +433,9 @@ pub struct CzParameters {
     pub del_feedback: FloatParameter,
 
     // Reverb
+    #[parameter(id = "rev_enabled", name = "Enabled", default = 0.0, range = 0.0..=1.0, group = "Reverb")]
+    pub rev_enabled: FloatParameter,
+
     #[parameter(id = "rev_mix", name = "Mix", default = 0.0, range = 0.0..=1.0, group = "Reverb")]
     pub rev_mix: FloatParameter,
 
@@ -592,6 +604,7 @@ impl CzParameters {
                 VelocityTarget::Both => cosmo_synth_engine::params::VelocityTarget::Both,
                 VelocityTarget::Off => cosmo_synth_engine::params::VelocityTarget::Off,
             },
+            int_pm_enabled: self.int_pm_enabled.get() >= 0.5,
             int_pm_amount: self.int_pm_amount.get() as f32,
             int_pm_ratio: self.int_pm_ratio.get() as f32,
             ext_pm_amount: self.ext_pm_amount.get() as f32,
@@ -629,14 +642,17 @@ impl CzParameters {
         params.vibrato.depth = self.vib_depth.get() as f32;
         params.vibrato.delay = self.vib_delay.get() as f32;
 
+        params.chorus.enabled = self.cho_enabled.get() >= 0.5;
         params.chorus.mix = self.cho_mix.get() as f32;
         params.chorus.rate = self.cho_rate.get() as f32;
         params.chorus.depth = self.cho_depth.get() as f32;
 
+        params.delay.enabled = self.del_enabled.get() >= 0.5;
         params.delay.mix = self.del_mix.get() as f32;
         params.delay.time = self.del_time.get() as f32;
         params.delay.feedback = self.del_feedback.get() as f32;
 
+        params.reverb.enabled = self.rev_enabled.get() >= 0.5;
         params.reverb.mix = self.rev_mix.get() as f32;
         params.reverb.size = self.rev_size.get() as f32;
 
@@ -688,6 +704,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         octave,
         line1,
         line2,
+        int_pm_enabled,
         int_pm_amount,
         int_pm_ratio,
         ext_pm_amount,
@@ -710,16 +727,19 @@ fn _assert_synth_params_coverage(p: SynthParams) {
     } = p;
 
     let ChorusParams {
+        enabled: _cho_enabled,
         rate: _cho_rate,
         depth: _cho_depth,
         mix: _cho_mix,
     } = chorus;
     let DelayParams {
+        enabled: _del_enabled,
         time: _del_time,
         feedback: _del_fb,
         mix: _del_mix,
     } = delay;
     let ReverbParams {
+        enabled: _rev_enabled,
         size: _rev_size,
         mix: _rev_mix,
     } = reverb;
@@ -806,6 +826,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         line_select,
         mod_mode,
         octave,
+        int_pm_enabled,
         int_pm_amount,
         int_pm_ratio,
         ext_pm_amount,

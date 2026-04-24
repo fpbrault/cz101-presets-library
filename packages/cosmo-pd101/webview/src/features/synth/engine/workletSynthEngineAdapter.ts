@@ -14,120 +14,29 @@ export function createWorkletSynthEngineAdapter({
 }: CreateWorkletSynthEngineAdapterParams): SynthEngineAdapter {
 	return {
 		sync(snapshot: SynthEngineSnapshot) {
-			const algoA = snapshot.warpAAlgo;
-			const algoB = snapshot.warpBAlgo;
-			const algo2A = snapshot.algo2A ?? null;
-			const algo2B = snapshot.algo2B ?? null;
+			const baseParams = snapshot.params;
+			const algoA = baseParams.line1.algo;
+			const algoB = baseParams.line2.algo;
 			const resolvedAlgoA = resolveAlgoRef(algoA);
 			const resolvedAlgoB = resolveAlgoRef(algoB);
-			const line1Window = resolvedAlgoA.windowType ?? snapshot.windowType;
-			const line2Window = resolvedAlgoB.windowType ?? snapshot.windowType;
+			const line1Window = resolvedAlgoA.windowType ?? baseParams.line1.window;
+			const line2Window = resolvedAlgoB.windowType ?? baseParams.line2.window;
 
 			const params: EngineParams = {
-				lineSelect: snapshot.lineSelect,
-				modMode: snapshot.modMode,
-				octave: 0,
+				...baseParams,
 				line1: {
+					...baseParams.line1,
 					algo: algoA,
-					algo2: algo2A,
-					algoBlend: snapshot.algoBlendA,
+					algo2: baseParams.line1.algo2 ?? null,
 					window: line1Window,
-					cz: {
-						slotAWaveform: snapshot.line1CzSlotAWaveform,
-						slotBWaveform: snapshot.line1CzSlotBWaveform,
-						window: snapshot.line1CzWindow,
-					},
-					algoControlsA: snapshot.line1AlgoControlsA,
-					algoControlsB: snapshot.line1AlgoControlsB,
-					dcaBase: snapshot.line1Level,
-					dcwBase: snapshot.warpAAmount,
-					modulation: 0,
-					detuneCents: snapshot.line1Detune,
-					octave: snapshot.line1Octave,
-					dcoEnv: snapshot.line1DcoEnv,
-					dcwEnv: snapshot.line1DcwEnv,
-					dcaEnv: snapshot.line1DcaEnv,
-					keyFollow: snapshot.line1DcwKeyFollow,
 				},
 				line2: {
+					...baseParams.line2,
 					algo: algoB,
-					algo2: algo2B,
-					algoBlend: snapshot.algoBlendB,
+					algo2: baseParams.line2.algo2 ?? null,
 					window: line2Window,
-					cz: {
-						slotAWaveform: snapshot.line2CzSlotAWaveform,
-						slotBWaveform: snapshot.line2CzSlotBWaveform,
-						window: snapshot.line2CzWindow,
-					},
-					algoControlsA: snapshot.line2AlgoControlsA,
-					algoControlsB: snapshot.line2AlgoControlsB,
-					dcaBase: snapshot.line2Level,
-					dcwBase: snapshot.warpBAmount,
-					modulation: 0,
-					detuneCents: snapshot.line2Detune,
-					octave: snapshot.line2Octave,
-					dcoEnv: snapshot.line2DcoEnv,
-					dcwEnv: snapshot.line2DcwEnv,
-					dcaEnv: snapshot.line2DcaEnv,
-					keyFollow: snapshot.line2DcwKeyFollow,
 				},
-				intPmAmount: snapshot.phaseModEnabled ? snapshot.intPmAmount : 0,
-				intPmRatio: snapshot.intPmRatio,
-				extPmAmount: snapshot.extPmAmount,
-				pmPre: snapshot.pmPre,
-				frequency: snapshot.effectivePitchHz,
-				volume: snapshot.volume,
-				polyMode: snapshot.polyMode,
-				legato: snapshot.legato,
-				velocityTarget: snapshot.velocityTarget,
-				chorus: {
-					enabled: snapshot.chorusEnabled,
-					rate: snapshot.chorusRate,
-					depth: snapshot.chorusDepth,
-					mix: snapshot.chorusEnabled ? snapshot.chorusMix : 0,
-				},
-				delay: {
-					enabled: snapshot.delayEnabled,
-					time: snapshot.delayTime,
-					feedback: snapshot.delayFeedback,
-					mix: snapshot.delayEnabled ? snapshot.delayMix : 0,
-				},
-				reverb: {
-					enabled: snapshot.reverbEnabled,
-					size: snapshot.reverbSize,
-					mix: snapshot.reverbEnabled ? snapshot.reverbMix : 0,
-				},
-				vibrato: {
-					enabled: snapshot.vibratoEnabled,
-					waveform: snapshot.vibratoWave,
-					rate: snapshot.vibratoRate,
-					depth: snapshot.vibratoDepth,
-					delay: snapshot.vibratoDelay,
-				},
-				portamento: {
-					enabled: snapshot.portamentoEnabled,
-					mode: snapshot.portamentoMode,
-					rate: snapshot.portamentoRate,
-					time: snapshot.portamentoTime,
-				},
-				lfo: {
-					enabled: snapshot.lfoEnabled,
-					waveform: snapshot.lfoWaveform,
-					rate: snapshot.lfoRate,
-					depth: snapshot.lfoDepth,
-					offset: snapshot.lfoOffset,
-					target: snapshot.lfoTarget,
-				},
-				filter: {
-					enabled: snapshot.filterEnabled,
-					type: snapshot.filterType,
-					cutoff: snapshot.filterCutoff,
-					resonance: snapshot.filterResonance,
-					envAmount: snapshot.filterEnvAmount,
-				},
-				pitchBendRange: snapshot.pitchBendRange,
-				modWheelVibratoDepth: snapshot.modWheelVibratoDepth,
-				modMatrix: { routes: snapshot.modMatrix.routes ?? [] },
+				modMatrix: { routes: baseParams.modMatrix?.routes ?? [] },
 			};
 			paramsRef.current = params;
 			if (!workletNodeRef.current) return;
