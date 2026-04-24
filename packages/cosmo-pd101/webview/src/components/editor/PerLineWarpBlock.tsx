@@ -229,12 +229,21 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 
 	// Map each "number"-kind control to a 1-based slot index for ModDestination
 	// (line1AlgoParam1…8 / line2AlgoParam1…8). Max 8 slots per line.
+	// Algo A takes slots 1..N, Algo B continues from N+1..8.
 	const algoParamSlotIndex: Record<string, number> = {};
 	let slotCounter = 1;
 	for (const ctrl of algoDefinitionControlsA) {
 		if ((ctrl.kind ?? "number") === "number") {
 			if (slotCounter <= 8) {
 				algoParamSlotIndex[ctrl.id] = slotCounter++;
+			}
+		}
+	}
+	const algoParamSlotIndexB: Record<string, number> = {};
+	for (const ctrl of algoDefinitionControlsB) {
+		if ((ctrl.kind ?? "number") === "number") {
+			if (slotCounter <= 8) {
+				algoParamSlotIndexB[ctrl.id] = slotCounter++;
 			}
 		}
 	}
@@ -455,7 +464,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									controls={algoDefinitionControlsB}
 									controlBindings={{}}
 									lineIndex={lineIndex}
-									algoParamSlotIndex={{}}
+									algoParamSlotIndex={algoParamSlotIndexB}
 									getAlgoControlValue={(id, fallback) =>
 										getAlgoControlValue(algoControlsB, id, fallback)
 									}

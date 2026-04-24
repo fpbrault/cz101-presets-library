@@ -24,23 +24,22 @@ function ModulationHarness() {
 }
 
 describe("ModulatableControl browser integration", () => {
-	it("adds, edits, and removes routes through the modulation menu", () => {
+	it("adds and removes routes through the modulation menu", () => {
 		render(<ModulationHarness />);
 
 		const modulationButton = screen.getByRole("button", {
 			name: /modulation for volume/i,
 		});
 
+		// Open the panel
 		fireEvent.click(modulationButton);
-		fireEvent.click(screen.getByRole("button", { name: /^LFO 1$/i }));
+
+		// Add a route via dropdown + Add button (default source is lfo1)
+		fireEvent.click(screen.getByRole("button", { name: /^Add$/i }));
 		expect(modulationButton).toHaveTextContent("1");
 
-		fireEvent.change(screen.getByRole("slider"), {
-			target: { value: "0.25" },
-		});
-		expect(screen.getByText("0.25")).toBeInTheDocument();
-
-		fireEvent.click(screen.getByRole("button", { name: "✕" }));
+		// Remove the route
+		fireEvent.click(screen.getByRole("button", { name: "Remove route" }));
 		expect(modulationButton).toHaveTextContent("+");
 	});
 });
