@@ -7,6 +7,11 @@ export type SynthHeaderProps = {
 	allEntries: PresetEntry[];
 	activeEntryId: string | null;
 	activePresetName: string;
+	pendingPresetChange?: {
+		activePresetName: string;
+		activeLocalName: string | null;
+		suggestedName: string;
+	} | null;
 	onLoadLocal: (name: string) => void;
 	onLoadLibrary: (preset: LibraryPreset) => void;
 	onLoadBuiltin: (name: string) => void;
@@ -18,24 +23,20 @@ export type SynthHeaderProps = {
 	onExportCurrentState: (name: string) => void;
 	onImportPreset: (json: string, filename: string) => void;
 	onInitPreset: () => void;
+	onSavePendingPresetChange?: (name?: string) => void;
+	onDiscardPendingPresetChange?: () => void;
+	onCancelPendingPresetChange?: () => void;
+	isLibraryModeOpen?: boolean;
+	onLibraryModeChange?: (open: boolean) => void;
 	trailingContent?: ReactNode;
 };
 
 export default function SynthHeader({
 	allEntries,
-	activeEntryId,
 	activePresetName,
-	onLoadLocal,
-	onLoadLibrary,
-	onLoadBuiltin,
 	onStepPreset,
-	onSavePreset,
-	onDeletePreset,
-	onRenamePreset,
-	onExportPreset,
-	onExportCurrentState,
-	onImportPreset,
-	onInitPreset,
+	isLibraryModeOpen = false,
+	onLibraryModeChange,
 	trailingContent,
 }: SynthHeaderProps) {
 	return (
@@ -60,19 +61,10 @@ export default function SynthHeader({
 
 			<PresetNavigator
 				allEntries={allEntries}
-				activeEntryId={activeEntryId}
 				activePresetName={activePresetName}
-				onLoadLocal={onLoadLocal}
-				onLoadLibrary={onLoadLibrary}
-				onLoadBuiltin={onLoadBuiltin}
 				onStepPreset={onStepPreset}
-				onSavePreset={onSavePreset}
-				onDeletePreset={onDeletePreset}
-				onRenamePreset={onRenamePreset}
-				onExportPreset={onExportPreset}
-				onExportCurrentState={onExportCurrentState}
-				onImportPreset={onImportPreset}
-				onInitPreset={onInitPreset}
+				isLibraryModeOpen={isLibraryModeOpen}
+				onLibraryModeChange={onLibraryModeChange}
 			/>
 
 			<div className="hidden sm:flex flex-col justify-center border-l border-cz-border pl-4">

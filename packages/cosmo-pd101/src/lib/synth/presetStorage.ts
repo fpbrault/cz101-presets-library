@@ -7,6 +7,13 @@ import {
 
 const STORAGE_PREFIX = "cz101-preset-";
 const CURRENT_STATE_KEY = "cz101-current-state";
+const CURRENT_PRESET_SESSION_KEY = "cz101-current-preset-session";
+
+export type CurrentPresetSession = {
+	activePresetId: string | null;
+	activePresetNameBase: string;
+	loadedPresetFingerprint: string | null;
+};
 
 function isSynthPresetV1(value: unknown): value is SynthPresetV1 {
 	if (typeof value !== "object" || value === null) return false;
@@ -214,6 +221,40 @@ export function loadCurrentState(): SynthPresetV1 | null {
 		return null;
 	} catch {
 		localStorage.removeItem(CURRENT_STATE_KEY);
+		return null;
+	}
+}
+
+function isCurrentPresetSession(value: unknown): value is CurrentPresetSession {
+	if (typeof value !== "object" || value === null) return false;
+	const candidate = value as Partial<CurrentPresetSession>;
+	return (
+		(typeof candidate.activePresetId === "string" ||
+			candidate.activePresetId === null) &&
+		typeof candidate.activePresetNameBase === "string" &&
+		(typeof candidate.loadedPresetFingerprint === "string" ||
+			candidate.loadedPresetFingerprint === null)
+	);
+}
+
+export function saveCurrentPresetSession(
+	session: CurrentPresetSession,
+): void {
+	localStorage.setItem(CURRENT_PRESET_SESSION_KEY, JSON.stringify(session));
+}
+
+export function loadCurrentPresetSession(): CurrentPresetSession | null {
+	const raw = localStorage.getItem(CURRENT_PRESET_SESSION_KEY);
+	if (!raw) return null;
+	try {
+		const parsed = JSON.parse(raw);
+		if (isCurrentPresetSession(parsed)) {
+			return parsed;
+		}
+		localStorage.removeItem(CURRENT_PRESET_SESSION_KEY);
+		return null;
+	} catch {
+		localStorage.removeItem(CURRENT_PRESET_SESSION_KEY);
 		return null;
 	}
 }

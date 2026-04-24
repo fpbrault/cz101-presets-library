@@ -33,6 +33,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
 	const velocityTarget = useSynthStore((s) => s.velocityTarget);
+	const presetStateKey = useSynthStore((s) => JSON.stringify(s.gatherState()));
 
 	const [uiScale, setUiScale] = useState<UiScale>(() => {
 		const saved = localStorage.getItem(UI_SCALE_KEY);
@@ -94,6 +95,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 		allPresetEntries,
 		activePresetId,
 		activePresetName,
+		pendingPresetChange,
 		handleLoadLocal,
 		handleLoadBuiltin,
 		handleLoadLibrary,
@@ -105,11 +107,15 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 		handleExportPreset,
 		handleImportPreset,
 		handleExportCurrentState,
+		handleSavePendingPresetChange,
+		handleDiscardPendingPresetChange,
+		handleCancelPendingPresetChange,
 	} = useSynthPresetManager({
 		builtinPresets: DEFAULT_SYNTH_PRESETS,
 		gatherState,
 		applyPreset,
 		shouldLoadCurrentState,
+		presetStateKey,
 	});
 
 	const lcdPrimaryText = useMemo(
@@ -127,6 +133,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 				allEntries: allPresetEntries,
 				activeEntryId: activePresetId,
 				activePresetName,
+				pendingPresetChange,
 				onLoadLocal: handleLoadLocal,
 				onLoadLibrary: handleLoadLibrary,
 				onLoadBuiltin: handleLoadBuiltin,
@@ -138,6 +145,9 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 				onExportPreset: handleExportPreset,
 				onExportCurrentState: handleExportCurrentState,
 				onImportPreset: handleImportPreset,
+				onSavePendingPresetChange: handleSavePendingPresetChange,
+				onDiscardPendingPresetChange: handleDiscardPendingPresetChange,
+				onCancelPendingPresetChange: handleCancelPendingPresetChange,
 			}}
 			frameClassName="h-full bg-cz-panel flex flex-col overflow-hidden w-full"
 			frameStyle={{ zoom: `${uiScale}%` }}

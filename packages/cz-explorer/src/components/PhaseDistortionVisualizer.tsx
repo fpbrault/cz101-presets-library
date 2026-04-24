@@ -64,6 +64,7 @@ export function SharedPhaseDistortionVisualizer({
 	const filterEnabled = useSynthStore((s) => s.filterEnabled);
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
+	const presetStateKey = useSynthStore((s) => JSON.stringify(s.gatherState()));
 
 	const [extPmAmount] = useState(0);
 	const activeAsidePanel = useSynthUiStore((s) => s.activeAsidePanel);
@@ -125,6 +126,7 @@ export function SharedPhaseDistortionVisualizer({
 		allPresetEntries,
 		activePresetId,
 		activePresetName,
+		pendingPresetChange,
 		handleLoadLocal,
 		handleLoadBuiltin,
 		handleLoadLibrary,
@@ -136,12 +138,16 @@ export function SharedPhaseDistortionVisualizer({
 		handleExportPreset,
 		handleImportPreset,
 		handleExportCurrentState,
+		handleSavePendingPresetChange,
+		handleDiscardPendingPresetChange,
+		handleCancelPendingPresetChange,
 	} = useSynthPresetManager({
 		builtinPresets: DEFAULT_SYNTH_PRESETS,
 		gatherState,
 		applyPreset,
 		libraryPresets,
 		onLoadLibraryPreset: handleLoadLibraryPreset,
+		presetStateKey,
 	});
 
 	const lastHeldFreqRef = useRef(currentFreq);
@@ -228,6 +234,7 @@ export function SharedPhaseDistortionVisualizer({
 				allEntries: allPresetEntries,
 				activeEntryId: activePresetId,
 				activePresetName,
+				pendingPresetChange,
 				onLoadLocal: handleLoadLocal,
 				onLoadLibrary: handleLoadLibrary,
 				onLoadBuiltin: handleLoadBuiltin,
@@ -239,6 +246,9 @@ export function SharedPhaseDistortionVisualizer({
 				onExportPreset: handleExportPreset,
 				onExportCurrentState: handleExportCurrentState,
 				onImportPreset: handleImportPreset,
+				onSavePendingPresetChange: handleSavePendingPresetChange,
+				onDiscardPendingPresetChange: handleDiscardPendingPresetChange,
+				onCancelPendingPresetChange: handleCancelPendingPresetChange,
 			}}
 			frameClassName="h-full min-h-0 min-w-0 bg-cz-panel flex flex-col overflow-hidden w-full"
 			frameStyle={frameStyle}

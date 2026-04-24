@@ -18,6 +18,7 @@ type SynthUiState = {
 	phaseLinePanelTab: PhaseLinePanelTab;
 	activeEnvTab: EnvTab;
 	keyboardVisible: boolean;
+	libraryModeOpen: boolean;
 };
 
 type SynthUiActions = {
@@ -26,6 +27,7 @@ type SynthUiActions = {
 	setPhaseLinePanelTab: (tab: PhaseLinePanelTab) => void;
 	setActiveEnvTab: (tab: EnvTab) => void;
 	setKeyboardVisible: (visible: boolean) => void;
+	setLibraryModeOpen: (open: boolean) => void;
 };
 
 export type SynthUiStore = SynthUiState & SynthUiActions;
@@ -57,6 +59,7 @@ const DEFAULT_UI_STATE: SynthUiState = {
 	phaseLinePanelTab: "line1-algos",
 	activeEnvTab: "dcw",
 	keyboardVisible: true,
+	libraryModeOpen: false,
 };
 
 const getStringValue = (value: unknown): string | null =>
@@ -96,6 +99,10 @@ const normalizeSynthUiState = (value: unknown): SynthUiState => {
 			typeof candidate.keyboardVisible === "boolean"
 				? candidate.keyboardVisible
 				: DEFAULT_UI_STATE.keyboardVisible,
+		libraryModeOpen:
+			typeof candidate.libraryModeOpen === "boolean"
+				? candidate.libraryModeOpen
+				: DEFAULT_UI_STATE.libraryModeOpen,
 	};
 };
 
@@ -108,6 +115,7 @@ export const useSynthUiStore = create<SynthUiStore>()(
 			setPhaseLinePanelTab: (tab) => set({ phaseLinePanelTab: tab }),
 			setActiveEnvTab: (tab) => set({ activeEnvTab: tab }),
 			setKeyboardVisible: (visible) => set({ keyboardVisible: visible }),
+			setLibraryModeOpen: (open) => set({ libraryModeOpen: open }),
 		}),
 		{
 			name: SYNTH_UI_STATE_STORAGE_KEY,
@@ -118,6 +126,7 @@ export const useSynthUiStore = create<SynthUiStore>()(
 				phaseLinePanelTab: state.phaseLinePanelTab,
 				activeEnvTab: state.activeEnvTab,
 				keyboardVisible: state.keyboardVisible,
+				libraryModeOpen: state.libraryModeOpen,
 			}),
 			merge: (persistedState, currentState) => ({
 				...currentState,
