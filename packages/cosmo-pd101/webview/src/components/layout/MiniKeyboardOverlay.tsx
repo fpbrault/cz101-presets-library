@@ -102,8 +102,7 @@ function PianoKey({
 			data-mini-note={note}
 			style={black && left !== undefined ? { left: `${left}%` } : undefined}
 			onPointerDown={(event) => onPointerDown(event, note)}
-		>
-		</button>
+		></button>
 	);
 }
 

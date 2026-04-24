@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type React from "react";
 import { joinClasses } from "@/components/primitives/Card";
 
@@ -24,39 +25,59 @@ const colorStyles: Record<
 > = {
 	black: {
 		active:
-			"text-white border-cz-btn-border bg-[linear-gradient(180deg,#3b3b3e_0%,#2f2f31_100%)] shadow-sm",
+			"text-white border-cz-btn-border bg-[linear-gradient(180deg,#383839_0%,#2c2c2e_100%)]",
 		inactive:
-			"text-white border-cz-btn-border bg-[linear-gradient(180deg,#363638_0%,#2a2a2c_100%)] hover:bg-[linear-gradient(180deg,#404044_0%,#343437_100%)]",
+			"text-white border-cz-btn-border bg-[linear-gradient(180deg,#505053_0%,#3a3a3d_40%,#2a2a2c_100%)] hover:bg-[linear-gradient(180deg,#585859_0%,#404044_40%,#343437_100%)]",
 	},
 	blue: {
 		active:
-			"text-white border-[#4b5f97] bg-[linear-gradient(180deg,#7d99e1_0%,#5f79bf_100%)] shadow-sm",
+			"text-white border-[#4b5f97] bg-[linear-gradient(180deg,#7085cc_0%,#5566a8_100%)]",
 		inactive:
-			"text-white border-[#5369a4] bg-[linear-gradient(180deg,#8dacfa_0%,#6f8fd6_100%)] hover:bg-[linear-gradient(180deg,#94b4ff_0%,#7797df_100%)]",
+			"text-white border-[#5369a4] bg-[linear-gradient(180deg,#a8c0ff_0%,#8dacfa_30%,#6f8fd6_100%)] hover:bg-[linear-gradient(180deg,#b2caff_0%,#94b4ff_30%,#7797df_100%)]",
 	},
 	cyan: {
 		active:
-			"text-white border-[#3f8f98] bg-[linear-gradient(180deg,#69d5de_0%,#3fb4bf_100%)] shadow-sm",
+			"text-white border-[#3f8f98] bg-[linear-gradient(180deg,#56bdc7_0%,#3aa8b2_100%)]",
 		inactive:
-			"text-white border-[#3a838c] bg-[linear-gradient(180deg,#61c9d1_0%,#389fa9_100%)] hover:bg-[linear-gradient(180deg,#6ed6de_0%,#43adb8_100%)]",
+			"text-white border-[#3a838c] bg-[linear-gradient(180deg,#85dde5_0%,#61c9d1_30%,#389fa9_100%)] hover:bg-[linear-gradient(180deg,#8ee6ee_0%,#6ed6de_30%,#43adb8_100%)]",
 	},
 	grey: {
 		active:
-			"text-white border-[#7b7b76] bg-[linear-gradient(180deg,#9f9e98_0%,#7f7e79_100%)] shadow-sm",
+			"text-white border-[#7b7b76] bg-[linear-gradient(180deg,#8e8d88_0%,#747470_100%)]",
 		inactive:
-			"text-white border-[#74736f] bg-[linear-gradient(180deg,#8c8b86_0%,#6e6d69_100%)] hover:bg-[linear-gradient(180deg,#979691_0%,#787773_100%)]",
+			"text-white border-[#74736f] bg-[linear-gradient(180deg,#aeada8_0%,#8c8b86_30%,#6e6d69_100%)] hover:bg-[linear-gradient(180deg,#b6b5b0_0%,#979691_30%,#787773_100%)]",
 	},
 	red: {
 		active:
-			"text-white border-[#9a4d4d] bg-[linear-gradient(180deg,#c86969_0%,#a94747_100%)] shadow-sm",
+			"text-white border-[#9a4d4d] bg-[linear-gradient(180deg,#b85c5c_0%,#9f4242_100%)]",
 		inactive:
-			"text-white border-[#8f4a4a] bg-[linear-gradient(180deg,#b95b5b_0%,#984141_100%)] hover:bg-[linear-gradient(180deg,#c66565_0%,#a34747_100%)]",
+			"text-white border-[#8f4a4a] bg-[linear-gradient(180deg,#d97575_0%,#b95b5b_30%,#984141_100%)] hover:bg-[linear-gradient(180deg,#de8080_0%,#c66565_30%,#a34747_100%)]",
 	},
 };
 
 /**
  * CZ-style small tab button with optional LED above and a two-line label.
  */
+
+type LedGlowConfig = {
+	color: string;
+	glow: string;
+};
+
+const LED_GLOW: Record<Exclude<CzTabButtonLedColor, "off">, LedGlowConfig> = {
+	red: {
+		color: "var(--color-cz-led-on, #ff3b3b)",
+		glow: "0 0 5px 2px rgba(255,50,50,0.7), inset 0 1px 0 rgba(255,160,160,0.25)",
+	},
+	green: {
+		color: "#5dff63",
+		glow: "0 0 5px 2px rgba(93,255,99,0.7), inset 0 1px 0 rgba(180,255,180,0.25)",
+	},
+	blue: {
+		color: "#7aa8ff",
+		glow: "0 0 5px 2px rgba(122,168,255,0.7), inset 0 1px 0 rgba(180,210,255,0.25)",
+	},
+};
 export default function CzTabButton({
 	active = false,
 	onClick,
@@ -81,25 +102,52 @@ export default function CzTabButton({
 			)}
 		>
 			{showLed ? (
-				<span
-					className={`inline-block h-1 w-3 mb-1 rounded-[1px] transition-all duration-75 ${
-						resolvedLedColor === "blue"
-							? "bg-[#7aa8ff] shadow-sm"
-							: resolvedLedColor === "green"
-								? "bg-[#5dff63] shadow-sm"
-								: resolvedLedColor === "red"
-									? "bg-cz-led-on shadow-sm"
-									: "bg-cz-led-off shadow-inner"
-					}`}
+				<motion.span
+					animate={
+						resolvedLedColor === "off"
+							? {
+									backgroundColor: "var(--color-cz-led-off, #3a1a1a)",
+									boxShadow: "inset 0 1px 3px rgba(0,0,0,0.7)",
+									scaleX: 1,
+								}
+							: {
+									backgroundColor: LED_GLOW[resolvedLedColor].color,
+									boxShadow: LED_GLOW[resolvedLedColor].glow,
+									scaleX: 1.18,
+								}
+					}
+					transition={{
+						backgroundColor: { duration: 0.05 },
+						scaleX: { type: "spring", stiffness: 900, damping: 16 },
+						boxShadow: { duration: 0.12, ease: "easeOut" },
+					}}
+					className="inline-block h-1 w-3 mb-1 rounded-[1px]"
 					aria-hidden="true"
 				/>
 			) : null}
-			<button
+			<motion.button
 				type={type}
 				disabled={disabled}
 				onClick={onClick}
+				animate={
+					active
+						? {
+								// pressed: wall collapses
+								boxShadow:
+									"0 1px 0 rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.3), inset 0 0px 0px rgba(0,0,0,0)",
+								y: 3,
+							}
+						: {
+								// raised: tall bottom wall + diffuse shadow + top edge highlight
+								boxShadow:
+									"0 4px 0 rgba(0,0,0,0.6), 0 6px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)",
+								y: 0,
+							}
+				}
+				transition={{ duration: 0.08, ease: "easeOut" }}
+				whileHover={disabled ? undefined : { y: -1 }}
 				className={joinClasses(
-					"h-12 w-full shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold transition-colors px-1 py-1 shadow-sm",
+					"h-12 w-full shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold px-1 py-1",
 					"disabled:opacity-40 disabled:cursor-not-allowed",
 					active ? palette.active : palette.inactive,
 					buttonClassName,
@@ -110,7 +158,7 @@ export default function CzTabButton({
 					<span className="block">{topLabel}</span>
 					<span className="block">{bottomLabel}</span>
 				</span>
-			</button>
+			</motion.button>
 		</div>
 	);
 }
