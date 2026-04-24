@@ -20,7 +20,7 @@ test.describe("Plugin shell visual smoke", () => {
 		await expect(page.getByTestId("test-harness")).toBeVisible();
 		const fxLabel = page.getByText(/^FX$/).last();
 		await fxLabel.locator("..").locator("button").click();
-		await expect(page.getByText("Processor").first()).toBeVisible();
+		await expect(page.getByText("Chorus").first()).toBeVisible();
 		await page.screenshot({
 			path: testInfo.outputPath("plugin-shell.png"),
 			fullPage: true,

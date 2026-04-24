@@ -12,8 +12,8 @@ test.describe("Host to UI inbound updates", () => {
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.pushParamUpdate(0, 0.6));
 
 		await expect(
-			page.getByRole("button", { name: /60%/i }).first(),
-		).toBeVisible({ timeout: 2000 });
+			page.getByRole("button", { name: "Volume value" }).first(),
+		).toHaveText("60%", { timeout: 2000 });
 	});
 
 	test("debug panel DSP state reflects pushed param update", async ({

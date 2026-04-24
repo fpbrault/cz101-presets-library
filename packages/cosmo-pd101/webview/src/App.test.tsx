@@ -13,8 +13,8 @@ const mockEnsureBeamerLegacyBridge = vi.hoisted(() => vi.fn());
 const mockCheckForPluginUpdate = vi.hoisted(() => vi.fn());
 
 vi.mock("./PluginPage", () => ({
-	default: ({ headerExtra }: { headerExtra?: ReactNode }) => (
-		<div data-testid="plugin-page">{headerExtra}</div>
+	default: ({ utilityExtra }: { utilityExtra?: ReactNode }) => (
+		<div data-testid="plugin-page">{utilityExtra}</div>
 	),
 }));
 
