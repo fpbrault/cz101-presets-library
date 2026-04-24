@@ -21,9 +21,11 @@ test.describe("Mod matrix plugin bridge", () => {
 		await page.evaluate(() => window.__MOCK_BRIDGE__?.clearMessages());
 		await modulationButton.click();
 
-		const addLfo1Button = page.getByRole("button", { name: /^lfo 1$/i });
-		await expect(addLfo1Button).toBeVisible();
-		await addLfo1Button.click();
+		const modulationMenu = page.getByRole("dialog", {
+			name: /modulation for volume/i,
+		});
+		await expect(modulationMenu).toBeVisible();
+		await modulationMenu.getByRole("button", { name: /^add$/i }).click();
 
 		await waitForMessageMatching(page, (message) => {
 			if (message.type !== "invoke" || message.method !== "setModMatrix") {
