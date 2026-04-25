@@ -14,8 +14,9 @@ import PhaseLinesSection from "@/components/editor/PhaseLinesSection";
 import { SynthSingleCycleDisplay } from "@/components/editor/SingleCycleDisplay";
 import type { AsidePanelTab } from "@/components/layout/AsidePanelSwitcher";
 import AsidePanelSwitcher from "@/components/layout/AsidePanelSwitcher";
-import SynthLcdDisplay from "@/components/layout/SynthLcdDisplay";
-import ScopePanel from "@/components/panels/analysis/ScopePanel";
+import ScopePanel, {
+	ScopeMiniDisplay,
+} from "@/components/panels/analysis/ScopePanel";
 import FxConsoleDrawer from "@/components/panels/drawers/FxConsoleDrawer";
 import ModConsoleDrawer from "@/components/panels/drawers/ModConsoleDrawer";
 import ChorusPanel from "@/components/panels/fx/ChorusPanel";
@@ -123,8 +124,8 @@ function SynthRendererContent({
 	frameStyle,
 	headerExtra,
 	bottomBarExtra,
-	lcdPrimaryText,
-	lcdSecondaryText,
+	lcdPrimaryText: _lcdPrimaryText,
+	lcdSecondaryText: _lcdSecondaryText,
 	lcdTransientReadout = null,
 	effectivePitchHz,
 	analyserNodeRef,
@@ -171,10 +172,11 @@ function SynthRendererContent({
 					<div className="relative z-10 px-1 grid flex-1 min-h-0 min-w-0 w-full gap-2 xl:gap-3 grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] overflow-hidden">
 						<aside className="overflow-y-auto min-h-0 rounded-[1.15rem] border border-cz-border/80 bg-cz-inset px-0 pb-2 shadow-lg [scrollbar-gutter:stable]">
 							<div className="px-4 mt-4 mx-auto">
-								<SynthLcdDisplay
-									primaryText={lcdPrimaryText}
-									secondaryText={lcdSecondaryText}
-									transientReadout={lcdTransientReadout ?? null}
+								<ScopeMiniDisplay
+									analyserNodeRef={analyserNodeRef}
+									audioCtxRef={audioCtxRef}
+									effectivePitchHz={effectivePitchHz}
+									subscribeScopeFrames={subscribeScopeFrames}
 								/>
 							</div>
 
@@ -185,12 +187,7 @@ function SynthRendererContent({
 								<GlobalVoicePanel />
 								<PhaseModPanel />
 								<VibratoPanel />
-								<ScopePanel
-									analyserNodeRef={analyserNodeRef}
-									audioCtxRef={audioCtxRef}
-									effectivePitchHz={effectivePitchHz}
-									subscribeScopeFrames={subscribeScopeFrames}
-								/>
+								<ScopePanel />
 								<ChorusPanel />
 								<PhaserPanel />
 								<DelayPanel />
