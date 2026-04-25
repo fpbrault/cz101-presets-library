@@ -48,6 +48,8 @@ const ASIDE_PANEL_TABS = new Set<AsidePanelTab>([
 	"reverb",
 	"phaser",
 ]);
+// Provides fallback panel IDs for removed/deprecated aside panels, ensuring
+// graceful migration of persisted user state when panel IDs change over time.
 const REMOVED_ASIDE_PANEL_FALLBACKS = new Map<string, AsidePanelTab>([
 	["filter", "global"],
 	["portamento", "global"],
