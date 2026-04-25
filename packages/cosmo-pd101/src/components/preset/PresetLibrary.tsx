@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { LibraryPreset } from "@/features/synth/types/libraryPreset";
 import type { PresetEntry } from "@/features/synth/types/presetEntry";
 
-type PresetLibraryModeProps = {
+type PresetLibrary = {
 	allEntries: PresetEntry[];
 	activeEntryId: string | null;
 	activePresetName: string;
@@ -35,7 +35,7 @@ function getEntrySearchText(entry: PresetEntry) {
 	return `${entry.label} ${sectionLabels[entry.type]}`.toLowerCase();
 }
 
-export default function PresetLibraryMode({
+export default function PresetLibrary({
 	allEntries,
 	activeEntryId,
 	activePresetName,
@@ -50,7 +50,7 @@ export default function PresetLibraryMode({
 	onImportPreset,
 	onInitPreset,
 	onClose,
-}: PresetLibraryModeProps) {
+}: PresetLibrary) {
 	const [search, setSearch] = useState("");
 	const [saveName, setSaveName] = useState("");
 	const [importError, setImportError] = useState<string | null>(null);
@@ -119,25 +119,45 @@ export default function PresetLibraryMode({
 		);
 		if (event.key === "ArrowDown") {
 			event.preventDefault();
-			setFocusedEntryId(
-				filteredEntries[(currentIndex + 1) % filteredEntries.length]?.id ?? null,
-			);
+			const nextEntry =
+				filteredEntries[(currentIndex + 1) % filteredEntries.length];
+			if (nextEntry) {
+				setFocusedEntryId(nextEntry.id);
+				handleLoad(nextEntry);
+			}
 		}
 		if (event.key === "ArrowUp") {
 			event.preventDefault();
-			setFocusedEntryId(
+			const prevEntry =
 				filteredEntries[
 					(currentIndex - 1 + filteredEntries.length) % filteredEntries.length
-				]?.id ?? null,
-			);
+				];
+			if (prevEntry) {
+				setFocusedEntryId(prevEntry.id);
+				handleLoad(prevEntry);
+			}
 		}
 		if (event.key === "Home") {
 			event.preventDefault();
-			setFocusedEntryId(filteredEntries[0]?.id ?? null);
+			const firstEntry = filteredEntries[0];
+			if (firstEntry) {
+				setFocusedEntryId(firstEntry.id);
+				handleLoad(firstEntry);
+			}
 		}
 		if (event.key === "End") {
 			event.preventDefault();
-			setFocusedEntryId(filteredEntries[filteredEntries.length - 1]?.id ?? null);
+			const lastEntry = filteredEntries[filteredEntries.length - 1];
+			if (lastEntry) {
+				setFocusedEntryId(lastEntry.id);
+				handleLoad(lastEntry);
+			}
+		}
+		if (event.key === "End") {
+			event.preventDefault();
+			setFocusedEntryId(
+				filteredEntries[filteredEntries.length - 1]?.id ?? null,
+			);
 		}
 		if (event.key === "Enter" && focusedEntry) {
 			event.preventDefault();
@@ -203,9 +223,9 @@ export default function PresetLibraryMode({
 	};
 
 	return (
-		<div className="relative z-10 flex min-h-0 flex-1 flex-col px-4 pb-3">
-			<div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-cz-border bg-cz-panel shadow-2xl">
-				<div className="grid gap-3 border-b border-cz-border bg-cz-surface px-5 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
+		<div className="relative z-10 flex min-h-0 flex-1 flex-col">
+			<div className="flex min-h-0 flex-1 flex-col overflow-hidden  border border-cz-border bg-cz-panel">
+				<div className="grid gap-3 border-b border-cz-border bg-cz-body px-5 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
 					<div>
 						<p className="text-3xs font-mono uppercase tracking-[0.32em] text-cz-gold">
 							Preset Library
@@ -232,7 +252,7 @@ export default function PresetLibraryMode({
 					</div>
 				</div>
 
-				<div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_15rem]">
+				<div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_17rem]">
 					<div
 						className="min-h-0 overflow-y-auto [scrollbar-gutter:stable]"
 						role="listbox"
@@ -262,15 +282,15 @@ export default function PresetLibraryMode({
 										return (
 											<div
 												key={entry.id}
-												className={`grid grid-cols-[2rem_minmax(12rem,1.5fr)_8rem_7rem] items-center border-b border-cz-border/60 px-4 py-0.5 text-sm transition ${
+												className={`grid grid-cols-[2rem_minmax(12rem,1.5fr)_8rem_7rem] items-center border-b border-cz-border px-4 py-0.5 text-sm transition ${
 													active
-														? "bg-cz-gold/25 text-white"
+														? "bg-cz-surface/20"
 														: focused
-															? "bg-cz-surface text-cz-cream"
-															: "text-cz-cream hover:bg-cz-surface/70"
+															? "bg-cz-surface/50 text-cz-cream"
+															: "text-cz-cream bg-cz-surface hover:bg-cz-surface/30"
 												}`}
 											>
-												<span className="font-mono text-cz-gold">
+												<span className="font-mono text-cz-gold ">
 													{active ? "*" : ""}
 												</span>
 												<button
@@ -278,7 +298,7 @@ export default function PresetLibraryMode({
 													ref={(node) => {
 														rowRefs.current[entry.id] = node;
 													}}
-													className="min-w-0 truncate rounded-sm py-2 text-left font-semibold outline-none focus-visible:ring-2 focus-visible:ring-cz-light-blue"
+													className="min-w-0 truncate rounded-sm py-2 text-left font-semibold outline-none text-cz-cream"
 													onFocus={() => setFocusedEntryId(entry.id)}
 													onClick={() => handleLoad(entry)}
 												>
@@ -325,7 +345,7 @@ export default function PresetLibraryMode({
 						)}
 					</div>
 
-					<aside className="border-l border-cz-border bg-cz-surface p-4">
+					<aside className="border-t border-cz-border bg-cz-surface p-4 lg:border-l lg:border-t-0">
 						<div className="space-y-5">
 							<section>
 								<h3 className="mb-2 text-4xs font-mono uppercase tracking-[0.28em] text-cz-gold">

@@ -52,7 +52,7 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 		line1: {
 			algo: "cz101",
 			algo2: null,
-			algoControls: [],
+			algoControlsA: [],
 			algoBlend: 0,
 			window: "off",
 			dcaBase: 1,
@@ -73,7 +73,7 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 		line2: {
 			algo: "cz101",
 			algo2: null,
-			algoControls: [],
+			algoControlsA: [],
 			algoBlend: 0,
 			window: "off",
 			dcaBase: 1,

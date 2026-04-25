@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LibraryPreset } from "@/features/synth/types/libraryPreset";
 import type { PresetEntry } from "@/features/synth/types/presetEntry";
-import PresetLibraryMode from "./PresetLibraryMode";
+import PresetLibrary from "./PresetLibrary";
 
 const libraryPreset: LibraryPreset = {
 	id: "library-1",
@@ -50,14 +50,14 @@ function createProps() {
 	};
 }
 
-describe("PresetLibraryMode", () => {
+describe("PresetLibrary", () => {
 	afterEach(() => {
 		vi.unstubAllGlobals();
 	});
 
 	it("routes preset selection to the matching callbacks", () => {
 		const props = createProps();
-		render(<PresetLibraryMode {...props} />);
+		render(<PresetLibrary {...props} />);
 
 		fireEvent.click(screen.getByRole("button", { name: "Factory Bass" }));
 		fireEvent.click(screen.getByRole("button", { name: "Local Keys" }));
@@ -81,7 +81,7 @@ describe("PresetLibraryMode", () => {
 		}
 		vi.stubGlobal("FileReader", MockFileReader);
 
-		const { container } = render(<PresetLibraryMode {...props} />);
+		const { container } = render(<PresetLibrary {...props} />);
 
 		const saveInput = screen.getByPlaceholderText("Preset name");
 		fireEvent.change(saveInput, { target: { value: "  New Patch  " } });
@@ -128,7 +128,7 @@ describe("PresetLibraryMode", () => {
 
 	it("supports keyboard navigation in the list", () => {
 		const props = createProps();
-		render(<PresetLibraryMode {...props} />);
+		render(<PresetLibrary {...props} />);
 
 		const list = screen.getByRole("listbox", { name: "Preset library" });
 		fireEvent.keyDown(list, { key: "ArrowDown" });
@@ -139,7 +139,7 @@ describe("PresetLibraryMode", () => {
 
 	it("closes back to the synth view", () => {
 		const props = createProps();
-		render(<PresetLibraryMode {...props} />);
+		render(<PresetLibrary {...props} />);
 
 		fireEvent.click(screen.getByRole("button", { name: "Return" }));
 

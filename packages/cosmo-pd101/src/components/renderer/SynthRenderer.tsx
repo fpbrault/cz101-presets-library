@@ -26,7 +26,7 @@ import LfoPanel from "@/components/panels/voice/LfoPanel";
 import PhaseModPanel from "@/components/panels/voice/PhaseModPanel";
 import PortamentoPanel from "@/components/panels/voice/PortamentoPanel";
 import VibratoPanel from "@/components/panels/voice/VibratoPanel";
-import PresetLibraryMode from "@/components/preset/PresetLibraryMode";
+import PresetLibrary from "@/components/preset/PresetLibrary";
 import SynthHeader, {
 	type SynthHeaderProps,
 } from "@/components/preset/SynthHeader";
@@ -158,31 +158,15 @@ function SynthRendererContent({
 				>
 					<div className="pointer-events-none absolute inset-0" />
 					<div className="pointer-events-none absolute inset-x-0 top-[5.8rem] bottom-10" />
-					<SynthHeader
-						{...headerProps}
-						isLibraryModeOpen={libraryModeOpen}
-						onLibraryModeChange={setLibraryModeOpen}
-					/>
-					{headerExtra}
-					{libraryModeOpen ? (
-						<PresetLibraryMode
-							allEntries={headerProps.allEntries}
-							activeEntryId={headerProps.activeEntryId}
-							activePresetName={headerProps.activePresetName}
-							onLoadLocal={headerProps.onLoadLocal}
-							onLoadLibrary={headerProps.onLoadLibrary}
-							onLoadBuiltin={headerProps.onLoadBuiltin}
-							onSavePreset={headerProps.onSavePreset}
-							onDeletePreset={headerProps.onDeletePreset}
-							onRenamePreset={headerProps.onRenamePreset}
-							onExportPreset={headerProps.onExportPreset}
-							onExportCurrentState={headerProps.onExportCurrentState}
-							onImportPreset={headerProps.onImportPreset}
-							onInitPreset={headerProps.onInitPreset}
-							onClose={() => setLibraryModeOpen(false)}
+					<div className="relative z-30">
+						<SynthHeader
+							{...headerProps}
+							isLibraryModeOpen={libraryModeOpen}
+							onLibraryModeChange={setLibraryModeOpen}
 						/>
-					) : (
-						<div className="relative z-10 px-1 grid flex-1 min-h-0 min-w-0 w-full gap-2 xl:gap-3 grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] overflow-hidden">
+						{headerExtra}
+					</div>
+					<div className="relative z-10 px-1 grid flex-1 min-h-0 min-w-0 w-full gap-2 xl:gap-3 grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] overflow-hidden">
 							<aside className="overflow-y-auto min-h-0 rounded-[1.15rem] border border-cz-border/80 bg-cz-inset px-0 pb-2 shadow-lg [scrollbar-gutter:stable]">
 								<div className="px-4 mt-4 mx-auto">
 									<SynthLcdDisplay
@@ -292,7 +276,42 @@ function SynthRendererContent({
 								</div>
 							</main>
 						</div>
-					)}
+					<AnimatePresence initial={false}>
+						{libraryModeOpen ? (
+							<motion.div
+								key="library-mode"
+								initial={{ y: "-100%", opacity: 0 }}
+								animate={{ y: 0, opacity: 1 }}
+								exit={{ y: "-100%", opacity: 0 }}
+								transition={{
+									ease: "easeInOut",
+									type: "spring",
+									stiffness: 520,
+									damping: 60,
+									mass: 1,
+								}}
+								style={{ transformOrigin: "top center" }}
+								className="absolute inset-x-0 top-[5rem] bottom-10 z-20 flex min-h-0 flex-col overflow-hidden shadow-lg shadow-black "
+							>
+								<PresetLibrary
+									allEntries={headerProps.allEntries}
+									activeEntryId={headerProps.activeEntryId}
+									activePresetName={headerProps.activePresetName}
+									onLoadLocal={headerProps.onLoadLocal}
+									onLoadLibrary={headerProps.onLoadLibrary}
+									onLoadBuiltin={headerProps.onLoadBuiltin}
+									onSavePreset={headerProps.onSavePreset}
+									onDeletePreset={headerProps.onDeletePreset}
+									onRenamePreset={headerProps.onRenamePreset}
+									onExportPreset={headerProps.onExportPreset}
+									onExportCurrentState={headerProps.onExportCurrentState}
+									onImportPreset={headerProps.onImportPreset}
+									onInitPreset={headerProps.onInitPreset}
+									onClose={() => setLibraryModeOpen(false)}
+								/>
+							</motion.div>
+						) : null}
+					</AnimatePresence>
 					<PendingModifiedPresetModal
 						pendingPresetChange={headerProps.pendingPresetChange}
 						onSave={headerProps.onSavePendingPresetChange}
