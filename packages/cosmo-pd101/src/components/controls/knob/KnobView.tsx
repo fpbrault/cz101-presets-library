@@ -1,14 +1,7 @@
 import {
-	motion,
-	useReducedMotion,
-	useSpring,
-	useTransform,
-} from "motion/react";
-import {
 	type CSSProperties,
 	type ReactNode,
 	type RefObject,
-	useEffect,
 	useId,
 } from "react";
 import {
@@ -61,7 +54,6 @@ export function KnobView({
 	const uid = useId().replace(/:/g, "");
 	const gradId = `knobGrad-${uid}`;
 	const innerGradId = `knobInner-${uid}`;
-	const reducedMotion = useReducedMotion();
 
 	const cx = Number.isFinite(arcGeometry.cx)
 		? arcGeometry.cx
@@ -100,12 +92,6 @@ export function KnobView({
 			? Math.max(60, modTrailDuration)
 			: 0
 		: 220;
-	const headDamping =
-		trailDuration > 0 ? Math.max(24, Math.min(52, trailDuration / 7)) : 0;
-	const midDamping =
-		trailDuration > 0 ? Math.max(26, Math.min(56, trailDuration / 6)) : 0;
-	const tailDamping =
-		trailDuration > 0 ? Math.max(28, Math.min(60, trailDuration / 5)) : 0;
 
 	const indicatorAngle = valueToAngle(
 		safeNormalizedValue,
@@ -151,62 +137,31 @@ export function KnobView({
 		sweepAngle,
 		indicatorRadius,
 	};
-
-	const trailHead = useSpring(safeModulatedNorm ?? safeNormalizedValue, {
-		stiffness: 420,
-		damping: headDamping,
-		mass: 0.2,
-	});
-	const trailMid = useSpring(trailHead, {
-		stiffness: 260,
-		damping: midDamping,
-		mass: 0.28,
-	});
-	const trailTail = useSpring(trailMid, {
-		stiffness: 180,
-		damping: tailDamping,
-		mass: 0.35,
-	});
-	const trailFar = useSpring(trailTail, {
-		stiffness: 130,
-		damping: Math.max(30, tailDamping + 3),
-		mass: 0.42,
-	});
-
-	useEffect(() => {
-		trailHead.set(safeModulatedNorm ?? safeNormalizedValue);
-	}, [safeModulatedNorm, safeNormalizedValue, trailHead]);
-
-	const headX = useTransform(
-		trailHead,
-		(norm) => modTargetPoint(norm, safeGeometry).x,
-	);
-	const headY = useTransform(
-		trailHead,
-		(norm) => modTargetPoint(norm, safeGeometry).y,
-	);
-
-	const trailFrontPath = useTransform(
-		[trailHead, trailMid],
-		([headNorm, midNorm]: number[]) => {
-			if (!Number.isFinite(headNorm) || !Number.isFinite(midNorm)) return "";
-			if (Math.abs(headNorm - midNorm) < 0.0008) return "";
-			const from = valueToAngle(midNorm, startAngle, sweepAngle);
-			const to = valueToAngle(headNorm, startAngle, sweepAngle);
-			return describeArc(cx, cy, safeGeometry.modOrbitRadius, from, to);
-		},
-	);
-
-	const trailBackPath = useTransform(
-		[trailMid, trailFar],
-		([midNorm, farNorm]: number[]) => {
-			if (!Number.isFinite(midNorm) || !Number.isFinite(farNorm)) return "";
-			if (Math.abs(midNorm - farNorm) < 0.0008) return "";
-			const from = valueToAngle(farNorm, startAngle, sweepAngle);
-			const to = valueToAngle(midNorm, startAngle, sweepAngle);
-			return describeArc(cx, cy, safeGeometry.modOrbitRadius, from, to);
-		},
-	);
+	const modulatedPoint =
+		safeModulatedNorm !== undefined
+			? modTargetPoint(safeModulatedNorm, safeGeometry)
+			: null;
+	const modulatedTrailPath =
+		safeModulatedNorm !== undefined &&
+		Math.abs(safeModulatedNorm - safeNormalizedValue) >= 0.0008
+			? (() => {
+					const baseAngle = valueToAngle(
+						safeNormalizedValue,
+						startAngle,
+						sweepAngle,
+					);
+					const modulatedAngle = valueToAngle(
+						safeModulatedNorm,
+						startAngle,
+						sweepAngle,
+					);
+					const [from, to] =
+						safeModulatedNorm >= safeNormalizedValue
+							? [baseAngle, modulatedAngle]
+							: [modulatedAngle, baseAngle];
+					return describeArc(cx, cy, safeGeometry.modOrbitRadius, from, to);
+				})()
+			: "";
 
 	const centerTick =
 		bipolarNorm !== null
@@ -234,11 +189,6 @@ export function KnobView({
 				"--knob-indicator-color": colorOverride,
 			} as CSSProperties)
 		: undefined;
-
-	const motionTransition =
-		dragging || reducedMotion
-			? { duration: 0 }
-			: { duration: 0.18, ease: [0.34, 1.2, 0.64, 1] as const };
 
 	return (
 		<div
@@ -283,25 +233,21 @@ export function KnobView({
 				<circle cx={cx} cy={cy} r={cx - 7} fill={`url(#${gradId})`} />
 				<circle cx={cx} cy={cy} r={cx - 7} fill={`url(#${innerGradId})`} />
 
-				<motion.path
+				<path
 					d={trackPath}
 					fill="none"
 					stroke="var(--knob-track-color)"
 					strokeLinecap="round"
 					strokeWidth={currentTrackWidth}
-					animate={{ strokeWidth: currentTrackWidth }}
-					transition={{ duration: 0.2, ease: "easeOut" }}
 				/>
 
 				{valuePath && (
-					<motion.path
+					<path
 						d={valuePath}
 						fill="none"
 						stroke="var(--knob-value-color)"
 						strokeLinecap={bipolarNorm !== null ? "butt" : "round"}
 						strokeWidth={currentTrackWidth}
-						animate={{ d: valuePath, strokeWidth: currentTrackWidth }}
-						transition={motionTransition}
 					/>
 				)}
 
@@ -317,7 +263,7 @@ export function KnobView({
 					/>
 				)}
 
-				<motion.line
+				<line
 					x1={cx}
 					y1={cy}
 					x2={indicatorTip.x}
@@ -326,12 +272,6 @@ export function KnobView({
 					strokeWidth="3.5"
 					strokeLinecap="round"
 					className={dragging ? "opacity-100" : "opacity-90"}
-					animate={{ x2: indicatorTip.x, y2: indicatorTip.y }}
-					transition={
-						dragging || reducedMotion
-							? { duration: 0 }
-							: { type: "spring", stiffness: 380, damping: 26, mass: 0.24 }
-					}
 				/>
 				<circle
 					cx={cx}
@@ -343,29 +283,25 @@ export function KnobView({
 
 				{safeModulatedNorm !== undefined && trailDuration > 0 && (
 					<>
-						<motion.path
-							d={trailBackPath}
-							fill="none"
-							stroke="var(--knob-value-color)"
-							strokeWidth="1.45"
-							strokeLinecap="round"
-							strokeOpacity="0.2"
-						/>
-						<motion.path
-							d={trailFrontPath}
-							fill="none"
-							stroke="var(--knob-value-color)"
-							strokeWidth="2.5"
-							strokeLinecap="round"
-							strokeOpacity="0.42"
-						/>
-						<motion.circle
-							cx={headX}
-							cy={headY}
-							r="2.1"
-							fill="var(--knob-value-color)"
-							fillOpacity="0.95"
-						/>
+						{modulatedTrailPath ? (
+							<path
+								d={modulatedTrailPath}
+								fill="none"
+								stroke="var(--knob-value-color)"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeOpacity="0.35"
+							/>
+						) : null}
+						{modulatedPoint ? (
+							<circle
+								cx={modulatedPoint.x}
+								cy={modulatedPoint.y}
+								r="2.1"
+								fill="var(--knob-value-color)"
+								fillOpacity="0.95"
+							/>
+						) : null}
 					</>
 				)}
 			</svg>

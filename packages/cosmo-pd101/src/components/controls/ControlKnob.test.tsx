@@ -104,6 +104,37 @@ describe("ControlKnob", () => {
 		expect(onChange).toHaveBeenCalledWith(0.1);
 	});
 
+	it("updates value while dragging", () => {
+		const onChange = vi.fn();
+		render(
+			<ControlKnob
+				value={0.4}
+				onChange={onChange}
+				label="Drive"
+				min={0}
+				max={1}
+			/>,
+		);
+
+		const knob = screen.getByRole("spinbutton", { name: "Drive" });
+		fireEvent.pointerDown(knob, {
+			pointerId: 1,
+			pointerType: "mouse",
+			clientX: 28,
+			clientY: 28,
+		});
+		fireEvent.pointerMove(window, {
+			pointerId: 1,
+			pointerType: "mouse",
+			clientX: 28,
+			clientY: 8,
+		});
+		fireEvent.pointerUp(window, { pointerId: 1, pointerType: "mouse" });
+
+		expect(onChange).toHaveBeenCalled();
+		expect(onChange.mock.calls.at(-1)?.[0]).toBeGreaterThan(0.4);
+	});
+
 	it("hides value display when valueVisibility is never", () => {
 		render(
 			<ControlKnob
