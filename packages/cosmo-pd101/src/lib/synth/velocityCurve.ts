@@ -7,6 +7,6 @@
  */
 export function applyVelocityCurve(velocity: number, curve: number): number {
 	if (Math.abs(curve) < 0.001) return velocity;
-	const exponent = Math.pow(2, -curve * 2.5);
-	return Math.pow(Math.max(0, Math.min(1, velocity)), exponent);
+	const exponent = 2 ** (-curve * 2.5);
+	return Math.max(0, Math.min(1, velocity)) ** exponent;
 }
