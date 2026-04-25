@@ -426,8 +426,17 @@ pub struct CzParameters {
     #[parameter(id = "rev_mix", name = "Mix", default = 0.0, range = 0.0..=1.0, group = "Reverb")]
     pub rev_mix: FloatParameter,
 
-    #[parameter(id = "rev_size", name = "Size", default = 0.5, range = 0.0..=1.0, group = "Reverb")]
-    pub rev_size: FloatParameter,
+    #[parameter(id = "rev_space", name = "Space", default = 0.5, range = 0.0..=1.0, group = "Reverb")]
+    pub rev_space: FloatParameter,
+
+    #[parameter(id = "rev_predelay", name = "Pre-Delay (s)", default = 0.0, range = 0.0..=0.1, group = "Reverb")]
+    pub rev_predelay: FloatParameter,
+
+    #[parameter(id = "rev_distance", name = "Distance", default = 0.3, range = 0.0..=1.0, group = "Reverb")]
+    pub rev_distance: FloatParameter,
+
+    #[parameter(id = "rev_character", name = "Character", default = 0.65, range = 0.0..=1.0, group = "Reverb")]
+    pub rev_character: FloatParameter,
 
     // LFO
     #[parameter(id = "lfo_waveform", name = "Waveform", group = "LFO")]
@@ -626,7 +635,10 @@ impl CzParameters {
 
         params.reverb.enabled = self.rev_enabled.get() >= 0.5;
         params.reverb.mix = self.rev_mix.get() as f32;
-        params.reverb.size = self.rev_size.get() as f32;
+        params.reverb.space = self.rev_space.get() as f32;
+        params.reverb.predelay = self.rev_predelay.get() as f32;
+        params.reverb.distance = self.rev_distance.get() as f32;
+        params.reverb.character = self.rev_character.get() as f32;
 
         params.lfo.waveform = Self::map_lfo_waveform(self.lfo_waveform.get());
         params.lfo.rate = self.lfo_rate.get() as f32;
@@ -711,8 +723,11 @@ fn _assert_synth_params_coverage(p: SynthParams) {
     } = delay;
     let ReverbParams {
         enabled: _rev_enabled,
-        size: _rev_size,
         mix: _rev_mix,
+        space: _rev_space,
+        predelay: _rev_predelay,
+        distance: _rev_distance,
+        character: _rev_character,
     } = reverb;
     let VibratoParams {
         enabled: _vib_enabled,

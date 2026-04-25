@@ -146,8 +146,11 @@ export type SynthState = {
 	delayMix: number;
 
 	reverbEnabled: boolean;
-	reverbSize: number;
 	reverbMix: number;
+	reverbSpace: number;
+	reverbPredelay: number;
+	reverbDistance: number;
+	reverbCharacter: number;
 
 	vibratoEnabled: boolean;
 	vibratoWave: number;
@@ -254,8 +257,11 @@ type SynthActions = {
 	setDelayMix: (v: number) => void;
 
 	setReverbEnabled: (v: boolean) => void;
-	setReverbSize: (v: number) => void;
 	setReverbMix: (v: number) => void;
+	setReverbSpace: (v: number) => void;
+	setReverbPredelay: (v: number) => void;
+	setReverbDistance: (v: number) => void;
+	setReverbCharacter: (v: number) => void;
 
 	setVibratoEnabled: (v: boolean) => void;
 	setVibratoWave: (v: number) => void;
@@ -367,8 +373,11 @@ const DEFAULT_STATE: SynthState = {
 	delayMix: 0,
 
 	reverbEnabled: false,
-	reverbSize: 0.5,
 	reverbMix: 0,
+	reverbSpace: 0.5,
+	reverbPredelay: 0,
+	reverbDistance: 0.3,
+	reverbCharacter: 0.65,
 
 	vibratoEnabled: false,
 	vibratoWave: 1,
@@ -486,8 +495,11 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 	setDelayMix: (v) => set({ delayMix: v }),
 
 	setReverbEnabled: (v) => set({ reverbEnabled: v }),
-	setReverbSize: (v) => set({ reverbSize: v }),
 	setReverbMix: (v) => set({ reverbMix: v }),
+	setReverbSpace: (v) => set({ reverbSpace: v }),
+	setReverbPredelay: (v) => set({ reverbPredelay: v }),
+	setReverbDistance: (v) => set({ reverbDistance: v }),
+	setReverbCharacter: (v) => set({ reverbCharacter: v }),
 
 	setVibratoEnabled: (v) => set({ vibratoEnabled: v }),
 	setVibratoWave: (v) => set({ vibratoWave: v }),
@@ -615,8 +627,11 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 				},
 				reverb: {
 					enabled: s.reverbEnabled,
-					size: s.reverbSize,
 					mix: s.reverbMix,
+					space: s.reverbSpace,
+					predelay: s.reverbPredelay,
+					distance: s.reverbDistance,
+					character: s.reverbCharacter,
 				},
 				vibrato: {
 					enabled: s.vibratoEnabled,
@@ -695,6 +710,23 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 			p.line2?.algo2 == null
 				? null
 				: toAlgoRefV1(p.line2.algo2, DEFAULT_ALGO_REF);
+		const legacyReverb = p.reverb as
+			| (typeof p.reverb & { brightness?: number; highCut?: number })
+			| undefined;
+		const hasLegacyReverbTone =
+			legacyReverb?.brightness != null || legacyReverb?.highCut != null;
+		const reverbCharacter = hasLegacyReverbTone
+			? Math.min(
+					1,
+					Math.max(
+						0,
+						(safe(legacyReverb?.brightness, 0.7) -
+							safe(legacyReverb?.highCut, 0) * 0.4) *
+							0.85 +
+							safe(legacyReverb?.character, 0.3) * 0.15,
+					),
+				)
+			: safe(p.reverb?.character, 0.65);
 
 		set({
 			warpAAmount: safe(p.line1?.dcwBase, 0),
@@ -779,9 +811,12 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 			delayFeedback: safe(p.delay?.feedback, 0.35),
 			delayMix: safe(p.delay?.mix, 0),
 			delayEnabled: p.delay?.enabled ?? safe(p.delay?.mix, 0) > 0,
-			reverbSize: safe(p.reverb?.size, 0.5),
 			reverbMix: safe(p.reverb?.mix, 0),
 			reverbEnabled: p.reverb?.enabled ?? safe(p.reverb?.mix, 0) > 0,
+			reverbSpace: safe(p.reverb?.space, 0.5),
+			reverbPredelay: safe(p.reverb?.predelay, 0),
+			reverbDistance: safe(p.reverb?.distance, 0.3),
+			reverbCharacter,
 			lineSelect: (p.lineSelect as LineSelect) ?? "L1+L2",
 			modMode: (p.modMode as ModMode) ?? "normal",
 			line1DcwKeyFollow: safe(p.line1?.keyFollow, 0),

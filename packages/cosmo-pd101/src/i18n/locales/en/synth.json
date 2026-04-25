@@ -56,9 +56,12 @@
 		"delayFeedback": "Delay Feedback",
 		"delayEnabled": "Delay",
 		"delayMix": "Delay Mix",
-		"reverbSize": "Reverb Size",
 		"reverbEnabled": "Reverb",
 		"reverbMix": "Reverb Mix",
+		"reverbSpace": "Reverb Space",
+		"reverbPredelay": "Reverb Pre-Delay",
+		"reverbDistance": "Reverb Distance",
+		"reverbCharacter": "Reverb Character",
 		"scopeCycles": "Scope Cycles",
 		"scopeVerticalZoom": "Scope Zoom",
 		"scopeTriggerLevel": "Scope Trigger"

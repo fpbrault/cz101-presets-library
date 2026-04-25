@@ -1,23 +1,65 @@
 import { BaseFxSection, type FxKnobConfig } from "./BaseFxSection";
 
 interface ReverbSectionProps {
-	size: number;
-	setSize: (v: number) => void;
+	space: number;
+	setSpace: (v: number) => void;
 	mix: number;
 	setMix: (v: number) => void;
+	predelay: number;
+	setPredelay: (v: number) => void;
+	distance: number;
+	setDistance: (v: number) => void;
+	character: number;
+	setCharacter: (v: number) => void;
 }
 
 export function ReverbSection({
-	size,
-	setSize,
+	space,
+	setSpace,
 	mix,
 	setMix,
+	predelay,
+	setPredelay,
+	distance,
+	setDistance,
+	character,
+	setCharacter,
 }: ReverbSectionProps) {
 	const knobs: FxKnobConfig[] = [
 		{
-			label: "Size",
-			value: size,
-			setValue: setSize,
+			label: "Space",
+			value: space,
+			setValue: setSpace,
+			min: 0,
+			max: 1,
+			size: 44,
+			color: "#9cb937",
+			valueFormatter: (value) => `${Math.round(value * 100)}%`,
+		},
+		{
+			label: "Pre-Dly",
+			value: predelay,
+			setValue: setPredelay,
+			min: 0,
+			max: 0.1,
+			size: 44,
+			color: "#9cb937",
+			valueFormatter: (value) => `${Math.round(value * 1000)}ms`,
+		},
+		{
+			label: "Char",
+			value: character,
+			setValue: setCharacter,
+			min: 0,
+			max: 1,
+			size: 44,
+			color: "#9cb937",
+			valueFormatter: (value) => `${Math.round(value * 100)}%`,
+		},
+		{
+			label: "Dist",
+			value: distance,
+			setValue: setDistance,
 			min: 0,
 			max: 1,
 			size: 44,

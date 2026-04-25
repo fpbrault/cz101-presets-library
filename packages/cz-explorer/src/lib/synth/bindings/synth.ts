@@ -165,7 +165,20 @@ export type DelayParams = { time: number; feedback: number; mix: number };
 /**
  * Reverb parameters
  */
-export type ReverbParams = { size: number; mix: number };
+export type ReverbParams = {
+	enabled?: boolean;
+	mix: number;
+	/** Decay time / room size. 0 = dead, 1 = large hall. */
+	space: number;
+	/** Pre-delay time in seconds (0–0.1 s). Default 0. */
+	predelay?: number;
+	/** High-frequency content: 1 = bright, 0 = dark. Default 0.7. */
+	brightness: number;
+	/** Near/far blend: 0 = close (early reflections), 1 = far (late reverb). Default 0.3. */
+	distance: number;
+	/** LFO modulation depth: 0 = static, 1 = lush/shimmery. Default 0.3. */
+	character: number;
+};
 
 /**
  * Vibrato parameters
