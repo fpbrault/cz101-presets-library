@@ -125,7 +125,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const lcdSecondaryText = useMemo(() => {
 		const filterStatus = filterEnabled ? "FILT ON" : "FILT OFF";
 		return `LINE ${lineSelect} | ${filterStatus}`;
-	}, [lineSelect,filterEnabled]);
+	}, [lineSelect, filterEnabled]);
 
 	return (
 		<SynthRenderer

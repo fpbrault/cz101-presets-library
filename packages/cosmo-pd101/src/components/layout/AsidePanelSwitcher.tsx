@@ -73,10 +73,10 @@ export default function AsidePanelSwitcher<T extends string>({
 
 	const isTabEnabled = (tabId: T): boolean => {
 		switch (String(tabId).toLowerCase()) {
-				case "polymode":
-					return polyMode === "mono";
-				case "portamentoenabled":
-					return portamentoEnabled;
+			case "polymode":
+				return polyMode === "mono";
+			case "portamentoenabled":
+				return portamentoEnabled;
 			case "phasemod":
 				return phaseModEnabled;
 			case "vibrato":

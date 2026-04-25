@@ -201,9 +201,9 @@ function SynthRendererContent({
 								<div className="pointer-events-none absolute inset-x-4 top-0 h-12 rounded-t-[1.2rem] opacity-70" />
 								<div className="relative shrink-0 rounded-md border border-cz-border bg-cz-body px-2 py-2 xl:px-3 shadow-inner">
 									<div className="flex flex-wrap justify-center gap-x-2 gap-y-2 xl:gap-x-4 items-center">
-											<MasterVolumeControl />
+										<MasterVolumeControl />
 										<LineSelectControl />
-									
+
 										<ModModeControl />
 										<SynthSingleCycleDisplay />
 										<div className="flex items-end gap-2">
@@ -214,8 +214,7 @@ function SynthRendererContent({
 												bottomLabel=""
 												color="red"
 												width={48}
-											>
-											</CzTabButton>
+											></CzTabButton>
 											<CzTabButton
 												active={mainPanelMode === "fx"}
 												onClick={() =>
@@ -227,8 +226,7 @@ function SynthRendererContent({
 												bottomLabel=""
 												width={48}
 												color="blue"
-											>
-											</CzTabButton>
+											></CzTabButton>
 											<CzTabButton
 												active={mainPanelMode === "mod"}
 												onClick={() =>
@@ -240,8 +238,7 @@ function SynthRendererContent({
 												bottomLabel=""
 												width={48}
 												color="cyan"
-											>
-											</CzTabButton>
+											></CzTabButton>
 										</div>
 									</div>
 								</div>

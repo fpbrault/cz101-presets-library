@@ -101,12 +101,7 @@ export default function CzTabButton({
 	const resolvedHeight = height ?? width ?? 48;
 
 	return (
-		<div
-			className={joinClasses(
-				"flex flex-col items-center gap-1",
-				className,
-			)}
-		>
+		<div className={joinClasses("flex flex-col items-center gap-1", className)}>
 			{showLed ? (
 				<motion.span
 					animate={

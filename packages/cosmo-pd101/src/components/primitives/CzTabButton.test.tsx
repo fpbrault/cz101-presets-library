@@ -59,7 +59,9 @@ describe("CzTabButton", () => {
 			height: "36px",
 		});
 
-		rerender(<CzTabButton topLabel="A" bottomLabel="B" width={28} height={40} />);
+		rerender(
+			<CzTabButton topLabel="A" bottomLabel="B" width={28} height={40} />,
+		);
 		expect(screen.getByRole("button")).toHaveStyle({
 			width: "28px",
 			height: "40px",
