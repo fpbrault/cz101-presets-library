@@ -131,12 +131,20 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 			time: 0.5,
 		},
 		lfo: {
-			enabled: false,
 			waveform: "sine",
 			rate: 5,
 			depth: 0,
+			symmetry: 0.5,
+			retrigger: false,
 			offset: 0,
-			target: "pitch",
+		},
+		lfo2: {
+			waveform: "sine",
+			rate: 5,
+			depth: 0,
+			symmetry: 0.5,
+			retrigger: false,
+			offset: 0,
 		},
 		filter: {
 			enabled: false,

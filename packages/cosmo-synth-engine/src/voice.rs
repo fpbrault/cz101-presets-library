@@ -10,8 +10,8 @@ use crate::dsp_utils::{lfo_output, wrap01};
 use crate::envelope::{EnvGen, EnvelopeKind};
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
-    FilterType, LfoTarget, LfoWaveform, LineParams, LineSelect, ModDestination, ModMatrix, ModMode,
-    ModSource, PortamentoMode, SynthParams, VelocityTarget,
+    FilterType, LfoWaveform, LineParams, LineSelect, ModDestination, ModMatrix, ModMode, ModSource,
+    PortamentoMode, SynthParams, VelocityTarget,
 };
 
 // TWO_PI for f32
@@ -27,7 +27,6 @@ const SILENCE_THRESHOLD: f32 = 0.001;
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct ModSources {
     pub lfo1: f32,
-    /// LFO2 — stub, always 0.0 this phase.
     pub lfo2: f32,
     pub velocity: f32,
     pub mod_wheel: f32,
@@ -36,10 +35,10 @@ pub(crate) struct ModSources {
 }
 
 impl ModSources {
-    fn new(lfo1: f32, velocity: f32, mod_wheel: f32, aftertouch: f32) -> Self {
+    fn new(lfo1: f32, lfo2: f32, velocity: f32, mod_wheel: f32, aftertouch: f32) -> Self {
         Self {
             lfo1,
-            lfo2: 0.0,
+            lfo2,
             velocity,
             mod_wheel,
             aftertouch,
@@ -239,11 +238,13 @@ struct PhaseFrame {
 /// * `voice`       – mutable reference to the voice state
 /// * `p`           – current synth parameters
 /// * `lfo_mod_val` – pre-computed LFO output value for this sample
+/// * `lfo2_mod_val` – pre-computed LFO2 output value for this sample
 /// * `sr`          – sample rate in Hz
 pub fn render_voice(
     voice: &mut Voice,
     p: &SynthParams,
     lfo_mod_val: f32,
+    lfo2_mod_val: f32,
     sr: f32,
     pitch_bend_semitones: f32,
     mod_wheel: f32,
@@ -263,7 +264,13 @@ pub fn render_voice(
         return 0.0;
     }
 
-    let mod_sources = ModSources::new(lfo_mod_val, voice.velocity, mod_wheel, aftertouch);
+    let mod_sources = ModSources::new(
+        lfo_mod_val,
+        lfo2_mod_val,
+        voice.velocity,
+        mod_wheel,
+        aftertouch,
+    );
     let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
     let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
     let mut signal = build_signal_state(voice, p, &env, base_freq, &mod_sources);
@@ -272,7 +279,6 @@ pub fn render_voice(
         p,
         sr,
         base_freq,
-        lfo_mod_val,
         pitch_bend_semitones,
         mod_wheel,
         &mod_sources,
@@ -319,7 +325,7 @@ pub fn render_voice(
         line1_algo_param_mods,
         line2_algo_param_mods,
     );
-    let sample = apply_filter(sample, voice, p, lfo_mod_val, sr, env.dcw1, &mod_sources);
+    let sample = apply_filter(sample, voice, p, sr, env.dcw1, &mod_sources);
 
     // Apply volume modulation from mod matrix
     let volume_mod = mod_value_for(ModDestination::Volume, &p.mod_matrix, &mod_sources);
@@ -485,7 +491,6 @@ fn apply_pitch_and_lfo_modulation(
     p: &SynthParams,
     sr: f32,
     base_freq: f32,
-    lfo_mod_val: f32,
     pitch_bend_semitones: f32,
     mod_wheel: f32,
     sources: &ModSources,
@@ -494,7 +499,6 @@ fn apply_pitch_and_lfo_modulation(
     apply_portamento(voice, &p.portamento, sr, base_freq, signal);
     apply_pitch_bend(pitch_bend_semitones, signal);
     apply_vibrato(voice, p, sr, mod_wheel, signal);
-    apply_global_lfo(p, lfo_mod_val, signal);
     // Pitch modulation from mod matrix (additive semitone offset via ratio)
     let pitch_mod = mod_value_for(ModDestination::Pitch, &p.mod_matrix, sources);
     if pitch_mod != 0.0 {
@@ -585,30 +589,6 @@ fn vibrato_waveform(waveform: u8) -> LfoWaveform {
         3 => LfoWaveform::Square,
         4 => LfoWaveform::Saw,
         _ => LfoWaveform::Sine,
-    }
-}
-
-fn apply_global_lfo(p: &SynthParams, lfo_mod_val: f32, signal: &mut SignalState) {
-    let lfo_offset = p.lfo.offset;
-    if lfo_mod_val == 0.0 && lfo_offset == 0.0 {
-        return;
-    }
-
-    let mod_val = lfo_mod_val * p.lfo.depth + lfo_offset;
-    match p.lfo.target {
-        LfoTarget::Pitch => {
-            signal.effective_freq1 *= 1.0 + mod_val;
-            signal.effective_freq2 *= 1.0 + mod_val;
-        }
-        LfoTarget::Dcw => {
-            signal.final_dcw1 = (signal.final_dcw1 + mod_val).clamp(0.0, 1.0);
-            signal.final_dcw2 = (signal.final_dcw2 + mod_val).clamp(0.0, 1.0);
-        }
-        LfoTarget::Dca => {
-            signal.final_dca1 = (signal.final_dca1 * (1.0 + mod_val)).max(0.0);
-            signal.final_dca2 = (signal.final_dca2 * (1.0 + mod_val)).max(0.0);
-        }
-        LfoTarget::Filter => {}
     }
 }
 
@@ -793,7 +773,6 @@ fn apply_filter(
     sample: f32,
     voice: &mut Voice,
     p: &SynthParams,
-    lfo_mod_val: f32,
     sr: f32,
     dcw1: f32,
     sources: &ModSources,
@@ -803,19 +782,13 @@ fn apply_filter(
     }
 
     let filter = &p.filter;
-    let lfo_filter_mod = if p.lfo.enabled && p.lfo.target == LfoTarget::Filter {
-        lfo_mod_val * p.lfo.depth
-    } else {
-        0.0
-    };
     let cutoff_mod = mod_value_for(ModDestination::FilterCutoff, &p.mod_matrix, sources);
     let resonance_mod = mod_value_for(ModDestination::FilterResonance, &p.mod_matrix, sources);
     let env_amount_mod = mod_value_for(ModDestination::FilterEnvAmount, &p.mod_matrix, sources);
     let effective_env_amount = (filter.env_amount + env_amount_mod).clamp(-1.0, 1.0);
     let cutoff = (filter.cutoff
         * libm::powf(2.0, cutoff_mod * 4.0) // ±4 octaves max for cutoff mod
-        * (1.0 + effective_env_amount * dcw1)
-        * (1.0 + lfo_filter_mod))
+        * (1.0 + effective_env_amount * dcw1))
         .clamp(20.0, sr * 0.49);
     let resonance = (filter.resonance + resonance_mod).max(0.001);
     let w0 = TWO_PI * cutoff / sr;

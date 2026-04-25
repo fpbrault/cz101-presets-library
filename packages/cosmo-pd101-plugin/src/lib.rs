@@ -243,23 +243,10 @@ pub enum LfoWaveform {
     Square,
     #[name = "Saw"]
     Saw,
-}
-
-/// LFO target.
-///
-/// Deprecated: destination routing is handled by the modulation matrix.
-/// Kept for compatibility with existing presets/automation.
-#[derive(Copy, Clone, PartialEq, EnumParameter)]
-pub enum LfoTarget {
-    #[name = "Pitch"]
-    #[default]
-    Pitch,
-    #[name = "DCW"]
-    Dcw,
-    #[name = "DCA"]
-    Dca,
-    #[name = "Filter"]
-    Filter,
+    #[name = "Inverted Saw"]
+    InvertedSaw,
+    #[name = "Random"]
+    Random,
 }
 
 /// Filter type.
@@ -443,9 +430,6 @@ pub struct CzParameters {
     pub rev_size: FloatParameter,
 
     // LFO
-    #[parameter(id = "lfo_enabled", name = "Enabled", default = 0.0, range = 0.0..=1.0, group = "LFO")]
-    pub lfo_enabled: FloatParameter,
-
     #[parameter(id = "lfo_waveform", name = "Waveform", group = "LFO")]
     pub lfo_waveform: EnumParameter<LfoWaveform>,
 
@@ -454,10 +438,6 @@ pub struct CzParameters {
 
     #[parameter(id = "lfo_depth", name = "Depth", default = 0.2, range = 0.0..=1.0, group = "LFO")]
     pub lfo_depth: FloatParameter,
-
-    // Deprecated parameter: retained to preserve preset and host automation compatibility.
-    #[parameter(id = "lfo_target", name = "Target", group = "LFO")]
-    pub lfo_target: EnumParameter<LfoTarget>,
 
     // Filter
     #[parameter(id = "fil_enabled", name = "Enabled", default = 0.0, range = 0.0..=1.0, group = "Filter")]
@@ -527,16 +507,8 @@ impl CzParameters {
             LfoWaveform::Triangle => cosmo_synth_engine::params::LfoWaveform::Triangle,
             LfoWaveform::Square => cosmo_synth_engine::params::LfoWaveform::Square,
             LfoWaveform::Saw => cosmo_synth_engine::params::LfoWaveform::Saw,
-        }
-    }
-
-    fn map_lfo_target(value: LfoTarget) -> cosmo_synth_engine::params::LfoTarget {
-        // Deprecated mapping path, retained for backward compatibility.
-        match value {
-            LfoTarget::Pitch => cosmo_synth_engine::params::LfoTarget::Pitch,
-            LfoTarget::Dcw => cosmo_synth_engine::params::LfoTarget::Dcw,
-            LfoTarget::Dca => cosmo_synth_engine::params::LfoTarget::Dca,
-            LfoTarget::Filter => cosmo_synth_engine::params::LfoTarget::Filter,
+            LfoWaveform::InvertedSaw => cosmo_synth_engine::params::LfoWaveform::InvertedSaw,
+            LfoWaveform::Random => cosmo_synth_engine::params::LfoWaveform::Random,
         }
     }
 
@@ -656,11 +628,9 @@ impl CzParameters {
         params.reverb.mix = self.rev_mix.get() as f32;
         params.reverb.size = self.rev_size.get() as f32;
 
-        params.lfo.enabled = self.lfo_enabled.get() >= 0.5;
         params.lfo.waveform = Self::map_lfo_waveform(self.lfo_waveform.get());
         params.lfo.rate = self.lfo_rate.get() as f32;
         params.lfo.depth = self.lfo_depth.get() as f32;
-        params.lfo.target = Self::map_lfo_target(self.lfo_target.get());
 
         params.filter.enabled = self.fil_enabled.get() >= 0.5;
         params.filter.filter_type = Self::map_filter_type(self.fil_type.get());
@@ -720,6 +690,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         vibrato,
         portamento,
         lfo,
+        lfo2,
         filter,
         pitch_bend_range: _pitch_bend_range, // not yet a VST param
         mod_wheel_vibrato_depth: _mod_wheel_vibrato_depth, // not yet a VST param
@@ -757,13 +728,21 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         time: _port_time,
     } = portamento;
     let LfoParams {
-        enabled: _lfo_enabled,
         waveform: _lfo_waveform,
         rate: _lfo_rate,
         depth: _lfo_depth,
-        target: _lfo_target,
+        symmetry: _lfo_symmetry,
+        retrigger: _lfo_retrigger,
         offset: _lfo_offset,
     } = lfo;
+    let LfoParams {
+        waveform: _lfo2_waveform,
+        rate: _lfo2_rate,
+        depth: _lfo2_depth,
+        symmetry: _lfo2_symmetry,
+        retrigger: _lfo2_retrigger,
+        offset: _lfo2_offset,
+    } = lfo2;
     let FilterParams {
         enabled: _fil_enabled,
         filter_type: _fil_type,

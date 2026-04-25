@@ -10,7 +10,6 @@ import type {
 	AlgoControlValueV1,
 	CzWaveform,
 	FilterType,
-	LfoTarget,
 	LfoWaveform,
 	LineSelect,
 	ModMatrix,
@@ -162,12 +161,18 @@ export type SynthState = {
 	portamentoRate: number;
 	portamentoTime: number;
 
-	lfoEnabled: boolean;
 	lfoWaveform: LfoWaveform;
 	lfoRate: number;
 	lfoDepth: number;
+	lfoSymmetry: number;
+	lfoRetrigger: boolean;
 	lfoOffset: number;
-	lfoTarget: LfoTarget;
+	lfo2Waveform: LfoWaveform;
+	lfo2Rate: number;
+	lfo2Depth: number;
+	lfo2Symmetry: number;
+	lfo2Retrigger: boolean;
+	lfo2Offset: number;
 
 	filterEnabled: boolean;
 	filterType: FilterType;
@@ -264,12 +269,18 @@ type SynthActions = {
 	setPortamentoRate: (v: number) => void;
 	setPortamentoTime: (v: number) => void;
 
-	setLfoEnabled: (v: boolean) => void;
 	setLfoWaveform: (v: LfoWaveform) => void;
 	setLfoRate: (v: number) => void;
 	setLfoDepth: (v: number) => void;
+	setLfoSymmetry: (v: number) => void;
+	setLfoRetrigger: (v: boolean) => void;
 	setLfoOffset: (v: number) => void;
-	setLfoTarget: (v: LfoTarget) => void;
+	setLfo2Waveform: (v: LfoWaveform) => void;
+	setLfo2Rate: (v: number) => void;
+	setLfo2Depth: (v: number) => void;
+	setLfo2Symmetry: (v: number) => void;
+	setLfo2Retrigger: (v: boolean) => void;
+	setLfo2Offset: (v: number) => void;
 
 	setFilterEnabled: (v: boolean) => void;
 	setFilterType: (v: FilterType) => void;
@@ -371,12 +382,18 @@ const DEFAULT_STATE: SynthState = {
 	portamentoRate: 50,
 	portamentoTime: 0.5,
 
-	lfoEnabled: false,
 	lfoWaveform: "sine",
 	lfoRate: 5,
 	lfoDepth: 0.2,
+	lfoSymmetry: 0.5,
+	lfoRetrigger: false,
 	lfoOffset: 0,
-	lfoTarget: "pitch",
+	lfo2Waveform: "sine",
+	lfo2Rate: 5,
+	lfo2Depth: 0.2,
+	lfo2Symmetry: 0.5,
+	lfo2Retrigger: false,
+	lfo2Offset: 0,
 
 	filterEnabled: false,
 	filterType: "lp",
@@ -484,12 +501,18 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 	setPortamentoRate: (v) => set({ portamentoRate: v }),
 	setPortamentoTime: (v) => set({ portamentoTime: v }),
 
-	setLfoEnabled: (v) => set({ lfoEnabled: v }),
 	setLfoWaveform: (v) => set({ lfoWaveform: v }),
 	setLfoRate: (v) => set({ lfoRate: v }),
 	setLfoDepth: (v) => set({ lfoDepth: v }),
+	setLfoSymmetry: (v) => set({ lfoSymmetry: v }),
+	setLfoRetrigger: (v) => set({ lfoRetrigger: v }),
 	setLfoOffset: (v) => set({ lfoOffset: v }),
-	setLfoTarget: (v) => set({ lfoTarget: v }),
+	setLfo2Waveform: (v) => set({ lfo2Waveform: v }),
+	setLfo2Rate: (v) => set({ lfo2Rate: v }),
+	setLfo2Depth: (v) => set({ lfo2Depth: v }),
+	setLfo2Symmetry: (v) => set({ lfo2Symmetry: v }),
+	setLfo2Retrigger: (v) => set({ lfo2Retrigger: v }),
+	setLfo2Offset: (v) => set({ lfo2Offset: v }),
 
 	setFilterEnabled: (v) => set({ filterEnabled: v }),
 	setFilterType: (v) => set({ filterType: v }),
@@ -611,12 +634,20 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 					time: s.portamentoTime,
 				},
 				lfo: {
-					enabled: s.lfoEnabled,
 					waveform: s.lfoWaveform,
 					rate: s.lfoRate,
 					depth: s.lfoDepth,
+					symmetry: s.lfoSymmetry,
+					retrigger: s.lfoRetrigger,
 					offset: s.lfoOffset,
-					target: s.lfoTarget,
+				},
+				lfo2: {
+					waveform: s.lfo2Waveform,
+					rate: s.lfo2Rate,
+					depth: s.lfo2Depth,
+					symmetry: s.lfo2Symmetry,
+					retrigger: s.lfo2Retrigger,
+					offset: s.lfo2Offset,
 				},
 				filter: {
 					enabled: s.filterEnabled,
@@ -769,12 +800,18 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 			portamentoMode: (p.portamento?.mode as PortamentoMode) ?? "rate",
 			portamentoRate: safe(p.portamento?.rate, 50),
 			portamentoTime: safe(p.portamento?.time, 0.5),
-			lfoEnabled: p.lfo?.enabled ?? false,
 			lfoWaveform: (p.lfo?.waveform as LfoWaveform) ?? "sine",
 			lfoRate: safe(p.lfo?.rate, 5),
 			lfoDepth: safe(p.lfo?.depth, 0),
+			lfoSymmetry: safe(p.lfo?.symmetry, 0.5),
+			lfoRetrigger: p.lfo?.retrigger ?? false,
 			lfoOffset: safe(p.lfo?.offset, 0),
-			lfoTarget: (p.lfo?.target as LfoTarget) ?? "pitch",
+			lfo2Waveform: (p.lfo2?.waveform as LfoWaveform) ?? "sine",
+			lfo2Rate: safe(p.lfo2?.rate, 5),
+			lfo2Depth: safe(p.lfo2?.depth, 0),
+			lfo2Symmetry: safe(p.lfo2?.symmetry, 0.5),
+			lfo2Retrigger: p.lfo2?.retrigger ?? false,
+			lfo2Offset: safe(p.lfo2?.offset, 0),
 			filterEnabled: p.filter?.enabled ?? false,
 			filterType: (p.filter?.type as FilterType) ?? "lp",
 			filterCutoff: safe(p.filter?.cutoff, 5000),

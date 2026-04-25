@@ -12,10 +12,9 @@ use cosmo_synth_engine::generators::{
 };
 use cosmo_synth_engine::params::{
     Algo, AlgoControlValueV1, ChorusParams, CzAlgo, CzLineParams, CzWaveform, DelayParams, EnvStep,
-    FilterParams, FilterType, LfoParams, LfoTarget, LfoWaveform, LineParams, LineSelect,
-    ModDestination, ModMatrix, ModMode, ModRoute, ModSource, PolyMode, PortamentoMode,
-    PortamentoParams, ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams,
-    WindowType,
+    FilterParams, FilterType, LfoParams, LfoWaveform, LineParams, LineSelect, ModDestination,
+    ModMatrix, ModMode, ModRoute, ModSource, PolyMode, PortamentoMode, PortamentoParams,
+    ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType,
 };
 use cosmo_synth_engine::preset_wire::{
     algo_definitions_v1, algo_ui_catalog_v1, cz_presets, SynthPresetV1,
@@ -66,8 +65,6 @@ fn main() {
     out.push_str(&export::<FilterType>(&config).expect("Failed to export FilterType"));
     out.push_str("\n\n");
     out.push_str(&export::<PortamentoMode>(&config).expect("Failed to export PortamentoMode"));
-    out.push_str("\n\n");
-    out.push_str(&export::<LfoTarget>(&config).expect("Failed to export LfoTarget"));
     out.push_str("\n\n");
     out.push_str(&export::<ChorusParams>(&config).expect("Failed to export ChorusParams"));
     out.push_str("\n\n");

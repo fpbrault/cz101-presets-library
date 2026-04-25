@@ -33,7 +33,6 @@ export function useLcdControlReadout(): UseLcdControlReadoutResult {
 				if (key === "velocityTarget") return value.toUpperCase();
 				if (key === "lineSelect") return value;
 				if (key === "modMode") return value.toUpperCase();
-				if (key === "lfoTarget") return value.toUpperCase();
 				if (key === "filterType") return value.toUpperCase();
 				if (key === "lfoWaveform") return value.toUpperCase();
 				if (key === "portamentoMode") return value.toUpperCase();

@@ -71,7 +71,7 @@ const DEFAULT_PARAMS = {
 	reverb: { size: 0.5, mix: 0 },
 	vibrato: { enabled: false, waveform: 1, rate: 30, depth: 30, delay: 0 },
 	portamento: { enabled: false, mode: "rate", rate: 50, time: 0.5 },
-	lfo: { enabled: false, waveform: "sine", rate: 5, depth: 0, target: "pitch" },
+	lfo: { enabled: false, waveform: "sine", rate: 5, depth: 0 },
 	filter: {
 		enabled: false,
 		type: "lp",

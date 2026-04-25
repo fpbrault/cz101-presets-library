@@ -22,7 +22,6 @@ export type AsidePanelTab =
 	| "phaseMod"
 	| "vibrato"
 	| "portamento"
-	| "lfo"
 	| "filter"
 	| "chorus"
 	| "delay"
@@ -31,7 +30,6 @@ export type AsidePanelTab =
 const TOGGLE_TAB_IDS = new Set([
 	"phasemod",
 	"vibrato",
-	"lfo",
 	"chorus",
 	"delay",
 	"reverb",
@@ -62,14 +60,12 @@ export default function AsidePanelSwitcher<T extends string>({
 	const { value: phaseModEnabled } = useSynthParam("phaseModEnabled");
 	const { value: vibratoEnabled } = useSynthParam("vibratoEnabled");
 	const { value: portamentoEnabled } = useSynthParam("portamentoEnabled");
-	const { value: lfoEnabled } = useSynthParam("lfoEnabled");
 	const { value: filterEnabled } = useSynthParam("filterEnabled");
 	const { value: chorusEnabled } = useSynthParam("chorusEnabled");
 	const { value: delayEnabled } = useSynthParam("delayEnabled");
 	const { value: reverbEnabled } = useSynthParam("reverbEnabled");
 	const { setValue: setPhaseModEnabled } = useSynthParam("phaseModEnabled");
 	const { setValue: setVibratoEnabled } = useSynthParam("vibratoEnabled");
-	const { setValue: setLfoEnabled } = useSynthParam("lfoEnabled");
 	const { setValue: setChorusEnabled } = useSynthParam("chorusEnabled");
 	const { setValue: setDelayEnabled } = useSynthParam("delayEnabled");
 	const { setValue: setReverbEnabled } = useSynthParam("reverbEnabled");
@@ -82,8 +78,6 @@ export default function AsidePanelSwitcher<T extends string>({
 				return vibratoEnabled;
 			case "portamento":
 				return portamentoEnabled;
-			case "lfo":
-				return lfoEnabled;
 			case "filter":
 				return filterEnabled;
 			case "chorus":
@@ -100,11 +94,7 @@ export default function AsidePanelSwitcher<T extends string>({
 	const getTabColor = (tabId: T): CzTabButtonColor => {
 		const normalizedTabId = String(tabId).toLowerCase();
 
-		if (
-			normalizedTabId === "phasemod" ||
-			normalizedTabId === "vibrato" ||
-			normalizedTabId === "lfo"
-		) {
+		if (normalizedTabId === "phasemod" || normalizedTabId === "vibrato") {
 			return "red";
 		}
 
@@ -132,9 +122,6 @@ export default function AsidePanelSwitcher<T extends string>({
 				break;
 			case "vibrato":
 				setVibratoEnabled(!vibratoEnabled);
-				break;
-			case "lfo":
-				setLfoEnabled(!lfoEnabled);
 				break;
 			case "chorus":
 				setChorusEnabled(!chorusEnabled);

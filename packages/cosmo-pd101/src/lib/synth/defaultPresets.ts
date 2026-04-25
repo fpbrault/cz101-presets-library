@@ -340,7 +340,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0.28284801136363635,
 				offset: 0,
-				target: "filter",
 			},
 			filter: {
 				enabled: false,
@@ -698,7 +697,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0,
 				offset: 0,
-				target: "pitch",
 			},
 			filter: {
 				enabled: false,
@@ -1031,7 +1029,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0,
 				offset: 0,
-				target: "pitch",
 			},
 			filter: {
 				enabled: false,
@@ -1364,7 +1361,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 0.4674183238636367,
 				depth: 0.14038085937499994,
 				offset: 0,
-				target: "dcw",
 			},
 			filter: {
 				enabled: false,
@@ -1697,7 +1693,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0,
 				offset: 0,
-				target: "pitch",
 			},
 			filter: {
 				enabled: false,
@@ -2030,7 +2025,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 0.5260120738636367,
 				depth: 0.8219549005681819,
 				offset: 0,
-				target: "filter",
 			},
 			filter: {
 				enabled: false,
@@ -2363,7 +2357,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0,
 				offset: 0,
-				target: "pitch",
 			},
 			filter: {
 				enabled: false,
@@ -2696,7 +2689,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0,
 				offset: 0,
-				target: "pitch",
 			},
 			filter: {
 				enabled: false,
@@ -3084,7 +3076,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0,
 				offset: 0,
-				target: "pitch",
 			},
 			filter: {
 				enabled: false,
@@ -3420,7 +3411,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 				rate: 5,
 				depth: 0,
 				offset: 0,
-				target: "pitch",
 			},
 			filter: {
 				enabled: false,
