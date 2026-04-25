@@ -132,18 +132,6 @@ export type ModMode = "normal" | "ring" | "noise";
 export type PolyMode = "poly8" | "mono";
 
 /**
- * Velocity routing target
- */
-export type VelocityTarget =
-	| "amp"
-	| "dcw"
-	| "both"
-	/**
-	 * JS "off" means velocity is ignored (worklet passes 0 velocity)
-	 */
-	| "off";
-
-/**
  * LFO waveform
  */
 export type LfoWaveform =
@@ -437,7 +425,6 @@ export type SynthParams = {
 	volume: number;
 	polyMode: PolyMode;
 	legato: boolean;
-	velocityTarget: VelocityTarget;
 	chorus: ChorusParams;
 	delay: DelayParams;
 	reverb: ReverbParams;

@@ -158,7 +158,6 @@ export function convertDecodedPatchToSynthPreset(
 
 	p.polyMode = "poly8";
 	p.legato = false;
-	p.velocityTarget = "amp";
 
 	p.line1.dcwBase = 1.0;
 	p.line2.dcwBase = 1.0;

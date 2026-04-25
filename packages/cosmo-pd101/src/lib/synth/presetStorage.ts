@@ -99,7 +99,6 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 		volume: 1,
 		polyMode: "poly8",
 		legato: false,
-		velocityTarget: "amp",
 		chorus: {
 			enabled: false,
 			rate: 0.8,

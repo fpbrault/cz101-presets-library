@@ -8,9 +8,9 @@
  */
 
 import { useSynthStore } from "@/features/synth/synthStore";
-import type { PolyMode, VelocityTarget } from "@/lib/synth/bindings/synth";
+import type { PolyMode } from "@/lib/synth/bindings/synth";
 
-export type { PolyMode, VelocityTarget };
+export type { PolyMode };
 
 export function useSynthState() {
 	return useSynthStore();

@@ -40,7 +40,12 @@ export function createWorkletSynthEngineAdapter({
 			};
 			paramsRef.current = params;
 			if (!workletNodeRef.current) return;
-			workletNodeRef.current.port.postMessage({ type: "setParams", params });
+			// Always pass velocityTarget: "off" so the Rust engine does not apply
+			// velocity to amp/dcw directly. Velocity routing is handled via mod matrix.
+			workletNodeRef.current.port.postMessage({
+				type: "setParams",
+				params: { ...params, velocityTarget: "off" },
+			});
 		},
 	};
 }

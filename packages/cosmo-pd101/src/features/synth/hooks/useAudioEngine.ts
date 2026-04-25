@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { PolyMode, VelocityTarget } from "@/features/synth/useSynthState";
+import type { PolyMode } from "@/features/synth/useSynthState";
 import type {
 	Algo,
 	AlgoControlValueV1,
@@ -36,7 +36,6 @@ export type EngineParams = {
 	volume: number;
 	polyMode: PolyMode;
 	legato: boolean;
-	velocityTarget: VelocityTarget;
 	chorus: { enabled: boolean; rate: number; depth: number; mix: number };
 	delay: { enabled: boolean; time: number; feedback: number; mix: number };
 	reverb: { enabled: boolean; size: number; mix: number };
@@ -158,7 +157,6 @@ export function useAudioEngine({
 		volume: 0.4,
 		polyMode: "poly8",
 		legato: false,
-		velocityTarget: "amp",
 		chorus: { enabled: false, rate: 0.8, depth: 0.003, mix: 0 },
 		delay: { enabled: false, time: 0.3, feedback: 0.35, mix: 0 },
 		reverb: { enabled: false, size: 0.5, mix: 0 },

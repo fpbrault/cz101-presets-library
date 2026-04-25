@@ -306,7 +306,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "off",
 			chorus: {
 				rate: 0.8,
 				depth: 1,
@@ -663,7 +662,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "amp",
 			chorus: {
 				rate: 0.8,
 				depth: 1,
@@ -992,7 +990,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "amp",
 			chorus: {
 				enabled: false,
 				rate: 2.1,
@@ -1324,7 +1321,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "off",
 			chorus: {
 				enabled: false,
 				rate: 1.0637961647727274,
@@ -1656,7 +1652,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "amp",
 			chorus: {
 				enabled: false,
 				rate: 0.8,
@@ -1988,7 +1983,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "off",
 			chorus: {
 				enabled: false,
 				rate: 2.1,
@@ -2320,7 +2314,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "amp",
 			chorus: {
 				enabled: false,
 				rate: 0.8,
@@ -2652,7 +2645,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "amp",
 			chorus: {
 				enabled: false,
 				rate: 0.8,
@@ -3039,7 +3031,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "amp",
 			chorus: {
 				enabled: false,
 				rate: 1.39,
@@ -3374,7 +3365,6 @@ export const DEFAULT_SYNTH_PRESETS: Record<string, SynthPresetV1> = {
 			volume: 1,
 			polyMode: "poly8",
 			legato: false,
-			velocityTarget: "amp",
 			chorus: {
 				enabled: false,
 				rate: 2.1,

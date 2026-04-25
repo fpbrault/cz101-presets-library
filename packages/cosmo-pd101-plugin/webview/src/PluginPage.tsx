@@ -32,7 +32,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const filterEnabled = useSynthStore((s) => s.filterEnabled);
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
-	const velocityTarget = useSynthStore((s) => s.velocityTarget);
+	const velocityCurve = useSynthStore((s) => s.velocityCurve);
 	const presetStateKey = useSynthStore((s) => JSON.stringify(s.gatherState()));
 
 	const [uiScale, setUiScale] = useState<UiScale>(() => {
@@ -49,7 +49,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const setActiveAsidePanel = useSynthUiStore((s) => s.setActiveAsidePanel);
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 	const { activeNotes, sendNoteOn, sendNoteOff } = useNoteHandling({
-		velocityTarget,
+		velocityCurve,
 		eventSink: (type, payload) => {
 			window.__BEAMER__?.emit?.(type, payload);
 		},

@@ -19,7 +19,6 @@ import type {
 	PortamentoMode,
 	StepEnvData,
 	SynthParams,
-	VelocityTarget,
 } from "@/lib/synth/bindings/synth";
 
 type EnvelopeId =
@@ -80,14 +79,6 @@ const POLY_MODE_IDS: EnumToIdMap<PolyMode> = {
 	mono: 1,
 };
 const POLY_MODE_FROM_ID = invertMap(POLY_MODE_IDS);
-
-const VEL_TARGET_IDS: EnumToIdMap<VelocityTarget> = {
-	amp: 0,
-	dcw: 1,
-	both: 2,
-	off: 3,
-};
-const VEL_TARGET_FROM_ID = invertMap(VEL_TARGET_IDS);
 
 const WARP_ALGO_IDS: EnumToIdMap<WarpAlgoKey> = {
 	cz101: 0,
@@ -212,14 +203,6 @@ const PLUGIN_PARAM_DESCRIPTORS: PluginParamDescriptor[] = [
 		id: "legato",
 		read: (params) => (params.legato ? 1 : 0),
 		apply: (value, s) => s.setLegato(value >= 0.5),
-	},
-	{
-		id: "vel_target",
-		read: (params) => VEL_TARGET_IDS[params.velocityTarget] ?? 0,
-		apply: (value, s) =>
-			s.setVelocityTarget(
-				(VEL_TARGET_FROM_ID[value] ?? "amp") as VelocityTarget,
-			),
 	},
 	{
 		id: "int_pm_enabled",

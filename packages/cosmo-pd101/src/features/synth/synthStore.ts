@@ -18,7 +18,6 @@ import type {
 	PortamentoMode,
 	StepEnvData,
 	SynthPresetV1,
-	VelocityTarget,
 	WindowType,
 } from "@/lib/synth/bindings/synth";
 import { ALGO_DEFINITIONS_V1 } from "@/lib/synth/bindings/synth";
@@ -134,7 +133,7 @@ export type SynthState = {
 
 	polyMode: PolyMode;
 	legato: boolean;
-	velocityTarget: VelocityTarget;
+	velocityCurve: number;
 
 	chorusEnabled: boolean;
 	chorusRate: number;
@@ -242,7 +241,7 @@ type SynthActions = {
 
 	setPolyMode: (v: PolyMode) => void;
 	setLegato: (v: boolean) => void;
-	setVelocityTarget: (v: VelocityTarget) => void;
+	setVelocityCurve: (v: number) => void;
 
 	setChorusEnabled: (v: boolean) => void;
 	setChorusRate: (v: number) => void;
@@ -355,7 +354,7 @@ const DEFAULT_STATE: SynthState = {
 
 	polyMode: "poly8",
 	legato: false,
-	velocityTarget: "amp",
+	velocityCurve: 0,
 
 	chorusEnabled: false,
 	chorusRate: 0.8,
@@ -474,7 +473,7 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 
 	setPolyMode: (v) => set({ polyMode: v }),
 	setLegato: (v) => set({ legato: v }),
-	setVelocityTarget: (v) => set({ velocityTarget: v }),
+	setVelocityCurve: (v) => set({ velocityCurve: v }),
 
 	setChorusEnabled: (v) => set({ chorusEnabled: v }),
 	setChorusRate: (v) => set({ chorusRate: v }),
@@ -602,7 +601,6 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 				volume: s.volume,
 				polyMode: s.polyMode,
 				legato: s.legato,
-				velocityTarget: s.velocityTarget,
 				chorus: {
 					enabled: s.chorusEnabled,
 					rate: s.chorusRate,
@@ -773,7 +771,6 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 				: [],
 			polyMode: (p.polyMode as PolyMode) ?? "poly8",
 			legato: p.legato ?? false,
-			velocityTarget: (p.velocityTarget as VelocityTarget) ?? "amp",
 			chorusRate: safe(p.chorus?.rate, 0.8),
 			chorusDepth: safe(p.chorus?.depth, 3),
 			chorusMix: safe(p.chorus?.mix, 0),
