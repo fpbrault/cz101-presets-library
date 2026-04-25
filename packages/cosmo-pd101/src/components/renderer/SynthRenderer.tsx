@@ -167,115 +167,119 @@ function SynthRendererContent({
 						{headerExtra}
 					</div>
 					<div className="relative z-10 px-1 grid flex-1 min-h-0 min-w-0 w-full gap-2 xl:gap-3 grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] overflow-hidden">
-							<aside className="overflow-y-auto min-h-0 rounded-[1.15rem] border border-cz-border/80 bg-cz-inset px-0 pb-2 shadow-lg [scrollbar-gutter:stable]">
-								<div className="px-4 mt-4 mx-auto">
-									<SynthLcdDisplay
-										primaryText={lcdPrimaryText}
-										secondaryText={lcdSecondaryText}
-										transientReadout={lcdTransientReadout ?? null}
-									/>
-								</div>
+						<aside className="overflow-y-auto min-h-0 rounded-[1.15rem] border border-cz-border/80 bg-cz-inset px-0 pb-2 shadow-lg [scrollbar-gutter:stable]">
+							<div className="px-4 mt-4 mx-auto">
+								<SynthLcdDisplay
+									primaryText={lcdPrimaryText}
+									secondaryText={lcdSecondaryText}
+									transientReadout={lcdTransientReadout ?? null}
+								/>
+							</div>
 
-								<AsidePanelSwitcher
-									activeTab={activeAsidePanel}
-									onTabChange={onAsidePanelChange}
-								>
-									<GlobalVoicePanel />
-									<PortamentoPanel />
-									<PhaseModPanel />
-									<VibratoPanel />
-									<LfoPanel />
-									<ScopePanel
-										analyserNodeRef={analyserNodeRef}
-										audioCtxRef={audioCtxRef}
-										effectivePitchHz={effectivePitchHz}
-										subscribeScopeFrames={subscribeScopeFrames}
-									/>
-									<SynthFilterPanel />
-									<ChorusPanel />
-									<DelayPanel />
-									<ReverbPanel />
-								</AsidePanelSwitcher>
-							</aside>
+							<AsidePanelSwitcher
+								activeTab={activeAsidePanel}
+								onTabChange={onAsidePanelChange}
+							>
+								<GlobalVoicePanel />
+								<PortamentoPanel />
+								<PhaseModPanel />
+								<VibratoPanel />
+								<LfoPanel />
+								<ScopePanel
+									analyserNodeRef={analyserNodeRef}
+									audioCtxRef={audioCtxRef}
+									effectivePitchHz={effectivePitchHz}
+									subscribeScopeFrames={subscribeScopeFrames}
+								/>
+								<SynthFilterPanel />
+								<ChorusPanel />
+								<DelayPanel />
+								<ReverbPanel />
+							</AsidePanelSwitcher>
+						</aside>
 
-							<main className="flex min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-								<div className="flex w-full max-w-none min-h-0 flex-1 flex-col gap-2 rounded-[1.2rem] border border-cz-border/80 bg-cz-surface p-2 xl:p-3 2xl:mx-auto 2xl:max-w-5xl shadow-xl">
-									<div className="pointer-events-none absolute inset-x-4 top-0 h-12 rounded-t-[1.2rem] opacity-70" />
-									<div className="relative shrink-0 rounded-md border border-cz-border bg-cz-body px-2 py-2 xl:px-3 shadow-inner">
-										<div className="flex flex-wrap items-end justify-end gap-x-2 gap-y-2 xl:gap-x-4">
-											<LineSelectControl />
-											<ModModeControl />
-											<SynthSingleCycleDisplay />
-											<div className="flex items-end gap-2 border-l border-cz-border pl-2 xl:pl-3">
-												<CzButton
-													active={mainPanelMode === "phase"}
-													onClick={() => setMainPanelMode("phase")}
-													className="[&_button]:w-18"
-												>
-													Main
-												</CzButton>
-												<CzButton
-													active={mainPanelMode === "fx"}
-													onClick={() =>
-														setMainPanelMode(mainPanelMode === "fx" ? "phase" : "fx")
-													}
-													className="[&_button]:w-18"
-												>
-													FX
-												</CzButton>
-												<CzButton
-													active={mainPanelMode === "mod"}
-													onClick={() =>
-														setMainPanelMode(mainPanelMode === "mod" ? "phase" : "mod")
-													}
-													className="[&_button]:w-18"
-												>
-													MOD
-												</CzButton>
-											</div>
+						<main className="flex min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
+							<div className="flex w-full max-w-none min-h-0 flex-1 flex-col gap-2 rounded-[1.2rem] border border-cz-border/80 bg-cz-surface p-2 xl:p-3 2xl:mx-auto 2xl:max-w-5xl shadow-xl">
+								<div className="pointer-events-none absolute inset-x-4 top-0 h-12 rounded-t-[1.2rem] opacity-70" />
+								<div className="relative shrink-0 rounded-md border border-cz-border bg-cz-body px-2 py-2 xl:px-3 shadow-inner">
+									<div className="flex flex-wrap items-end justify-end gap-x-2 gap-y-2 xl:gap-x-4">
+										<LineSelectControl />
+										<ModModeControl />
+										<SynthSingleCycleDisplay />
+										<div className="flex items-end gap-2 border-l border-cz-border pl-2 xl:pl-3">
+											<CzButton
+												active={mainPanelMode === "phase"}
+												onClick={() => setMainPanelMode("phase")}
+												className="[&_button]:w-18"
+											>
+												Main
+											</CzButton>
+											<CzButton
+												active={mainPanelMode === "fx"}
+												onClick={() =>
+													setMainPanelMode(
+														mainPanelMode === "fx" ? "phase" : "fx",
+													)
+												}
+												className="[&_button]:w-18"
+											>
+												FX
+											</CzButton>
+											<CzButton
+												active={mainPanelMode === "mod"}
+												onClick={() =>
+													setMainPanelMode(
+														mainPanelMode === "mod" ? "phase" : "mod",
+													)
+												}
+												className="[&_button]:w-18"
+											>
+												MOD
+											</CzButton>
 										</div>
 									</div>
-
-									<div className="relative flex-1 min-h-0 min-w-0 overflow-hidden rounded-2xl border border-cz-border/75 bg-cz-panel/30 p-2 shadow-inner">
-										<div className="pointer-events-none absolute inset-0" />
-										<PhaseLinesSection
-											className="h-full min-h-0 max-h-164"
-											envOverrideHandlers={envOverrideHandlers}
-										/>
-										<AnimatePresence initial={false}>
-											{mainPanelMode === "fx" || mainPanelMode === "mod" ? (
-												<motion.div
-													key={`${mainPanelMode}-drawer`}
-													initial={{ y: "-100%" }}
-													animate={{ y: 0 }}
-													exit={{ y: "-100%" }}
-													transition={{
-														type: "spring",
-														stiffness: 220,
-														damping: 30,
-														mass: 1,
-													}}
-													style={{ transformOrigin: "top center" }}
-													className="absolute inset-0 z-10 overflow-hidden p-2"
-												>
-													<div className="relative flex h-full min-h-0 flex-col rounded-lg border border-cz-border bg-cz-body p-3 shadow-xl">
-														<div className="pointer-events-none absolute inset-0 rounded-lg bg-white/5" />
-														<div className="pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-lg opacity-60" />
-														<div className="relative min-h-0 flex-1">
-															{mainPanelMode === "fx" ? (
-																<FxConsoleDrawer />
-															) : (
-																<ModConsoleDrawer />
-															)}
-														</div>
-													</div>
-												</motion.div>
-											) : null}
-										</AnimatePresence>
-									</div>
 								</div>
-							</main>
-						</div>
+
+								<div className="relative flex-1 min-h-0 min-w-0 overflow-hidden rounded-2xl border border-cz-border/75 bg-cz-panel/30 p-2 shadow-inner">
+									<div className="pointer-events-none absolute inset-0" />
+									<PhaseLinesSection
+										className="h-full min-h-0 max-h-164"
+										envOverrideHandlers={envOverrideHandlers}
+									/>
+									<AnimatePresence initial={false}>
+										{mainPanelMode === "fx" || mainPanelMode === "mod" ? (
+											<motion.div
+												key={`${mainPanelMode}-drawer`}
+												initial={{ y: "-100%" }}
+												animate={{ y: 0 }}
+												exit={{ y: "-100%" }}
+												transition={{
+													type: "spring",
+													stiffness: 220,
+													damping: 30,
+													mass: 1,
+												}}
+												style={{ transformOrigin: "top center" }}
+												className="absolute inset-0 z-10 overflow-hidden p-2"
+											>
+												<div className="relative flex h-full min-h-0 flex-col rounded-lg border border-cz-border bg-cz-body p-3 shadow-xl">
+													<div className="pointer-events-none absolute inset-0 rounded-lg bg-white/5" />
+													<div className="pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-lg opacity-60" />
+													<div className="relative min-h-0 flex-1">
+														{mainPanelMode === "fx" ? (
+															<FxConsoleDrawer />
+														) : (
+															<ModConsoleDrawer />
+														)}
+													</div>
+												</div>
+											</motion.div>
+										) : null}
+									</AnimatePresence>
+								</div>
+							</div>
+						</main>
+					</div>
 					<AnimatePresence initial={false}>
 						{libraryModeOpen ? (
 							<motion.div

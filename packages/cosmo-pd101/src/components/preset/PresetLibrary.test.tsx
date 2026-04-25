@@ -89,7 +89,9 @@ describe("PresetLibrary", () => {
 		expect(props.onSavePreset).toHaveBeenCalledWith("New Patch");
 
 		fireEvent.change(saveInput, { target: { value: "  Snapshot  " } });
-		fireEvent.click(screen.getByRole("button", { name: "Export current state" }));
+		fireEvent.click(
+			screen.getByRole("button", { name: "Export current state" }),
+		);
 		expect(props.onExportCurrentState).toHaveBeenCalledWith("Snapshot");
 
 		fireEvent.click(screen.getByRole("button", { name: "Init" }));

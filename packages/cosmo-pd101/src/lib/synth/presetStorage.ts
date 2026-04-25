@@ -237,9 +237,7 @@ function isCurrentPresetSession(value: unknown): value is CurrentPresetSession {
 	);
 }
 
-export function saveCurrentPresetSession(
-	session: CurrentPresetSession,
-): void {
+export function saveCurrentPresetSession(session: CurrentPresetSession): void {
 	localStorage.setItem(CURRENT_PRESET_SESSION_KEY, JSON.stringify(session));
 }
 
