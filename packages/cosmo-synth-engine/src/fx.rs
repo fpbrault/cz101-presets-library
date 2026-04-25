@@ -12,6 +12,12 @@ const SMOOTH_COEFF: f32 = 0.005;
 // TWO_PI for f32
 const TWO_PI: f32 = core::f32::consts::PI * 2.0;
 
+// Damping parameter mapping: maps the 0–1 user-facing `reverb_damping` value
+// to a CombFilter low-pass coefficient range of [DAMP_MIN, DAMP_MIN + DAMP_RANGE].
+// Lower coefficients = brighter (less HF rolloff); higher = darker (more HF rolloff).
+const DAMP_MIN: f32 = 0.05;
+const DAMP_RANGE: f32 = 0.80;
+
 // ---------------------------------------------------------------------------
 // DelayLine
 // ---------------------------------------------------------------------------
@@ -297,8 +303,8 @@ impl FxChain {
         }
         let size = self.reverb_size;
         let feedback = 0.28 + size * 0.56;
-        // Map 0–1 damping param to a perceptually useful range (0.05–0.85).
-        let damping = 0.05 + self.reverb_damping * 0.8;
+        // Map 0–1 damping param to the comb LPF coefficient range [DAMP_MIN, DAMP_MIN + DAMP_RANGE].
+        let damping = DAMP_MIN + self.reverb_damping * DAMP_RANGE;
 
         // Smooth and apply pre-delay.
         self.smooth_reverb_pre_delay = Self::smooth(
