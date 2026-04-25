@@ -245,7 +245,37 @@ export type ModSource = "lfo1" |
 /**
  * Secondary LFO source.
  */
-"lfo2" | "velocity" | "modWheel" | "aftertouch"
+"lfo2" | 
+/**
+ * Sample-and-hold random source with configurable rate.
+ */
+"random" | 
+/**
+ * Dedicated ADSR mod envelope.
+ */
+"modEnv" | "velocity" | "modWheel" | "aftertouch"
+
+/**
+ * Parameters for the random (sample-and-hold) modulation source.
+ */
+export type RandomParams = { 
+/**
+ * Rate in Hz — how often the held value steps to a new random value.
+ */
+rate: number }
+
+/**
+ * ADSR mod envelope parameters.
+ */
+export type ModEnvParams = { 
+/** Attack time in seconds. */
+attack: number; 
+/** Decay time in seconds. */
+decay: number; 
+/** Sustain level [0, 1]. */
+sustain: number; 
+/** Release time in seconds. */
+release: number }
 
 /**
  * Modulation destination selector for modulation matrix routes.
@@ -282,7 +312,15 @@ modWheelVibratoDepth?: number;
 /**
  * Modulation matrix routes for source-to-destination parameter modulation.
  */
-modMatrix?: ModMatrix }
+modMatrix?: ModMatrix;
+/**
+ * Parameters for the random (sample-and-hold) modulation source.
+ */
+random?: RandomParams;
+/**
+ * Parameters for the ADSR mod envelope.
+ */
+modEnv?: ModEnvParams }
 
 /**
  * Canonical, versioned synth preset wire contract.

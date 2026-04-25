@@ -7,7 +7,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::array;
 
-use crate::dsp_utils::lfo_output_with_symmetry;
+use crate::dsp_utils::{lfo_output_with_symmetry, random_hold_value};
 use crate::envelope::normalize_synth_params_envelopes_to_raw_if_human;
 use crate::fx::FxChain;
 use crate::generators::PER_LINE_HEADROOM;
@@ -51,6 +51,12 @@ pub struct CosmoProcessor {
     pub sustain_on: bool,
     pub lfo_phase: f32,
     pub lfo2_phase: f32,
+    /// Phase accumulator for the random mod source (seconds elapsed * rate).
+    pub random_phase: f32,
+    /// Step counter for the random mod source used as the hash seed.
+    pub random_step: i32,
+    /// Current held value of the random mod source in [-1, 1].
+    pub random_hold: f32,
     pub params: SynthParams,
     pub sample_rate: f32,
     /// Normalised pitch bend value in [-1.0, 1.0].
@@ -74,6 +80,9 @@ impl CosmoProcessor {
             sustain_on: false,
             lfo_phase: 0.0,
             lfo2_phase: 0.0,
+            random_phase: 0.0,
+            random_step: 0,
+            random_hold: random_hold_value(0),
             params: SynthParams::default(),
             sample_rate,
             pitch_bend: 0.0,
@@ -133,6 +142,7 @@ impl CosmoProcessor {
         voice.line2_env.dco.start_release(&p.line2.dco_env);
         voice.line2_env.dcw.start_release(&p.line2.dcw_env);
         voice.line2_env.dca.start_release(&p.line2.dca_env);
+        voice.mod_env.note_off();
     }
 
     /// Mark a voice as releasing and switch all envelopes to release mode.
@@ -192,6 +202,8 @@ impl CosmoProcessor {
         self.reset_voice_runtime(voice_idx);
         self.reset_voice_envs(voice_idx);
         self.reset_generator_runtime_for_note(voice_idx, note);
+        // Trigger mod envelope attack after reset.
+        self.voices[voice_idx].mod_env.note_on();
     }
 
     /// Reset generator-owned per-voice runtime state for a new note-on event.
@@ -459,6 +471,15 @@ impl CosmoProcessor {
                     * lfo2_depth
                     + lfo2_offset;
 
+            // Advance the random (sample-and-hold) mod source.
+            self.random_phase += p.random.rate / sr;
+            if self.random_phase >= 1.0 {
+                self.random_phase -= 1.0;
+                self.random_step = self.random_step.wrapping_add(1);
+                self.random_hold = random_hold_value(self.random_step);
+            }
+            let random_mod_val = self.random_hold;
+
             let mut mixed = 0.0_f32;
             // SAFETY: `voices` and `params` are separate fields; we use raw pointer to avoid
             // simultaneous mutable + immutable borrow of `self`.
@@ -474,6 +495,7 @@ impl CosmoProcessor {
                     p_ref,
                     lfo1_mod_val,
                     lfo2_mod_val,
+                    random_mod_val,
                     sr,
                     pitch_bend_semitones,
                     mod_wheel,

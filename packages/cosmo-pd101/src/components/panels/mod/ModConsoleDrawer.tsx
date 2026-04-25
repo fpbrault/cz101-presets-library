@@ -96,6 +96,8 @@ function destinationLabel(dest: ModDestination): string {
 const MOD_SOURCES: { label: string; value: ModSource }[] = [
 	{ label: "LFO 1", value: "lfo1" },
 	{ label: "LFO 2", value: "lfo2" },
+	{ label: "Random", value: "random" },
+	{ label: "Mod Env", value: "modEnv" },
 	{ label: "Velocity", value: "velocity" },
 	{ label: "Mod Wheel", value: "modWheel" },
 	{ label: "Aftertouch", value: "aftertouch" },
@@ -316,6 +318,18 @@ export default function ModConsoleDrawer() {
 	const { value: lfo2Offset, setValue: setLfo2Offset } =
 		useSynthParam("lfo2Offset");
 
+	const { value: randomRate, setValue: setRandomRate } =
+		useSynthParam("randomRate");
+
+	const { value: modEnvAttack, setValue: setModEnvAttack } =
+		useSynthParam("modEnvAttack");
+	const { value: modEnvDecay, setValue: setModEnvDecay } =
+		useSynthParam("modEnvDecay");
+	const { value: modEnvSustain, setValue: setModEnvSustain } =
+		useSynthParam("modEnvSustain");
+	const { value: modEnvRelease, setValue: setModEnvRelease } =
+		useSynthParam("modEnvRelease");
+
 	const { value: phaseModEnabled, setValue: setPhaseModEnabled } =
 		useSynthParam("phaseModEnabled");
 	const { value: intPmAmount, setValue: setIntPmAmount } =
@@ -326,8 +340,8 @@ export default function ModConsoleDrawer() {
 
 	return (
 		<div className="flex h-full min-h-0 gap-3">
-			{/* Left: 2×2 module grid filling full height — row 1: Vibrato + Phase Mod, row 2: LFO 1 + LFO 2 */}
-			<div className="flex-2 min-w-0 min-h-0 grid grid-cols-2 grid-rows-2 gap-2">
+			{/* Left: 2×3 module grid filling full height — row 1: Vibrato + Phase Mod, row 2: LFO 1 + LFO 2, row 3: Random + Mod Env */}
+			<div className="flex-2 min-w-0 min-h-0 grid grid-cols-2 grid-rows-3 gap-2">
 				<ModuleFrame
 					title="Vibrato"
 					color="#307948"
@@ -579,6 +593,73 @@ export default function ModConsoleDrawer() {
 							>
 								Retrig
 							</CompactButton>
+						</div>
+					</div>
+				</ModuleFrame>
+
+				<ModuleFrame title="Random" color="#c2571a" enabled>
+					<div className="flex flex-col gap-2 w-full">
+						<ControlKnob
+							value={randomRate}
+							onChange={setRandomRate}
+							min={0.05}
+							max={20}
+							defaultValue={2}
+							size={50}
+							color="#c2571a"
+							label="Rate"
+							valueFormatter={(v) => `${v.toFixed(2)}Hz`}
+						/>
+					</div>
+				</ModuleFrame>
+
+				<ModuleFrame title="Mod Env" color="#c24587" enabled>
+					<div className="flex flex-col gap-2 w-full">
+						<div className="grid grid-cols-4 gap-1.5">
+							<ControlKnob
+								value={modEnvAttack}
+								onChange={setModEnvAttack}
+								min={0}
+								max={10}
+								defaultValue={0.01}
+								size={40}
+								color="#c24587"
+								label="Atk"
+								valueFormatter={(v) => `${v.toFixed(2)}s`}
+							/>
+							<ControlKnob
+								value={modEnvDecay}
+								onChange={setModEnvDecay}
+								min={0}
+								max={10}
+								defaultValue={0.1}
+								size={40}
+								color="#c24587"
+								label="Dec"
+								valueFormatter={(v) => `${v.toFixed(2)}s`}
+							/>
+							<ControlKnob
+								value={modEnvSustain}
+								onChange={setModEnvSustain}
+								min={0}
+								max={1}
+								defaultValue={0.5}
+								size={40}
+								color="#c24587"
+								label="Sus"
+								valueFormatter={(v) => `${Math.round(v * 100)}%`}
+							/>
+							<ControlKnob
+								value={modEnvRelease}
+								onChange={setModEnvRelease}
+								min={0}
+								max={10}
+								defaultValue={0.2}
+								size={40}
+								color="#c24587"
+								label="Rel"
+								valueFormatter={(v) => `${v.toFixed(2)}s`}
+							/>
 						</div>
 					</div>
 				</ModuleFrame>

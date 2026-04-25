@@ -82,6 +82,11 @@ const SYNTH_PARAM_SETTERS = {
 	lfo2Symmetry: "setLfo2Symmetry",
 	lfo2Retrigger: "setLfo2Retrigger",
 	lfo2Offset: "setLfo2Offset",
+	randomRate: "setRandomRate",
+	modEnvAttack: "setModEnvAttack",
+	modEnvDecay: "setModEnvDecay",
+	modEnvSustain: "setModEnvSustain",
+	modEnvRelease: "setModEnvRelease",
 	filterEnabled: "setFilterEnabled",
 	filterType: "setFilterType",
 	filterCutoff: "setFilterCutoff",
@@ -110,6 +115,8 @@ type ReadoutValue = string | number | boolean;
 type LiveModSources = Readonly<{
 	lfo1: number;
 	lfo2: number;
+	random: number;
+	modEnv: number;
 	velocity: number;
 	modWheel: number;
 	aftertouch: number;
@@ -167,6 +174,7 @@ export function SynthParamControllerProvider({
 	const lfo2Waveform = useSynthStore((s) => s.lfo2Waveform);
 	const lfo2Symmetry = useSynthStore((s) => s.lfo2Symmetry);
 	const lfo2Offset = useSynthStore((s) => s.lfo2Offset);
+	const randomRate = useSynthStore((s) => s.randomRate);
 
 	const getParam = useCallback(
 		<K extends SynthParamKey>(key: K): UseSynthStateResult[K] => {
@@ -202,9 +210,17 @@ export function SynthParamControllerProvider({
 		return modRoutes.some((route) => route.enabled && route.source === "lfo2");
 	}, [modRoutes]);
 
+	const hasAnyRandomRoutes = useMemo(() => {
+		return modRoutes.some((route) => route.enabled && route.source === "random");
+	}, [modRoutes]);
+
 	useEffect(() => {
 		if (
-			!((hasAnyLfo1Routes && lfoRate > 0) || (hasAnyLfo2Routes && lfo2Rate > 0))
+			!(
+				(hasAnyLfo1Routes && lfoRate > 0) ||
+				(hasAnyLfo2Routes && lfo2Rate > 0) ||
+				(hasAnyRandomRoutes && randomRate > 0)
+			)
 		) {
 			return;
 		}
@@ -218,7 +234,7 @@ export function SynthParamControllerProvider({
 		return () => {
 			window.cancelAnimationFrame(rafId);
 		};
-	}, [hasAnyLfo1Routes, hasAnyLfo2Routes, lfoRate, lfo2Rate]);
+	}, [hasAnyLfo1Routes, hasAnyLfo2Routes, hasAnyRandomRoutes, lfoRate, lfo2Rate, randomRate]);
 
 	useEffect(() => {
 		const onModSource = (event: Event) => {
@@ -253,6 +269,12 @@ export function SynthParamControllerProvider({
 
 	const lfoPhase = (((animTimeSec * lfoRate) % 1) + 1) % 1;
 	const lfo2Phase = (((animTimeSec * lfo2Rate) % 1) + 1) % 1;
+
+	// Compute the live random (sample-and-hold) value based on elapsed time.
+	const randomStep = Math.floor(animTimeSec * randomRate);
+	const randomSeed = randomStep * 12.9898 + 78.233;
+	const randomHash = Math.sin(randomSeed) * 43758.5453;
+	const liveRandomValue = (randomHash - Math.floor(randomHash)) * 2 - 1;
 
 	const waveformValue = (
 		waveform: UseSynthStateResult["lfoWaveform"],
@@ -300,6 +322,8 @@ export function SynthParamControllerProvider({
 		() => ({
 			lfo1: liveLfo1Value,
 			lfo2: liveLfo2Value,
+			random: liveRandomValue,
+			modEnv: 0,
 			velocity: velocityValue,
 			modWheel: modWheelValue,
 			aftertouch: aftertouchValue,
@@ -307,6 +331,7 @@ export function SynthParamControllerProvider({
 		[
 			liveLfo1Value,
 			liveLfo2Value,
+			liveRandomValue,
 			velocityValue,
 			modWheelValue,
 			aftertouchValue,

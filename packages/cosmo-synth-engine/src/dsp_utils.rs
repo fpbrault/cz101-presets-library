@@ -81,7 +81,7 @@ pub fn lfo_output(phase: f32, waveform: LfoWaveform) -> f32 {
     lfo_output_with_symmetry(phase, waveform, 0.5)
 }
 
-fn random_hold_value(step_index: i32) -> f32 {
+pub fn random_hold_value(step_index: i32) -> f32 {
     let seed = step_index as f32 * 12.9898 + 78.233;
     let hash = libm::sinf(seed) * 43758.5453;
     let fract = hash - libm::floorf(hash);

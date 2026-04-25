@@ -19,6 +19,18 @@ export const MOD_SOURCE_META: Record<
 		colorClass: "text-cz-light-blue/60",
 		bgClass: "bg-cz-light-blue/10 border-cz-light-blue/20",
 	},
+	random: {
+		label: "Random",
+		shortLabel: "RND",
+		colorClass: "text-orange-400",
+		bgClass: "bg-orange-500/20 border-orange-500/40",
+	},
+	modEnv: {
+		label: "Mod Env",
+		shortLabel: "ENV",
+		colorClass: "text-pink-400",
+		bgClass: "bg-pink-500/20 border-pink-500/40",
+	},
 	velocity: {
 		label: "Velocity",
 		shortLabel: "VEL",
