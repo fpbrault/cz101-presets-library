@@ -211,7 +211,9 @@ export function SynthParamControllerProvider({
 	}, [modRoutes]);
 
 	const hasAnyRandomRoutes = useMemo(() => {
-		return modRoutes.some((route) => route.enabled && route.source === "random");
+		return modRoutes.some(
+			(route) => route.enabled && route.source === "random",
+		);
 	}, [modRoutes]);
 
 	useEffect(() => {
@@ -234,7 +236,14 @@ export function SynthParamControllerProvider({
 		return () => {
 			window.cancelAnimationFrame(rafId);
 		};
-	}, [hasAnyLfo1Routes, hasAnyLfo2Routes, hasAnyRandomRoutes, lfoRate, lfo2Rate, randomRate]);
+	}, [
+		hasAnyLfo1Routes,
+		hasAnyLfo2Routes,
+		hasAnyRandomRoutes,
+		lfoRate,
+		lfo2Rate,
+		randomRate,
+	]);
 
 	useEffect(() => {
 		const onModSource = (event: Event) => {
