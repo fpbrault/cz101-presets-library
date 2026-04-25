@@ -434,19 +434,29 @@ const PLUGIN_PARAM_DESCRIPTORS: PluginParamDescriptor[] = [
 		apply: (value, s) => s.setReverbMix(value),
 	},
 	{
-		id: "rev_size",
-		read: (params) => params.reverb.size,
-		apply: (value, s) => s.setReverbSize(value),
+		id: "rev_space",
+		read: (params) => params.reverb.space,
+		apply: (value, s) => s.setReverbSpace(value),
 	},
 	{
-		id: "rev_damping",
-		read: (params) => params.reverb.damping ?? 0.5,
-		apply: (value, s) => s.setReverbDamping(value),
+		id: "rev_predelay",
+		read: (params) => params.reverb.predelay ?? 0,
+		apply: (value, s) => s.setReverbPredelay(value),
 	},
 	{
-		id: "rev_pre_delay",
-		read: (params) => params.reverb.preDelay ?? 0,
-		apply: (value, s) => s.setReverbPreDelay(value),
+		id: "rev_brightness",
+		read: (params) => params.reverb.brightness,
+		apply: (value, s) => s.setReverbBrightness(value),
+	},
+	{
+		id: "rev_distance",
+		read: (params) => params.reverb.distance,
+		apply: (value, s) => s.setReverbDistance(value),
+	},
+	{
+		id: "rev_character",
+		read: (params) => params.reverb.character,
+		apply: (value, s) => s.setReverbCharacter(value),
 	},
 	{
 		id: "lfo_waveform",

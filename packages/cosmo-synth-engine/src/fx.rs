@@ -1,6 +1,4 @@
-/// FX chain: chorus, delay, Freeverb-style reverb.
-///
-/// Ported from `FxChain` in `pdVisualizerProcessor.js` (lines 336-467).
+/// FX chain: chorus, delay, FDN reverb.
 extern crate alloc;
 
 use alloc::vec;
@@ -8,15 +6,32 @@ use alloc::vec::Vec;
 use libm::{cosf, sinf};
 
 const SMOOTH_COEFF: f32 = 0.005;
-
-// TWO_PI for f32
 const TWO_PI: f32 = core::f32::consts::PI * 2.0;
 
-// Damping parameter mapping: maps the 0–1 user-facing `reverb_damping` value
-// to a CombFilter low-pass coefficient range of [DAMP_MIN, DAMP_MIN + DAMP_RANGE].
-// Lower coefficients = brighter (less HF rolloff); higher = darker (more HF rolloff).
-const DAMP_MIN: f32 = 0.05;
-const DAMP_RANGE: f32 = 0.80;
+// ---------------------------------------------------------------------------
+// FDN reverb constants
+// ---------------------------------------------------------------------------
+
+/// Number of delay lines in the FDN.
+const FDN_N: usize = 8;
+
+/// Maximum LFO pitch-modulation depth in samples (for `character` control).
+const FDN_MAX_MOD: f32 = 14.0;
+
+/// Base FDN delay-line lengths at 44100 Hz (all prime, ≈21–69 ms).
+const FDN_BASE_LENGTHS_44100: [f32; FDN_N] = [
+    947.0, 1283.0, 1523.0, 1789.0, 2053.0, 2341.0, 2677.0, 3049.0,
+];
+
+/// Per-line LFO rates (Hz) — mutually inharmonic to avoid beating.
+const FDN_LFO_RATES: [f32; FDN_N] = [
+    0.127, 0.167, 0.207, 0.247, 0.289, 0.331, 0.373, 0.419,
+];
+
+/// Early-reflection tap delays (seconds) and gains.
+const ER_N: usize = 5;
+const ER_TAP_DELAYS_S: [f32; ER_N] = [0.017, 0.026, 0.035, 0.045, 0.057];
+const ER_TAP_GAINS: [f32; ER_N] = [0.70, 0.55, 0.40, 0.28, 0.18];
 
 // ---------------------------------------------------------------------------
 // DelayLine
@@ -45,14 +60,14 @@ impl DelayLine {
     }
 
     /// Read a sample at `offset` samples behind the write pointer.
+    /// `offset = 1` → most-recently-written sample (1 sample delay).
     #[inline]
     pub fn read(&self, offset: usize) -> f32 {
-        // Equivalent to JS: (writePos - offset + length) % length
         let pos = (self.write_pos + self.length - offset % self.length) % self.length;
         self.buffer[pos]
     }
 
-    /// Linear-interpolated read at fractional delay `samples`.
+    /// Linear-interpolated read at fractional delay `samples` (≥ 1).
     #[inline]
     pub fn read_at_fractional(&self, samples: f32) -> f32 {
         let int_part = libm::floorf(samples) as usize;
@@ -64,59 +79,178 @@ impl DelayLine {
 }
 
 // ---------------------------------------------------------------------------
-// CombFilter  (Freeverb-style)
+// FdnReverb — 8-line Feedback Delay Network with early reflections
+//
+// Topology:
+//   input → pre-delay → [early reflections bank] ─────────────────────────┐
+//                      → [FDN: 8 delay lines, Householder matrix,          │
+//                               per-line LP brightness filter,             │
+//                               per-line LFO modulation for character]     │
+//                                     └── late reverb output               │
+//   output = distance_blend(early_reflections, late_reverb) ← ────────────┘
+//          = equal-power mix(dry, wet)
+//
+// Parameters
+// ----------
+// space      – feedback gain (decay time / room size). 0 = dead, 1 = hall.
+// predelay   – pre-delay time 0–0.1 s before reverb onset.
+// brightness – HF content: 1 = bright, 0 = dark (LP filter coefficient).
+// distance   – near/far blend between early reflections and late reverb.
+// character  – LFO modulation depth: 0 = static, 1 = lush/shimmery.
+// mix        – equal-power wet/dry crossfade.
 // ---------------------------------------------------------------------------
 
-pub struct CombFilter {
-    delay: DelayLine,
-    filter_store: f32,
+pub struct FdnReverb {
+    // 8 FDN delay lines (each length = base + FDN_MAX_MOD + 1 for modulation headroom)
+    lines: [DelayLine; FDN_N],
+    /// Pre-computed base read offsets (in samples) for each FDN line.
+    base_lengths: [f32; FDN_N],
+    /// One-pole LP filter state per line (brightness damping).
+    lp_state: [f32; FDN_N],
+    /// LFO phase per line (0–1).
+    lfo_phases: [f32; FDN_N],
+    /// Smoothed pre-delay (samples).
+    smooth_predelay: f32,
+    /// Pre-delay line (max 100 ms).
+    pre_line: DelayLine,
+    /// Early-reflection line; tapped at 5 fixed offsets.
+    er_line: DelayLine,
+    /// Pre-computed ER tap offsets in samples (scaled to current SR).
+    er_tap_samples: [f32; ER_N],
+    sample_rate: f32,
+
+    // --- parameters (set by FxChain / processor) ---
+    pub enabled: bool,
+    pub mix: f32,
+    pub space: f32,
+    pub predelay: f32,
+    pub brightness: f32,
+    pub distance: f32,
+    pub character: f32,
 }
 
-impl CombFilter {
-    pub fn new(delay_samples: usize) -> Self {
+impl FdnReverb {
+    pub fn new(sr: f32) -> Self {
+        let ratio = sr / 44100.0;
+
+        // Scale and store base lengths
+        let base_lengths: [f32; FDN_N] =
+            core::array::from_fn(|i| FDN_BASE_LENGTHS_44100[i] * ratio);
+
+        // Each delay line is slightly longer than base to allow positive LFO swing
+        let lines: [DelayLine; FDN_N] =
+            core::array::from_fn(|i| {
+                DelayLine::new(base_lengths[i] as usize + FDN_MAX_MOD as usize + 2)
+            });
+
+        // Pre-delay: 100 ms max
+        let pre_line = DelayLine::new(libm::roundf(0.1 * sr) as usize + 2);
+
+        // Early-reflection tap storage: max tap is ~57 ms, so 80 ms buffer is safe
+        let er_line = DelayLine::new(libm::roundf(0.08 * sr) as usize + 2);
+        let er_tap_samples: [f32; ER_N] =
+            core::array::from_fn(|i| (ER_TAP_DELAYS_S[i] * sr).max(1.0));
+
         Self {
-            delay: DelayLine::new(delay_samples),
-            filter_store: 0.0,
+            lines,
+            base_lengths,
+            lp_state: [0.0; FDN_N],
+            lfo_phases: [0.0; FDN_N],
+            smooth_predelay: 0.0,
+            pre_line,
+            er_line,
+            er_tap_samples,
+            sample_rate: sr,
+            enabled: false,
+            mix: 0.0,
+            space: 0.5,
+            predelay: 0.0,
+            brightness: 0.7,
+            distance: 0.3,
+            character: 0.3,
         }
     }
 
-    /// Process one sample.
-    /// `feedback` and `damping` are computed externally per-call (matches JS).
-    #[inline]
-    pub fn process(&mut self, input: f32, feedback: f32, damping: f32) -> f32 {
-        let damp1 = damping;
-        let damp2 = 1.0 - damping;
-        let output = self.delay.read(0);
-        // One-pole LPF on the feedback path
-        self.filter_store = output * damp2 + self.filter_store * damp1;
-        self.delay.write(input + self.filter_store * feedback);
-        output
-    }
-}
+    /// Process one sample through the FDN reverb and return the mixed output.
+    pub fn process(&mut self, sample: f32) -> f32 {
+        // --- Parameter mapping ---
+        // space → feedback gain (0 = dead 0.50, 1 = hall 0.97)
+        let g = 0.50 + self.space * 0.47;
+        // brightness → LP damping coeff (1 = bright ≈ 0.05, 0 = dark ≈ 0.90)
+        let lp_damp = 0.90 - self.brightness * 0.85;
+        // character → LFO depth in samples
+        let lfo_depth = self.character * FDN_MAX_MOD;
 
-// ---------------------------------------------------------------------------
-// AllPassFilter
-// ---------------------------------------------------------------------------
+        // --- Pre-delay ---
+        self.smooth_predelay = Self::smooth(
+            self.smooth_predelay,
+            self.predelay * self.sample_rate,
+            SMOOTH_COEFF,
+        );
+        self.pre_line.write(sample);
+        let pre_delayed = if self.smooth_predelay >= 1.0 {
+            self.pre_line.read_at_fractional(self.smooth_predelay)
+        } else {
+            sample
+        };
 
-pub struct AllPassFilter {
-    delay: DelayLine,
-    pub feedback: f32,
-}
-
-impl AllPassFilter {
-    pub fn new(delay_samples: usize) -> Self {
-        Self {
-            delay: DelayLine::new(delay_samples),
-            feedback: 0.5,
+        // --- Early reflections ---
+        // Tap the ER line at 5 fixed offsets and mix with decaying gains.
+        let mut er_out = 0.0_f32;
+        for i in 0..ER_N {
+            er_out += self.er_line.read_at_fractional(self.er_tap_samples[i]) * ER_TAP_GAINS[i];
         }
+        self.er_line.write(pre_delayed);
+
+        // --- FDN read ---
+        // Update LFOs and read each delay line at a modulated offset.
+        let mut x = [0.0_f32; FDN_N];
+        for i in 0..FDN_N {
+            self.lfo_phases[i] += FDN_LFO_RATES[i] / self.sample_rate;
+            if self.lfo_phases[i] >= 1.0 {
+                self.lfo_phases[i] -= 1.0;
+            }
+            let lfo_val = sinf(self.lfo_phases[i] * TWO_PI);
+            let read_pos = (self.base_lengths[i] + lfo_val * lfo_depth).max(1.0);
+            x[i] = self.lines[i].read_at_fractional(read_pos);
+        }
+
+        // --- Brightness: per-line one-pole LP filter ---
+        for i in 0..FDN_N {
+            self.lp_state[i] = lp_damp * self.lp_state[i] + (1.0 - lp_damp) * x[i];
+        }
+
+        // --- Householder feedback matrix ---
+        // y[i] = lp[i] - (2/N) * sum(lp)  → O(N), energy-preserving.
+        let sum_lp: f32 = self.lp_state.iter().sum();
+        let two_over_n = 2.0 / FDN_N as f32; // = 0.25 for N=8
+
+        // --- FDN write ---
+        for i in 0..FDN_N {
+            let mixed = self.lp_state[i] - two_over_n * sum_lp;
+            self.lines[i].write(pre_delayed + g * mixed);
+        }
+
+        // --- Late reverb output: average of all FDN line outputs ---
+        let late_out: f32 = x.iter().sum::<f32>() / FDN_N as f32;
+
+        // --- Distance blend: near = early reflections, far = late reverb ---
+        // close (distance=0): ER gain=0.6, LR gain=0.4
+        // far   (distance=1): ER gain=0.0, LR gain=1.0
+        let er_gain = (1.0 - self.distance) * 0.6;
+        let lr_gain = 0.4 + self.distance * 0.6;
+        let wet = er_out * er_gain + late_out * lr_gain;
+
+        // --- Equal-power wet/dry crossfade ---
+        let mix_angle = self.mix * core::f32::consts::PI * 0.5;
+        let dry_gain = cosf(mix_angle);
+        let wet_gain = sinf(mix_angle);
+        sample * dry_gain + wet * wet_gain
     }
 
     #[inline]
-    pub fn process(&mut self, input: f32) -> f32 {
-        let delayed = self.delay.read(0);
-        let output = -input + delayed;
-        self.delay.write(input + delayed * self.feedback);
-        output
+    fn smooth(current: f32, target: f32, coeff: f32) -> f32 {
+        current + (target - current) * coeff
     }
 }
 
@@ -142,32 +276,15 @@ pub struct FxChain {
     pub delay_enabled: bool,
     smooth_delay_samples: f32,
 
-    // Freeverb-style reverb
-    pub reverb_combs: [CombFilter; 8],
-    pub reverb_allpass: [AllPassFilter; 4],
-    pub reverb_pre_delay_line: DelayLine,
-    pub reverb_mix: f32,
-    pub reverb_size: f32,
-    pub reverb_damping: f32,
-    pub reverb_pre_delay: f32,
-    pub reverb_enabled: bool,
-    smooth_reverb_pre_delay: f32,
+    // FDN reverb (all reverb state is encapsulated in FdnReverb)
+    pub reverb: FdnReverb,
 
     sample_rate: f32,
 }
 
 impl FxChain {
     /// Construct a new `FxChain` for the given sample rate.
-    ///
-    /// Delay-line sizes match the JS constructor exactly:
-    /// - Chorus buffer : `round(0.05 * sr) + 2`
-    /// - Delay line    : `round(2 * sr)`
-    /// - Comb sizes    : 1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116  (scaled by sr/44100)
-    /// - Allpass sizes : 225, 556, 441, 341                               (scaled by sr/44100)
-    /// - Pre-delay buf : `round(0.1 * sr) + 2`
     pub fn new(sr: f32) -> Self {
-        let sr_ratio = sr / 44100.0;
-
         // Chorus
         let chorus_buf_len = libm::roundf(0.05 * sr) as usize + 2;
         let chorus_delay = DelayLine::new(chorus_buf_len);
@@ -175,32 +292,6 @@ impl FxChain {
         // Delay
         let delay_buf_len = libm::roundf(2.0 * sr) as usize;
         let delay_line = DelayLine::new(delay_buf_len);
-
-        // Reverb combs — full 8-filter Freeverb network
-        let comb_sizes = [1557_f32, 1617.0, 1491.0, 1422.0, 1277.0, 1356.0, 1188.0, 1116.0];
-        let reverb_combs = [
-            CombFilter::new(libm::roundf(comb_sizes[0] * sr_ratio) as usize),
-            CombFilter::new(libm::roundf(comb_sizes[1] * sr_ratio) as usize),
-            CombFilter::new(libm::roundf(comb_sizes[2] * sr_ratio) as usize),
-            CombFilter::new(libm::roundf(comb_sizes[3] * sr_ratio) as usize),
-            CombFilter::new(libm::roundf(comb_sizes[4] * sr_ratio) as usize),
-            CombFilter::new(libm::roundf(comb_sizes[5] * sr_ratio) as usize),
-            CombFilter::new(libm::roundf(comb_sizes[6] * sr_ratio) as usize),
-            CombFilter::new(libm::roundf(comb_sizes[7] * sr_ratio) as usize),
-        ];
-
-        // Reverb allpasses
-        let ap_sizes = [225_f32, 556.0, 441.0, 341.0];
-        let reverb_allpass = [
-            AllPassFilter::new(libm::roundf(ap_sizes[0] * sr_ratio) as usize),
-            AllPassFilter::new(libm::roundf(ap_sizes[1] * sr_ratio) as usize),
-            AllPassFilter::new(libm::roundf(ap_sizes[2] * sr_ratio) as usize),
-            AllPassFilter::new(libm::roundf(ap_sizes[3] * sr_ratio) as usize),
-        ];
-
-        // Reverb pre-delay line (max 100 ms)
-        let pre_delay_buf_len = libm::roundf(0.1 * sr) as usize + 2;
-        let reverb_pre_delay_line = DelayLine::new(pre_delay_buf_len);
 
         Self {
             chorus_delay,
@@ -218,15 +309,7 @@ impl FxChain {
             delay_enabled: false,
             smooth_delay_samples: libm::roundf(0.3 * sr) as f32,
 
-            reverb_combs,
-            reverb_allpass,
-            reverb_pre_delay_line,
-            reverb_mix: 0.0,
-            reverb_size: 0.5,
-            reverb_damping: 0.5,
-            reverb_pre_delay: 0.0,
-            reverb_enabled: false,
-            smooth_reverb_pre_delay: 0.0,
+            reverb: FdnReverb::new(sr),
 
             sample_rate: sr,
         }
@@ -291,54 +374,12 @@ impl FxChain {
         sample * dry_gain + delayed * wet_gain
     }
 
-    /// Process Freeverb-style reverb with equal-power wet/dry mix.
-    ///
-    /// Improvements over the original 4-comb design:
-    /// - Full 8-comb Freeverb network for denser, more natural reverb tails.
-    /// - Independent `reverb_damping` parameter (0 = bright, 1 = dark).
-    /// - Pre-delay line for added depth and dry/wet separation.
+    /// Process FDN reverb. Bypasses if not enabled.
     pub fn process_reverb(&mut self, sample: f32) -> f32 {
-        if !self.reverb_enabled || self.reverb_mix <= 0.0 {
+        if !self.reverb.enabled {
             return sample;
         }
-        let size = self.reverb_size;
-        let feedback = 0.28 + size * 0.56;
-        // Map 0–1 damping param to the comb LPF coefficient range [DAMP_MIN, DAMP_MIN + DAMP_RANGE].
-        let damping = DAMP_MIN + self.reverb_damping * DAMP_RANGE;
-
-        // Smooth and apply pre-delay.
-        self.smooth_reverb_pre_delay = Self::smooth(
-            self.smooth_reverb_pre_delay,
-            self.reverb_pre_delay * self.sample_rate,
-            SMOOTH_COEFF,
-        );
-        let pre_delay_samples = self.smooth_reverb_pre_delay;
-        self.reverb_pre_delay_line.write(sample);
-        let reverb_input = if pre_delay_samples >= 1.0 {
-            self.reverb_pre_delay_line.read_at_fractional(pre_delay_samples)
-        } else {
-            sample
-        };
-
-        // Sum all 8 comb filters in parallel.
-        let mut sum = 0.0_f32;
-        for i in 0..8 {
-            sum += self.reverb_combs[i].process(reverb_input, feedback, damping);
-        }
-        sum /= 8.0;
-
-        // Cascade 4 allpass diffusers.
-        let allpass_feedback = 0.55 + size * 0.1;
-        for i in 0..4 {
-            self.reverb_allpass[i].feedback = allpass_feedback;
-            sum = self.reverb_allpass[i].process(sum);
-        }
-
-        // Equal-power crossfade: dry² + wet² = 1
-        let mix_angle = self.reverb_mix * core::f32::consts::PI * 0.5;
-        let dry_gain = cosf(mix_angle);
-        let wet_gain = sinf(mix_angle);
-        sample * dry_gain + sum * wet_gain
+        self.reverb.process(sample)
     }
 
     /// Run chorus → delay → reverb chain.
@@ -348,3 +389,4 @@ impl FxChain {
         self.process_reverb(out)
     }
 }
+

@@ -7,12 +7,16 @@ const ReverbPanel: AsidePanelComponent<"reverb"> = Object.assign(
 	function ReverbPanel() {
 		const { value: enabled, setValue: setEnabled } =
 			useSynthParam("reverbEnabled");
-		const { value: size, setValue: setSize } = useSynthParam("reverbSize");
+		const { value: space, setValue: setSpace } = useSynthParam("reverbSpace");
 		const { value: mix, setValue: setMix } = useSynthParam("reverbMix");
-		const { value: damping, setValue: setDamping } =
-			useSynthParam("reverbDamping");
-		const { value: preDelay, setValue: setPreDelay } =
-			useSynthParam("reverbPreDelay");
+		const { value: predelay, setValue: setPredelay } =
+			useSynthParam("reverbPredelay");
+		const { value: brightness, setValue: setBrightness } =
+			useSynthParam("reverbBrightness");
+		const { value: distance, setValue: setDistance } =
+			useSynthParam("reverbDistance");
+		const { value: character, setValue: setCharacter } =
+			useSynthParam("reverbCharacter");
 
 		return (
 			<SynthPanelContainer
@@ -21,14 +25,18 @@ const ReverbPanel: AsidePanelComponent<"reverb"> = Object.assign(
 				onToggleEnabled={setEnabled}
 			>
 				<ReverbSection
-					size={size}
-					setSize={setSize}
+					space={space}
+					setSpace={setSpace}
 					mix={mix}
 					setMix={setMix}
-					damping={damping}
-					setDamping={setDamping}
-					preDelay={preDelay}
-					setPreDelay={setPreDelay}
+					predelay={predelay}
+					setPredelay={setPredelay}
+					brightness={brightness}
+					setBrightness={setBrightness}
+					distance={distance}
+					setDistance={setDistance}
+					character={character}
+					setCharacter={setCharacter}
 				/>
 			</SynthPanelContainer>
 		);

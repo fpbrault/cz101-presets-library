@@ -99,11 +99,13 @@ impl CosmoProcessor {
         self.fx.delay_time = p.delay.time;
         self.fx.delay_feedback = p.delay.feedback;
         self.fx.delay_mix = p.delay.mix;
-        self.fx.reverb_enabled = p.reverb.enabled;
-        self.fx.reverb_size = p.reverb.size;
-        self.fx.reverb_mix = p.reverb.mix;
-        self.fx.reverb_damping = p.reverb.damping;
-        self.fx.reverb_pre_delay = p.reverb.pre_delay;
+        self.fx.reverb.enabled = p.reverb.enabled;
+        self.fx.reverb.mix = p.reverb.mix;
+        self.fx.reverb.space = p.reverb.space;
+        self.fx.reverb.predelay = p.reverb.predelay;
+        self.fx.reverb.brightness = p.reverb.brightness;
+        self.fx.reverb.distance = p.reverb.distance;
+        self.fx.reverb.character = p.reverb.character;
     }
 
     // -----------------------------------------------------------------------
