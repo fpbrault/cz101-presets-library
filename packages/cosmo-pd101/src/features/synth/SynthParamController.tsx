@@ -53,7 +53,7 @@ const SYNTH_PARAM_SETTERS = {
 	line2DcwKeyFollow: "setLine2DcwKeyFollow",
 	volume: "setVolume",
 	polyMode: "setPolyMode",
-	velocityTarget: "setVelocityTarget",
+	velocityCurve: "setVelocityCurve",
 	pitchBendRange: "setPitchBendRange",
 	modWheelVibratoDepth: "setModWheelVibratoDepth",
 	phaseModEnabled: "setPhaseModEnabled",

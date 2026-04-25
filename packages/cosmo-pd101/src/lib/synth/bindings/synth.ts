@@ -81,15 +81,6 @@ export type ModMode = "normal" | "ring" | "noise"
 export type PolyMode = "poly8" | "mono"
 
 /**
- * Velocity routing target
- */
-export type VelocityTarget = "amp" | "dcw" | "both" | 
-/**
- * JS "off" means velocity is ignored (worklet passes 0 velocity)
- */
-"off"
-
-/**
  * LFO waveform
  */
 export type LfoWaveform = "sine" | "triangle" | "square" | "saw" | "invertedSaw" | "random"
@@ -253,7 +244,7 @@ export type ModMatrix = { routes?: ModRoute[] }
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
-export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; lfo2?: LfoParams; filter: FilterParams; 
+export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; lfo2?: LfoParams; filter: FilterParams; 
 /**
  * Pitch bend wheel range in semitones (1-24). Default 2.
  */

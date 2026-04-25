@@ -25,7 +25,7 @@
 		"line2DcwEnv": "Line 2 DCW Env",
 		"line2DcaEnv": "Line 2 DCA Env",
 		"polyMode": "Voice Mode",
-		"velocityTarget": "Velocity",
+		"velocityCurve": "Vel Curve",
 		"pitchBendRange": "Bend Range",
 		"modWheelVibratoDepth": "Mod to Vibrato",
 		"lineSelect": "Line Select",

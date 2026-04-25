@@ -2,10 +2,24 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ModSource } from "@/lib/synth/bindings/synth";
 import { noteToFreq, PC_KEY_TO_NOTE } from "@/lib/synth/pdAlgorithms";
 
+/**
+ * Apply an exponential velocity curve to a normalised velocity [0, 1].
+ *
+ * curve = 0  → linear (identity)
+ * curve > 0  → convex  (more sensitive — high output at low input)
+ * curve < 0  → concave (less sensitive — needs hard hit for high output)
+ */
+function applyVelocityCurve(velocity: number, curve: number): number {
+	if (Math.abs(curve) < 0.001) return velocity;
+	const exponent = Math.pow(2, -curve * 2.5);
+	return Math.pow(Math.max(0, Math.min(1, velocity)), exponent);
+}
+
 type UseNoteHandlingParams = {
 	workletNodeRef?: React.MutableRefObject<AudioWorkletNode | null> | null;
 	eventSink?: (type: string, payload: Record<string, unknown>) => void;
-	velocityTarget: "amp" | "dcw" | "both" | "off";
+	/** Velocity curve exponent parameter in range [-1, 1]. 0 = linear. */
+	velocityCurve?: number;
 };
 
 export type NoteHandlingApi = {
@@ -21,7 +35,7 @@ export type NoteHandlingApi = {
 export function useNoteHandling({
 	workletNodeRef,
 	eventSink,
-	velocityTarget,
+	velocityCurve = 0,
 }: UseNoteHandlingParams): NoteHandlingApi {
 	const dispatchEngineEvent = useCallback(
 		(type: string, payload: Record<string, unknown>) => {
@@ -45,7 +59,6 @@ export function useNoteHandling({
 		);
 	}, []);
 
-	void velocityTarget;
 	const activeNotesRef = useRef<Set<number>>(new Set());
 	const sustainedButReleasedRef = useRef<Set<number>>(new Set());
 	const sustainRef = useRef(false);
@@ -56,16 +69,15 @@ export function useNoteHandling({
 			if (activeNotesRef.current.has(note)) return;
 			activeNotesRef.current.add(note);
 			setActiveNotes((prev) => (prev.includes(note) ? prev : [...prev, note]));
+			const curvedVelocity = applyVelocityCurve(velocity / 127, velocityCurve);
 			dispatchEngineEvent("noteOn", {
 				note,
 				frequency: noteToFreq(note),
-				// Always forward physical note velocity so ModSource::Velocity works
-				// regardless of legacy velocityTarget routing.
-				velocity: velocity / 127,
+				velocity: curvedVelocity,
 			});
-			emitModSourceValue("velocity", velocity / 127);
+			emitModSourceValue("velocity", curvedVelocity);
 		},
-		[dispatchEngineEvent, emitModSourceValue],
+		[dispatchEngineEvent, emitModSourceValue, velocityCurve],
 	);
 
 	const sendNoteOff = useCallback(

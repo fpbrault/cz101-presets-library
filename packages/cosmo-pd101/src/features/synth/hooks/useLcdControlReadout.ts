@@ -30,7 +30,6 @@ export function useLcdControlReadout(): UseLcdControlReadoutResult {
 					return value === "poly8" ? t("states.poly8") : t("states.mono");
 				}
 				if (key === "windowType") return value.toUpperCase();
-				if (key === "velocityTarget") return value.toUpperCase();
 				if (key === "lineSelect") return value;
 				if (key === "modMode") return value.toUpperCase();
 				if (key === "filterType") return value.toUpperCase();

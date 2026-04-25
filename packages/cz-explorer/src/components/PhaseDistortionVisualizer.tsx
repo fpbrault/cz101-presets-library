@@ -59,7 +59,7 @@ export function SharedPhaseDistortionVisualizer({
 	const line2DcaEnv = useSynthStore((s) => s.line2DcaEnv);
 	const setLine2DcaEnv = useSynthStore((s) => s.setLine2DcaEnv);
 	const polyMode = useSynthStore((s) => s.polyMode);
-	const velocityTarget = useSynthStore((s) => s.velocityTarget);
+	const velocityCurve = useSynthStore((s) => s.velocityCurve);
 	const lineSelect = useSynthStore((s) => s.lineSelect);
 	const filterEnabled = useSynthStore((s) => s.filterEnabled);
 	const gatherState = useSynthStore((s) => s.gatherState);
@@ -91,7 +91,7 @@ export function SharedPhaseDistortionVisualizer({
 
 	const { activeNotes, sendNoteOn, sendNoteOff } = useNoteHandling({
 		workletNodeRef,
-		velocityTarget,
+		velocityCurve,
 	});
 
 	const { lcdControlReadout, pushLcdControlReadout, formatEnvReadout } =
