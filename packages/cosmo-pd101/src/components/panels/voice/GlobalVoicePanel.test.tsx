@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GlobalVoicePanel from "./GlobalVoicePanel";
 
@@ -9,7 +10,23 @@ vi.mock("@/features/synth/SynthParamController", () => ({
 }));
 
 vi.mock("@/components/controls/ControlKnob", () => ({
-	default: ({ label }: { label?: string }) => <div>{label}</div>,
+	default: ({ label }: { label?: string }) => (
+		<div data-testid={`knob-${label}`}>{label}</div>
+	),
+}));
+
+vi.mock("@/components/primitives/CzButton", () => ({
+	default: ({
+		children,
+		onClick,
+	}: {
+		children: React.ReactNode;
+		onClick?: () => void;
+	}) => (
+		<button type="button" onClick={onClick}>
+			{children}
+		</button>
+	),
 }));
 
 describe("GlobalVoicePanel", () => {
@@ -35,14 +52,25 @@ describe("GlobalVoicePanel", () => {
 
 	it("groups voice mode, portamento, and bend range controls", () => {
 		render(<GlobalVoicePanel />);
+		const portamentoSection = screen.getByText("Portamento").parentElement;
 
 		expect(screen.getByText("Voice Mode")).toBeInTheDocument();
 		expect(screen.getByText("Poly 8")).toBeInTheDocument();
 		expect(screen.getByText("Mono")).toBeInTheDocument();
 		expect(screen.getByText("Portamento")).toBeInTheDocument();
-		expect(screen.getAllByText("Rate")).toHaveLength(2);
-		expect(screen.getByText("Time")).toBeInTheDocument();
-		expect(screen.getByText("Bend")).toBeInTheDocument();
+		expect(portamentoSection).not.toBeNull();
+		expect(
+			within(portamentoSection as HTMLElement).getByRole("button", {
+				name: "Rate",
+			}),
+		).toBeInTheDocument();
+		expect(
+			within(portamentoSection as HTMLElement).getByRole("button", {
+				name: "Time",
+			}),
+		).toBeInTheDocument();
+		expect(screen.getByTestId("knob-Rate")).toBeInTheDocument();
+		expect(screen.getByTestId("knob-Bend")).toBeInTheDocument();
 	});
 
 	it("does not render master volume or mod wheel vibrato controls", () => {
@@ -54,10 +82,19 @@ describe("GlobalVoicePanel", () => {
 
 	it("updates portamento controls", () => {
 		render(<GlobalVoicePanel />);
-		const buttons = screen.getAllByRole("button");
+		const portamentoSection = screen.getByText("Portamento").parentElement;
 
-		fireEvent.click(buttons[2]);
-		fireEvent.click(buttons[4]);
+		expect(portamentoSection).not.toBeNull();
+		fireEvent.click(
+			within(portamentoSection as HTMLElement).getByRole("button", {
+				name: "Off",
+			}),
+		);
+		fireEvent.click(
+			within(portamentoSection as HTMLElement).getByRole("button", {
+				name: "Time",
+			}),
+		);
 
 		expect(setters.get("portamentoEnabled")).toHaveBeenCalledWith(true);
 		expect(setters.get("portamentoMode")).toHaveBeenCalledWith("time");

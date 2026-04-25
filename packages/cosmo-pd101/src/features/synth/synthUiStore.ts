@@ -42,6 +42,9 @@ const ASIDE_PANEL_TABS = new Set<AsidePanelTab>([
 	"delay",
 	"reverb",
 ]);
+const REMOVED_ASIDE_PANEL_FALLBACKS = new Map<string, AsidePanelTab>([
+	["portamento", "global"],
+]);
 const MAIN_PANEL_MODES = new Set<MainPanelMode>(["phase", "fx", "mod"]);
 const PHASE_LINE_PANEL_TABS = new Set<PhaseLinePanelTab>([
 	"line1-algos",
@@ -76,8 +79,11 @@ const normalizeSynthUiState = (value: unknown): SynthUiState => {
 
 	return {
 		activeAsidePanel:
-			activeAsidePanel &&
-			ASIDE_PANEL_TABS.has(activeAsidePanel as AsidePanelTab)
+			activeAsidePanel && REMOVED_ASIDE_PANEL_FALLBACKS.has(activeAsidePanel)
+				? (REMOVED_ASIDE_PANEL_FALLBACKS.get(activeAsidePanel) ??
+					DEFAULT_UI_STATE.activeAsidePanel)
+				: activeAsidePanel &&
+						ASIDE_PANEL_TABS.has(activeAsidePanel as AsidePanelTab)
 				? (activeAsidePanel as AsidePanelTab)
 				: DEFAULT_UI_STATE.activeAsidePanel,
 		mainPanelMode:
