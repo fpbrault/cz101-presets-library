@@ -6,8 +6,8 @@ import CzButton from "@/components/primitives/CzButton";
 import { useSynthParam } from "@/features/synth/SynthParamController";
 import { applyVelocityCurve } from "@/lib/synth/velocityCurve";
 
-const W = 80;
-const H = 48;
+const W = 72;
+const H = 42;
 const PAD = 4;
 const INNER_W = W - PAD * 2;
 const INNER_H = H - PAD * 2;
@@ -77,81 +77,90 @@ const VelocityCurvePreview = memo(function VelocityCurvePreview({
 
 const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 	function GlobalVoicePanel() {
-		const { value: volume, setValue: setVolume } = useSynthParam("volume");
-		const { value: polyMode, setValue: setPolyMode } =
-			useSynthParam("polyMode");
 		const { value: velocityCurve, setValue: setVelocityCurve } =
 			useSynthParam("velocityCurve");
 		const { value: pitchBendRange, setValue: setPitchBendRange } =
 			useSynthParam("pitchBendRange");
-		const { value: modWheelVibratoDepth, setValue: setModWheelVibratoDepth } =
-			useSynthParam("modWheelVibratoDepth");
+		const { value: portamentoMode, setValue: setPortamentoMode } =
+			useSynthParam("portamentoMode");
+		const { value: portamentoRate, setValue: setPortamentoRate } =
+			useSynthParam("portamentoRate");
+		const { value: portamentoTime, setValue: setPortamentoTime } =
+			useSynthParam("portamentoTime");
 		return (
-			<SynthPanelContainer>
-				<div className="mb-3 flex justify-center">
-					<ControlKnob
-						value={volume}
-						onChange={setVolume}
-						min={0}
-						max={1}
-						size={32}
-						color="#9cb937"
-						label="Volume"
-						valueFormatter={(value) => `${Math.round(value * 100)}%`}
-						modDestination="volume"
-					/>
-				</div>
+			<SynthPanelContainer className="p-2">
 				<div className="space-y-2">
-					<div className="flex w-full gap-1">
-						<CzButton
-							active={polyMode === "poly8"}
-							onClick={() => setPolyMode("poly8")}
-							className="flex-1"
-						>
-							Poly 8
-						</CzButton>
-						<CzButton
-							active={polyMode === "mono"}
-							onClick={() => setPolyMode("mono")}
-							className="flex-1"
-						>
-							Mono
-						</CzButton>
+					<div className="min-w-0">
+						<div className="mb-0.5 text-center cz-light-blue">Portamento</div>
+						<div className="mt-0.5 flex justify-center gap-1">
+							<CzButton
+								active={portamentoMode === "rate"}
+								onClick={() => setPortamentoMode("rate")}
+							>
+								Rate
+							</CzButton>
+							<CzButton
+								active={portamentoMode === "time"}
+								onClick={() => setPortamentoMode("time")}
+							>
+								Time
+							</CzButton>
+						</div>
+						<div className="mt-0.5 flex justify-center">
+							{portamentoMode === "rate" ? (
+								<ControlKnob
+									value={portamentoRate}
+									onChange={setPortamentoRate}
+									min={0}
+									max={99}
+									size={32}
+									color="#7f9de4"
+									label="Rate"
+									valueFormatter={(v) => `${Math.round(v)}`}
+								/>
+							) : (
+								<ControlKnob
+									value={portamentoTime}
+									onChange={setPortamentoTime}
+									min={0}
+									max={2}
+									size={32}
+									color="#7f9de4"
+									label="Time"
+									valueFormatter={(v) => `${v.toFixed(2)}s`}
+								/>
+							)}
+						</div>
 					</div>
-					<div className="flex items-center justify-center gap-3 pt-1">
-						<VelocityCurvePreview curve={velocityCurve} />
-						<ControlKnob
-							value={velocityCurve}
-							onChange={setVelocityCurve}
-							min={-1}
-							max={1}
-							size={28}
-							color="#c46eb4"
-							label="Vel Curve"
-							valueFormatter={(v) => (v === 0 ? "Linear" : v.toFixed(2))}
-						/>
-					</div>
-					<div className="flex justify-around pt-1">
-						<ControlKnob
-							value={pitchBendRange}
-							onChange={setPitchBendRange}
-							min={1}
-							max={24}
-							size={28}
-							color="#5bc8d4"
-							label="Bend"
-							valueFormatter={(v) => `${Math.round(v)} st`}
-						/>
-						<ControlKnob
-							value={modWheelVibratoDepth}
-							onChange={setModWheelVibratoDepth}
-							min={0}
-							max={99}
-							size={28}
-							color="#5bc8d4"
-							label="Mod→Vib"
-							valueFormatter={(v) => `${Math.round(v)}`}
-						/>
+
+					<div className="grid grid-cols-[auto_1fr_auto] items-end gap-1.5 pt-0.5">
+						<div className="flex justify-center">
+							<ControlKnob
+								value={pitchBendRange}
+								onChange={setPitchBendRange}
+								min={1}
+								max={24}
+								size={30}
+								color="#5bc8d4"
+								label="Bend"
+								valueFormatter={(v) => `${Math.round(v)} st`}
+							/>
+						</div>
+						<div className="flex justify-center">
+							<VelocityCurvePreview curve={velocityCurve} />
+						</div>
+						<div className="flex justify-center">
+							<ControlKnob
+								value={velocityCurve}
+								onChange={setVelocityCurve}
+								min={-1}
+								max={1}
+								size={28}
+								color="#c46eb4"
+								label="Vel Curve"
+								valueFormatter={(v) => (v === 0 ? "Linear" : v.toFixed(2))}
+							/>
+						</div>
 					</div>
 				</div>
 			</SynthPanelContainer>

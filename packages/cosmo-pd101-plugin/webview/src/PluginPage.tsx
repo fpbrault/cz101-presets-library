@@ -124,8 +124,8 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	);
 	const lcdSecondaryText = useMemo(() => {
 		const filterStatus = filterEnabled ? "FILT ON" : "FILT OFF";
-		return `LINE ${lineSelect} | ${polyMode.toUpperCase()} | ${filterStatus}`;
-	}, [lineSelect, polyMode, filterEnabled]);
+		return `LINE ${lineSelect} | ${filterStatus}`;
+	}, [lineSelect,filterEnabled]);
 
 	return (
 		<SynthRenderer
@@ -177,7 +177,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 				</>
 			}
 			lcdPrimaryText={lcdPrimaryText}
-			lcdSecondaryText={lcdSecondaryText}
+			lcdSecondaryText={""}
 			lcdTransientReadout={lcdControlReadout}
 			effectivePitchHz={scopeActiveHz}
 			analyserNodeRef={analyserNodeRef}
