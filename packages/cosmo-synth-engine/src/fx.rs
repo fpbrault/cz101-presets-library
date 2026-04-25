@@ -430,8 +430,7 @@ impl FxChain {
         let min_freq = 100.0_f32;
         let max_freq = 2000.0_f32;
         let depth_clamped = self.phaser_depth.clamp(0.0, 1.0);
-        let center_freq =
-            min_freq + (max_freq - min_freq) * 0.5 * (1.0 + lfo * depth_clamped);
+        let center_freq = min_freq + (max_freq - min_freq) * 0.5 * (1.0 + lfo * depth_clamped);
 
         // All-pass coefficient from center frequency
         let g = libm::tanf(core::f32::consts::PI * center_freq / self.sample_rate);
