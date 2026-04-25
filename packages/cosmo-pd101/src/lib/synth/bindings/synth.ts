@@ -103,7 +103,15 @@ export type ChorusParams = { enabled?: boolean; rate: number; depth: number; mix
 /**
  * Delay parameters
  */
-export type DelayParams = { enabled?: boolean; time: number; feedback: number; mix: number }
+export type DelayParams = { enabled?: boolean; time: number; feedback: number; mix: number; 
+/**
+ * When true, applies tape echo characteristics (LP filter + soft saturation in feedback).
+ */
+tapeMode?: boolean; 
+/**
+ * Tape warmth (0 = bright, 1 = warm). Only effective when `tape_mode` is true.
+ */
+warmth?: number }
 
 /**
  * Reverb parameters for the FDN reverb engine.
@@ -125,6 +133,27 @@ distance?: number;
  * Combined reverb tone and motion: 0 = dark/static, 1 = bright/shimmery. Default 0.65.
  */
 character?: number }
+
+/**
+ * Phaser parameters
+ */
+export type PhaserParams = { enabled?: boolean; 
+/**
+ * LFO rate in Hz (0.1–10 Hz)
+ */
+rate: number; 
+/**
+ * LFO depth: how much the all-pass center frequency is swept (0–1)
+ */
+depth: number; 
+/**
+ * Wet/dry mix (0–1)
+ */
+mix: number; 
+/**
+ * Feedback amount from phaser output back to input (-0.9–0.9)
+ */
+feedback: number }
 
 /**
  * Vibrato parameters
@@ -298,7 +327,7 @@ export type ModMatrix = { routes?: ModRoute[] }
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
-export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; lfo2?: LfoParams; filter: FilterParams; 
+export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; phaser: PhaserParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; lfo2?: LfoParams; filter: FilterParams; 
 /**
  * Pitch bend wheel range in semitones (1-24). Default 2.
  */

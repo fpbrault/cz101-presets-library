@@ -424,12 +424,23 @@ impl Default for ChorusParams {
 /// Delay parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
 pub struct DelayParams {
     #[serde(default)]
     pub enabled: bool,
     pub time: f32,
     pub feedback: f32,
     pub mix: f32,
+    /// When true, applies tape echo characteristics (LP filter + soft saturation in feedback).
+    #[serde(default)]
+    pub tape_mode: bool,
+    /// Tape warmth (0 = bright, 1 = warm). Only effective when `tape_mode` is true.
+    #[serde(default = "default_delay_warmth")]
+    pub warmth: f32,
+}
+
+fn default_delay_warmth() -> f32 {
+    0.5
 }
 
 impl Default for DelayParams {
@@ -439,6 +450,37 @@ impl Default for DelayParams {
             time: 0.3,
             feedback: 0.35,
             mix: 0.0,
+            tape_mode: false,
+            warmth: 0.5,
+        }
+    }
+}
+
+/// Phaser parameters
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PhaserParams {
+    #[serde(default)]
+    pub enabled: bool,
+    /// LFO rate in Hz (0.1–10 Hz)
+    pub rate: f32,
+    /// LFO depth: how much the all-pass center frequency is swept (0–1)
+    pub depth: f32,
+    /// Wet/dry mix (0–1)
+    pub mix: f32,
+    /// Feedback amount from phaser output back to input (-0.9–0.9)
+    pub feedback: f32,
+}
+
+impl Default for PhaserParams {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            rate: 0.5,
+            depth: 1.0,
+            mix: 0.0,
+            feedback: 0.5,
         }
     }
 }
@@ -754,6 +796,7 @@ pub struct SynthParams {
     pub chorus: ChorusParams,
     pub delay: DelayParams,
     pub reverb: ReverbParams,
+    pub phaser: PhaserParams,
     pub vibrato: VibratoParams,
     pub portamento: PortamentoParams,
     pub lfo: LfoParams,
@@ -807,6 +850,7 @@ impl Default for SynthParams {
             chorus: ChorusParams::default(),
             delay: DelayParams::default(),
             reverb: ReverbParams::default(),
+            phaser: PhaserParams::default(),
             vibrato: VibratoParams::default(),
             portamento: PortamentoParams::default(),
             lfo: LfoParams::default(),

@@ -141,6 +141,11 @@ impl CosmoProcessor {
         self.fx.chorus_rate = p.chorus.rate;
         self.fx.chorus_depth = p.chorus.depth;
         self.fx.chorus_mix = p.chorus.mix;
+        self.fx.phaser_enabled = p.phaser.enabled;
+        self.fx.phaser_rate = p.phaser.rate;
+        self.fx.phaser_depth = p.phaser.depth;
+        self.fx.phaser_mix = p.phaser.mix;
+        self.fx.phaser_feedback = p.phaser.feedback;
         self.fx.delay_enabled = p.delay.enabled;
         self.fx.delay_time = p.delay.time;
         self.fx.delay_feedback = p.delay.feedback;
@@ -151,6 +156,8 @@ impl CosmoProcessor {
         self.fx.reverb.predelay = p.reverb.predelay;
         self.fx.reverb.distance = p.reverb.distance;
         self.fx.reverb.character = p.reverb.character;
+        self.fx.delay_tape_mode = p.delay.tape_mode;
+        self.fx.delay_warmth = p.delay.warmth;
     }
 
     // -----------------------------------------------------------------------

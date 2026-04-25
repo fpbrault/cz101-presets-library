@@ -674,6 +674,7 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         legato,
         chorus,
         delay,
+        phaser,
         reverb,
         vibrato,
         portamento,
@@ -695,6 +696,8 @@ fn _assert_synth_params_coverage(p: SynthParams) {
     } = chorus;
     let DelayParams {
         enabled: _del_enabled,
+        tape_mode: _del_tape_mode,
+        warmth: _del_warmth,
         time: _del_time,
         feedback: _del_fb,
         mix: _del_mix,

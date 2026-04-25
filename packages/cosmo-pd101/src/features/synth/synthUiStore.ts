@@ -40,6 +40,7 @@ const ASIDE_PANEL_TABS = new Set<AsidePanelTab>([
 	"chorus",
 	"delay",
 	"reverb",
+	"phaser",
 ]);
 const REMOVED_ASIDE_PANEL_FALLBACKS = new Map<string, AsidePanelTab>([
 	["filter", "global"],

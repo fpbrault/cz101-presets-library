@@ -28,6 +28,7 @@ export interface ControlKnobProps {
 	tooltip?: string;
 	/** Semantic color variant. Prefer this over `color`. */
 	variant?: KnobVariant;
+	className?: string;
 	/**
 	 * Raw CSS color override (migration escape hatch).
 	 * Maps to `--knob-value-color` and `--knob-indicator-color`.
@@ -80,6 +81,7 @@ export function ControlKnob({
 	label,
 	tooltip,
 	variant = "default",
+	className,
 	color,
 	size = 32,
 	valueFormatter,
@@ -187,7 +189,7 @@ export function ControlKnob({
 
 	const inner = (
 		<div
-			className="group flex flex-col items-center gap-0.5 text-center"
+			className={`group flex flex-col items-center gap-0.5 text-center ${className ?? ""}`}
 			data-hover-info={tooltip}
 			{...hoverHandlers}
 		>
