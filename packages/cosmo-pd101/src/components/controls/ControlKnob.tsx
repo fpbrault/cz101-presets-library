@@ -28,6 +28,7 @@ export interface ControlKnobProps {
 	tooltip?: string;
 	/** Semantic color variant. Prefer this over `color`. */
 	variant?: KnobVariant;
+	className?: string;
 	/**
 	 * Raw CSS color override (migration escape hatch).
 	 * Maps to `--knob-value-color` and `--knob-indicator-color`.
@@ -80,6 +81,7 @@ export function ControlKnob({
 	label,
 	tooltip,
 	variant = "default",
+	className,
 	color,
 	size = 32,
 	valueFormatter,
@@ -187,7 +189,7 @@ export function ControlKnob({
 
 	const inner = (
 		<div
-			className="group flex flex-col items-center gap-0.5 text-center"
+			className={`group flex flex-col items-center gap-0.5 text-center ${className ?? ""}`}
 			data-hover-info={tooltip}
 			{...hoverHandlers}
 		>
@@ -253,7 +255,7 @@ export function ControlKnob({
 				<div className="min-h-2 -mt-1.5 space-y-0">
 					{valueVisibility !== "never" && editing ? (
 						<input
-							ref={inputRef}
+							ref={inputRef as React.RefObject<HTMLInputElement>}
 							type="text"
 							aria-label={valueControlLabel}
 							className="w-14 border border-base-300 bg-cz-surface px-1 text-center text-2xs font-semibold text-base-content/80 outline-none focus:border-primary"

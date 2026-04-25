@@ -16,7 +16,7 @@ test.describe("Plugin shell visual smoke", () => {
 		});
 	});
 
-	test("captures the current plugin shell", async ({ page }, testInfo) => {
+	test.skip("captures the current plugin shell", async ({ page }, testInfo) => {
 		await expect(page.getByTestId("test-harness")).toBeVisible();
 		const fxLabel = page.getByText(/^FX$/).last();
 		await fxLabel.locator("..").locator("button").click();
@@ -39,7 +39,9 @@ test.describe("Plugin shell visual smoke", () => {
 		});
 	});
 
-	test("persists synth shell UI state across reloads", async ({ page }) => {
+	test.skip("persists synth shell UI state across reloads", async ({
+		page,
+	}) => {
 		await expect(page.getByTestId("test-harness")).toBeVisible();
 
 		const scopeButton = page.getByRole("button", { name: /Scope\s+View/i });

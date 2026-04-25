@@ -8,6 +8,26 @@ import type {
 	WindowType,
 } from "@/lib/synth/bindings/synth";
 
+export type RuntimeModSources = {
+	lfo1: number;
+	lfo2: number;
+	random: number;
+	modEnv: number;
+	velocity: number;
+	modWheel: number;
+	aftertouch: number;
+};
+
+export const EMPTY_RUNTIME_MOD_SOURCES: RuntimeModSources = {
+	lfo1: 0,
+	lfo2: 0,
+	random: 0,
+	modEnv: 0,
+	velocity: 0,
+	modWheel: 0,
+	aftertouch: 0,
+};
+
 export type UseAudioEngineParams = {
 	synthWasmUrl: string;
 	synthBindingsUrl: string;
@@ -204,6 +224,30 @@ export function useAudioEngine({
 		audioInitRef.current = true;
 		let disposed = false;
 
+		const normalizeRuntimeModSources = (
+			value: unknown,
+		): RuntimeModSources | null => {
+			if (!value || typeof value !== "object") {
+				return null;
+			}
+
+			const detail = value as Partial<Record<keyof RuntimeModSources, unknown>>;
+			const read = (key: keyof RuntimeModSources) => {
+				const next = detail[key];
+				return typeof next === "number" && Number.isFinite(next) ? next : 0;
+			};
+
+			return {
+				lfo1: read("lfo1"),
+				lfo2: read("lfo2"),
+				random: read("random"),
+				modEnv: read("modEnv"),
+				velocity: read("velocity"),
+				modWheel: read("modWheel"),
+				aftertouch: read("aftertouch"),
+			};
+		};
+
 		const init = async () => {
 			try {
 				const ctx = new AudioContext();
@@ -249,6 +293,15 @@ export function useAudioEngine({
 							type: "setParams",
 							params: paramsRef.current,
 						});
+					} else if (e.data?.type === "runtimeModSources") {
+						const sources = normalizeRuntimeModSources(e.data.sources);
+						if (sources) {
+							window.dispatchEvent(
+								new CustomEvent<RuntimeModSources>("cz-runtime-mod-sources", {
+									detail: sources,
+								}),
+							);
+						}
 					} else if (e.data?.type === "error") {
 						console.error("[CZ Synth WASM] Worklet error:", e.data.message);
 					}

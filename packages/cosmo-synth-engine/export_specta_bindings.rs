@@ -13,8 +13,9 @@ use cosmo_synth_engine::generators::{
 use cosmo_synth_engine::params::{
     Algo, AlgoControlValueV1, ChorusParams, CzAlgo, CzLineParams, CzWaveform, DelayParams, EnvStep,
     FilterParams, FilterType, LfoParams, LfoWaveform, LineParams, LineSelect, ModDestination,
-    ModMatrix, ModMode, ModRoute, ModSource, PolyMode, PortamentoMode, PortamentoParams,
-    ReverbParams, StepEnvData, SynthParams, VelocityTarget, VibratoParams, WindowType,
+    ModEnvParams, ModMatrix, ModMode, ModRoute, ModSource, PhaserParams, PolyMode, PortamentoMode,
+    PortamentoParams, RandomParams, ReverbParams, StepEnvData, SynthParams, VibratoParams,
+    WindowType,
 };
 use cosmo_synth_engine::preset_wire::{
     algo_definitions_v1, algo_ui_catalog_v1, cz_presets, SynthPresetV1,
@@ -58,8 +59,6 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(&export::<PolyMode>(&config).expect("Failed to export PolyMode"));
     out.push_str("\n\n");
-    out.push_str(&export::<VelocityTarget>(&config).expect("Failed to export VelocityTarget"));
-    out.push_str("\n\n");
     out.push_str(&export::<LfoWaveform>(&config).expect("Failed to export LfoWaveform"));
     out.push_str("\n\n");
     out.push_str(&export::<FilterType>(&config).expect("Failed to export FilterType"));
@@ -72,7 +71,13 @@ fn main() {
     out.push_str("\n\n");
     out.push_str(&export::<ReverbParams>(&config).expect("Failed to export ReverbParams"));
     out.push_str("\n\n");
+    out.push_str(&export::<PhaserParams>(&config).expect("Failed to export PhaserParams"));
+    out.push_str("\n\n");
     out.push_str(&export::<VibratoParams>(&config).expect("Failed to export VibratoParams"));
+    out.push_str("\n\n");
+    out.push_str(&export::<RandomParams>(&config).expect("Failed to export RandomParams"));
+    out.push_str("\n\n");
+    out.push_str(&export::<ModEnvParams>(&config).expect("Failed to export ModEnvParams"));
     out.push_str("\n\n");
     out.push_str(&export::<PortamentoParams>(&config).expect("Failed to export PortamentoParams"));
     out.push_str("\n\n");

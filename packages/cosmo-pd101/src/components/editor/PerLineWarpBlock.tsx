@@ -407,7 +407,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 								<div className="flex min-h-0 flex-col gap-4">
 									<Card
 										variant="subtle"
-										className="flex flex-col items-center justify-center "
+										className="flex flex-col items-center justify-center grow"
 									>
 										<div className="text-3xs uppercase tracking-[0.24em] text-cz-light-blue">
 											Algo Bridge

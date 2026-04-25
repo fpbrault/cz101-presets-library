@@ -28,10 +28,7 @@ describe("KnobView", () => {
 		);
 
 		expect(
-			container.querySelector('path[stroke-width="2.5"]'),
-		).toBeInTheDocument();
-		expect(
-			container.querySelector('path[stroke-width="1.45"]'),
+			container.querySelector('path[stroke-opacity="0.35"]'),
 		).toBeInTheDocument();
 		expect(
 			container.querySelector(
@@ -43,8 +40,8 @@ describe("KnobView", () => {
 	it("does not render modulation trail when modulatedNorm is absent", () => {
 		const { container } = render(<KnobView normalizedValue={0.5} size={56} />);
 
-		expect(container.querySelector('path[stroke-width="2.5"]')).toBeNull();
-		expect(container.querySelector('path[stroke-width="1.45"]')).toBeNull();
+		expect(container.querySelector('path[stroke-opacity="0.35"]')).toBeNull();
+		expect(container.querySelector('circle[fill-opacity="0.95"]')).toBeNull();
 	});
 
 	it("applies color override CSS variables", () => {

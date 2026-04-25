@@ -6,8 +6,9 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 use core::array;
+use serde::Serialize;
 
-use crate::dsp_utils::lfo_output_with_symmetry;
+use crate::dsp_utils::{lfo_output_with_symmetry, random_hold_value};
 use crate::envelope::normalize_synth_params_envelopes_to_raw_if_human;
 use crate::fx::FxChain;
 use crate::generators::PER_LINE_HEADROOM;
@@ -19,6 +20,18 @@ const SOFT_CLIP_THRESHOLD: f32 = 0.9;
 const REFERENCE_LINE_HEADROOM: f32 = 0.75;
 const HEADROOM_MAKEUP_EXPONENT: f32 = 0.8;
 const MAX_HEADROOM_MAKEUP: f32 = 1.0;
+
+#[derive(Debug, Clone, Copy, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct RuntimeModSources {
+    pub lfo1: f32,
+    pub lfo2: f32,
+    pub random: f32,
+    pub mod_env: f32,
+    pub velocity: f32,
+    pub mod_wheel: f32,
+    pub aftertouch: f32,
+}
 
 // ---------------------------------------------------------------------------
 // NoteEntry — maps a MIDI note to a voice index
@@ -51,6 +64,12 @@ pub struct CosmoProcessor {
     pub sustain_on: bool,
     pub lfo_phase: f32,
     pub lfo2_phase: f32,
+    /// Phase accumulator for the random mod source (seconds elapsed * rate).
+    pub random_phase: f32,
+    /// Step counter for the random mod source used as the hash seed.
+    pub random_step: i32,
+    /// Current held value of the random mod source in [-1, 1].
+    pub random_hold: f32,
     pub params: SynthParams,
     pub sample_rate: f32,
     /// Normalised pitch bend value in [-1.0, 1.0].
@@ -61,6 +80,8 @@ pub struct CosmoProcessor {
     pub mod_wheel: f32,
     /// Normalised aftertouch/channel pressure value in [0.0, 1.0].
     pub aftertouch: f32,
+    /// Latest modulation-source snapshot for UI telemetry.
+    pub last_runtime_mod_sources: RuntimeModSources,
 }
 
 impl CosmoProcessor {
@@ -74,14 +95,39 @@ impl CosmoProcessor {
             sustain_on: false,
             lfo_phase: 0.0,
             lfo2_phase: 0.0,
+            random_phase: 0.0,
+            random_step: 0,
+            random_hold: random_hold_value(0),
             params: SynthParams::default(),
             sample_rate,
             pitch_bend: 0.0,
             mod_wheel: 0.0,
             aftertouch: 0.0,
+            last_runtime_mod_sources: RuntimeModSources::default(),
         };
         proc.update_fx();
         proc
+    }
+
+    fn runtime_mod_source_voice_index(&self) -> Option<usize> {
+        self.active_notes
+            .last()
+            .map(|entry| entry.voice_idx)
+            .filter(|voice_idx| *voice_idx < NUM_VOICES)
+            .or_else(|| {
+                self.voices.iter().position(|voice| {
+                    voice.note.is_some() && (!voice.is_silent || voice.mod_env.output > 0.0)
+                })
+            })
+            .or_else(|| {
+                self.voices
+                    .iter()
+                    .position(|voice| voice.mod_env.output > 0.0)
+            })
+    }
+
+    pub fn runtime_mod_sources(&self) -> RuntimeModSources {
+        self.last_runtime_mod_sources
     }
 
     // -----------------------------------------------------------------------
@@ -95,6 +141,11 @@ impl CosmoProcessor {
         self.fx.chorus_rate = p.chorus.rate;
         self.fx.chorus_depth = p.chorus.depth;
         self.fx.chorus_mix = p.chorus.mix;
+        self.fx.phaser_enabled = p.phaser.enabled;
+        self.fx.phaser_rate = p.phaser.rate;
+        self.fx.phaser_depth = p.phaser.depth;
+        self.fx.phaser_mix = p.phaser.mix;
+        self.fx.phaser_feedback = p.phaser.feedback;
         self.fx.delay_enabled = p.delay.enabled;
         self.fx.delay_time = p.delay.time;
         self.fx.delay_feedback = p.delay.feedback;
@@ -105,6 +156,8 @@ impl CosmoProcessor {
         self.fx.reverb.predelay = p.reverb.predelay;
         self.fx.reverb.distance = p.reverb.distance;
         self.fx.reverb.character = p.reverb.character;
+        self.fx.delay_tape_mode = p.delay.tape_mode;
+        self.fx.delay_warmth = p.delay.warmth;
     }
 
     // -----------------------------------------------------------------------
@@ -133,6 +186,7 @@ impl CosmoProcessor {
         voice.line2_env.dco.start_release(&p.line2.dco_env);
         voice.line2_env.dcw.start_release(&p.line2.dcw_env);
         voice.line2_env.dca.start_release(&p.line2.dca_env);
+        voice.mod_env.note_off();
     }
 
     /// Mark a voice as releasing and switch all envelopes to release mode.
@@ -192,6 +246,8 @@ impl CosmoProcessor {
         self.reset_voice_runtime(voice_idx);
         self.reset_voice_envs(voice_idx);
         self.reset_generator_runtime_for_note(voice_idx, note);
+        // Trigger mod envelope attack after reset.
+        self.voices[voice_idx].mod_env.note_on();
     }
 
     /// Reset generator-owned per-voice runtime state for a new note-on event.
@@ -459,6 +515,15 @@ impl CosmoProcessor {
                     * lfo2_depth
                     + lfo2_offset;
 
+            // Advance the random (sample-and-hold) mod source.
+            self.random_phase += p.random.rate / sr;
+            if self.random_phase >= 1.0 {
+                self.random_phase -= 1.0;
+                self.random_step = self.random_step.wrapping_add(1);
+                self.random_hold = random_hold_value(self.random_step);
+            }
+            let random_mod_val = self.random_hold;
+
             let mut mixed = 0.0_f32;
             // SAFETY: `voices` and `params` are separate fields; we use raw pointer to avoid
             // simultaneous mutable + immutable borrow of `self`.
@@ -474,12 +539,30 @@ impl CosmoProcessor {
                     p_ref,
                     lfo1_mod_val,
                     lfo2_mod_val,
+                    random_mod_val,
                     sr,
                     pitch_bend_semitones,
                     mod_wheel,
                     aftertouch,
                 );
             }
+
+            let (mod_env, velocity) = self
+                .runtime_mod_source_voice_index()
+                .map(|voice_idx| {
+                    let voice = &self.voices[voice_idx];
+                    (voice.mod_env.output, voice.velocity)
+                })
+                .unwrap_or((0.0, 0.0));
+            self.last_runtime_mod_sources = RuntimeModSources {
+                lfo1: lfo1_mod_val,
+                lfo2: lfo2_mod_val,
+                random: random_mod_val,
+                mod_env,
+                velocity,
+                mod_wheel,
+                aftertouch,
+            };
 
             mixed *= norm;
 

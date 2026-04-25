@@ -38,4 +38,33 @@ describe("CzTabButton", () => {
 		expect(container.querySelector("span[aria-hidden='true']")).toBeNull();
 		expect(screen.getByRole("button").className).toContain("border-[#3a838c]");
 	});
+
+	it("uses square dimensions by default and when only one dimension is provided", () => {
+		const { rerender } = render(<CzTabButton topLabel="A" bottomLabel="B" />);
+
+		expect(screen.getByRole("button")).toHaveStyle({
+			width: "48px",
+			height: "48px",
+		});
+
+		rerender(<CzTabButton topLabel="A" bottomLabel="B" width={30} />);
+		expect(screen.getByRole("button")).toHaveStyle({
+			width: "30px",
+			height: "30px",
+		});
+
+		rerender(<CzTabButton topLabel="A" bottomLabel="B" height={36} />);
+		expect(screen.getByRole("button")).toHaveStyle({
+			width: "36px",
+			height: "36px",
+		});
+
+		rerender(
+			<CzTabButton topLabel="A" bottomLabel="B" width={28} height={40} />,
+		);
+		expect(screen.getByRole("button")).toHaveStyle({
+			width: "28px",
+			height: "40px",
+		});
+	});
 });
