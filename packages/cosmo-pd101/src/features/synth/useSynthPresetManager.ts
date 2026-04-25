@@ -8,9 +8,11 @@ import {
 	exportPreset,
 	importPreset,
 	listPresets,
+	loadCurrentPresetSession,
 	loadCurrentState,
 	loadPreset,
 	renamePreset,
+	saveCurrentPresetSession,
 	saveCurrentState,
 	savePreset,
 } from "@/lib/synth/presetStorage";
@@ -22,12 +24,14 @@ type UseSynthPresetManagerOptions = {
 	libraryPresets?: LibraryPreset[];
 	onLoadLibraryPreset?: (preset: LibraryPreset) => void;
 	shouldLoadCurrentState?: () => boolean;
+	presetStateKey?: string;
 };
 
 type UseSynthPresetManagerResult = {
 	allPresetEntries: PresetEntry[];
 	activePresetId: string | null;
 	activePresetName: string;
+	pendingPresetChange: PendingPresetChange | null;
 	handleLoadLocal: (name: string) => void;
 	handleLoadBuiltin: (name: string) => void;
 	handleLoadLibrary: (preset: LibraryPreset) => void;
@@ -39,11 +43,42 @@ type UseSynthPresetManagerResult = {
 	handleExportPreset: (name: string) => void;
 	handleImportPreset: (json: string, filename: string) => void;
 	handleExportCurrentState: (name: string) => void;
+	handleSavePendingPresetChange: (name?: string) => void;
+	handleDiscardPendingPresetChange: () => void;
+	handleCancelPendingPresetChange: () => void;
+};
+
+type PendingNavigation =
+	| { type: "local"; entryId: string; name: string }
+	| { type: "builtin"; entryId: string; name: string }
+	| { type: "library"; entryId: string; preset: LibraryPreset };
+
+type PendingPresetChange = {
+	activePresetName: string;
+	activeLocalName: string | null;
+	suggestedName: string;
 };
 
 const getBuiltinPresetEntryId = (name: string) => `builtin:${name}`;
 const getLocalPresetEntryId = (name: string) => `local:${name}`;
 const getLibraryPresetEntryId = (presetId: string) => `library:${presetId}`;
+const presetNameCollator = new Intl.Collator(undefined, {
+	numeric: true,
+	sensitivity: "base",
+});
+
+function sortPresetEntries(entries: PresetEntry[]): PresetEntry[] {
+	return [...entries].sort((a, b) => {
+		const labelCompare = presetNameCollator.compare(a.label, b.label);
+		return labelCompare === 0
+			? presetNameCollator.compare(a.id, b.id)
+			: labelCompare;
+	});
+}
+
+function getPresetFingerprint(preset: SynthPresetV1): string {
+	return JSON.stringify(preset);
+}
 
 export function useSynthPresetManager({
 	builtinPresets,
@@ -52,61 +87,158 @@ export function useSynthPresetManager({
 	libraryPresets = [],
 	onLoadLibraryPreset,
 	shouldLoadCurrentState,
+	presetStateKey,
 }: UseSynthPresetManagerOptions): UseSynthPresetManagerResult {
 	const [presetList, setPresetList] = useState<string[]>([]);
-	const [activePresetId, setActivePresetId] = useState<string | null>(null);
-	const [activePresetName, setActivePresetName] = useState("Current State");
+	const shouldHydratePersistedState = useMemo(
+		() => (shouldLoadCurrentState ? shouldLoadCurrentState() : true),
+		[shouldLoadCurrentState],
+	);
+	const initialPresetSession = useMemo(
+		() => (shouldHydratePersistedState ? loadCurrentPresetSession() : null),
+		[shouldHydratePersistedState],
+	);
+	const [activePresetId, setActivePresetId] = useState<string | null>(
+		initialPresetSession?.activePresetId ?? null,
+	);
+	const [activePresetNameBase, setActivePresetNameBase] = useState(
+		initialPresetSession?.activePresetNameBase ?? "Current State",
+	);
+	const [loadedPresetFingerprint, setLoadedPresetFingerprint] = useState<
+		string | null
+	>(initialPresetSession?.loadedPresetFingerprint ?? null);
+	const [pendingNavigation, setPendingNavigation] =
+		useState<PendingNavigation | null>(null);
+	const currentPresetFingerprint =
+		presetStateKey ?? getPresetFingerprint(gatherState());
+	const hasUnsavedChanges =
+		loadedPresetFingerprint !== null &&
+		currentPresetFingerprint !== loadedPresetFingerprint;
+	const activePresetName = hasUnsavedChanges
+		? `${activePresetNameBase} *`
+		: activePresetNameBase;
+	const activeLocalName = activePresetId?.startsWith("local:")
+		? activePresetNameBase
+		: null;
+	const pendingPresetChange = pendingNavigation
+		? {
+				activePresetName: activePresetNameBase,
+				activeLocalName,
+				suggestedName:
+					activePresetNameBase === "Current State" ? "" : activePresetNameBase,
+			}
+		: null;
 
-	const handleLoadLocal = useCallback(
+	const captureLoadedPresetFingerprint = useCallback(() => {
+		setLoadedPresetFingerprint(getPresetFingerprint(gatherState()));
+	}, [gatherState]);
+
+	const requestPresetChange = useCallback(
+		(navigation: PendingNavigation) => {
+			if (!hasUnsavedChanges || navigation.entryId === activePresetId)
+				return true;
+			setPendingNavigation(navigation);
+			return false;
+		},
+		[activePresetId, hasUnsavedChanges],
+	);
+
+	const loadLocalPreset = useCallback(
 		(name: string) => {
 			const data = loadPreset(name);
 			if (!data) return;
 			applyPreset(data);
 			setActivePresetId(getLocalPresetEntryId(name));
-			setActivePresetName(name);
+			setActivePresetNameBase(name);
+			captureLoadedPresetFingerprint();
 		},
-		[applyPreset],
+		[applyPreset, captureLoadedPresetFingerprint],
 	);
 
-	const handleLoadBuiltin = useCallback(
+	const loadBuiltinPreset = useCallback(
 		(name: string) => {
 			const data = builtinPresets[name];
 			if (!data) return;
 			applyPreset(data);
 			setActivePresetId(getBuiltinPresetEntryId(name));
-			setActivePresetName(name);
+			setActivePresetNameBase(name);
+			captureLoadedPresetFingerprint();
 		},
-		[applyPreset, builtinPresets],
+		[applyPreset, builtinPresets, captureLoadedPresetFingerprint],
 	);
 
-	const handleLoadLibrary = useCallback(
+	const loadLibraryPreset = useCallback(
 		(preset: LibraryPreset) => {
 			if (!onLoadLibraryPreset) return;
 			onLoadLibraryPreset(preset);
 			setActivePresetId(getLibraryPresetEntryId(preset.id));
-			setActivePresetName(preset.name);
+			setActivePresetNameBase(preset.name);
+			captureLoadedPresetFingerprint();
 		},
-		[onLoadLibraryPreset],
+		[captureLoadedPresetFingerprint, onLoadLibraryPreset],
+	);
+
+	const handleLoadLocal = useCallback(
+		(name: string) => {
+			const nextEntryId = getLocalPresetEntryId(name);
+			if (!requestPresetChange({ type: "local", entryId: nextEntryId, name })) {
+				return;
+			}
+			loadLocalPreset(name);
+		},
+		[loadLocalPreset, requestPresetChange],
+	);
+
+	const handleLoadBuiltin = useCallback(
+		(name: string) => {
+			const nextEntryId = getBuiltinPresetEntryId(name);
+			if (
+				!requestPresetChange({ type: "builtin", entryId: nextEntryId, name })
+			) {
+				return;
+			}
+			loadBuiltinPreset(name);
+		},
+		[loadBuiltinPreset, requestPresetChange],
+	);
+
+	const handleLoadLibrary = useCallback(
+		(preset: LibraryPreset) => {
+			const nextEntryId = getLibraryPresetEntryId(preset.id);
+			if (
+				!requestPresetChange({ type: "library", entryId: nextEntryId, preset })
+			) {
+				return;
+			}
+			loadLibraryPreset(preset);
+		},
+		[loadLibraryPreset, requestPresetChange],
 	);
 
 	const allPresetEntries = useMemo(
 		(): PresetEntry[] => [
-			...Object.keys(builtinPresets).map((name) => ({
-				id: getBuiltinPresetEntryId(name),
-				label: name,
-				type: "builtin" as const,
-			})),
-			...presetList.map((name) => ({
-				id: getLocalPresetEntryId(name),
-				label: name,
-				type: "local" as const,
-			})),
-			...libraryPresets.map((preset) => ({
-				id: getLibraryPresetEntryId(preset.id),
-				label: preset.name,
-				type: "library" as const,
-				preset,
-			})),
+			...sortPresetEntries(
+				Object.keys(builtinPresets).map((name) => ({
+					id: getBuiltinPresetEntryId(name),
+					label: name,
+					type: "builtin" as const,
+				})),
+			),
+			...sortPresetEntries(
+				presetList.map((name) => ({
+					id: getLocalPresetEntryId(name),
+					label: name,
+					type: "local" as const,
+				})),
+			),
+			...sortPresetEntries(
+				libraryPresets.map((preset) => ({
+					id: getLibraryPresetEntryId(preset.id),
+					label: preset.name,
+					type: "library" as const,
+					preset,
+				})),
+			),
 		],
 		[builtinPresets, presetList, libraryPresets],
 	);
@@ -145,24 +277,78 @@ export function useSynthPresetManager({
 		],
 	);
 
+	const completePendingNavigation = useCallback(
+		(navigation: PendingNavigation | null) => {
+			if (!navigation) return;
+			setPendingNavigation(null);
+			if (navigation.type === "local") {
+				loadLocalPreset(navigation.name);
+				return;
+			}
+			if (navigation.type === "builtin") {
+				loadBuiltinPreset(navigation.name);
+				return;
+			}
+			loadLibraryPreset(navigation.preset);
+		},
+		[loadBuiltinPreset, loadLibraryPreset, loadLocalPreset],
+	);
+
+	const handleSavePendingPresetChange = useCallback(
+		(name?: string) => {
+			const navigation = pendingNavigation;
+			if (!navigation) return;
+			const saveName = activeLocalName ?? name?.trim();
+			if (!saveName) return;
+			savePreset(saveName, gatherState());
+			setPresetList(listPresets());
+			captureLoadedPresetFingerprint();
+			completePendingNavigation(navigation);
+		},
+		[
+			activeLocalName,
+			captureLoadedPresetFingerprint,
+			completePendingNavigation,
+			gatherState,
+			pendingNavigation,
+		],
+	);
+
+	const handleDiscardPendingPresetChange = useCallback(() => {
+		completePendingNavigation(pendingNavigation);
+	}, [completePendingNavigation, pendingNavigation]);
+
+	const handleCancelPendingPresetChange = useCallback(() => {
+		setPendingNavigation(null);
+	}, []);
+
 	const handleSavePreset = useCallback(
 		(name: string) => {
 			savePreset(name, gatherState());
 			setPresetList(listPresets());
 			setActivePresetId(getLocalPresetEntryId(name));
-			setActivePresetName(name);
+			setActivePresetNameBase(name);
+			captureLoadedPresetFingerprint();
 		},
-		[gatherState],
+		[captureLoadedPresetFingerprint, gatherState],
 	);
 
-	const handleDeletePreset = useCallback((name: string) => {
-		deletePreset(name);
-		setPresetList(listPresets());
-		setActivePresetId((prev) =>
-			prev === getLocalPresetEntryId(name) ? null : prev,
-		);
-		setActivePresetName((prev) => (prev === name ? "Current State" : prev));
-	}, []);
+	const handleDeletePreset = useCallback(
+		(name: string) => {
+			deletePreset(name);
+			setPresetList(listPresets());
+			setActivePresetId((prev) =>
+				prev === getLocalPresetEntryId(name) ? null : prev,
+			);
+			setActivePresetNameBase((prev) =>
+				prev === name ? "Current State" : prev,
+			);
+			setLoadedPresetFingerprint((prev) =>
+				activePresetId === getLocalPresetEntryId(name) ? null : prev,
+			);
+		},
+		[activePresetId],
+	);
 
 	const handleRenamePreset = useCallback((oldName: string, newName: string) => {
 		const trimmed = newName.trim();
@@ -174,14 +360,15 @@ export function useSynthPresetManager({
 				? getLocalPresetEntryId(trimmed)
 				: prev,
 		);
-		setActivePresetName((prev) => (prev === oldName ? trimmed : prev));
+		setActivePresetNameBase((prev) => (prev === oldName ? trimmed : prev));
 	}, []);
 
 	const handleInitPreset = useCallback(() => {
 		applyPreset(DEFAULT_PRESET);
 		setActivePresetId(null);
-		setActivePresetName("Current State");
-	}, [applyPreset]);
+		setActivePresetNameBase("Current State");
+		captureLoadedPresetFingerprint();
+	}, [applyPreset, captureLoadedPresetFingerprint]);
 
 	const handleExportPreset = useCallback((name: string) => {
 		const json = exportPreset(name);
@@ -210,9 +397,10 @@ export function useSynthPresetManager({
 			setPresetList(listPresets());
 			applyPreset(data);
 			setActivePresetId(getLocalPresetEntryId(candidate));
-			setActivePresetName(candidate);
+			setActivePresetNameBase(candidate);
+			captureLoadedPresetFingerprint();
 		},
-		[applyPreset],
+		[applyPreset, captureLoadedPresetFingerprint],
 	);
 
 	const handleExportCurrentState = useCallback(
@@ -232,23 +420,33 @@ export function useSynthPresetManager({
 
 	useEffect(() => {
 		setPresetList(listPresets());
-		const shouldLoad = shouldLoadCurrentState ? shouldLoadCurrentState() : true;
-		if (!shouldLoad) return;
+		if (!shouldHydratePersistedState) return;
 		const saved = loadCurrentState();
 		if (saved) applyPreset(saved);
-	}, [applyPreset, shouldLoadCurrentState]);
+	}, [applyPreset, shouldHydratePersistedState]);
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			saveCurrentState(gatherState());
+			saveCurrentPresetSession({
+				activePresetId,
+				activePresetNameBase,
+				loadedPresetFingerprint,
+			});
 		}, 500);
 		return () => clearTimeout(timer);
-	}, [gatherState]);
+	}, [
+		activePresetId,
+		activePresetNameBase,
+		gatherState,
+		loadedPresetFingerprint,
+	]);
 
 	return {
 		allPresetEntries,
 		activePresetId,
 		activePresetName,
+		pendingPresetChange,
 		handleLoadLocal,
 		handleLoadBuiltin,
 		handleLoadLibrary,
@@ -260,5 +458,8 @@ export function useSynthPresetManager({
 		handleExportPreset,
 		handleImportPreset,
 		handleExportCurrentState,
+		handleSavePendingPresetChange,
+		handleDiscardPendingPresetChange,
+		handleCancelPendingPresetChange,
 	};
 }

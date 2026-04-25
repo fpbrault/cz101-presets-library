@@ -1,92 +1,240 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { LibraryPreset } from "@/features/synth/types/libraryPreset";
 import type { SynthPresetV1 } from "@/lib/synth/bindings/synth";
+import {
+	DEFAULT_PRESET,
+	loadCurrentPresetSession,
+	loadCurrentState,
+	loadPreset,
+	saveCurrentPresetSession,
+	saveCurrentState,
+	savePreset,
+} from "@/lib/synth/presetStorage";
 import { useSynthPresetManager } from "./useSynthPresetManager";
 
-const storedPresets = new Map<string, SynthPresetV1>();
+const clonePreset = (): SynthPresetV1 =>
+	JSON.parse(JSON.stringify(DEFAULT_PRESET)) as SynthPresetV1;
 
-vi.mock("@/lib/synth/presetStorage", () => {
-	const defaultPreset = {
-		schemaVersion: 1,
-		params: { volume: 1 },
-	} as SynthPresetV1;
-
-	return {
-		DEFAULT_PRESET: defaultPreset,
-		deletePreset: vi.fn((name: string) => {
-			storedPresets.delete(name);
-		}),
-		exportPreset: vi.fn(() => null),
-		importPreset: vi.fn(() => null),
-		listPresets: vi.fn(() => [...storedPresets.keys()].sort()),
-		loadCurrentState: vi.fn(() => null),
-		loadPreset: vi.fn((name: string) => storedPresets.get(name) ?? null),
-		renamePreset: vi.fn((oldName: string, newName: string) => {
-			const preset = storedPresets.get(oldName);
-			if (!preset) {
-				return false;
-			}
-			storedPresets.set(newName, preset);
-			storedPresets.delete(oldName);
-			return true;
-		}),
-		saveCurrentState: vi.fn(),
-		savePreset: vi.fn((name: string, data: SynthPresetV1) => {
-			storedPresets.set(name, data);
-		}),
-	};
-});
+const makePreset = (volume: number): SynthPresetV1 => {
+	const preset = clonePreset();
+	preset.params.volume = volume;
+	return preset;
+};
 
 describe("useSynthPresetManager", () => {
 	beforeEach(() => {
-		storedPresets.clear();
+		localStorage.clear();
+		vi.restoreAllMocks();
+		vi.useRealTimers();
 	});
 
-	it("steps through duplicate library preset names by entry id", () => {
-		const applyPreset = vi.fn();
-		const onLoadLibraryPreset = vi.fn();
-		const libraryPresets = [
-			{ id: "preset-1", name: "Same Name" },
-			{ id: "preset-2", name: "Same Name" },
-			{ id: "preset-3", name: "Different Name" },
-		] as LibraryPreset[];
+	it("hydrates saved current state and preset session on mount", () => {
+		const savedState = makePreset(0.33);
+		let currentState = savedState;
+		const applyPreset = vi.fn((preset: SynthPresetV1) => {
+			currentState = preset;
+		});
+
+		savePreset("Zulu", makePreset(0.8));
+		savePreset("Alpha", makePreset(0.2));
+		saveCurrentState(savedState);
+		saveCurrentPresetSession({
+			activePresetId: "builtin:Factory Brass",
+			activePresetNameBase: "Factory Brass",
+			loadedPresetFingerprint: JSON.stringify(savedState),
+		});
 
 		const { result } = renderHook(() =>
 			useSynthPresetManager({
-				builtinPresets: {},
-				gatherState: () =>
-					({
-						schemaVersion: 1,
-						params: { volume: 1 },
-					}) as SynthPresetV1,
+				builtinPresets: {
+					"Init Bass": makePreset(0.5),
+					"Factory Brass": makePreset(0.7),
+				},
+				gatherState: () => currentState,
 				applyPreset,
-				libraryPresets,
-				onLoadLibraryPreset,
 			}),
 		);
 
-		act(() => {
-			result.current.handleLoadLibrary(libraryPresets[0]);
+		expect(applyPreset).toHaveBeenCalledWith(savedState);
+		expect(result.current.activePresetId).toBe("builtin:Factory Brass");
+		expect(result.current.activePresetName).toBe("Factory Brass");
+		expect(result.current.allPresetEntries.map((entry) => entry.id)).toEqual([
+			"builtin:Factory Brass",
+			"builtin:Init Bass",
+			"local:Alpha",
+			"local:Zulu",
+		]);
+	});
+
+	it("skips preset session hydration when current state hydration is disabled", () => {
+		const savedState = makePreset(0.33);
+		let currentState = clonePreset();
+		const applyPreset = vi.fn((preset: SynthPresetV1) => {
+			currentState = preset;
 		});
 
-		expect(result.current.activePresetId).toBe("library:preset-1");
-		expect(result.current.activePresetName).toBe("Same Name");
-
-		act(() => {
-			result.current.handleStepPreset(1);
+		saveCurrentState(savedState);
+		saveCurrentPresetSession({
+			activePresetId: "builtin:Factory Brass",
+			activePresetNameBase: "Factory Brass",
+			loadedPresetFingerprint: JSON.stringify(savedState),
 		});
 
-		expect(onLoadLibraryPreset).toHaveBeenLastCalledWith(libraryPresets[1]);
-		expect(result.current.activePresetId).toBe("library:preset-2");
-		expect(result.current.activePresetName).toBe("Same Name");
+		const { result } = renderHook(() =>
+			useSynthPresetManager({
+				builtinPresets: {
+					"Factory Brass": makePreset(0.7),
+					Beta: makePreset(0.9),
+				},
+				gatherState: () => currentState,
+				applyPreset,
+				shouldLoadCurrentState: () => false,
+			}),
+		);
+
+		expect(applyPreset).not.toHaveBeenCalled();
+		expect(result.current.activePresetId).toBeNull();
+		expect(result.current.activePresetName).toBe("Current State");
 
 		act(() => {
-			result.current.handleStepPreset(1);
+			result.current.handleLoadBuiltin("Beta");
 		});
 
-		expect(onLoadLibraryPreset).toHaveBeenLastCalledWith(libraryPresets[2]);
-		expect(result.current.activePresetId).toBe("library:preset-3");
-		expect(result.current.activePresetName).toBe("Different Name");
+		expect(result.current.pendingPresetChange).toBeNull();
+		expect(result.current.activePresetId).toBe("builtin:Beta");
+		expect(result.current.activePresetName).toBe("Beta");
+	});
+
+	it("queues pending navigation when switching presets with unsaved changes", () => {
+		const alphaPreset = makePreset(0.1);
+		const betaPreset = makePreset(0.9);
+		let currentState = clonePreset();
+		const applyPreset = vi.fn((preset: SynthPresetV1) => {
+			currentState = preset;
+		});
+
+		const { result, rerender } = renderHook(
+			({ presetStateKey }: { presetStateKey: string }) =>
+				useSynthPresetManager({
+					builtinPresets: {
+						Alpha: alphaPreset,
+						Beta: betaPreset,
+					},
+					gatherState: () => currentState,
+					applyPreset,
+					presetStateKey,
+				}),
+			{ initialProps: { presetStateKey: JSON.stringify(currentState) } },
+		);
+
+		act(() => {
+			result.current.handleLoadBuiltin("Alpha");
+		});
+
+		const editedState = makePreset(0.45);
+		currentState = editedState;
+		rerender({ presetStateKey: JSON.stringify(editedState) });
+
+		act(() => {
+			result.current.handleLoadBuiltin("Beta");
+		});
+
+		expect(applyPreset).toHaveBeenCalledTimes(1);
+		expect(result.current.activePresetId).toBe("builtin:Alpha");
+		expect(result.current.activePresetName).toBe("Alpha *");
+		expect(result.current.pendingPresetChange).toEqual({
+			activePresetName: "Alpha",
+			activeLocalName: null,
+			suggestedName: "Alpha",
+		});
+	});
+
+	it("saves the active local preset before completing a pending navigation", () => {
+		const localPreset = makePreset(0.25);
+		const editedLocalPreset = makePreset(0.6);
+		const betaPreset = makePreset(0.85);
+		let currentState = clonePreset();
+		const applyPreset = vi.fn((preset: SynthPresetV1) => {
+			currentState = preset;
+		});
+
+		savePreset("Mine", localPreset);
+
+		const { result, rerender } = renderHook(
+			({ presetStateKey }: { presetStateKey: string }) =>
+				useSynthPresetManager({
+					builtinPresets: {
+						Beta: betaPreset,
+					},
+					gatherState: () => currentState,
+					applyPreset,
+					presetStateKey,
+				}),
+			{ initialProps: { presetStateKey: JSON.stringify(currentState) } },
+		);
+
+		act(() => {
+			result.current.handleLoadLocal("Mine");
+		});
+
+		currentState = editedLocalPreset;
+		rerender({ presetStateKey: JSON.stringify(editedLocalPreset) });
+
+		act(() => {
+			result.current.handleLoadBuiltin("Beta");
+		});
+
+		act(() => {
+			result.current.handleSavePendingPresetChange();
+		});
+		rerender({ presetStateKey: JSON.stringify(currentState) });
+
+		expect(loadPreset("Mine")).toEqual(editedLocalPreset);
+		expect(result.current.pendingPresetChange).toBeNull();
+		expect(result.current.activePresetId).toBe("builtin:Beta");
+		expect(result.current.activePresetName).toBe("Beta");
+		expect(applyPreset).toHaveBeenLastCalledWith(betaPreset);
+	});
+
+	it("persists current state and preset session after the debounce", () => {
+		vi.useFakeTimers();
+
+		const alphaPreset = makePreset(0.2);
+		const editedAlpha = makePreset(0.51);
+		let currentState = clonePreset();
+		const applyPreset = vi.fn((preset: SynthPresetV1) => {
+			currentState = preset;
+		});
+
+		const { result, rerender } = renderHook(
+			({ presetStateKey }: { presetStateKey: string }) =>
+				useSynthPresetManager({
+					builtinPresets: {
+						Alpha: alphaPreset,
+					},
+					gatherState: () => currentState,
+					applyPreset,
+					presetStateKey,
+				}),
+			{ initialProps: { presetStateKey: JSON.stringify(currentState) } },
+		);
+
+		act(() => {
+			result.current.handleLoadBuiltin("Alpha");
+		});
+
+		currentState = editedAlpha;
+		rerender({ presetStateKey: JSON.stringify(editedAlpha) });
+
+		act(() => {
+			vi.runAllTimers();
+		});
+
+		expect(loadCurrentState()).toEqual(editedAlpha);
+		expect(loadCurrentPresetSession()).toEqual({
+			activePresetId: "builtin:Alpha",
+			activePresetNameBase: "Alpha",
+			loadedPresetFingerprint: JSON.stringify(alphaPreset),
+		});
 	});
 });
