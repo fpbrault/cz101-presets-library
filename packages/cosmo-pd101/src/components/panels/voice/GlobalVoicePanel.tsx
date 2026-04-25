@@ -9,8 +9,6 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 		const { value: volume, setValue: setVolume } = useSynthParam("volume");
 		const { value: polyMode, setValue: setPolyMode } =
 			useSynthParam("polyMode");
-		const { value: velocityTarget, setValue: setVelocityTarget } =
-			useSynthParam("velocityTarget");
 		const { value: pitchBendRange, setValue: setPitchBendRange } =
 			useSynthParam("pitchBendRange");
 		const { value: modWheelVibratoDepth, setValue: setModWheelVibratoDepth } =
@@ -46,26 +44,6 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 						>
 							Mono
 						</CzButton>
-					</div>
-					<div>
-						<div className="mb-2 cz-light-blue">Velocity</div>
-						<div className="flex flex-wrap gap-1 justify-center">
-							{(["amp", "dcw", "both", "off"] as const).map((target) => (
-								<CzButton
-									key={target}
-									active={velocityTarget === target}
-									onClick={() => setVelocityTarget(target)}
-								>
-									{target === "amp"
-										? "Amp"
-										: target === "dcw"
-											? "DCW"
-											: target === "both"
-												? "Both"
-												: "Off"}
-								</CzButton>
-							))}
-						</div>
 					</div>
 					<div className="flex justify-around pt-1">
 						<ControlKnob
