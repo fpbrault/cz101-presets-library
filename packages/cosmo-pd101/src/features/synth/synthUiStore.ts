@@ -84,8 +84,8 @@ const normalizeSynthUiState = (value: unknown): SynthUiState => {
 					DEFAULT_UI_STATE.activeAsidePanel)
 				: activeAsidePanel &&
 						ASIDE_PANEL_TABS.has(activeAsidePanel as AsidePanelTab)
-				? (activeAsidePanel as AsidePanelTab)
-				: DEFAULT_UI_STATE.activeAsidePanel,
+					? (activeAsidePanel as AsidePanelTab)
+					: DEFAULT_UI_STATE.activeAsidePanel,
 		mainPanelMode:
 			mainPanelMode && MAIN_PANEL_MODES.has(mainPanelMode as MainPanelMode)
 				? (mainPanelMode as MainPanelMode)
