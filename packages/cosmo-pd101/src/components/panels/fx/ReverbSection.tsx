@@ -7,8 +7,6 @@ interface ReverbSectionProps {
 	setMix: (v: number) => void;
 	predelay: number;
 	setPredelay: (v: number) => void;
-	brightness: number;
-	setBrightness: (v: number) => void;
 	distance: number;
 	setDistance: (v: number) => void;
 	character: number;
@@ -22,8 +20,6 @@ export function ReverbSection({
 	setMix,
 	predelay,
 	setPredelay,
-	brightness,
-	setBrightness,
 	distance,
 	setDistance,
 	character,
@@ -51,9 +47,9 @@ export function ReverbSection({
 			valueFormatter: (value) => `${Math.round(value * 1000)}ms`,
 		},
 		{
-			label: "Bright",
-			value: brightness,
-			setValue: setBrightness,
+			label: "Char",
+			value: character,
+			setValue: setCharacter,
 			min: 0,
 			max: 1,
 			size: 44,
@@ -64,16 +60,6 @@ export function ReverbSection({
 			label: "Dist",
 			value: distance,
 			setValue: setDistance,
-			min: 0,
-			max: 1,
-			size: 44,
-			color: "#9cb937",
-			valueFormatter: (value) => `${Math.round(value * 100)}%`,
-		},
-		{
-			label: "Char",
-			value: character,
-			setValue: setCharacter,
 			min: 0,
 			max: 1,
 			size: 44,

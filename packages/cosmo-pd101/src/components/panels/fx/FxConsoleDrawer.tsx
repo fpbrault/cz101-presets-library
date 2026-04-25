@@ -28,8 +28,6 @@ export default function FxConsoleDrawer() {
 		useSynthParam("reverbSpace");
 	const { value: reverbPredelay, setValue: setReverbPredelay } =
 		useSynthParam("reverbPredelay");
-	const { value: reverbBrightness, setValue: setReverbBrightness } =
-		useSynthParam("reverbBrightness");
 	const { value: reverbDistance, setValue: setReverbDistance } =
 		useSynthParam("reverbDistance");
 	const { value: reverbCharacter, setValue: setReverbCharacter } =
@@ -135,7 +133,7 @@ export default function FxConsoleDrawer() {
 				onToggle={() => setReverbEnabled(!reverbEnabled)}
 				className="col-span-2"
 			>
-				<div className="grid grid-cols-6 gap-4">
+				<div className="grid grid-cols-5 gap-4">
 					<ControlKnob
 						value={reverbSpace}
 						onChange={setReverbSpace}
@@ -159,17 +157,6 @@ export default function FxConsoleDrawer() {
 						valueFormatter={(value) => `${Math.round(value * 1000)}ms`}
 					/>
 					<ControlKnob
-						value={reverbBrightness}
-						onChange={setReverbBrightness}
-						min={0}
-						max={1}
-						defaultValue={0.7}
-						size={96}
-						color="#f97316"
-						label="Bright"
-						valueFormatter={(value) => `${Math.round(value * 100)}%`}
-					/>
-					<ControlKnob
 						value={reverbDistance}
 						onChange={setReverbDistance}
 						min={0}
@@ -185,10 +172,10 @@ export default function FxConsoleDrawer() {
 						onChange={setReverbCharacter}
 						min={0}
 						max={1}
-						defaultValue={0.3}
+						defaultValue={0.65}
 						size={96}
 						color="#f97316"
-						label="Char"
+						label="Character"
 						valueFormatter={(value) => `${Math.round(value * 100)}%`}
 					/>
 					<ControlKnob
@@ -207,4 +194,3 @@ export default function FxConsoleDrawer() {
 		</div>
 	);
 }
-

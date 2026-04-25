@@ -38,7 +38,16 @@ export type EngineParams = {
 	legato: boolean;
 	chorus: { enabled: boolean; rate: number; depth: number; mix: number };
 	delay: { enabled: boolean; time: number; feedback: number; mix: number };
-	reverb: { enabled: boolean; size: number; mix: number };
+	reverb: {
+		enabled: boolean;
+		mix: number;
+		space: number;
+		predelay: number;
+		brightness: number;
+		highCut: number;
+		distance: number;
+		character: number;
+	};
 	vibrato: {
 		enabled: boolean;
 		waveform: number;
@@ -159,7 +168,16 @@ export function useAudioEngine({
 		legato: false,
 		chorus: { enabled: false, rate: 0.8, depth: 0.003, mix: 0 },
 		delay: { enabled: false, time: 0.3, feedback: 0.35, mix: 0 },
-		reverb: { enabled: false, size: 0.5, mix: 0 },
+		reverb: {
+			enabled: false,
+			mix: 0,
+			space: 0.5,
+			predelay: 0,
+			brightness: 0.7,
+			highCut: 0,
+			distance: 0.3,
+			character: 0.3,
+		},
 		vibrato: { enabled: false, waveform: 0, rate: 0, depth: 0, delay: 0 },
 		portamento: { enabled: false, mode: "rate", rate: 0, time: 0 },
 		lfo: {

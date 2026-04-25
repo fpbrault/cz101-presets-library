@@ -430,12 +430,12 @@ const PLUGIN_PARAM_DESCRIPTORS: PluginParamDescriptor[] = [
 	},
 	{
 		id: "rev_mix",
-		read: (params) => params.reverb.mix,
+		read: (params) => params.reverb.mix ?? 0,
 		apply: (value, s) => s.setReverbMix(value),
 	},
 	{
 		id: "rev_space",
-		read: (params) => params.reverb.space,
+		read: (params) => params.reverb.space ?? 0.5,
 		apply: (value, s) => s.setReverbSpace(value),
 	},
 	{
@@ -444,18 +444,13 @@ const PLUGIN_PARAM_DESCRIPTORS: PluginParamDescriptor[] = [
 		apply: (value, s) => s.setReverbPredelay(value),
 	},
 	{
-		id: "rev_brightness",
-		read: (params) => params.reverb.brightness,
-		apply: (value, s) => s.setReverbBrightness(value),
-	},
-	{
 		id: "rev_distance",
-		read: (params) => params.reverb.distance,
+		read: (params) => params.reverb.distance ?? 0.3,
 		apply: (value, s) => s.setReverbDistance(value),
 	},
 	{
 		id: "rev_character",
-		read: (params) => params.reverb.character,
+		read: (params) => params.reverb.character ?? 0.65,
 		apply: (value, s) => s.setReverbCharacter(value),
 	},
 	{

@@ -11,8 +11,6 @@ const ReverbPanel: AsidePanelComponent<"reverb"> = Object.assign(
 		const { value: mix, setValue: setMix } = useSynthParam("reverbMix");
 		const { value: predelay, setValue: setPredelay } =
 			useSynthParam("reverbPredelay");
-		const { value: brightness, setValue: setBrightness } =
-			useSynthParam("reverbBrightness");
 		const { value: distance, setValue: setDistance } =
 			useSynthParam("reverbDistance");
 		const { value: character, setValue: setCharacter } =
@@ -31,8 +29,6 @@ const ReverbPanel: AsidePanelComponent<"reverb"> = Object.assign(
 					setMix={setMix}
 					predelay={predelay}
 					setPredelay={setPredelay}
-					brightness={brightness}
-					setBrightness={setBrightness}
 					distance={distance}
 					setDistance={setDistance}
 					character={character}

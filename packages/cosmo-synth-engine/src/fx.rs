@@ -24,9 +24,7 @@ const FDN_BASE_LENGTHS_44100: [f32; FDN_N] = [
 ];
 
 /// Per-line LFO rates (Hz) — mutually inharmonic to avoid beating.
-const FDN_LFO_RATES: [f32; FDN_N] = [
-    0.127, 0.167, 0.207, 0.247, 0.289, 0.331, 0.373, 0.419,
-];
+const FDN_LFO_RATES: [f32; FDN_N] = [0.127, 0.167, 0.207, 0.247, 0.289, 0.331, 0.373, 0.419];
 
 /// Early-reflection tap delays (seconds) and gains.
 const ER_N: usize = 5;
@@ -94,9 +92,8 @@ impl DelayLine {
 // ----------
 // space      – feedback gain (decay time / room size). 0 = dead, 1 = hall.
 // predelay   – pre-delay time 0–0.1 s before reverb onset.
-// brightness – HF content: 1 = bright, 0 = dark (LP filter coefficient).
+// character  – combined brightness and modulation depth.
 // distance   – near/far blend between early reflections and late reverb.
-// character  – LFO modulation depth: 0 = static, 1 = lush/shimmery.
 // mix        – equal-power wet/dry crossfade.
 // ---------------------------------------------------------------------------
 
@@ -124,7 +121,6 @@ pub struct FdnReverb {
     pub mix: f32,
     pub space: f32,
     pub predelay: f32,
-    pub brightness: f32,
     pub distance: f32,
     pub character: f32,
 }
@@ -138,10 +134,9 @@ impl FdnReverb {
             core::array::from_fn(|i| FDN_BASE_LENGTHS_44100[i] * ratio);
 
         // Each delay line is slightly longer than base to allow positive LFO swing
-        let lines: [DelayLine; FDN_N] =
-            core::array::from_fn(|i| {
-                DelayLine::new(base_lengths[i] as usize + FDN_MAX_MOD as usize + 2)
-            });
+        let lines: [DelayLine; FDN_N] = core::array::from_fn(|i| {
+            DelayLine::new(base_lengths[i] as usize + FDN_MAX_MOD as usize + 2)
+        });
 
         // Pre-delay: 100 ms max
         let pre_line = DelayLine::new(libm::roundf(0.1 * sr) as usize + 2);
@@ -165,9 +160,8 @@ impl FdnReverb {
             mix: 0.0,
             space: 0.5,
             predelay: 0.0,
-            brightness: 0.7,
             distance: 0.3,
-            character: 0.3,
+            character: 0.65,
         }
     }
 
@@ -176,10 +170,9 @@ impl FdnReverb {
         // --- Parameter mapping ---
         // space → feedback gain (0 = dead 0.50, 1 = hall 0.97)
         let g = 0.50 + self.space * 0.47;
-        // brightness → LP damping coeff (1 = bright ≈ 0.05, 0 = dark ≈ 0.90)
-        let lp_damp = 0.90 - self.brightness * 0.85;
-        // character → LFO depth in samples
-        let lfo_depth = self.character * FDN_MAX_MOD;
+        let character = self.character.clamp(0.0, 1.0);
+        let lp_damp = (0.90 - character * 0.85).clamp(0.0, 0.995);
+        let lfo_depth = character * (FDN_MAX_MOD * 0.5);
 
         // --- Pre-delay ---
         self.smooth_predelay = Self::smooth(
@@ -389,4 +382,3 @@ impl FxChain {
         self.process_reverb(out)
     }
 }
-

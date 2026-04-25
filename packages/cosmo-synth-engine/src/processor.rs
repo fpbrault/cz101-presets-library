@@ -103,7 +103,6 @@ impl CosmoProcessor {
         self.fx.reverb.mix = p.reverb.mix;
         self.fx.reverb.space = p.reverb.space;
         self.fx.reverb.predelay = p.reverb.predelay;
-        self.fx.reverb.brightness = p.reverb.brightness;
         self.fx.reverb.distance = p.reverb.distance;
         self.fx.reverb.character = p.reverb.character;
     }

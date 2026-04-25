@@ -460,16 +460,12 @@ fn default_reverb_space() -> f32 {
     0.5
 }
 
-fn default_reverb_brightness() -> f32 {
-    0.7
-}
-
 fn default_reverb_distance() -> f32 {
     0.3
 }
 
 fn default_reverb_character() -> f32 {
-    0.3
+    0.65
 }
 
 /// Reverb parameters for the FDN reverb engine.
@@ -486,13 +482,10 @@ pub struct ReverbParams {
     /// Pre-delay time in seconds (0–0.1 s). Default 0.
     #[serde(default)]
     pub predelay: f32,
-    /// High-frequency content: 1 = bright, 0 = dark. Default 0.7.
-    #[serde(default = "default_reverb_brightness")]
-    pub brightness: f32,
     /// Near/far blend between early reflections and late reverb. Default 0.3.
     #[serde(default = "default_reverb_distance")]
     pub distance: f32,
-    /// LFO modulation depth: 0 = static, 1 = lush/shimmery. Default 0.3.
+    /// Combined reverb tone and motion: 0 = dark/static, 1 = bright/shimmery. Default 0.65.
     #[serde(default = "default_reverb_character")]
     pub character: f32,
 }
@@ -504,13 +497,11 @@ impl Default for ReverbParams {
             mix: 0.0,
             space: 0.5,
             predelay: 0.0,
-            brightness: 0.7,
             distance: 0.3,
-            character: 0.3,
+            character: 0.65,
         }
     }
 }
-
 
 /// Vibrato parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]

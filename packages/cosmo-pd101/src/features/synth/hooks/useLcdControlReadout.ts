@@ -54,6 +54,7 @@ export function useLcdControlReadout(): UseLcdControlReadoutResult {
 				key === "chorusMix" ||
 				key === "delayMix" ||
 				key === "reverbMix" ||
+				key === "reverbCharacter" ||
 				key === "filterResonance" ||
 				key === "filterEnvAmount"
 			) {

@@ -99,7 +99,6 @@ const SYNTH_PARAM_SETTERS = {
 	reverbMix: "setReverbMix",
 	reverbSpace: "setReverbSpace",
 	reverbPredelay: "setReverbPredelay",
-	reverbBrightness: "setReverbBrightness",
 	reverbDistance: "setReverbDistance",
 	reverbCharacter: "setReverbCharacter",
 } as const;
