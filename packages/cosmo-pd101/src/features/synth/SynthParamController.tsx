@@ -8,9 +8,13 @@ import {
 	useState,
 } from "react";
 import { useOptionalModMatrix } from "@/context/ModMatrixContext";
+import {
+	EMPTY_RUNTIME_MOD_SOURCES,
+	type RuntimeModSources,
+} from "@/features/synth/hooks/useAudioEngine";
 import { useSynthStore } from "@/features/synth/synthStore";
 import type { UseSynthStateResult } from "@/features/synth/useSynthState";
-import type { ModDestination, ModSource } from "@/lib/synth/bindings/synth";
+import type { ModDestination } from "@/lib/synth/bindings/synth";
 import {
 	type ModTarget,
 	resolveModDestination,
@@ -82,6 +86,11 @@ const SYNTH_PARAM_SETTERS = {
 	lfo2Symmetry: "setLfo2Symmetry",
 	lfo2Retrigger: "setLfo2Retrigger",
 	lfo2Offset: "setLfo2Offset",
+	randomRate: "setRandomRate",
+	modEnvAttack: "setModEnvAttack",
+	modEnvDecay: "setModEnvDecay",
+	modEnvSustain: "setModEnvSustain",
+	modEnvRelease: "setModEnvRelease",
 	filterEnabled: "setFilterEnabled",
 	filterType: "setFilterType",
 	filterCutoff: "setFilterCutoff",
@@ -107,13 +116,7 @@ export type SynthParamKey = keyof typeof SYNTH_PARAM_SETTERS;
 
 type ReadoutValue = string | number | boolean;
 
-type LiveModSources = Readonly<{
-	lfo1: number;
-	lfo2: number;
-	velocity: number;
-	modWheel: number;
-	aftertouch: number;
-}>;
+type LiveModSources = Readonly<RuntimeModSources>;
 
 type SynthParamController = {
 	getParam: <K extends SynthParamKey>(key: K) => UseSynthStateResult[K];
@@ -149,24 +152,9 @@ export function SynthParamControllerProvider({
 }: SynthParamControllerProviderProps) {
 	const maybeModMatrix = useOptionalModMatrix();
 	const modRoutes = maybeModMatrix?.modMatrix.routes ?? [];
-	const [velocityValue, setVelocityValue] = useState(0);
-	const [modWheelValue, setModWheelValue] = useState(0);
-	const [aftertouchValue, setAftertouchValue] = useState(0);
-	const [animTimeSec, setAnimTimeSec] = useState(() =>
-		typeof performance !== "undefined" ? performance.now() / 1000 : 0,
+	const [liveSources, setLiveSources] = useState<LiveModSources>(
+		EMPTY_RUNTIME_MOD_SOURCES,
 	);
-
-	// Read LFO params from the store with selective subscriptions.
-	const lfoRate = useSynthStore((s) => s.lfoRate);
-	const lfoDepth = useSynthStore((s) => s.lfoDepth);
-	const lfoWaveform = useSynthStore((s) => s.lfoWaveform);
-	const lfoSymmetry = useSynthStore((s) => s.lfoSymmetry);
-	const lfoOffset = useSynthStore((s) => s.lfoOffset);
-	const lfo2Rate = useSynthStore((s) => s.lfo2Rate);
-	const lfo2Depth = useSynthStore((s) => s.lfo2Depth);
-	const lfo2Waveform = useSynthStore((s) => s.lfo2Waveform);
-	const lfo2Symmetry = useSynthStore((s) => s.lfo2Symmetry);
-	const lfo2Offset = useSynthStore((s) => s.lfo2Offset);
 
 	const getParam = useCallback(
 		<K extends SynthParamKey>(key: K): UseSynthStateResult[K] => {
@@ -194,124 +182,34 @@ export function SynthParamControllerProvider({
 		[onControlReadout],
 	);
 
-	const hasAnyLfo1Routes = useMemo(() => {
-		return modRoutes.some((route) => route.enabled && route.source === "lfo1");
-	}, [modRoutes]);
-
-	const hasAnyLfo2Routes = useMemo(() => {
-		return modRoutes.some((route) => route.enabled && route.source === "lfo2");
-	}, [modRoutes]);
-
 	useEffect(() => {
-		if (
-			!((hasAnyLfo1Routes && lfoRate > 0) || (hasAnyLfo2Routes && lfo2Rate > 0))
-		) {
-			return;
-		}
-
-		let rafId = 0;
-		const animate = (ts: number) => {
-			setAnimTimeSec(ts / 1000);
-			rafId = window.requestAnimationFrame(animate);
-		};
-		rafId = window.requestAnimationFrame(animate);
-		return () => {
-			window.cancelAnimationFrame(rafId);
-		};
-	}, [hasAnyLfo1Routes, hasAnyLfo2Routes, lfoRate, lfo2Rate]);
-
-	useEffect(() => {
-		const onModSource = (event: Event) => {
-			const detail = (
-				event as CustomEvent<{ source?: ModSource; value?: number }>
-			).detail;
-			if (detail?.source == null || detail.value == null) {
+		const onRuntimeModSources = (event: Event) => {
+			const detail = (event as CustomEvent<RuntimeModSources | undefined>).detail;
+			if (!detail) {
 				return;
 			}
 
-			const clamped = Math.max(0, Math.min(1, detail.value));
-			switch (detail.source) {
-				case "velocity":
-					setVelocityValue(clamped);
-					break;
-				case "modWheel":
-					setModWheelValue(clamped);
-					break;
-				case "aftertouch":
-					setAftertouchValue(clamped);
-					break;
-				default:
-					break;
-			}
+			setLiveSources({
+				lfo1: Number.isFinite(detail.lfo1) ? detail.lfo1 : 0,
+				lfo2: Number.isFinite(detail.lfo2) ? detail.lfo2 : 0,
+				random: Number.isFinite(detail.random) ? detail.random : 0,
+				modEnv: Number.isFinite(detail.modEnv) ? detail.modEnv : 0,
+				velocity: Number.isFinite(detail.velocity) ? detail.velocity : 0,
+				modWheel: Number.isFinite(detail.modWheel) ? detail.modWheel : 0,
+				aftertouch: Number.isFinite(detail.aftertouch)
+					? detail.aftertouch
+					: 0,
+			});
 		};
 
-		window.addEventListener("cz-mod-source", onModSource);
+		window.addEventListener("cz-runtime-mod-sources", onRuntimeModSources);
 		return () => {
-			window.removeEventListener("cz-mod-source", onModSource);
+			window.removeEventListener(
+				"cz-runtime-mod-sources",
+				onRuntimeModSources,
+			);
 		};
 	}, []);
-
-	const lfoPhase = (((animTimeSec * lfoRate) % 1) + 1) % 1;
-	const lfo2Phase = (((animTimeSec * lfo2Rate) % 1) + 1) % 1;
-
-	const waveformValue = (
-		waveform: UseSynthStateResult["lfoWaveform"],
-		phase: number,
-		symmetry: number,
-	): number => {
-		const sym = Math.min(0.999, Math.max(0.001, symmetry));
-		switch (waveform) {
-			case "invertedSaw":
-				return 1 - phase * 2;
-			case "random": {
-				const step = Math.floor(phase * 16);
-				const seed = step * 12.9898 + 78.233;
-				const hash = Math.sin(seed) * 43758.5453;
-				const fract = hash - Math.floor(hash);
-				return fract * 2 - 1;
-			}
-			case "triangle":
-				return phase < sym
-					? (phase / sym) * 2 - 1
-					: 1 - ((phase - sym) / (1 - sym)) * 2;
-			case "square":
-				return phase < sym ? 1 : -1;
-			case "saw":
-				return phase * 2 - 1;
-			default:
-				return Math.sin(Math.PI * 2 * phase);
-		}
-	};
-
-	const liveLfo1Value = (() => {
-		return (
-			waveformValue(lfoWaveform, lfoPhase, lfoSymmetry) * lfoDepth + lfoOffset
-		);
-	})();
-
-	const liveLfo2Value = (() => {
-		return (
-			waveformValue(lfo2Waveform, lfo2Phase, lfo2Symmetry) * lfo2Depth +
-			lfo2Offset
-		);
-	})();
-
-	const liveSources = useMemo<LiveModSources>(
-		() => ({
-			lfo1: liveLfo1Value,
-			lfo2: liveLfo2Value,
-			velocity: velocityValue,
-			modWheel: modWheelValue,
-			aftertouch: aftertouchValue,
-		}),
-		[
-			liveLfo1Value,
-			liveLfo2Value,
-			velocityValue,
-			modWheelValue,
-			aftertouchValue,
-		],
-	);
 
 	const resolveDestination = useCallback(
 		(target: ModTarget | undefined, options?: { lineIndex?: 1 | 2 }) =>

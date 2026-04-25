@@ -10,14 +10,111 @@ use crate::dsp_utils::{lfo_output, wrap01};
 use crate::envelope::{EnvGen, EnvelopeKind};
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
-    FilterType, LfoWaveform, LineParams, LineSelect, ModDestination, ModMatrix, ModMode, ModSource,
-    PortamentoMode, SynthParams, VelocityTarget,
+    FilterType, LfoWaveform, LineParams, LineSelect, ModDestination, ModEnvParams, ModMatrix,
+    ModMode, ModSource, PortamentoMode, SynthParams, 
 };
 
 // TWO_PI for f32
 const TWO_PI: f32 = core::f32::consts::PI * 2.0;
 const DEFAULT_BASE_FREQ: f32 = 220.0;
 const SILENCE_THRESHOLD: f32 = 0.001;
+
+// ---------------------------------------------------------------------------
+// ADSR modulation envelope
+// ---------------------------------------------------------------------------
+
+/// Phase state for the per-voice ADSR mod envelope.
+#[derive(Debug, Clone, Default, PartialEq)]
+enum AdsrPhase {
+    #[default]
+    Idle,
+    Attack,
+    Decay,
+    Sustain,
+    Release,
+}
+
+/// Simple ADSR envelope used as a modulation source.
+#[derive(Debug, Clone, Default)]
+pub struct AdsrEnv {
+    phase: AdsrPhase,
+    pub output: f32,
+    release_start: f32,
+}
+
+impl AdsrEnv {
+    /// Trigger attack — starts or retriggers from the current output level.
+    pub fn note_on(&mut self) {
+        self.phase = AdsrPhase::Attack;
+    }
+
+    /// Begin the release stage from the current output level.
+    pub fn note_off(&mut self) {
+        self.release_start = self.output;
+        self.phase = AdsrPhase::Release;
+    }
+
+    /// Reset to idle (silent) state.
+    pub fn reset(&mut self) {
+        self.phase = AdsrPhase::Idle;
+        self.output = 0.0;
+        self.release_start = 0.0;
+    }
+
+    /// Advance the envelope by one sample and return the current output [0, 1].
+    pub fn advance(&mut self, p: &ModEnvParams, sr: f32) -> f32 {
+        match self.phase {
+            AdsrPhase::Idle => {
+                self.output = 0.0;
+            }
+            AdsrPhase::Attack => {
+                let rate = if p.attack > 0.0 {
+                    1.0 / (p.attack * sr)
+                } else {
+                    1.0
+                };
+                self.output = (self.output + rate).min(1.0);
+                if self.output >= 1.0 {
+                    self.phase = AdsrPhase::Decay;
+                }
+            }
+            AdsrPhase::Decay => {
+                let range = 1.0 - p.sustain;
+                let rate = if p.decay > 0.0 && range > 0.0 {
+                    range / (p.decay * sr)
+                } else {
+                    range
+                };
+                self.output = (self.output - rate).max(p.sustain);
+                if self.output <= p.sustain {
+                    self.output = p.sustain;
+                    self.phase = AdsrPhase::Sustain;
+                }
+            }
+            AdsrPhase::Sustain => {
+                self.output = p.sustain;
+            }
+            AdsrPhase::Release => {
+                if self.release_start <= 0.0 {
+                    self.output = 0.0;
+                    self.phase = AdsrPhase::Idle;
+                } else {
+                    let rate = if p.release > 0.0 {
+                        self.release_start / (p.release * sr)
+                    } else {
+                        self.release_start
+                    };
+                    self.output = (self.output - rate).max(0.0);
+                    if self.output <= 0.0 {
+                        self.output = 0.0;
+                        self.phase = AdsrPhase::Idle;
+                    }
+                }
+            }
+        }
+        self.output
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Modulation helpers
@@ -28,6 +125,8 @@ const SILENCE_THRESHOLD: f32 = 0.001;
 pub(crate) struct ModSources {
     pub lfo1: f32,
     pub lfo2: f32,
+    pub random: f32,
+    pub mod_env: f32,
     pub velocity: f32,
     pub mod_wheel: f32,
     /// Aftertouch — stub, always 0.0 this phase.
@@ -35,10 +134,20 @@ pub(crate) struct ModSources {
 }
 
 impl ModSources {
-    fn new(lfo1: f32, lfo2: f32, velocity: f32, mod_wheel: f32, aftertouch: f32) -> Self {
+    fn new(
+        lfo1: f32,
+        lfo2: f32,
+        random: f32,
+        mod_env: f32,
+        velocity: f32,
+        mod_wheel: f32,
+        aftertouch: f32,
+    ) -> Self {
         Self {
             lfo1,
             lfo2,
+            random,
+            mod_env,
             velocity,
             mod_wheel,
             aftertouch,
@@ -49,6 +158,8 @@ impl ModSources {
         match source {
             ModSource::Lfo1 => self.lfo1,
             ModSource::Lfo2 => self.lfo2,
+            ModSource::Random => self.random,
+            ModSource::ModEnv => self.mod_env,
             ModSource::Velocity => self.velocity,
             ModSource::ModWheel => self.mod_wheel,
             ModSource::Aftertouch => self.aftertouch,
@@ -146,6 +257,9 @@ pub struct Voice {
     pub filter_state1: [f32; 4],
     pub filter_state2: [f32; 4],
 
+    /// ADSR mod envelope used as a modulation source.
+    pub mod_env: AdsrEnv,
+
     /// Per-voice runtime state owned by generator algorithms.
     pub algo_runtime: AlgoRuntimeState,
 }
@@ -176,11 +290,12 @@ impl Voice {
             line2_env: LineEnvs::default(),
             filter_state1: [0.0; 4],
             filter_state2: [0.0; 4],
+            mod_env: AdsrEnv::default(),
             algo_runtime: AlgoRuntimeState::default(),
         }
     }
 
-    /// Reset all six envelope generators to their initial state.
+    /// Reset all envelope generators to their initial state.
     pub fn reset_envs(&mut self) {
         self.line1_env.dco.reset();
         self.line1_env.dcw.reset();
@@ -188,6 +303,7 @@ impl Voice {
         self.line2_env.dco.reset();
         self.line2_env.dcw.reset();
         self.line2_env.dca.reset();
+        self.mod_env.reset();
     }
 }
 
@@ -245,6 +361,7 @@ pub fn render_voice(
     p: &SynthParams,
     lfo_mod_val: f32,
     lfo2_mod_val: f32,
+    random_mod_val: f32,
     sr: f32,
     pitch_bend_semitones: f32,
     mod_wheel: f32,
@@ -264,16 +381,21 @@ pub fn render_voice(
         return 0.0;
     }
 
+    // Advance per-voice ADSR mod envelope.
+    let mod_env_val = voice.mod_env.advance(&p.mod_env, sr);
+
     let mod_sources = ModSources::new(
         lfo_mod_val,
         lfo2_mod_val,
+        random_mod_val,
+        mod_env_val,
         voice.velocity,
         mod_wheel,
         aftertouch,
     );
     let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
     let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
-    let mut signal = build_signal_state(voice, p, &env, base_freq, &mod_sources);
+    let mut signal = build_signal_state(p, &env, base_freq, &mod_sources);
     apply_pitch_and_lfo_modulation(
         voice,
         p,
@@ -415,11 +537,11 @@ fn release_has_faded_out(voice: &mut Voice, env: EnvelopeSnapshot) -> bool {
     voice.env_note = 60;
     voice.line1_env.dca.output = 0.0;
     voice.line2_env.dca.output = 0.0;
+    voice.mod_env.reset();
     true
 }
 
 fn build_signal_state(
-    voice: &Voice,
     p: &SynthParams,
     env: &EnvelopeSnapshot,
     base_freq: f32,
@@ -430,15 +552,7 @@ fn build_signal_state(
     let matrix = &p.mod_matrix;
     let dca1_level = l1.dca_base * env.dca1;
     let dca2_level = l2.dca_base * env.dca2;
-    let vel = voice.velocity;
-    let vel_amp = match p.velocity_target {
-        VelocityTarget::Amp | VelocityTarget::Both => vel,
-        _ => 1.0,
-    };
-    let vel_dcw = match p.velocity_target {
-        VelocityTarget::Dcw | VelocityTarget::Both => vel,
-        _ => 1.0,
-    };
+
 
     // Mod matrix offsets for DCW/DCA
     let dcw1_mod = mod_value_for(ModDestination::Line1DcwBase, matrix, sources);
@@ -449,10 +563,10 @@ fn build_signal_state(
     SignalState {
         effective_freq1: line_frequency(base_freq, l1, env.dco1_env),
         effective_freq2: line_frequency(base_freq, l2, env.dco2_env),
-        final_dcw1: (env.dcw1 * vel_dcw + dcw1_mod).clamp(0.0, 1.0),
-        final_dcw2: (env.dcw2 * vel_dcw + dcw2_mod).clamp(0.0, 1.0),
-        final_dca1: (dca1_level * vel_amp + dca1_mod).max(0.0),
-        final_dca2: (dca2_level * vel_amp + dca2_mod).max(0.0),
+        final_dcw1: (env.dcw1 + dcw1_mod).clamp(0.0, 1.0),
+        final_dcw2: (env.dcw2 + dcw2_mod).clamp(0.0, 1.0),
+        final_dca1: (dca1_level + dca1_mod).max(0.0),
+        final_dca2: (dca2_level + dca2_mod).max(0.0),
     }
 }
 
@@ -912,6 +1026,8 @@ mod tests {
             ModSource::Velocity => sources.velocity,
             ModSource::ModWheel => sources.mod_wheel,
             ModSource::Aftertouch => sources.aftertouch,
+            ModSource::ModEnv => sources.mod_env,
+            ModSource::Random => sources.random,
         }
     }
 
@@ -923,6 +1039,8 @@ mod tests {
             velocity: 0.8,
             mod_wheel: 0.6,
             aftertouch: 0.3,
+            mod_env: 0.5,
+            random: -0.2,
         };
 
         let amount = 0.5;
@@ -960,6 +1078,8 @@ mod tests {
             velocity: 0.0,
             mod_wheel: 0.0,
             aftertouch: 0.0,
+            mod_env: 0.0,
+            random: 0.0,
         };
         let destination = ModDestination::Volume;
         let matrix = ModMatrix {
@@ -983,6 +1103,8 @@ mod tests {
             velocity: 0.0,
             mod_wheel: 0.0,
             aftertouch: 0.0,
+            mod_env: 0.0,
+            random: 0.0,
         };
         let destination = ModDestination::Pitch;
         let matrix = ModMatrix {

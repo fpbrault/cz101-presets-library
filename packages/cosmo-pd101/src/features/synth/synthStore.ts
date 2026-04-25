@@ -176,6 +176,13 @@ export type SynthState = {
 	lfo2Retrigger: boolean;
 	lfo2Offset: number;
 
+	randomRate: number;
+
+	modEnvAttack: number;
+	modEnvDecay: number;
+	modEnvSustain: number;
+	modEnvRelease: number;
+
 	filterEnabled: boolean;
 	filterType: FilterType;
 	filterCutoff: number;
@@ -286,6 +293,13 @@ type SynthActions = {
 	setLfo2Symmetry: (v: number) => void;
 	setLfo2Retrigger: (v: boolean) => void;
 	setLfo2Offset: (v: number) => void;
+
+	setRandomRate: (v: number) => void;
+
+	setModEnvAttack: (v: number) => void;
+	setModEnvDecay: (v: number) => void;
+	setModEnvSustain: (v: number) => void;
+	setModEnvRelease: (v: number) => void;
 
 	setFilterEnabled: (v: boolean) => void;
 	setFilterType: (v: FilterType) => void;
@@ -402,6 +416,13 @@ const DEFAULT_STATE: SynthState = {
 	lfo2Symmetry: 0.5,
 	lfo2Retrigger: false,
 	lfo2Offset: 0,
+
+	randomRate: 2,
+
+	modEnvAttack: 0.01,
+	modEnvDecay: 0.1,
+	modEnvSustain: 0.5,
+	modEnvRelease: 0.2,
 
 	filterEnabled: false,
 	filterType: "lp",
@@ -524,6 +545,13 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 	setLfo2Symmetry: (v) => set({ lfo2Symmetry: v }),
 	setLfo2Retrigger: (v) => set({ lfo2Retrigger: v }),
 	setLfo2Offset: (v) => set({ lfo2Offset: v }),
+
+	setRandomRate: (v) => set({ randomRate: v }),
+
+	setModEnvAttack: (v) => set({ modEnvAttack: v }),
+	setModEnvDecay: (v) => set({ modEnvDecay: v }),
+	setModEnvSustain: (v) => set({ modEnvSustain: v }),
+	setModEnvRelease: (v) => set({ modEnvRelease: v }),
 
 	setFilterEnabled: (v) => set({ filterEnabled: v }),
 	setFilterType: (v) => set({ filterType: v }),
@@ -661,6 +689,15 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 					symmetry: s.lfo2Symmetry,
 					retrigger: s.lfo2Retrigger,
 					offset: s.lfo2Offset,
+				},
+				random: {
+					rate: s.randomRate,
+				},
+				modEnv: {
+					attack: s.modEnvAttack,
+					decay: s.modEnvDecay,
+					sustain: s.modEnvSustain,
+					release: s.modEnvRelease,
 				},
 				filter: {
 					enabled: s.filterEnabled,
@@ -844,6 +881,11 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 			lfo2Symmetry: safe(p.lfo2?.symmetry, 0.5),
 			lfo2Retrigger: p.lfo2?.retrigger ?? false,
 			lfo2Offset: safe(p.lfo2?.offset, 0),
+			randomRate: safe(p.random?.rate, 2),
+			modEnvAttack: safe(p.modEnv?.attack, 0.01),
+			modEnvDecay: safe(p.modEnv?.decay, 0.1),
+			modEnvSustain: safe(p.modEnv?.sustain, 0.5),
+			modEnvRelease: safe(p.modEnv?.release, 0.2),
 			filterEnabled: p.filter?.enabled ?? false,
 			filterType: (p.filter?.type as FilterType) ?? "lp",
 			filterCutoff: safe(p.filter?.cutoff, 5000),

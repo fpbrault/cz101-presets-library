@@ -5,7 +5,9 @@ import ModRouteRow, { MOD_SOURCE_META } from "./ModRouteRow";
 
 const MOD_SOURCES: { label: string; value: ModSource }[] = [
 	{ label: "LFO 1", value: "lfo1" },
-	{ label: "LFO 2 (stub)", value: "lfo2" },
+	{ label: "LFO 2", value: "lfo2" },
+	{ label: "Random", value: "random" },
+	{ label: "Mod Env", value: "modEnv" },
 	{ label: "Velocity", value: "velocity" },
 	{ label: "Mod Wheel", value: "modWheel" },
 	{ label: "Aftertouch", value: "aftertouch" },

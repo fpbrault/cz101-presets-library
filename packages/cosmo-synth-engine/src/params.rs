@@ -276,19 +276,6 @@ pub enum PolyMode {
     Mono,
 }
 
-/// Velocity routing target
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
-pub enum VelocityTarget {
-    #[default]
-    Amp,
-    Dcw,
-    Both,
-    /// JS "off" means velocity is ignored (worklet passes 0 velocity)
-    Off,
-}
-
 /// LFO waveform
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -551,6 +538,45 @@ impl Default for PortamentoParams {
     }
 }
 
+/// Parameters for the random (sample-and-hold) modulation source.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+pub struct RandomParams {
+    /// Rate in Hz — how often the held value steps to a new random value.
+    pub rate: f32,
+}
+
+impl Default for RandomParams {
+    fn default() -> Self {
+        Self { rate: 2.0 }
+    }
+}
+
+/// ADSR mod envelope parameters.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta-bindings", derive(Type))]
+pub struct ModEnvParams {
+    /// Attack time in seconds.
+    pub attack: f32,
+    /// Decay time in seconds.
+    pub decay: f32,
+    /// Sustain level [0, 1].
+    pub sustain: f32,
+    /// Release time in seconds.
+    pub release: f32,
+}
+
+impl Default for ModEnvParams {
+    fn default() -> Self {
+        Self {
+            attack: 0.01,
+            decay: 0.1,
+            sustain: 0.5,
+            release: 0.2,
+        }
+    }
+}
+
 /// Modulation source selector for modulation matrix routes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -560,6 +586,10 @@ pub enum ModSource {
     Lfo1,
     /// Secondary LFO source.
     Lfo2,
+    /// Sample-and-hold random source with configurable rate.
+    Random,
+    /// Dedicated ADSR mod envelope.
+    ModEnv,
     Velocity,
     ModWheel,
     Aftertouch,
@@ -721,7 +751,6 @@ pub struct SynthParams {
     pub volume: f32,
     pub poly_mode: PolyMode,
     pub legato: bool,
-    pub velocity_target: VelocityTarget,
     pub chorus: ChorusParams,
     pub delay: DelayParams,
     pub reverb: ReverbParams,
@@ -741,6 +770,12 @@ pub struct SynthParams {
     /// Modulation matrix routes for source-to-destination parameter modulation.
     #[serde(default)]
     pub mod_matrix: ModMatrix,
+    /// Parameters for the random (sample-and-hold) modulation source.
+    #[serde(default)]
+    pub random: RandomParams,
+    /// Parameters for the ADSR mod envelope.
+    #[serde(default)]
+    pub mod_env: ModEnvParams,
 }
 
 pub(crate) fn default_pitch_bend_range() -> f32 {
@@ -769,7 +804,6 @@ impl Default for SynthParams {
             volume: 0.4,
             poly_mode: PolyMode::default(),
             legato: false,
-            velocity_target: VelocityTarget::default(),
             chorus: ChorusParams::default(),
             delay: DelayParams::default(),
             reverb: ReverbParams::default(),
@@ -781,6 +815,8 @@ impl Default for SynthParams {
             pitch_bend_range: 2.0,
             mod_wheel_vibrato_depth: 0.0,
             mod_matrix: ModMatrix::default(),
+            random: RandomParams::default(),
+            mod_env: ModEnvParams::default(),
         }
     }
 }

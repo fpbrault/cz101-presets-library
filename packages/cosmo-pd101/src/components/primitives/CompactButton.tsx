@@ -23,7 +23,7 @@ export default function CompactButton({
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className={`inline-flex items-center justify-center h-[1.25rem] min-w-[1.75rem] px-1 font-mono text-[0.56rem] font-bold uppercase tracking-wide select-none cursor-pointer transition-colors rounded-[2px] border disabled:opacity-40 disabled:cursor-not-allowed ${
+			className={`inline-flex items-center justify-center h-5 min-w-7 px-1 font-mono text-[0.56rem] font-bold uppercase tracking-wide select-none cursor-pointer transition-colors rounded-xs border disabled:opacity-40 disabled:cursor-not-allowed ${
 				active
 					? "bg-cz-cream text-cz-body border-cz-cream"
 					: "bg-cz-btn text-cz-cream-dim border-cz-btn-border hover:text-cz-cream"

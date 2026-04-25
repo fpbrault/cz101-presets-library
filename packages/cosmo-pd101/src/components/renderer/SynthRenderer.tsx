@@ -16,11 +16,11 @@ import type { AsidePanelTab } from "@/components/layout/AsidePanelSwitcher";
 import AsidePanelSwitcher from "@/components/layout/AsidePanelSwitcher";
 import SynthLcdDisplay from "@/components/layout/SynthLcdDisplay";
 import ScopePanel from "@/components/panels/analysis/ScopePanel";
+import FxConsoleDrawer from "@/components/panels/drawers/FxConsoleDrawer";
+import ModConsoleDrawer from "@/components/panels/drawers/ModConsoleDrawer";
 import ChorusPanel from "@/components/panels/fx/ChorusPanel";
 import DelayPanel from "@/components/panels/fx/DelayPanel";
-import FxConsoleDrawer from "@/components/panels/fx/FxConsoleDrawer";
 import ReverbPanel from "@/components/panels/fx/ReverbPanel";
-import ModConsoleDrawer from "@/components/panels/mod/ModConsoleDrawer";
 import GlobalVoicePanel from "@/components/panels/voice/GlobalVoicePanel";
 import PhaseModPanel from "@/components/panels/voice/PhaseModPanel";
 import VibratoPanel from "@/components/panels/voice/VibratoPanel";
@@ -298,7 +298,7 @@ function SynthRendererContent({
 									mass: 1,
 								}}
 								style={{ transformOrigin: "top center" }}
-								className="absolute inset-x-0 top-[5rem] bottom-10 z-20 flex min-h-0 flex-col overflow-hidden shadow-lg shadow-black "
+								className="absolute inset-x-0 top-20 bottom-10 z-20 flex min-h-0 flex-col overflow-hidden shadow-lg shadow-black "
 							>
 								<PresetLibrary
 									allEntries={headerProps.allEntries}
