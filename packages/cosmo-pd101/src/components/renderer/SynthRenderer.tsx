@@ -38,6 +38,7 @@ import { useSynthStore } from "@/features/synth/synthStore";
 import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import { HoverInfoProvider, useHoverInfo } from "../layout/HoverInfo";
 import MiniKeyboardOverlay from "../layout/MiniKeyboardOverlay";
+import PhaserPanel from "../panels/fx/PhaserPanel";
 
 type SynthRendererProps = {
 	headerProps: SynthHeaderProps;

@@ -20,56 +20,53 @@ export default function VibratoModule() {
 			title="Vibrato"
 			color="#307948"
 			enabled={vibratoEnabled}
+			columns={3}
 			onToggle={() => setVibratoEnabled(!vibratoEnabled)}
 		>
-			<div className="flex flex-col gap-2 w-full">
-				<div className="grid grid-cols-4 gap-1">
-					{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
-						<CompactButton
-							key={w}
-							active={vibratoWave === i + 1}
-							onClick={() => setVibratoWave(i + 1)}
-						>
-							{w}
-						</CompactButton>
-					))}
-				</div>
-				<div className="grid grid-cols-3 gap-1.5">
-					<ControlKnob
-						value={vibratoRate}
-						onChange={setVibratoRate}
-						min={0}
-						max={99}
-						defaultValue={65}
-						size={64}
-						color="#307948"
-						label="Rate"
-						valueFormatter={(v) => `${Math.round(v)}`}
-					/>
-					<ControlKnob
-						value={vibratoDepth}
-						onChange={setVibratoDepth}
-						min={0}
-						max={99}
-						defaultValue={20}
-						size={64}
-						color="#307948"
-						label="Depth"
-						valueFormatter={(v) => `${Math.round(v)}`}
-					/>
-					<ControlKnob
-						value={vibratoDelay}
-						onChange={setVibratoDelay}
-						min={0}
-						max={5000}
-						defaultValue={0}
-						size={64}
-						color="#307948"
-						label="Delay"
-						valueFormatter={(v) => `${Math.round(v)}ms`}
-					/>
-				</div>
+			<div className="grid grid-cols-4 gap-1 w-full col-span-3">
+				{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
+					<CompactButton
+						key={w}
+						active={vibratoWave === i + 1}
+						onClick={() => setVibratoWave(i + 1)}
+					>
+						{w}
+					</CompactButton>
+				))}
 			</div>
+			<ControlKnob
+				value={vibratoRate}
+				onChange={setVibratoRate}
+				min={0}
+				max={99}
+				defaultValue={65}
+				size={52}
+				color="#307948"
+				label="Rate"
+				valueFormatter={(v) => `${Math.round(v)}`}
+			/>
+			<ControlKnob
+				value={vibratoDepth}
+				onChange={setVibratoDepth}
+				min={0}
+				max={99}
+				defaultValue={20}
+				size={52}
+				color="#307948"
+				label="Depth"
+				valueFormatter={(v) => `${Math.round(v)}`}
+			/>
+			<ControlKnob
+				value={vibratoDelay}
+				onChange={setVibratoDelay}
+				min={0}
+				max={5000}
+				defaultValue={0}
+				size={52}
+				color="#307948"
+				label="Delay"
+				valueFormatter={(v) => `${Math.round(v)}ms`}
+			/>
 		</ModuleFrame>
 	);
 }

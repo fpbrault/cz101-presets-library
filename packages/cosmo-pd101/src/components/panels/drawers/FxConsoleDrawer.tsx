@@ -1,6 +1,7 @@
 import ChorusModule from "../drawer-modules/ChorusModule";
 import DelayModule from "../drawer-modules/DelayModule";
 import PhaseModModule from "../drawer-modules/PhaseModModule";
+import PhaserModule from "../drawer-modules/PhaserModule";
 import ReverbModule from "../drawer-modules/ReverbModule";
 import VibratoModule from "../drawer-modules/VibratoModule";
 
@@ -12,6 +13,7 @@ export default function FxConsoleDrawer() {
 			<ReverbModule />
 			<VibratoModule />
 			<PhaseModModule />
+			<PhaserModule />
 		</div>
 	);
 }

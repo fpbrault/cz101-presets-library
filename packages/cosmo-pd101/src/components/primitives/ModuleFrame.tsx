@@ -14,6 +14,7 @@ type ModuleFrameProps = {
 	enabled: boolean;
 	onToggle?: () => void;
 	className?: string;
+	columns?: number; // number of columns for the content grid (default: 2)
 	children: React.ReactNode;
 	showLed?: boolean; // whether to show the LED indicator (default: true)
 };
@@ -25,6 +26,7 @@ export default function ModuleFrame({
 	enabled,
 	onToggle,
 	className,
+	columns = 4,
 	children,
 	showLed = true,
 }: ModuleFrameProps) {
@@ -36,7 +38,7 @@ export default function ModuleFrame({
 		<section
 			style={{ borderColor: color }}
 			className={[
-				`relative flex min-h-0 flex-col overflow-hidden border-4 rounded-b-sm bg-cz-body shadow-lg rounded-t-lg transition-[filter]`,
+				`relative flex min-h-0 flex-col overflow-hidden border-4 rounded-b-sm bg-cz-surface shadow-lg rounded-t-lg transition-[filter]`,
 				dimmed ? "brightness-80" : "",
 				className,
 			]
@@ -93,7 +95,9 @@ export default function ModuleFrame({
 					dimmed ? "bg-cz-inset/20" : "bg-cz-inset/60"
 				}`}
 			>
-				{children}
+				<div className={`grid grid-cols-${columns} gap-2.5 w-full`}>
+					{children}
+				</div>
 			</div>
 		</section>
 	);
