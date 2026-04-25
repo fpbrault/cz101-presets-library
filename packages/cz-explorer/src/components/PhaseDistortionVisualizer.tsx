@@ -213,8 +213,6 @@ export function SharedPhaseDistortionVisualizer({
 		});
 	}, [heldNote, effectivePitchHz, activePresetName, t]);
 
-
-
 	return (
 		<SynthRenderer
 			headerProps={{
