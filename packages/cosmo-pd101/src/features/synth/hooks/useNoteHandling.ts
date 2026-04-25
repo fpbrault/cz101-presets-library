@@ -1,19 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ModSource } from "@/lib/synth/bindings/synth";
 import { noteToFreq, PC_KEY_TO_NOTE } from "@/lib/synth/pdAlgorithms";
-
-/**
- * Apply an exponential velocity curve to a normalised velocity [0, 1].
- *
- * curve = 0  → linear (identity)
- * curve > 0  → convex  (more sensitive — high output at low input)
- * curve < 0  → concave (less sensitive — needs hard hit for high output)
- */
-function applyVelocityCurve(velocity: number, curve: number): number {
-	if (Math.abs(curve) < 0.001) return velocity;
-	const exponent = Math.pow(2, -curve * 2.5);
-	return Math.pow(Math.max(0, Math.min(1, velocity)), exponent);
-}
+import { applyVelocityCurve } from "@/lib/synth/velocityCurve";
 
 type UseNoteHandlingParams = {
 	workletNodeRef?: React.MutableRefObject<AudioWorkletNode | null> | null;

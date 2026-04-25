@@ -4,17 +4,13 @@ import type { AsidePanelComponent } from "@/components/layout/AsidePanelSwitcher
 import SynthPanelContainer from "@/components/layout/SynthPanelContainer";
 import CzButton from "@/components/primitives/CzButton";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { applyVelocityCurve } from "@/lib/synth/velocityCurve";
 
 const W = 80;
 const H = 48;
 const PAD = 4;
 const INNER_W = W - PAD * 2;
 const INNER_H = H - PAD * 2;
-
-function applyVelocityCurve(v: number, curve: number): number {
-if (Math.abs(curve) < 0.001) return v;
-return Math.pow(Math.max(0, Math.min(1, v)), Math.pow(2, -curve * 2.5));
-}
 
 function buildCurvePath(curve: number): string {
 const pts = Array.from({ length: 33 }, (_, i) => {
