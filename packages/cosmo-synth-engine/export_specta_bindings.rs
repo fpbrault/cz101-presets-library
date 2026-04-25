@@ -13,7 +13,7 @@ use cosmo_synth_engine::generators::{
 use cosmo_synth_engine::params::{
     Algo, AlgoControlValueV1, ChorusParams, CzAlgo, CzLineParams, CzWaveform, DelayParams, EnvStep,
     FilterParams, FilterType, LfoParams, LfoWaveform, LineParams, LineSelect, ModDestination,
-    ModEnvParams, ModMatrix, ModMode, ModRoute, ModSource, PolyMode, PortamentoMode,
+    ModEnvParams, ModMatrix, ModMode, ModRoute, ModSource, PolyMode, PortamentoMode, PhaserParams, 
     PortamentoParams, RandomParams, ReverbParams, StepEnvData, SynthParams, VibratoParams,
     WindowType,
 };
@@ -70,6 +70,8 @@ fn main() {
     out.push_str(&export::<DelayParams>(&config).expect("Failed to export DelayParams"));
     out.push_str("\n\n");
     out.push_str(&export::<ReverbParams>(&config).expect("Failed to export ReverbParams"));
+    out.push_str("\n\n");
+    out.push_str(&export::<PhaserParams>(&config).expect("Failed to export PhaserParams"));
     out.push_str("\n\n");
     out.push_str(&export::<VibratoParams>(&config).expect("Failed to export VibratoParams"));
     out.push_str("\n\n");

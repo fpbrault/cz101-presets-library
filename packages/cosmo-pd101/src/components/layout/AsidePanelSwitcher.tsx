@@ -23,7 +23,8 @@ export type AsidePanelTab =
 	| "vibrato"
 	| "chorus"
 	| "delay"
-	| "reverb";
+	| "reverb"
+	| "phaser";
 
 const TOGGLE_TAB_IDS = new Set([
 	"polymode",
@@ -33,6 +34,7 @@ const TOGGLE_TAB_IDS = new Set([
 	"chorus",
 	"delay",
 	"reverb",
+	"phaser",
 ]);
 
 export type AsidePanelTabMeta = {
@@ -65,11 +67,13 @@ export default function AsidePanelSwitcher<T extends string>({
 	const { value: chorusEnabled } = useSynthParam("chorusEnabled");
 	const { value: delayEnabled } = useSynthParam("delayEnabled");
 	const { value: reverbEnabled } = useSynthParam("reverbEnabled");
+	const { value: phaserEnabled } = useSynthParam("phaserEnabled");
 	const { setValue: setPhaseModEnabled } = useSynthParam("phaseModEnabled");
 	const { setValue: setVibratoEnabled } = useSynthParam("vibratoEnabled");
 	const { setValue: setChorusEnabled } = useSynthParam("chorusEnabled");
 	const { setValue: setDelayEnabled } = useSynthParam("delayEnabled");
 	const { setValue: setReverbEnabled } = useSynthParam("reverbEnabled");
+	const { setValue: setPhaserEnabled } = useSynthParam("phaserEnabled");
 
 	const isTabEnabled = (tabId: T): boolean => {
 		switch (String(tabId).toLowerCase()) {
@@ -87,6 +91,8 @@ export default function AsidePanelSwitcher<T extends string>({
 				return delayEnabled;
 			case "reverb":
 				return reverbEnabled;
+			case "phaser":
+				return phaserEnabled;
 			default:
 				return false;
 		}
@@ -102,7 +108,8 @@ export default function AsidePanelSwitcher<T extends string>({
 		if (
 			normalizedTabId === "chorus" ||
 			normalizedTabId === "delay" ||
-			normalizedTabId === "reverb"
+			normalizedTabId === "reverb" ||
+			normalizedTabId === "phaser"
 		) {
 			return "blue";
 		}
@@ -138,6 +145,9 @@ export default function AsidePanelSwitcher<T extends string>({
 				break;
 			case "reverb":
 				setReverbEnabled(!reverbEnabled);
+				break;
+			case "phaser":
+				setPhaserEnabled(!phaserEnabled);
 				break;
 		}
 	};

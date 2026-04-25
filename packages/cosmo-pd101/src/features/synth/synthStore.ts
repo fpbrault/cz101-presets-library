@@ -144,6 +144,8 @@ export type SynthState = {
 	delayTime: number;
 	delayFeedback: number;
 	delayMix: number;
+	delayTapeMode: boolean;
+	delayWarmth: number;
 
 	reverbEnabled: boolean;
 	reverbMix: number;
@@ -151,6 +153,12 @@ export type SynthState = {
 	reverbPredelay: number;
 	reverbDistance: number;
 	reverbCharacter: number;
+
+	phaserEnabled: boolean;
+	phaserRate: number;
+	phaserDepth: number;
+	phaserMix: number;
+	phaserFeedback: number;
 
 	vibratoEnabled: boolean;
 	vibratoWave: number;
@@ -262,6 +270,8 @@ type SynthActions = {
 	setDelayTime: (v: number) => void;
 	setDelayFeedback: (v: number) => void;
 	setDelayMix: (v: number) => void;
+	setDelayTapeMode: (v: boolean) => void;
+	setDelayWarmth: (v: number) => void;
 
 	setReverbEnabled: (v: boolean) => void;
 	setReverbMix: (v: number) => void;
@@ -269,6 +279,12 @@ type SynthActions = {
 	setReverbPredelay: (v: number) => void;
 	setReverbDistance: (v: number) => void;
 	setReverbCharacter: (v: number) => void;
+
+	setPhaserEnabled: (v: boolean) => void;
+	setPhaserRate: (v: number) => void;
+	setPhaserDepth: (v: number) => void;
+	setPhaserMix: (v: number) => void;
+	setPhaserFeedback: (v: number) => void;
 
 	setVibratoEnabled: (v: boolean) => void;
 	setVibratoWave: (v: number) => void;
@@ -385,6 +401,8 @@ const DEFAULT_STATE: SynthState = {
 	delayTime: 0.3,
 	delayFeedback: 0.35,
 	delayMix: 0,
+	delayTapeMode: false,
+	delayWarmth: 0.5,
 
 	reverbEnabled: false,
 	reverbMix: 0,
@@ -392,6 +410,12 @@ const DEFAULT_STATE: SynthState = {
 	reverbPredelay: 0,
 	reverbDistance: 0.3,
 	reverbCharacter: 0.65,
+
+	phaserEnabled: false,
+	phaserRate: 0.5,
+	phaserDepth: 1,
+	phaserMix: 0,
+	phaserFeedback: 0.5,
 
 	vibratoEnabled: false,
 	vibratoWave: 1,
@@ -514,6 +538,8 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 	setDelayTime: (v) => set({ delayTime: v }),
 	setDelayFeedback: (v) => set({ delayFeedback: v }),
 	setDelayMix: (v) => set({ delayMix: v }),
+	setDelayTapeMode: (v) => set({ delayTapeMode: v }),
+	setDelayWarmth: (v) => set({ delayWarmth: v }),
 
 	setReverbEnabled: (v) => set({ reverbEnabled: v }),
 	setReverbMix: (v) => set({ reverbMix: v }),
@@ -521,6 +547,12 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 	setReverbPredelay: (v) => set({ reverbPredelay: v }),
 	setReverbDistance: (v) => set({ reverbDistance: v }),
 	setReverbCharacter: (v) => set({ reverbCharacter: v }),
+
+	setPhaserEnabled: (v) => set({ phaserEnabled: v }),
+	setPhaserRate: (v) => set({ phaserRate: v }),
+	setPhaserDepth: (v) => set({ phaserDepth: v }),
+	setPhaserMix: (v) => set({ phaserMix: v }),
+	setPhaserFeedback: (v) => set({ phaserFeedback: v }),
 
 	setVibratoEnabled: (v) => set({ vibratoEnabled: v }),
 	setVibratoWave: (v) => set({ vibratoWave: v }),
@@ -652,6 +684,8 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 					time: s.delayTime,
 					feedback: s.delayFeedback,
 					mix: s.delayMix,
+					tapeMode: s.delayTapeMode,
+					warmth: s.delayWarmth,
 				},
 				reverb: {
 					enabled: s.reverbEnabled,
@@ -660,6 +694,13 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 					predelay: s.reverbPredelay,
 					distance: s.reverbDistance,
 					character: s.reverbCharacter,
+				},
+				phaser: {
+					enabled: s.phaserEnabled,
+					rate: s.phaserRate,
+					depth: s.phaserDepth,
+					mix: s.phaserMix,
+					feedback: s.phaserFeedback,
 				},
 				vibrato: {
 					enabled: s.vibratoEnabled,
@@ -854,6 +895,13 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 			reverbPredelay: safe(p.reverb?.predelay, 0),
 			reverbDistance: safe(p.reverb?.distance, 0.3),
 			reverbCharacter,
+			delayTapeMode: p.delay?.tapeMode ?? false,
+			delayWarmth: safe(p.delay?.warmth, 0.5),
+			phaserEnabled: p.phaser?.enabled ?? false,
+			phaserRate: safe(p.phaser?.rate, 0.5),
+			phaserDepth: safe(p.phaser?.depth, 1),
+			phaserMix: safe(p.phaser?.mix, 0),
+			phaserFeedback: safe(p.phaser?.feedback, 0.5),
 			lineSelect: (p.lineSelect as LineSelect) ?? "L1+L2",
 			modMode: (p.modMode as ModMode) ?? "normal",
 			line1DcwKeyFollow: safe(p.line1?.keyFollow, 0),

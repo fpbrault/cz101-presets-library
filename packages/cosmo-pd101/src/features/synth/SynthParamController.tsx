@@ -104,12 +104,19 @@ const SYNTH_PARAM_SETTERS = {
 	delayTime: "setDelayTime",
 	delayFeedback: "setDelayFeedback",
 	delayMix: "setDelayMix",
+	delayTapeMode: "setDelayTapeMode",
+	delayWarmth: "setDelayWarmth",
 	reverbEnabled: "setReverbEnabled",
 	reverbMix: "setReverbMix",
 	reverbSpace: "setReverbSpace",
 	reverbPredelay: "setReverbPredelay",
 	reverbDistance: "setReverbDistance",
 	reverbCharacter: "setReverbCharacter",
+	phaserEnabled: "setPhaserEnabled",
+	phaserRate: "setPhaserRate",
+	phaserDepth: "setPhaserDepth",
+	phaserMix: "setPhaserMix",
+	phaserFeedback: "setPhaserFeedback",
 } as const;
 
 export type SynthParamKey = keyof typeof SYNTH_PARAM_SETTERS;

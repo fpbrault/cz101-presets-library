@@ -1,9 +1,11 @@
-/// FX chain: chorus, delay, FDN reverb.
+/// FX chain: chorus, phaser, delay (with tape echo mode), Freeverb-style reverb.
+///
+/// Ported from `FxChain` in `pdVisualizerProcessor.js` (lines 336-467).
 extern crate alloc;
 
 use alloc::vec;
 use alloc::vec::Vec;
-use libm::{cosf, sinf};
+use libm::{cosf, expf, sinf, tanhf};
 
 const SMOOTH_COEFF: f32 = 0.005;
 const TWO_PI: f32 = core::f32::consts::PI * 2.0;
@@ -248,6 +250,33 @@ impl FdnReverb {
 }
 
 // ---------------------------------------------------------------------------
+// PhaserStage (first-order all-pass)
+// ---------------------------------------------------------------------------
+
+struct PhaserStage {
+    x_prev: f32,
+    y_prev: f32,
+}
+
+impl PhaserStage {
+    fn new() -> Self {
+        Self {
+            x_prev: 0.0,
+            y_prev: 0.0,
+        }
+    }
+
+    /// Process one sample with all-pass coefficient `a`.
+    #[inline]
+    fn process(&mut self, input: f32, a: f32) -> f32 {
+        let output = a * input + self.x_prev - a * self.y_prev;
+        self.x_prev = input;
+        self.y_prev = output;
+        output
+    }
+}
+
+// ---------------------------------------------------------------------------
 // FxChain
 // ---------------------------------------------------------------------------
 
@@ -261,13 +290,26 @@ pub struct FxChain {
     pub chorus_enabled: bool,
     smooth_chorus_depth: f32,
 
-    // Simple delay
+    // Phaser
+    phaser_stages: [PhaserStage; 4],
+    phaser_phase: f32,
+    pub phaser_rate: f32,
+    pub phaser_depth: f32,
+    pub phaser_mix: f32,
+    pub phaser_feedback: f32,
+    pub phaser_enabled: bool,
+    phaser_feedback_buf: f32,
+
+    // Delay (with optional tape echo mode)
     pub delay_line: DelayLine,
     pub delay_time: f32,
     pub delay_feedback: f32,
     pub delay_mix: f32,
     pub delay_enabled: bool,
     smooth_delay_samples: f32,
+    pub delay_tape_mode: bool,
+    pub delay_warmth: f32,
+    tape_filter_state: f32,
 
     // FDN reverb (all reverb state is encapsulated in FdnReverb)
     pub reverb: FdnReverb,
@@ -295,12 +337,29 @@ impl FxChain {
             chorus_enabled: false,
             smooth_chorus_depth: 0.003,
 
+            phaser_stages: [
+                PhaserStage::new(),
+                PhaserStage::new(),
+                PhaserStage::new(),
+                PhaserStage::new(),
+            ],
+            phaser_phase: 0.0,
+            phaser_rate: 0.5,
+            phaser_depth: 1.0,
+            phaser_mix: 0.0,
+            phaser_feedback: 0.5,
+            phaser_enabled: false,
+            phaser_feedback_buf: 0.0,
+
             delay_line,
             delay_time: 0.3,
             delay_feedback: 0.35,
             delay_mix: 0.0,
             delay_enabled: false,
             smooth_delay_samples: libm::roundf(0.3 * sr) as f32,
+            delay_tape_mode: false,
+            delay_warmth: 0.5,
+            tape_filter_state: 0.0,
 
             reverb: FdnReverb::new(sr),
 
@@ -342,7 +401,52 @@ impl FxChain {
         sample * dry_gain + wet * wet_gain
     }
 
+    /// Process phaser effect.
+    ///
+    /// Four first-order all-pass stages in series, modulated by an LFO.
+    /// Mixing the all-pass output with the dry signal creates sweeping notches.
+    pub fn process_phaser(&mut self, sample: f32) -> f32 {
+        if !self.phaser_enabled || self.phaser_mix <= 0.0 {
+            return sample;
+        }
+
+        // Advance LFO
+        self.phaser_phase += self.phaser_rate / self.sample_rate;
+        if self.phaser_phase >= 1.0 {
+            self.phaser_phase -= 1.0;
+        }
+        let lfo = sinf(TWO_PI * self.phaser_phase);
+
+        // Center frequency sweeps between 100 Hz and 2000 Hz
+        let min_freq = 100.0_f32;
+        let max_freq = 2000.0_f32;
+        let depth_clamped = self.phaser_depth.clamp(0.0, 1.0);
+        let center_freq =
+            min_freq + (max_freq - min_freq) * 0.5 * (1.0 + lfo * depth_clamped);
+
+        // All-pass coefficient from center frequency
+        let g = libm::tanf(core::f32::consts::PI * center_freq / self.sample_rate);
+        let a = (g - 1.0) / (g + 1.0);
+
+        // Apply feedback then cascade through 4 all-pass stages
+        let fb = self.phaser_feedback.clamp(-0.9, 0.9);
+        let input_with_fb = sample + self.phaser_feedback_buf * fb;
+        let mut out = input_with_fb;
+        for stage in &mut self.phaser_stages {
+            out = stage.process(out, a);
+        }
+        self.phaser_feedback_buf = out;
+
+        // Equal-power crossfade: dry² + wet² = 1
+        let mix_angle = self.phaser_mix * core::f32::consts::PI * 0.5;
+        let dry_gain = cosf(mix_angle);
+        let wet_gain = sinf(mix_angle);
+        sample * dry_gain + out * wet_gain
+    }
+
     /// Process simple feedback delay with smoothed delay time.
+    /// When `delay_tape_mode` is true, applies a one-pole LP filter and soft
+    /// saturation in the feedback path to emulate tape echo characteristics.
     pub fn process_delay(&mut self, sample: f32) -> f32 {
         if !self.delay_enabled || self.delay_mix <= 0.0 {
             return sample;
@@ -358,8 +462,21 @@ impl FxChain {
             self.smooth_delay_samples
         };
         let delayed = self.delay_line.read_at_fractional(delay_samples);
+
+        let feedback_input = if self.delay_tape_mode {
+            // One-pole LP filter: warmth 0 = bright (fc≈20000 Hz), warmth 1 = warm (fc≈300 Hz)
+            let fc = 20000.0 - self.delay_warmth * 19700.0;
+            let g = expf(-TWO_PI * fc / self.sample_rate);
+            self.tape_filter_state = self.tape_filter_state * g + delayed * (1.0 - g);
+            // Gentle soft saturation
+            let drive = 1.5;
+            tanhf(self.tape_filter_state * drive) / drive
+        } else {
+            delayed
+        };
+
         self.delay_line
-            .write(sample + delayed * self.delay_feedback);
+            .write(sample + feedback_input * self.delay_feedback);
         // Equal-power crossfade: dry² + wet² = 1
         let mix_angle = self.delay_mix * core::f32::consts::PI * 0.5;
         let dry_gain = cosf(mix_angle);
@@ -375,9 +492,10 @@ impl FxChain {
         self.reverb.process(sample)
     }
 
-    /// Run chorus → delay → reverb chain.
+    /// Run chorus → phaser → delay → reverb chain.
     pub fn process(&mut self, sample: f32) -> f32 {
         let out = self.process_chorus(sample);
+        let out = self.process_phaser(out);
         let out = self.process_delay(out);
         self.process_reverb(out)
     }

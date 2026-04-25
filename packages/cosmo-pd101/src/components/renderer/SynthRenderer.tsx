@@ -191,6 +191,7 @@ function SynthRendererContent({
 									subscribeScopeFrames={subscribeScopeFrames}
 								/>
 								<ChorusPanel />
+								<PhaserPanel />
 								<DelayPanel />
 								<ReverbPanel />
 							</AsidePanelSwitcher>

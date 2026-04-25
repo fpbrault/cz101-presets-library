@@ -11,6 +11,10 @@ const DelayPanel: AsidePanelComponent<"delay"> = Object.assign(
 		const { value: feedback, setValue: setFeedback } =
 			useSynthParam("delayFeedback");
 		const { value: mix, setValue: setMix } = useSynthParam("delayMix");
+		const { value: tapeMode, setValue: setTapeMode } =
+			useSynthParam("delayTapeMode");
+		const { value: warmth, setValue: setWarmth } =
+			useSynthParam("delayWarmth");
 
 		return (
 			<SynthPanelContainer
@@ -25,6 +29,10 @@ const DelayPanel: AsidePanelComponent<"delay"> = Object.assign(
 					setFeedback={setFeedback}
 					mix={mix}
 					setMix={setMix}
+					tapeMode={tapeMode}
+					setTapeMode={setTapeMode}
+					warmth={warmth}
+					setWarmth={setWarmth}
 				/>
 			</SynthPanelContainer>
 		);
