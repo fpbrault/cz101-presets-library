@@ -96,6 +96,8 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 		// structuredClone is not available in AudioWorklet scope — use JSON round-trip
 		this._params = JSON.parse(JSON.stringify(DEFAULT_PARAMS));
 		this._queue = []; // messages received before WASM is ready
+		this._runtimeTelemetryDivider = 4;
+		this._runtimeTelemetryCounter = 0;
 
 		this.port.onmessage = (e) => this._handleMessage(e.data);
 	}
@@ -307,6 +309,20 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 		}
 	}
 
+	_emitRuntimeModSources() {
+		if (!this._synth) return;
+
+		try {
+			const sources = JSON.parse(this._synth.getRuntimeModSources());
+			this.port.postMessage({
+				type: "runtimeModSources",
+				sources,
+			});
+		} catch (err) {
+			console.error("[czSynthWorklet] Failed to read runtime mod sources:", err);
+		}
+	}
+
 	// ── Audio render loop ─────────────────────────────────────────────────
 
 	process(_inputs, outputs, _params) {
@@ -322,6 +338,11 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 
 		// Fill the left channel buffer directly
 		this._synth.process(ch0);
+		this._runtimeTelemetryCounter += 1;
+		if (this._runtimeTelemetryCounter >= this._runtimeTelemetryDivider) {
+			this._runtimeTelemetryCounter = 0;
+			this._emitRuntimeModSources();
+		}
 
 		// Copy to right channel if present
 		if (outputs[0].length > 1) {

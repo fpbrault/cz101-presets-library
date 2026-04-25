@@ -276,19 +276,6 @@ pub enum PolyMode {
     Mono,
 }
 
-/// Velocity routing target
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
-pub enum VelocityTarget {
-    #[default]
-    Amp,
-    Dcw,
-    Both,
-    /// JS "off" means velocity is ignored (worklet passes 0 velocity)
-    Off,
-}
-
 /// LFO waveform
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -554,7 +541,6 @@ impl Default for PortamentoParams {
 /// Parameters for the random (sample-and-hold) modulation source.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
 pub struct RandomParams {
     /// Rate in Hz — how often the held value steps to a new random value.
     pub rate: f32,
@@ -569,7 +555,6 @@ impl Default for RandomParams {
 /// ADSR mod envelope parameters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
 pub struct ModEnvParams {
     /// Attack time in seconds.
     pub attack: f32,
@@ -766,7 +751,6 @@ pub struct SynthParams {
     pub volume: f32,
     pub poly_mode: PolyMode,
     pub legato: bool,
-    pub velocity_target: VelocityTarget,
     pub chorus: ChorusParams,
     pub delay: DelayParams,
     pub reverb: ReverbParams,
@@ -820,7 +804,6 @@ impl Default for SynthParams {
             volume: 0.4,
             poly_mode: PolyMode::default(),
             legato: false,
-            velocity_target: VelocityTarget::default(),
             chorus: ChorusParams::default(),
             delay: DelayParams::default(),
             reverb: ReverbParams::default(),

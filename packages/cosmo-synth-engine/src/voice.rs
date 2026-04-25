@@ -11,7 +11,7 @@ use crate::envelope::{EnvGen, EnvelopeKind};
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
     FilterType, LfoWaveform, LineParams, LineSelect, ModDestination, ModEnvParams, ModMatrix,
-    ModMode, ModSource, PortamentoMode, SynthParams, VelocityTarget,
+    ModMode, ModSource, PortamentoMode, SynthParams, 
 };
 
 // TWO_PI for f32
@@ -395,7 +395,7 @@ pub fn render_voice(
     );
     let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
     let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
-    let mut signal = build_signal_state(voice, p, &env, base_freq, &mod_sources);
+    let mut signal = build_signal_state(p, &env, base_freq, &mod_sources);
     apply_pitch_and_lfo_modulation(
         voice,
         p,
@@ -542,7 +542,6 @@ fn release_has_faded_out(voice: &mut Voice, env: EnvelopeSnapshot) -> bool {
 }
 
 fn build_signal_state(
-    voice: &Voice,
     p: &SynthParams,
     env: &EnvelopeSnapshot,
     base_freq: f32,
@@ -553,15 +552,7 @@ fn build_signal_state(
     let matrix = &p.mod_matrix;
     let dca1_level = l1.dca_base * env.dca1;
     let dca2_level = l2.dca_base * env.dca2;
-    let vel = voice.velocity;
-    let vel_amp = match p.velocity_target {
-        VelocityTarget::Amp | VelocityTarget::Both => vel,
-        _ => 1.0,
-    };
-    let vel_dcw = match p.velocity_target {
-        VelocityTarget::Dcw | VelocityTarget::Both => vel,
-        _ => 1.0,
-    };
+
 
     // Mod matrix offsets for DCW/DCA
     let dcw1_mod = mod_value_for(ModDestination::Line1DcwBase, matrix, sources);
@@ -572,10 +563,10 @@ fn build_signal_state(
     SignalState {
         effective_freq1: line_frequency(base_freq, l1, env.dco1_env),
         effective_freq2: line_frequency(base_freq, l2, env.dco2_env),
-        final_dcw1: (env.dcw1 * vel_dcw + dcw1_mod).clamp(0.0, 1.0),
-        final_dcw2: (env.dcw2 * vel_dcw + dcw2_mod).clamp(0.0, 1.0),
-        final_dca1: (dca1_level * vel_amp + dca1_mod).max(0.0),
-        final_dca2: (dca2_level * vel_amp + dca2_mod).max(0.0),
+        final_dcw1: (env.dcw1 + dcw1_mod).clamp(0.0, 1.0),
+        final_dcw2: (env.dcw2 + dcw2_mod).clamp(0.0, 1.0),
+        final_dca1: (dca1_level + dca1_mod).max(0.0),
+        final_dca2: (dca2_level + dca2_mod).max(0.0),
     }
 }
 
@@ -1035,6 +1026,8 @@ mod tests {
             ModSource::Velocity => sources.velocity,
             ModSource::ModWheel => sources.mod_wheel,
             ModSource::Aftertouch => sources.aftertouch,
+            ModSource::ModEnv => sources.mod_env,
+            ModSource::Random => sources.random,
         }
     }
 
@@ -1046,6 +1039,8 @@ mod tests {
             velocity: 0.8,
             mod_wheel: 0.6,
             aftertouch: 0.3,
+            mod_env: 0.5,
+            random: -0.2,
         };
 
         let amount = 0.5;
@@ -1083,6 +1078,8 @@ mod tests {
             velocity: 0.0,
             mod_wheel: 0.0,
             aftertouch: 0.0,
+            mod_env: 0.0,
+            random: 0.0,
         };
         let destination = ModDestination::Volume;
         let matrix = ModMatrix {
@@ -1106,6 +1103,8 @@ mod tests {
             velocity: 0.0,
             mod_wheel: 0.0,
             aftertouch: 0.0,
+            mod_env: 0.0,
+            random: 0.0,
         };
         let destination = ModDestination::Pitch;
         let matrix = ModMatrix {

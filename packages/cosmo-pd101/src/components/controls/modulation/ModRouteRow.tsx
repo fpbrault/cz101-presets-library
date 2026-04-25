@@ -92,7 +92,7 @@ const ModRouteRow = memo(function ModRouteRow({
 				<>
 					<span className="text-[0.55rem] text-cz-cream-dim/50">→</span>
 					<span
-						className="min-w-0 flex-1 truncate font-mono text-[0.55rem] uppercase tracking-[0.1em] text-cz-cream-dim"
+						className="min-w-0 flex-1 truncate font-mono text-[0.55rem] uppercase tracking-widest text-cz-cream-dim"
 						title={destinationLabel}
 					>
 						{destinationLabel ?? route.destination}
@@ -121,7 +121,7 @@ const ModRouteRow = memo(function ModRouteRow({
 				type="button"
 				onClick={onToggleEnabled}
 				aria-label={route.enabled ? "Disable route" : "Enable route"}
-				className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[0.5rem] font-bold uppercase tracking-[0.12em] transition-colors ${
+				className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-5xs font-bold uppercase tracking-[0.12em] transition-colors ${
 					route.enabled
 						? "border-cz-gold/50 bg-cz-gold/10 text-cz-gold"
 						: "border-cz-border bg-black/10 text-cz-cream-dim hover:text-cz-cream"

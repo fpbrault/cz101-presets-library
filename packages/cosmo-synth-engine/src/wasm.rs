@@ -10,7 +10,7 @@
 use wasm_bindgen::prelude::*;
 
 use crate::params::SynthParams;
-use crate::processor::CosmoProcessor;
+use crate::processor::{CosmoProcessor, RuntimeModSources};
 
 /// WebAssembly wrapper around [`CosmoProcessor`].
 ///
@@ -91,6 +91,24 @@ impl CzSynthProcessor {
     #[wasm_bindgen(js_name = setAftertouch)]
     pub fn set_aftertouch(&mut self, value: f32) {
         self.inner.set_aftertouch(value);
+    }
+
+    /// Return the latest runtime modulation-source values as JSON for UI telemetry.
+    #[wasm_bindgen(js_name = getRuntimeModSources)]
+    pub fn get_runtime_mod_sources(&self) -> String {
+        match serde_json::to_string(&self.inner.runtime_mod_sources()) {
+            Ok(json) => json,
+            Err(e) => {
+                web_sys::console::error_1(
+                    &format!(
+                        "[cosmo-synth-engine] getRuntimeModSources serialize error: {e}"
+                    )
+                    .into(),
+                );
+                serde_json::to_string(&RuntimeModSources::default())
+                    .unwrap_or_else(|_| String::from("{}"))
+            }
+        }
     }
 
     /// Fill `output` with mono samples rendered by the DSP engine.

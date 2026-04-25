@@ -113,7 +113,10 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 		},
 		reverb: {
 			enabled: false,
-			size: 0.5,
+			space: 0.5,
+			predelay: 0.01,
+			distance: 0.5,
+			character: 0.5,
 			mix: 0,
 		},
 		vibrato: {
@@ -125,9 +128,9 @@ export const DEFAULT_PRESET: SynthPresetV1 = {
 		},
 		portamento: {
 			enabled: false,
-			mode: "rate",
+			mode: "time",
 			rate: 50,
-			time: 0.5,
+			time: 0.1,
 		},
 		lfo: {
 			waveform: "sine",

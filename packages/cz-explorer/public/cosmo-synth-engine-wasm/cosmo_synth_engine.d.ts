@@ -12,6 +12,10 @@ declare namespace wasm_bindgen {
         free(): void;
         [Symbol.dispose](): void;
         /**
+         * Return the latest runtime modulation-source values as JSON for UI telemetry.
+         */
+        getRuntimeModSources(): string;
+        /**
          * Create a new processor at the given sample rate.
          */
         constructor(sample_rate: number);
@@ -67,6 +71,7 @@ declare type InitInput = RequestInfo | URL | Response | BufferSource | WebAssemb
 declare interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_czsynthprocessor_free: (a: number, b: number) => void;
+    readonly czsynthprocessor_getRuntimeModSources: (a: number, b: number) => void;
     readonly czsynthprocessor_new: (a: number) => number;
     readonly czsynthprocessor_noteOff: (a: number, b: number) => void;
     readonly czsynthprocessor_noteOn: (a: number, b: number, c: number, d: number) => void;
@@ -76,8 +81,10 @@ declare interface InitOutput {
     readonly czsynthprocessor_setParams: (a: number, b: number, c: number) => void;
     readonly czsynthprocessor_setPitchBend: (a: number, b: number) => void;
     readonly czsynthprocessor_setSustain: (a: number, b: number) => void;
-    readonly __wbindgen_export: (a: number, b: number) => number;
-    readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
+    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
+    readonly __wbindgen_export: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_export2: (a: number, b: number) => number;
+    readonly __wbindgen_export3: (a: number, b: number, c: number, d: number) => number;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import {
 	memo,
 	type ReactNode,
@@ -189,21 +189,25 @@ const ModulatableControl = memo(function ModulatableControl({
 			/>
 
 			{createPortal(
-				<AnimatePresence>
-					{popoverOpen && (
-						<div ref={panelRef} style={panelStyle}>
-							<ModulationMenu
-								title={label ?? destinationId}
-								routes={activeRoutes}
-								onToggleEnabled={handleToggleEnabled}
-								onRemoveRoute={handleRemoveRoute}
-								onAmountChange={handleAmountChange}
-								onAddRoute={handleAddRoute}
-								onClose={closePopover}
-							/>
-						</div>
-					)}
-				</AnimatePresence>,
+				popoverOpen ? (
+					<motion.div
+						ref={panelRef}
+						style={panelStyle}
+						initial={{ opacity: 0, scale: 0.92, y: -6 }}
+						animate={{ opacity: 1, scale: 1, y: 0 }}
+						transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+					>
+						<ModulationMenu
+							title={label ?? destinationId}
+							routes={activeRoutes}
+							onToggleEnabled={handleToggleEnabled}
+							onRemoveRoute={handleRemoveRoute}
+							onAmountChange={handleAmountChange}
+							onAddRoute={handleAddRoute}
+							onClose={closePopover}
+						/>
+					</motion.div>
+				) : null,
 				document.body,
 			)}
 		</div>

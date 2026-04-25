@@ -81,15 +81,6 @@ export type ModMode = "normal" | "ring" | "noise"
 export type PolyMode = "poly8" | "mono"
 
 /**
- * Velocity routing target
- */
-export type VelocityTarget = "amp" | "dcw" | "both" | 
-/**
- * JS "off" means velocity is ignored (worklet passes 0 velocity)
- */
-"off"
-
-/**
  * LFO waveform
  */
 export type LfoWaveform = "sine" | "triangle" | "square" | "saw" | "invertedSaw" | "random"
@@ -155,6 +146,36 @@ depth: number;
  * Delay in milliseconds
  */
 delay: number }
+
+/**
+ * Parameters for the random (sample-and-hold) modulation source.
+ */
+export type RandomParams = { 
+/**
+ * Rate in Hz — how often the held value steps to a new random value.
+ */
+rate: number }
+
+/**
+ * ADSR mod envelope parameters.
+ */
+export type ModEnvParams = { 
+/**
+ * Attack time in seconds.
+ */
+attack: number; 
+/**
+ * Decay time in seconds.
+ */
+decay: number; 
+/**
+ * Sustain level [0, 1].
+ */
+sustain: number; 
+/**
+ * Release time in seconds.
+ */
+release: number }
 
 /**
  * Portamento parameters
@@ -256,28 +277,6 @@ export type ModSource = "lfo1" |
 "modEnv" | "velocity" | "modWheel" | "aftertouch"
 
 /**
- * Parameters for the random (sample-and-hold) modulation source.
- */
-export type RandomParams = { 
-/**
- * Rate in Hz — how often the held value steps to a new random value.
- */
-rate: number }
-
-/**
- * ADSR mod envelope parameters.
- */
-export type ModEnvParams = { 
-/** Attack time in seconds. */
-attack: number; 
-/** Decay time in seconds. */
-decay: number; 
-/** Sustain level [0, 1]. */
-sustain: number; 
-/** Release time in seconds. */
-release: number }
-
-/**
  * Modulation destination selector for modulation matrix routes.
  */
 export type ModDestination = "volume" | "pitch" | "intPmAmount" | "line1DcwBase" | "line1DcaBase" | "line1AlgoBlend" | "line1Detune" | "line1Octave" | "line1AlgoParam1" | "line1AlgoParam2" | "line1AlgoParam3" | "line1AlgoParam4" | "line1AlgoParam5" | "line1AlgoParam6" | "line1AlgoParam7" | "line1AlgoParam8" | "line2DcwBase" | "line2DcaBase" | "line2AlgoBlend" | "line2Detune" | "line2Octave" | "line2AlgoParam1" | "line2AlgoParam2" | "line2AlgoParam3" | "line2AlgoParam4" | "line2AlgoParam5" | "line2AlgoParam6" | "line2AlgoParam7" | "line2AlgoParam8" | "filterCutoff" | "filterResonance" | "filterEnvAmount" | "chorusMix" | "delayMix" | "reverbMix" | "vibratoDepth" | "lfoDepth" | "lfoRate"
@@ -299,7 +298,7 @@ export type ModMatrix = { routes?: ModRoute[] }
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
-export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; lfo2?: LfoParams; filter: FilterParams; 
+export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; lfo2?: LfoParams; filter: FilterParams; 
 /**
  * Pitch bend wheel range in semitones (1-24). Default 2.
  */
@@ -312,11 +311,11 @@ modWheelVibratoDepth?: number;
 /**
  * Modulation matrix routes for source-to-destination parameter modulation.
  */
-modMatrix?: ModMatrix;
+modMatrix?: ModMatrix; 
 /**
  * Parameters for the random (sample-and-hold) modulation source.
  */
-random?: RandomParams;
+random?: RandomParams; 
 /**
  * Parameters for the ADSR mod envelope.
  */

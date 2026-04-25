@@ -15,6 +15,7 @@ type ModuleFrameProps = {
 	onToggle?: () => void;
 	className?: string;
 	children: React.ReactNode;
+	showLed?: boolean; // whether to show the LED indicator (default: true)
 };
 
 export default function ModuleFrame({
@@ -25,6 +26,7 @@ export default function ModuleFrame({
 	onToggle,
 	className,
 	children,
+	showLed = true,
 }: ModuleFrameProps) {
 	const canToggle = Boolean(onToggle);
 	const dimmed = canToggle && !enabled;
@@ -34,7 +36,7 @@ export default function ModuleFrame({
 		<section
 			style={{ borderColor: color }}
 			className={[
-				`relative flex min-h-0 flex-col overflow-hidden border-4 rounded-b-sm bg-cz-body shadow-lg rounded-t-lg transition-[filter] ${canToggle ? "has-[[data-header]:hover]:brightness-125" : ""}`,
+				`relative flex min-h-0 flex-col overflow-hidden border-4 rounded-b-sm bg-cz-body shadow-lg rounded-t-lg transition-[filter]`,
 				dimmed ? "brightness-80" : "",
 				className,
 			]
@@ -48,17 +50,21 @@ export default function ModuleFrame({
 				onClick={canToggle ? onToggle : undefined}
 				style={{ backgroundColor: color }}
 				className={`relative flex w-full items-center px-2 py-1 ${
-					canToggle ? "cursor-pointer select-none" : "cursor-default"
+					canToggle
+						? "cursor-pointer select-none hover:brightness-125 transition-all duration-200"
+						: "cursor-default"
 				}`}
 			>
 				{/* LED dot — green indicator */}
-				<span
-					className={`inline-block h-1.5 w-3 shrink-0 rounded-[1px] transition-colors ${
-						enabled
-							? "bg-green-400 shadow-[0_0_5px_2px_rgba(74,222,128,0.8)]"
-							: "bg-green-950/80"
-					}`}
-				/>
+				{showLed && (
+					<span
+						className={`inline-block h-1.5 w-3 shrink-0 rounded-[1px] transition-colors ${
+							enabled
+								? "bg-green-400 shadow-[0_0_5px_2px_rgba(74,222,128,0.8)]"
+								: "bg-green-950/80"
+						}`}
+					/>
+				)}
 				{/* Title centered in the full header width */}
 				<span
 					style={{ color: textColor }}
@@ -71,7 +77,7 @@ export default function ModuleFrame({
 					{meta ? (
 						<span
 							style={{ color: textColor }}
-							className="font-mono text-[0.5rem] uppercase tracking-[0.15em] opacity-60"
+							className="font-mono text-5xs uppercase tracking-[0.15em] opacity-60"
 						>
 							{meta}
 						</span>
