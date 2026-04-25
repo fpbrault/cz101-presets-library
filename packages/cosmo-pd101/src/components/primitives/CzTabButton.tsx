@@ -10,6 +10,8 @@ type CzTabButtonProps = {
 	onClick?: () => void;
 	topLabel: React.ReactNode;
 	bottomLabel: React.ReactNode;
+	width?: number;
+	height?: number;
 	className?: string;
 	buttonClassName?: string;
 	disabled?: boolean;
@@ -83,6 +85,8 @@ export default function CzTabButton({
 	onClick,
 	topLabel,
 	bottomLabel,
+	width,
+	height,
 	className,
 	buttonClassName,
 	disabled = false,
@@ -93,14 +97,11 @@ export default function CzTabButton({
 }: CzTabButtonProps) {
 	const palette = colorStyles[color];
 	const resolvedLedColor = ledColor ?? (active ? "red" : "off");
+	const resolvedWidth = width ?? height ?? 48;
+	const resolvedHeight = height ?? width ?? 48;
 
 	return (
-		<div
-			className={joinClasses(
-				"w-full flex flex-col items-center gap-1",
-				className,
-			)}
-		>
+		<div className={joinClasses("flex flex-col items-center gap-1", className)}>
 			{showLed ? (
 				<motion.span
 					animate={
@@ -146,11 +147,12 @@ export default function CzTabButton({
 				}
 				transition={{ duration: 0.08, ease: "easeOut" }}
 				className={joinClasses(
-					"h-12 w-full shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold px-1 py-1",
+					"shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold px-1 py-1",
 					"disabled:opacity-40 disabled:cursor-not-allowed",
 					active ? palette.active : palette.inactive,
 					buttonClassName,
 				)}
+				style={{ width: `${resolvedWidth}px`, height: `${resolvedHeight}px` }}
 				aria-pressed={active}
 			>
 				<span className="text-center font-['Arial_Narrow','Arial',sans-serif]">

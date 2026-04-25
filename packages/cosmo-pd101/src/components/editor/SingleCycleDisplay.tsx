@@ -139,7 +139,7 @@ export const SynthSingleCycleDisplay = memo(function SynthSingleCycleDisplay() {
 	);
 
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const width = 176;
+	const width = 120;
 	const height = 64;
 
 	useEffect(() => {

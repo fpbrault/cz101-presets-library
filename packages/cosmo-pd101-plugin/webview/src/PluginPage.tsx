@@ -28,7 +28,6 @@ type PluginPageProps = {
 
 export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const lineSelect = useSynthStore((s) => s.lineSelect);
-	const polyMode = useSynthStore((s) => s.polyMode);
 	const filterEnabled = useSynthStore((s) => s.filterEnabled);
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
@@ -122,10 +121,10 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 		() => `PRESET ${activePresetName.toUpperCase()}`,
 		[activePresetName],
 	);
-	const lcdSecondaryText = useMemo(() => {
+	const _lcdSecondaryText = useMemo(() => {
 		const filterStatus = filterEnabled ? "FILT ON" : "FILT OFF";
-		return `LINE ${lineSelect} | ${polyMode.toUpperCase()} | ${filterStatus}`;
-	}, [lineSelect, polyMode, filterEnabled]);
+		return `LINE ${lineSelect} | ${filterStatus}`;
+	}, [lineSelect, filterEnabled]);
 
 	return (
 		<SynthRenderer
@@ -177,7 +176,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 				</>
 			}
 			lcdPrimaryText={lcdPrimaryText}
-			lcdSecondaryText={lcdSecondaryText}
+			lcdSecondaryText={""}
 			lcdTransientReadout={lcdControlReadout}
 			effectivePitchHz={scopeActiveHz}
 			analyserNodeRef={analyserNodeRef}

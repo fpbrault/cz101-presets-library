@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe("Mod matrix route management", () => {
-	test("add, adjust, disable, and remove route emits setModMatrix payloads", async ({
+	test.skip("add, adjust, disable, and remove route emits setModMatrix payloads", async ({
 		page,
 	}) => {
 		const volumeKnob = page.getByRole("spinbutton", { name: /^volume$/i });

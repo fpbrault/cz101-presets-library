@@ -6,6 +6,7 @@ import {
 	useEffect,
 	useState,
 } from "react";
+import ControlKnob from "@/components/controls/ControlKnob";
 import LineSelectControl from "@/components/controls/LineSelectControl";
 import ModModeControl from "@/components/controls/ModModeControl";
 import type { EnvOverrideHandlers } from "@/components/editor/PhaseLinesSection";
@@ -19,19 +20,20 @@ import ChorusPanel from "@/components/panels/fx/ChorusPanel";
 import DelayPanel from "@/components/panels/fx/DelayPanel";
 import FxConsoleDrawer from "@/components/panels/fx/FxConsoleDrawer";
 import ReverbPanel from "@/components/panels/fx/ReverbPanel";
-import SynthFilterPanel from "@/components/panels/fx/SynthFilterPanel";
 import ModConsoleDrawer from "@/components/panels/mod/ModConsoleDrawer";
 import GlobalVoicePanel from "@/components/panels/voice/GlobalVoicePanel";
 import PhaseModPanel from "@/components/panels/voice/PhaseModPanel";
-import PortamentoPanel from "@/components/panels/voice/PortamentoPanel";
 import VibratoPanel from "@/components/panels/voice/VibratoPanel";
 import PresetLibrary from "@/components/preset/PresetLibrary";
 import SynthHeader, {
 	type SynthHeaderProps,
 } from "@/components/preset/SynthHeader";
-import CzButton from "@/components/primitives/CzButton";
+import CzTabButton from "@/components/primitives/CzTabButton";
 import { ModMatrixProvider } from "@/context/ModMatrixContext";
-import { SynthParamControllerProvider } from "@/features/synth/SynthParamController";
+import {
+	SynthParamControllerProvider,
+	useSynthParam,
+} from "@/features/synth/SynthParamController";
 import { useSynthStore } from "@/features/synth/synthStore";
 import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import { HoverInfoProvider, useHoverInfo } from "../layout/HoverInfo";
@@ -180,7 +182,6 @@ function SynthRendererContent({
 								onTabChange={onAsidePanelChange}
 							>
 								<GlobalVoicePanel />
-								<PortamentoPanel />
 								<PhaseModPanel />
 								<VibratoPanel />
 								<ScopePanel
@@ -189,7 +190,6 @@ function SynthRendererContent({
 									effectivePitchHz={effectivePitchHz}
 									subscribeScopeFrames={subscribeScopeFrames}
 								/>
-								<SynthFilterPanel />
 								<ChorusPanel />
 								<DelayPanel />
 								<ReverbPanel />
@@ -200,40 +200,45 @@ function SynthRendererContent({
 							<div className="flex w-full max-w-none min-h-0 flex-1 flex-col gap-2 rounded-[1.2rem] border border-cz-border/80 bg-cz-surface p-2 xl:p-3 2xl:mx-auto 2xl:max-w-5xl shadow-xl">
 								<div className="pointer-events-none absolute inset-x-4 top-0 h-12 rounded-t-[1.2rem] opacity-70" />
 								<div className="relative shrink-0 rounded-md border border-cz-border bg-cz-body px-2 py-2 xl:px-3 shadow-inner">
-									<div className="flex flex-wrap items-end justify-end gap-x-2 gap-y-2 xl:gap-x-4">
+									<div className="flex flex-wrap justify-center gap-x-2 gap-y-2 xl:gap-x-4 items-center">
+										<MasterVolumeControl />
 										<LineSelectControl />
+
 										<ModModeControl />
 										<SynthSingleCycleDisplay />
-										<div className="flex items-end gap-2 border-l border-cz-border pl-2 xl:pl-3">
-											<CzButton
+										<div className="flex items-end gap-2">
+											<CzTabButton
 												active={mainPanelMode === "phase"}
 												onClick={() => setMainPanelMode("phase")}
-												className="[&_button]:w-18"
-											>
-												Main
-											</CzButton>
-											<CzButton
+												topLabel="Main"
+												bottomLabel=""
+												color="red"
+												width={48}
+											></CzTabButton>
+											<CzTabButton
 												active={mainPanelMode === "fx"}
 												onClick={() =>
 													setMainPanelMode(
 														mainPanelMode === "fx" ? "phase" : "fx",
 													)
 												}
-												className="[&_button]:w-18"
-											>
-												FX
-											</CzButton>
-											<CzButton
+												topLabel="FX"
+												bottomLabel=""
+												width={48}
+												color="blue"
+											></CzTabButton>
+											<CzTabButton
 												active={mainPanelMode === "mod"}
 												onClick={() =>
 													setMainPanelMode(
 														mainPanelMode === "mod" ? "phase" : "mod",
 													)
 												}
-												className="[&_button]:w-18"
-											>
-												MOD
-											</CzButton>
+												topLabel="MOD"
+												bottomLabel=""
+												width={48}
+												color="cyan"
+											></CzTabButton>
 										</div>
 									</div>
 								</div>
@@ -353,6 +358,26 @@ function SynthRendererContent({
 				</div>
 			</SynthParamControllerProvider>
 		</ModMatrixProvider>
+	);
+}
+
+function MasterVolumeControl() {
+	const { value: volume, setValue: setVolume } = useSynthParam("volume");
+
+	return (
+		<div className="shrink-0">
+			<ControlKnob
+				value={volume}
+				onChange={setVolume}
+				min={0}
+				max={1}
+				size={48}
+				color="white"
+				label="Main Volume"
+				valueFormatter={(value) => `${Math.round(value * 100)}%`}
+				modDestination="volume"
+			/>
+		</div>
 	);
 }
 
