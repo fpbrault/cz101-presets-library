@@ -456,14 +456,29 @@ impl Default for DelayParams {
     }
 }
 
+fn default_reverb_damping() -> f32 {
+    0.5
+}
+
+fn default_reverb_size() -> f32 {
+    0.5
+}
+
 /// Reverb parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct ReverbParams {
     #[serde(default)]
     pub enabled: bool,
+    #[serde(default = "default_reverb_size")]
     pub size: f32,
     pub mix: f32,
+    /// High-frequency damping amount (0 = bright, 1 = dark). Default 0.5.
+    #[serde(default = "default_reverb_damping")]
+    pub damping: f32,
+    /// Pre-delay time in seconds (0–0.1 s). Default 0.
+    #[serde(default)]
+    pub pre_delay: f32,
 }
 
 impl Default for ReverbParams {
@@ -472,6 +487,8 @@ impl Default for ReverbParams {
             enabled: false,
             size: 0.5,
             mix: 0.0,
+            damping: 0.5,
+            pre_delay: 0.0,
         }
     }
 }

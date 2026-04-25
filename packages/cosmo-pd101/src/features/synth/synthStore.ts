@@ -148,6 +148,8 @@ export type SynthState = {
 	reverbEnabled: boolean;
 	reverbSize: number;
 	reverbMix: number;
+	reverbDamping: number;
+	reverbPreDelay: number;
 
 	vibratoEnabled: boolean;
 	vibratoWave: number;
@@ -256,6 +258,8 @@ type SynthActions = {
 	setReverbEnabled: (v: boolean) => void;
 	setReverbSize: (v: number) => void;
 	setReverbMix: (v: number) => void;
+	setReverbDamping: (v: number) => void;
+	setReverbPreDelay: (v: number) => void;
 
 	setVibratoEnabled: (v: boolean) => void;
 	setVibratoWave: (v: number) => void;
@@ -369,6 +373,8 @@ const DEFAULT_STATE: SynthState = {
 	reverbEnabled: false,
 	reverbSize: 0.5,
 	reverbMix: 0,
+	reverbDamping: 0.5,
+	reverbPreDelay: 0,
 
 	vibratoEnabled: false,
 	vibratoWave: 1,
@@ -488,6 +494,8 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 	setReverbEnabled: (v) => set({ reverbEnabled: v }),
 	setReverbSize: (v) => set({ reverbSize: v }),
 	setReverbMix: (v) => set({ reverbMix: v }),
+	setReverbDamping: (v) => set({ reverbDamping: v }),
+	setReverbPreDelay: (v) => set({ reverbPreDelay: v }),
 
 	setVibratoEnabled: (v) => set({ vibratoEnabled: v }),
 	setVibratoWave: (v) => set({ vibratoWave: v }),
@@ -617,6 +625,8 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 					enabled: s.reverbEnabled,
 					size: s.reverbSize,
 					mix: s.reverbMix,
+					damping: s.reverbDamping,
+					preDelay: s.reverbPreDelay,
 				},
 				vibrato: {
 					enabled: s.vibratoEnabled,
@@ -782,6 +792,8 @@ export const useSynthStore = create<SynthStore>((set, get) => ({
 			reverbSize: safe(p.reverb?.size, 0.5),
 			reverbMix: safe(p.reverb?.mix, 0),
 			reverbEnabled: p.reverb?.enabled ?? safe(p.reverb?.mix, 0) > 0,
+			reverbDamping: safe(p.reverb?.damping, 0.5),
+			reverbPreDelay: safe(p.reverb?.preDelay, 0),
 			lineSelect: (p.lineSelect as LineSelect) ?? "L1+L2",
 			modMode: (p.modMode as ModMode) ?? "normal",
 			line1DcwKeyFollow: safe(p.line1?.keyFollow, 0),

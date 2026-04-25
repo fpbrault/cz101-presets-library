@@ -59,6 +59,8 @@
 		"reverbSize": "Reverb Size",
 		"reverbEnabled": "Reverb",
 		"reverbMix": "Reverb Mix",
+		"reverbDamping": "Reverb Damping",
+		"reverbPreDelay": "Reverb Pre-Delay",
 		"scopeCycles": "Scope Cycles",
 		"scopeVerticalZoom": "Scope Zoom",
 		"scopeTriggerLevel": "Scope Trigger"

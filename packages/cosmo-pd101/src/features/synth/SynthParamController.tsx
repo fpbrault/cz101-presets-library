@@ -98,6 +98,8 @@ const SYNTH_PARAM_SETTERS = {
 	reverbEnabled: "setReverbEnabled",
 	reverbSize: "setReverbSize",
 	reverbMix: "setReverbMix",
+	reverbDamping: "setReverbDamping",
+	reverbPreDelay: "setReverbPreDelay",
 } as const;
 
 export type SynthParamKey = keyof typeof SYNTH_PARAM_SETTERS;

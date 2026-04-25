@@ -439,6 +439,16 @@ const PLUGIN_PARAM_DESCRIPTORS: PluginParamDescriptor[] = [
 		apply: (value, s) => s.setReverbSize(value),
 	},
 	{
+		id: "rev_damping",
+		read: (params) => params.reverb.damping ?? 0.5,
+		apply: (value, s) => s.setReverbDamping(value),
+	},
+	{
+		id: "rev_pre_delay",
+		read: (params) => params.reverb.preDelay ?? 0,
+		apply: (value, s) => s.setReverbPreDelay(value),
+	},
+	{
 		id: "lfo_waveform",
 		read: (params) => LFO_WAVE_IDS[params.lfo.waveform as LfoWaveform] ?? 0,
 		apply: (value, s) =>

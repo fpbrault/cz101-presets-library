@@ -117,7 +117,15 @@ export type DelayParams = { enabled?: boolean; time: number; feedback: number; m
 /**
  * Reverb parameters
  */
-export type ReverbParams = { enabled?: boolean; size: number; mix: number }
+export type ReverbParams = { enabled?: boolean; size: number; mix: number; 
+/**
+ * High-frequency damping amount (0 = bright, 1 = dark). Default 0.5.
+ */
+damping?: number; 
+/**
+ * Pre-delay time in seconds (0–0.1 s). Default 0.
+ */
+preDelay?: number }
 
 /**
  * Vibrato parameters

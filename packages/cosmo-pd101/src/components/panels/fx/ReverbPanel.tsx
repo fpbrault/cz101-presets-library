@@ -9,6 +9,10 @@ const ReverbPanel: AsidePanelComponent<"reverb"> = Object.assign(
 			useSynthParam("reverbEnabled");
 		const { value: size, setValue: setSize } = useSynthParam("reverbSize");
 		const { value: mix, setValue: setMix } = useSynthParam("reverbMix");
+		const { value: damping, setValue: setDamping } =
+			useSynthParam("reverbDamping");
+		const { value: preDelay, setValue: setPreDelay } =
+			useSynthParam("reverbPreDelay");
 
 		return (
 			<SynthPanelContainer
@@ -21,6 +25,10 @@ const ReverbPanel: AsidePanelComponent<"reverb"> = Object.assign(
 					setSize={setSize}
 					mix={mix}
 					setMix={setMix}
+					damping={damping}
+					setDamping={setDamping}
+					preDelay={preDelay}
+					setPreDelay={setPreDelay}
 				/>
 			</SynthPanelContainer>
 		);

@@ -137,11 +137,15 @@ pub struct FxChain {
     smooth_delay_samples: f32,
 
     // Freeverb-style reverb
-    pub reverb_combs: [CombFilter; 4],
+    pub reverb_combs: [CombFilter; 8],
     pub reverb_allpass: [AllPassFilter; 4],
+    pub reverb_pre_delay_line: DelayLine,
     pub reverb_mix: f32,
     pub reverb_size: f32,
+    pub reverb_damping: f32,
+    pub reverb_pre_delay: f32,
     pub reverb_enabled: bool,
+    smooth_reverb_pre_delay: f32,
 
     sample_rate: f32,
 }
@@ -152,8 +156,9 @@ impl FxChain {
     /// Delay-line sizes match the JS constructor exactly:
     /// - Chorus buffer : `round(0.05 * sr) + 2`
     /// - Delay line    : `round(2 * sr)`
-    /// - Comb sizes    : 1557, 1617, 1491, 1422  (scaled by sr/44100)
-    /// - Allpass sizes : 225, 556, 441, 341       (scaled by sr/44100)
+    /// - Comb sizes    : 1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116  (scaled by sr/44100)
+    /// - Allpass sizes : 225, 556, 441, 341                               (scaled by sr/44100)
+    /// - Pre-delay buf : `round(0.1 * sr) + 2`
     pub fn new(sr: f32) -> Self {
         let sr_ratio = sr / 44100.0;
 
@@ -165,13 +170,17 @@ impl FxChain {
         let delay_buf_len = libm::roundf(2.0 * sr) as usize;
         let delay_line = DelayLine::new(delay_buf_len);
 
-        // Reverb combs
-        let comb_sizes = [1557_f32, 1617.0, 1491.0, 1422.0];
+        // Reverb combs — full 8-filter Freeverb network
+        let comb_sizes = [1557_f32, 1617.0, 1491.0, 1422.0, 1277.0, 1356.0, 1188.0, 1116.0];
         let reverb_combs = [
             CombFilter::new(libm::roundf(comb_sizes[0] * sr_ratio) as usize),
             CombFilter::new(libm::roundf(comb_sizes[1] * sr_ratio) as usize),
             CombFilter::new(libm::roundf(comb_sizes[2] * sr_ratio) as usize),
             CombFilter::new(libm::roundf(comb_sizes[3] * sr_ratio) as usize),
+            CombFilter::new(libm::roundf(comb_sizes[4] * sr_ratio) as usize),
+            CombFilter::new(libm::roundf(comb_sizes[5] * sr_ratio) as usize),
+            CombFilter::new(libm::roundf(comb_sizes[6] * sr_ratio) as usize),
+            CombFilter::new(libm::roundf(comb_sizes[7] * sr_ratio) as usize),
         ];
 
         // Reverb allpasses
@@ -182,6 +191,10 @@ impl FxChain {
             AllPassFilter::new(libm::roundf(ap_sizes[2] * sr_ratio) as usize),
             AllPassFilter::new(libm::roundf(ap_sizes[3] * sr_ratio) as usize),
         ];
+
+        // Reverb pre-delay line (max 100 ms)
+        let pre_delay_buf_len = libm::roundf(0.1 * sr) as usize + 2;
+        let reverb_pre_delay_line = DelayLine::new(pre_delay_buf_len);
 
         Self {
             chorus_delay,
@@ -201,9 +214,13 @@ impl FxChain {
 
             reverb_combs,
             reverb_allpass,
+            reverb_pre_delay_line,
             reverb_mix: 0.0,
             reverb_size: 0.5,
+            reverb_damping: 0.5,
+            reverb_pre_delay: 0.0,
             reverb_enabled: false,
+            smooth_reverb_pre_delay: 0.0,
 
             sample_rate: sr,
         }
@@ -269,32 +286,53 @@ impl FxChain {
     }
 
     /// Process Freeverb-style reverb with equal-power wet/dry mix.
+    ///
+    /// Improvements over the original 4-comb design:
+    /// - Full 8-comb Freeverb network for denser, more natural reverb tails.
+    /// - Independent `reverb_damping` parameter (0 = bright, 1 = dark).
+    /// - Pre-delay line for added depth and dry/wet separation.
     pub fn process_reverb(&mut self, sample: f32) -> f32 {
         if !self.reverb_enabled || self.reverb_mix <= 0.0 {
             return sample;
         }
         let size = self.reverb_size;
         let feedback = 0.28 + size * 0.56;
-        let damping = 0.15 + (1.0 - size) * 0.5;
+        // Map 0–1 damping param to a perceptually useful range (0.05–0.85).
+        let damping = 0.05 + self.reverb_damping * 0.8;
 
+        // Smooth and apply pre-delay.
+        self.smooth_reverb_pre_delay = Self::smooth(
+            self.smooth_reverb_pre_delay,
+            self.reverb_pre_delay * self.sample_rate,
+            SMOOTH_COEFF,
+        );
+        let pre_delay_samples = self.smooth_reverb_pre_delay;
+        self.reverb_pre_delay_line.write(sample);
+        let reverb_input = if pre_delay_samples >= 1.0 {
+            self.reverb_pre_delay_line.read_at_fractional(pre_delay_samples)
+        } else {
+            sample
+        };
+
+        // Sum all 8 comb filters in parallel.
         let mut sum = 0.0_f32;
-        for i in 0..4 {
-            sum += self.reverb_combs[i].process(sample, feedback, damping);
+        for i in 0..8 {
+            sum += self.reverb_combs[i].process(reverb_input, feedback, damping);
         }
-        sum /= 4.0;
+        sum /= 8.0;
 
+        // Cascade 4 allpass diffusers.
         let allpass_feedback = 0.55 + size * 0.1;
         for i in 0..4 {
             self.reverb_allpass[i].feedback = allpass_feedback;
             sum = self.reverb_allpass[i].process(sum);
         }
 
-        let reverb_gain = 0.3 + size * 0.25;
         // Equal-power crossfade: dry² + wet² = 1
         let mix_angle = self.reverb_mix * core::f32::consts::PI * 0.5;
         let dry_gain = cosf(mix_angle);
         let wet_gain = sinf(mix_angle);
-        sample * dry_gain + sum * wet_gain * reverb_gain
+        sample * dry_gain + sum * wet_gain
     }
 
     /// Run chorus → delay → reverb chain.

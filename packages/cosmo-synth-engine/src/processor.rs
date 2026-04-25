@@ -102,6 +102,8 @@ impl CosmoProcessor {
         self.fx.reverb_enabled = p.reverb.enabled;
         self.fx.reverb_size = p.reverb.size;
         self.fx.reverb_mix = p.reverb.mix;
+        self.fx.reverb_damping = p.reverb.damping;
+        self.fx.reverb_pre_delay = p.reverb.pre_delay;
     }
 
     // -----------------------------------------------------------------------

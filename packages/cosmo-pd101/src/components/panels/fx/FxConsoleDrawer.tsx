@@ -28,6 +28,10 @@ export default function FxConsoleDrawer() {
 		useSynthParam("reverbSize");
 	const { value: reverbMix, setValue: setReverbMix } =
 		useSynthParam("reverbMix");
+	const { value: reverbDamping, setValue: setReverbDamping } =
+		useSynthParam("reverbDamping");
+	const { value: reverbPreDelay, setValue: setReverbPreDelay } =
+		useSynthParam("reverbPreDelay");
 
 	return (
 		<div className="grid h-full min-h-0 grid-cols-2 grid-rows-2 gap-2">
@@ -127,7 +131,7 @@ export default function FxConsoleDrawer() {
 				onToggle={() => setReverbEnabled(!reverbEnabled)}
 				className="col-span-2"
 			>
-				<div className="grid grid-cols-2 gap-4">
+				<div className="grid grid-cols-4 gap-4">
 					<ControlKnob
 						value={reverbSize}
 						onChange={setReverbSize}
@@ -135,10 +139,31 @@ export default function FxConsoleDrawer() {
 						max={1}
 						defaultValue={0.5}
 						size={96}
-						//some kind of dark orange
 						color="#f97316"
 						label="Size"
 						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
+					<ControlKnob
+						value={reverbDamping}
+						onChange={setReverbDamping}
+						min={0}
+						max={1}
+						defaultValue={0.5}
+						size={96}
+						color="#f97316"
+						label="Damping"
+						valueFormatter={(value) => `${Math.round(value * 100)}%`}
+					/>
+					<ControlKnob
+						value={reverbPreDelay}
+						onChange={setReverbPreDelay}
+						min={0}
+						max={0.1}
+						defaultValue={0}
+						size={96}
+						color="#f97316"
+						label="Pre-Dly"
+						valueFormatter={(value) => `${Math.round(value * 1000)}ms`}
 					/>
 					<ControlKnob
 						value={reverbMix}
