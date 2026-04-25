@@ -11,7 +11,7 @@ use crate::envelope::{EnvGen, EnvelopeKind};
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
     FilterType, LfoWaveform, LineParams, LineSelect, ModDestination, ModEnvParams, ModMatrix,
-    ModMode, ModSource, PortamentoMode, SynthParams, 
+    ModMode, ModSource, PortamentoMode, SynthParams,
 };
 
 // TWO_PI for f32
@@ -552,7 +552,6 @@ fn build_signal_state(
     let matrix = &p.mod_matrix;
     let dca1_level = l1.dca_base * env.dca1;
     let dca2_level = l2.dca_base * env.dca2;
-
 
     // Mod matrix offsets for DCW/DCA
     let dcw1_mod = mod_value_for(ModDestination::Line1DcwBase, matrix, sources);

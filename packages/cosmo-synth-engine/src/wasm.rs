@@ -100,10 +100,8 @@ impl CzSynthProcessor {
             Ok(json) => json,
             Err(e) => {
                 web_sys::console::error_1(
-                    &format!(
-                        "[cosmo-synth-engine] getRuntimeModSources serialize error: {e}"
-                    )
-                    .into(),
+                    &format!("[cosmo-synth-engine] getRuntimeModSources serialize error: {e}")
+                        .into(),
                 );
                 serde_json::to_string(&RuntimeModSources::default())
                     .unwrap_or_else(|_| String::from("{}"))

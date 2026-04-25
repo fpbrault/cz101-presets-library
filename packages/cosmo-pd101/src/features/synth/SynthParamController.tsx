@@ -184,7 +184,8 @@ export function SynthParamControllerProvider({
 
 	useEffect(() => {
 		const onRuntimeModSources = (event: Event) => {
-			const detail = (event as CustomEvent<RuntimeModSources | undefined>).detail;
+			const detail = (event as CustomEvent<RuntimeModSources | undefined>)
+				.detail;
 			if (!detail) {
 				return;
 			}
@@ -196,18 +197,13 @@ export function SynthParamControllerProvider({
 				modEnv: Number.isFinite(detail.modEnv) ? detail.modEnv : 0,
 				velocity: Number.isFinite(detail.velocity) ? detail.velocity : 0,
 				modWheel: Number.isFinite(detail.modWheel) ? detail.modWheel : 0,
-				aftertouch: Number.isFinite(detail.aftertouch)
-					? detail.aftertouch
-					: 0,
+				aftertouch: Number.isFinite(detail.aftertouch) ? detail.aftertouch : 0,
 			});
 		};
 
 		window.addEventListener("cz-runtime-mod-sources", onRuntimeModSources);
 		return () => {
-			window.removeEventListener(
-				"cz-runtime-mod-sources",
-				onRuntimeModSources,
-			);
+			window.removeEventListener("cz-runtime-mod-sources", onRuntimeModSources);
 		};
 	}, []);
 

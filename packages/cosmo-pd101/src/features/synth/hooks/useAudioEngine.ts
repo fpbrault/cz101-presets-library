@@ -297,10 +297,9 @@ export function useAudioEngine({
 						const sources = normalizeRuntimeModSources(e.data.sources);
 						if (sources) {
 							window.dispatchEvent(
-								new CustomEvent<RuntimeModSources>(
-									"cz-runtime-mod-sources",
-									{ detail: sources },
-								),
+								new CustomEvent<RuntimeModSources>("cz-runtime-mod-sources", {
+									detail: sources,
+								}),
 							);
 						}
 					} else if (e.data?.type === "error") {

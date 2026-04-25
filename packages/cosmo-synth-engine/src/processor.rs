@@ -119,7 +119,11 @@ impl CosmoProcessor {
                     voice.note.is_some() && (!voice.is_silent || voice.mod_env.output > 0.0)
                 })
             })
-            .or_else(|| self.voices.iter().position(|voice| voice.mod_env.output > 0.0))
+            .or_else(|| {
+                self.voices
+                    .iter()
+                    .position(|voice| voice.mod_env.output > 0.0)
+            })
     }
 
     pub fn runtime_mod_sources(&self) -> RuntimeModSources {

@@ -319,7 +319,10 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 				sources,
 			});
 		} catch (err) {
-			console.error("[czSynthWorklet] Failed to read runtime mod sources:", err);
+			console.error(
+				"[czSynthWorklet] Failed to read runtime mod sources:",
+				err,
+			);
 		}
 	}
 

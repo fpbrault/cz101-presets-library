@@ -11,7 +11,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use beamer::prelude::*;
 use cosmo_synth_engine::default_envelopes::{default_dca_env, default_dco_env, default_dcw_env};
 use cosmo_synth_engine::params::{
-    AlgoControlValueV1, ModMatrix, PolyMode, StepEnvData, SynthParams
+    AlgoControlValueV1, ModMatrix, PolyMode, StepEnvData, SynthParams,
 };
 use cosmo_synth_engine::processor::{midi_note_to_freq, CosmoProcessor};
 
