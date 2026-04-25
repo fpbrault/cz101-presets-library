@@ -92,7 +92,7 @@ export type VelocityTarget = "amp" | "dcw" | "both" |
 /**
  * LFO waveform
  */
-export type LfoWaveform = "sine" | "triangle" | "square" | "saw"
+export type LfoWaveform = "sine" | "triangle" | "square" | "saw" | "invertedSaw" | "random"
 
 /**
  * Filter type
@@ -103,14 +103,6 @@ export type FilterType = "lp" | "hp" | "bp"
  * Portamento mode
  */
 export type PortamentoMode = "rate" | "time"
-
-/**
- * LFO target.
- * 
- * Deprecated: per-destination routing should now be done through the modulation matrix.
- * This enum is kept for backward-compatible preset/state deserialization.
- */
-export type LfoTarget = "pitch" | "dcw" | "dca" | "filter"
 
 /**
  * Chorus parameters
@@ -156,7 +148,7 @@ export type PortamentoParams = { enabled: boolean; mode: PortamentoMode; rate: n
 /**
  * LFO parameters
  */
-export type LfoParams = { enabled: boolean; waveform: LfoWaveform; 
+export type LfoParams = { waveform: LfoWaveform; 
 /**
  * Rate in Hz
  */
@@ -166,10 +158,13 @@ rate: number;
  */
 depth: number; 
 /**
- * Deprecated: use modulation matrix routes for destination selection.
- * Kept for backward compatibility.
+ * Symmetry [0, 1] (0 = saw, 0.5 = triangle, 1 = reverse saw)
  */
-target: LfoTarget; 
+symmetry: number; 
+/**
+ * Retrigger LFO on note-on
+ */
+retrigger: boolean; 
 /**
  * DC offset/bias applied to LFO output [-1, 1]
  */
@@ -232,7 +227,7 @@ export type AlgoUiEntryV1 = { id: Algo; label: string; iconPath: string; visible
  */
 export type ModSource = "lfo1" | 
 /**
- * LFO2 is currently a placeholder source and evaluates to 0.0 in DSP.
+ * Secondary LFO source.
  */
 "lfo2" | "velocity" | "modWheel" | "aftertouch"
 
@@ -258,7 +253,7 @@ export type ModMatrix = { routes?: ModRoute[] }
 /**
  * Top-level synth parameters (mirrors this.params in the JS)
  */
-export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; filter: FilterParams; 
+export type SynthParams = { lineSelect: LineSelect; modMode: ModMode; ringGain?: number; octave: number; line1: LineParams; line2: LineParams; intPmEnabled?: boolean; intPmAmount: number; intPmRatio: number; extPmAmount: number; pmPre: boolean; frequency: number; volume: number; polyMode: PolyMode; legato: boolean; velocityTarget: VelocityTarget; chorus: ChorusParams; delay: DelayParams; reverb: ReverbParams; vibrato: VibratoParams; portamento: PortamentoParams; lfo: LfoParams; lfo2?: LfoParams; filter: FilterParams; 
 /**
  * Pitch bend wheel range in semitones (1-24). Default 2.
  */

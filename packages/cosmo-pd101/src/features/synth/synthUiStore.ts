@@ -38,7 +38,6 @@ const ASIDE_PANEL_TABS = new Set<AsidePanelTab>([
 	"phaseMod",
 	"vibrato",
 	"portamento",
-	"lfo",
 	"filter",
 	"chorus",
 	"delay",

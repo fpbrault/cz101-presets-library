@@ -7,7 +7,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::array;
 
-use crate::dsp_utils::lfo_output;
+use crate::dsp_utils::lfo_output_with_symmetry;
 use crate::envelope::normalize_synth_params_envelopes_to_raw_if_human;
 use crate::fx::FxChain;
 use crate::generators::PER_LINE_HEADROOM;
@@ -50,6 +50,7 @@ pub struct CosmoProcessor {
     pub mono_stack: Vec<MonoStackEntry>,
     pub sustain_on: bool,
     pub lfo_phase: f32,
+    pub lfo2_phase: f32,
     pub params: SynthParams,
     pub sample_rate: f32,
     /// Normalised pitch bend value in [-1.0, 1.0].
@@ -72,6 +73,7 @@ impl CosmoProcessor {
             mono_stack: Vec::new(),
             sustain_on: false,
             lfo_phase: 0.0,
+            lfo2_phase: 0.0,
             params: SynthParams::default(),
             sample_rate,
             pitch_bend: 0.0,
@@ -318,6 +320,13 @@ impl CosmoProcessor {
     pub fn note_on(&mut self, note: u8, frequency: f32, velocity: f32) {
         let vel = if velocity <= 0.0 { 1.0 } else { velocity };
 
+        if self.params.lfo.retrigger {
+            self.lfo_phase = 0.0;
+        }
+        if self.params.lfo2.retrigger {
+            self.lfo2_phase = 0.0;
+        }
+
         if self.params.poly_mode == PolyMode::Mono {
             self.handle_mono_note_on(note, frequency, vel);
         } else {
@@ -413,9 +422,16 @@ impl CosmoProcessor {
     pub fn process(&mut self, output: &mut [f32]) {
         let p = &self.params;
         let volume = p.volume;
-        let lfo_enabled = p.lfo.enabled;
-        let lfo_rate = p.lfo.rate;
-        let lfo_waveform = p.lfo.waveform;
+        let lfo1_rate = p.lfo.rate;
+        let lfo1_waveform = p.lfo.waveform;
+        let lfo1_symmetry = p.lfo.symmetry;
+        let lfo1_depth = p.lfo.depth;
+        let lfo1_offset = p.lfo.offset;
+        let lfo2_rate = p.lfo2.rate;
+        let lfo2_waveform = p.lfo2.waveform;
+        let lfo2_symmetry = p.lfo2.symmetry;
+        let lfo2_depth = p.lfo2.depth;
+        let lfo2_offset = p.lfo2.offset;
         let sr = self.sample_rate;
         let headroom_ratio = REFERENCE_LINE_HEADROOM / PER_LINE_HEADROOM.max(0.01);
         let headroom_makeup =
@@ -423,15 +439,22 @@ impl CosmoProcessor {
         let norm = volume * headroom_makeup / libm::sqrtf(NUM_VOICES as f32);
 
         for sample_out in output.iter_mut() {
-            let lfo_mod_val = if lfo_enabled {
-                self.lfo_phase += lfo_rate / sr;
-                if self.lfo_phase >= 1.0 {
-                    self.lfo_phase -= 1.0;
-                }
-                lfo_output(self.lfo_phase, lfo_waveform)
-            } else {
-                0.0
-            };
+            self.lfo_phase += lfo1_rate / sr;
+            if self.lfo_phase >= 1.0 {
+                self.lfo_phase -= 1.0;
+            }
+            let lfo1_mod_val =
+                lfo_output_with_symmetry(self.lfo_phase, lfo1_waveform, lfo1_symmetry) * lfo1_depth
+                    + lfo1_offset;
+
+            self.lfo2_phase += lfo2_rate / sr;
+            if self.lfo2_phase >= 1.0 {
+                self.lfo2_phase -= 1.0;
+            }
+            let lfo2_mod_val =
+                lfo_output_with_symmetry(self.lfo2_phase, lfo2_waveform, lfo2_symmetry)
+                    * lfo2_depth
+                    + lfo2_offset;
 
             let mut mixed = 0.0_f32;
             // SAFETY: `voices` and `params` are separate fields; we use raw pointer to avoid
@@ -446,7 +469,8 @@ impl CosmoProcessor {
                 mixed += render_voice(
                     &mut self.voices[v],
                     p_ref,
-                    lfo_mod_val,
+                    lfo1_mod_val,
+                    lfo2_mod_val,
                     sr,
                     pitch_bend_semitones,
                     mod_wheel,

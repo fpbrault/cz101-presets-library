@@ -78,22 +78,40 @@ pub fn apply_window(phase: f32, window: WindowType) -> f32 {
 
 /// LFO sample for phase ∈ [0, 1). Mirrors `lfoOutput` in the JS.
 pub fn lfo_output(phase: f32, waveform: LfoWaveform) -> f32 {
+    lfo_output_with_symmetry(phase, waveform, 0.5)
+}
+
+fn random_hold_value(step_index: i32) -> f32 {
+    let seed = step_index as f32 * 12.9898 + 78.233;
+    let hash = libm::sinf(seed) * 43758.5453;
+    let fract = hash - libm::floorf(hash);
+    fract * 2.0 - 1.0
+}
+
+pub fn lfo_output_with_symmetry(phase: f32, waveform: LfoWaveform, symmetry: f32) -> f32 {
+    let sym = symmetry.clamp(0.001, 0.999);
     match waveform {
         LfoWaveform::Sine => libm::sinf(TWO_PI * phase),
         LfoWaveform::Triangle => {
-            if phase < 0.5 {
-                4.0 * phase - 1.0
+            if phase < sym {
+                (phase / sym) * 2.0 - 1.0
             } else {
-                3.0 - 4.0 * phase
+                1.0 - ((phase - sym) / (1.0 - sym)) * 2.0
             }
         }
         LfoWaveform::Square => {
-            if phase < 0.5 {
+            if phase < sym {
                 1.0
             } else {
                 -1.0
             }
         }
         LfoWaveform::Saw => phase * 2.0 - 1.0,
+        LfoWaveform::InvertedSaw => 1.0 - phase * 2.0,
+        LfoWaveform::Random => {
+            let steps_per_cycle = 16.0;
+            let step_index = libm::floorf(phase * steps_per_cycle) as i32;
+            random_hold_value(step_index)
+        }
     }
 }

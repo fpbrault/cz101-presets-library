@@ -11,7 +11,6 @@ import type {
 	AlgoControlValueV1,
 	CzWaveform,
 	FilterType,
-	LfoTarget,
 	LfoWaveform,
 	LineSelect,
 	ModMatrix,
@@ -115,14 +114,6 @@ const LFO_WAVE_IDS: EnumToIdMap<LfoWaveform> = {
 	saw: 3,
 };
 const LFO_WAVE_FROM_ID = invertMap(LFO_WAVE_IDS);
-
-const LFO_TARGET_IDS: EnumToIdMap<LfoTarget> = {
-	pitch: 0,
-	dcw: 1,
-	dca: 2,
-	filter: 3,
-};
-const LFO_TARGET_FROM_ID = invertMap(LFO_TARGET_IDS);
 
 const FILTER_TYPE_IDS: EnumToIdMap<FilterType> = {
 	lp: 0,
@@ -465,11 +456,6 @@ const PLUGIN_PARAM_DESCRIPTORS: PluginParamDescriptor[] = [
 		apply: (value, s) => s.setReverbSize(value),
 	},
 	{
-		id: "lfo_enabled",
-		read: (params) => (params.lfo.enabled ? 1 : 0),
-		apply: (value, s) => s.setLfoEnabled(value >= 0.5),
-	},
-	{
 		id: "lfo_waveform",
 		read: (params) => LFO_WAVE_IDS[params.lfo.waveform as LfoWaveform] ?? 0,
 		apply: (value, s) =>
@@ -486,14 +472,6 @@ const PLUGIN_PARAM_DESCRIPTORS: PluginParamDescriptor[] = [
 		id: "lfo_depth",
 		read: (params) => params.lfo.depth,
 		apply: (value, s) => s.setLfoDepth(value),
-	},
-	{
-		id: "lfo_target",
-		read: (params) => LFO_TARGET_IDS[params.lfo.target as LfoTarget] ?? 0,
-		apply: (value, s) =>
-			s.setLfoTarget(
-				(LFO_TARGET_FROM_ID[Math.round(value)] ?? "pitch") as LfoTarget,
-			),
 	},
 	{
 		id: "fil_enabled",

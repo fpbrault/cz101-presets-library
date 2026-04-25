@@ -70,12 +70,18 @@ const SYNTH_PARAM_SETTERS = {
 	portamentoMode: "setPortamentoMode",
 	portamentoRate: "setPortamentoRate",
 	portamentoTime: "setPortamentoTime",
-	lfoEnabled: "setLfoEnabled",
 	lfoWaveform: "setLfoWaveform",
 	lfoRate: "setLfoRate",
 	lfoDepth: "setLfoDepth",
+	lfoSymmetry: "setLfoSymmetry",
+	lfoRetrigger: "setLfoRetrigger",
 	lfoOffset: "setLfoOffset",
-	lfoTarget: "setLfoTarget",
+	lfo2Waveform: "setLfo2Waveform",
+	lfo2Rate: "setLfo2Rate",
+	lfo2Depth: "setLfo2Depth",
+	lfo2Symmetry: "setLfo2Symmetry",
+	lfo2Retrigger: "setLfo2Retrigger",
+	lfo2Offset: "setLfo2Offset",
 	filterEnabled: "setFilterEnabled",
 	filterType: "setFilterType",
 	filterCutoff: "setFilterCutoff",
@@ -148,9 +154,16 @@ export function SynthParamControllerProvider({
 	);
 
 	// Read LFO params from the store with selective subscriptions.
-	const lfoEnabled = useSynthStore((s) => s.lfoEnabled);
 	const lfoRate = useSynthStore((s) => s.lfoRate);
+	const lfoDepth = useSynthStore((s) => s.lfoDepth);
 	const lfoWaveform = useSynthStore((s) => s.lfoWaveform);
+	const lfoSymmetry = useSynthStore((s) => s.lfoSymmetry);
+	const lfoOffset = useSynthStore((s) => s.lfoOffset);
+	const lfo2Rate = useSynthStore((s) => s.lfo2Rate);
+	const lfo2Depth = useSynthStore((s) => s.lfo2Depth);
+	const lfo2Waveform = useSynthStore((s) => s.lfo2Waveform);
+	const lfo2Symmetry = useSynthStore((s) => s.lfo2Symmetry);
+	const lfo2Offset = useSynthStore((s) => s.lfo2Offset);
 
 	const getParam = useCallback(
 		<K extends SynthParamKey>(key: K): UseSynthStateResult[K] => {
@@ -182,8 +195,14 @@ export function SynthParamControllerProvider({
 		return modRoutes.some((route) => route.enabled && route.source === "lfo1");
 	}, [modRoutes]);
 
+	const hasAnyLfo2Routes = useMemo(() => {
+		return modRoutes.some((route) => route.enabled && route.source === "lfo2");
+	}, [modRoutes]);
+
 	useEffect(() => {
-		if (!(hasAnyLfo1Routes && lfoEnabled && lfoRate > 0)) {
+		if (
+			!((hasAnyLfo1Routes && lfoRate > 0) || (hasAnyLfo2Routes && lfo2Rate > 0))
+		) {
 			return;
 		}
 
@@ -196,7 +215,7 @@ export function SynthParamControllerProvider({
 		return () => {
 			window.cancelAnimationFrame(rafId);
 		};
-	}, [hasAnyLfo1Routes, lfoEnabled, lfoRate]);
+	}, [hasAnyLfo1Routes, hasAnyLfo2Routes, lfoRate, lfo2Rate]);
 
 	useEffect(() => {
 		const onModSource = (event: Event) => {
@@ -230,31 +249,65 @@ export function SynthParamControllerProvider({
 	}, []);
 
 	const lfoPhase = (((animTimeSec * lfoRate) % 1) + 1) % 1;
-	const liveLfo1Value = (() => {
-		if (!lfoEnabled) {
-			return 0;
-		}
-		switch (lfoWaveform) {
+	const lfo2Phase = (((animTimeSec * lfo2Rate) % 1) + 1) % 1;
+
+	const waveformValue = (
+		waveform: UseSynthStateResult["lfoWaveform"],
+		phase: number,
+		symmetry: number,
+	): number => {
+		const sym = Math.min(0.999, Math.max(0.001, symmetry));
+		switch (waveform) {
+			case "invertedSaw":
+				return 1 - phase * 2;
+			case "random": {
+				const step = Math.floor(phase * 16);
+				const seed = step * 12.9898 + 78.233;
+				const hash = Math.sin(seed) * 43758.5453;
+				const fract = hash - Math.floor(hash);
+				return fract * 2 - 1;
+			}
 			case "triangle":
-				return lfoPhase < 0.5 ? 4 * lfoPhase - 1 : 3 - 4 * lfoPhase;
+				return phase < sym
+					? (phase / sym) * 2 - 1
+					: 1 - ((phase - sym) / (1 - sym)) * 2;
 			case "square":
-				return lfoPhase < 0.5 ? 1 : -1;
+				return phase < sym ? 1 : -1;
 			case "saw":
-				return lfoPhase * 2 - 1;
+				return phase * 2 - 1;
 			default:
-				return Math.sin(Math.PI * 2 * lfoPhase);
+				return Math.sin(Math.PI * 2 * phase);
 		}
+	};
+
+	const liveLfo1Value = (() => {
+		return (
+			waveformValue(lfoWaveform, lfoPhase, lfoSymmetry) * lfoDepth + lfoOffset
+		);
+	})();
+
+	const liveLfo2Value = (() => {
+		return (
+			waveformValue(lfo2Waveform, lfo2Phase, lfo2Symmetry) * lfo2Depth +
+			lfo2Offset
+		);
 	})();
 
 	const liveSources = useMemo<LiveModSources>(
 		() => ({
 			lfo1: liveLfo1Value,
-			lfo2: 0,
+			lfo2: liveLfo2Value,
 			velocity: velocityValue,
 			modWheel: modWheelValue,
 			aftertouch: aftertouchValue,
 		}),
-		[liveLfo1Value, velocityValue, modWheelValue, aftertouchValue],
+		[
+			liveLfo1Value,
+			liveLfo2Value,
+			velocityValue,
+			modWheelValue,
+			aftertouchValue,
+		],
 	);
 
 	const resolveDestination = useCallback(

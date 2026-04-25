@@ -66,5 +66,14 @@ pub fn lfo_output(phase: f32, waveform: LfoWaveform) -> f32 {
             }
         }
         LfoWaveform::Saw => phase * 2.0 - 1.0,
+        LfoWaveform::InvertedSaw => 1.0 - phase * 2.0,
+        LfoWaveform::Random => {
+            let steps_per_cycle = 16.0;
+            let step_index = libm::floorf(phase * steps_per_cycle) as i32;
+            let seed = step_index as f32 * 12.9898 + 78.233;
+            let hash = libm::sinf(seed) * 43758.5453;
+            let fract = hash - libm::floorf(hash);
+            fract * 2.0 - 1.0
+        }
     }
 }

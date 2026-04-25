@@ -4,7 +4,8 @@ import ControlKnob from "@/components/controls/ControlKnob";
 import ModRouteRow, {
 	MOD_SOURCE_META,
 } from "@/components/controls/modulation/ModRouteRow";
-import CzButton from "@/components/primitives/CzButton";
+import CompactButton from "@/components/primitives/CompactButton";
+import ModuleFrame from "@/components/primitives/ModuleFrame";
 import { useModMatrix } from "@/context/ModMatrixContext";
 import { useSynthParam } from "@/features/synth/SynthParamController";
 import type {
@@ -99,75 +100,6 @@ const MOD_SOURCES: { label: string; value: ModSource }[] = [
 	{ label: "Mod Wheel", value: "modWheel" },
 	{ label: "Aftertouch", value: "aftertouch" },
 ];
-
-// ---------------------------------------------------------------------------
-// ModModuleFrame
-// ---------------------------------------------------------------------------
-
-type ModModuleFrameProps = {
-	title: string;
-	accentClassName: string;
-	enabled: boolean;
-	onToggle: () => void;
-	className?: string;
-	children: React.ReactNode;
-};
-
-function ModModuleFrame({
-	title,
-	accentClassName,
-	enabled,
-	onToggle,
-	className,
-	children,
-}: ModModuleFrameProps) {
-	return (
-		<section
-			className={[
-				enabled
-					? "relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-cz-gold/45 bg-cz-panel/80 p-3 shadow-xl"
-					: "relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-cz-border bg-cz-surface p-3 shadow-lg",
-				className,
-			]
-				.filter(Boolean)
-				.join(" ")}
-		>
-			<div className="mb-1 flex items-start justify-between gap-3">
-				<div className="min-w-0">
-					<span
-						className={[
-							"font-mono text-sm font-bold uppercase tracking-[0.3em]",
-							enabled ? "opacity-100" : "opacity-85",
-							accentClassName,
-						].join(" ")}
-					>
-						{title}
-					</span>
-				</div>
-				<button
-					type="button"
-					onClick={onToggle}
-					className={`min-w-16 rounded-md border px-2 py-1 font-mono text-[0.6rem] font-bold uppercase tracking-[0.22em] transition-colors ${
-						enabled
-							? "border-cz-gold bg-cz-gold/15 text-cz-gold"
-							: "border-cz-border bg-black/15 text-cz-cream-dim hover:text-cz-cream"
-					}`}
-				>
-					{enabled ? "On" : "Off"}
-				</button>
-			</div>
-			<div
-				className={`flex min-h-0 flex-1 items-center justify-center rounded-xl border px-3 py-4 transition-colors ${
-					enabled
-						? "border-cz-gold/50 bg-cz-inset"
-						: "border-cz-border/70 bg-cz-inset/70"
-				}`}
-			>
-				{children}
-			</div>
-		</section>
-	);
-}
 
 // ---------------------------------------------------------------------------
 // ModMatrixPanel — full mod matrix list with add/remove
@@ -362,14 +294,27 @@ export default function ModConsoleDrawer() {
 	const { value: vibratoDelay, setValue: setVibratoDelay } =
 		useSynthParam("vibratoDelay");
 
-	const { value: lfoEnabled, setValue: setLfoEnabled } =
-		useSynthParam("lfoEnabled");
 	const { value: lfoWaveform, setValue: setLfoWaveform } =
 		useSynthParam("lfoWaveform");
 	const { value: lfoRate, setValue: setLfoRate } = useSynthParam("lfoRate");
 	const { value: lfoDepth, setValue: setLfoDepth } = useSynthParam("lfoDepth");
+	const { value: lfoSymmetry, setValue: setLfoSymmetry } =
+		useSynthParam("lfoSymmetry");
+	const { value: lfoRetrigger, setValue: setLfoRetrigger } =
+		useSynthParam("lfoRetrigger");
 	const { value: lfoOffset, setValue: setLfoOffset } =
 		useSynthParam("lfoOffset");
+	const { value: lfo2Waveform, setValue: setLfo2Waveform } =
+		useSynthParam("lfo2Waveform");
+	const { value: lfo2Rate, setValue: setLfo2Rate } = useSynthParam("lfo2Rate");
+	const { value: lfo2Depth, setValue: setLfo2Depth } =
+		useSynthParam("lfo2Depth");
+	const { value: lfo2Symmetry, setValue: setLfo2Symmetry } =
+		useSynthParam("lfo2Symmetry");
+	const { value: lfo2Retrigger, setValue: setLfo2Retrigger } =
+		useSynthParam("lfo2Retrigger");
+	const { value: lfo2Offset, setValue: setLfo2Offset } =
+		useSynthParam("lfo2Offset");
 
 	const { value: phaseModEnabled, setValue: setPhaseModEnabled } =
 		useSynthParam("phaseModEnabled");
@@ -380,134 +325,80 @@ export default function ModConsoleDrawer() {
 	const { value: pmPre, setValue: setPmPre } = useSynthParam("pmPre");
 
 	return (
-		<div className="grid h-full min-h-0 grid-cols-3 gap-3">
-			{/* Left: 2×2 module grid (2/3 width) */}
-			<div className="col-span-2 grid grid-cols-2 auto-rows-fr gap-3">
-				<ModModuleFrame
+		<div className="flex h-full min-h-0 gap-3">
+			{/* Left: 2×2 module grid filling full height — row 1: Vibrato + Phase Mod, row 2: LFO 1 + LFO 2 */}
+			<div className="flex-2 min-w-0 min-h-0 grid grid-cols-2 grid-rows-2 gap-2">
+				<ModuleFrame
 					title="Vibrato"
-					accentClassName="text-cz-light-blue"
+					color="#307948"
 					enabled={vibratoEnabled}
 					onToggle={() => setVibratoEnabled(!vibratoEnabled)}
 				>
-					<div className="grid grid-cols-4 gap-2.5">
-						{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
-							<CzButton
-								key={w}
-								active={vibratoWave === i + 1}
-								onClick={() => setVibratoWave(i + 1)}
-								className="[&_button]:h-5 [&_button]:w-8 [&_button]:px-0 [&_button]:text-[0.58rem]"
-							>
-								{w}
-							</CzButton>
-						))}
-						<ControlKnob
-							value={vibratoRate}
-							onChange={setVibratoRate}
-							min={0}
-							max={99}
-							size={56}
-							color="#7f9de4"
-							label="Rate"
-							valueFormatter={(v) => `${Math.round(v)}`}
-						/>
-						<ControlKnob
-							value={vibratoDepth}
-							onChange={setVibratoDepth}
-							min={0}
-							max={99}
-							size={56}
-							color="#7f9de4"
-							label="Depth"
-							valueFormatter={(v) => `${Math.round(v)}`}
-						/>
-						<ControlKnob
-							value={vibratoDelay}
-							onChange={setVibratoDelay}
-							min={0}
-							max={5000}
-							size={56}
-							color="#7f9de4"
-							label="Delay"
-							valueFormatter={(v) => `${Math.round(v)}ms`}
-						/>
+					<div className="flex flex-col gap-2 w-full">
+						<div className="grid grid-cols-4 gap-1">
+							{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
+								<CompactButton
+									key={w}
+									active={vibratoWave === i + 1}
+									onClick={() => setVibratoWave(i + 1)}
+								>
+									{w}
+								</CompactButton>
+							))}
+						</div>
+						<div className="grid grid-cols-3 gap-1.5">
+							<ControlKnob
+								value={vibratoRate}
+								onChange={setVibratoRate}
+								min={0}
+								max={99}
+								defaultValue={65}
+								size={50}
+								color="#307948"
+								label="Rate"
+								valueFormatter={(v) => `${Math.round(v)}`}
+							/>
+							<ControlKnob
+								value={vibratoDepth}
+								onChange={setVibratoDepth}
+								min={0}
+								max={99}
+								defaultValue={20}
+								size={50}
+								color="#307948"
+								label="Depth"
+								valueFormatter={(v) => `${Math.round(v)}`}
+							/>
+							<ControlKnob
+								value={vibratoDelay}
+								onChange={setVibratoDelay}
+								min={0}
+								max={5000}
+								defaultValue={0}
+								size={50}
+								color="#307948"
+								label="Delay"
+								valueFormatter={(v) => `${Math.round(v)}ms`}
+							/>
+						</div>
 					</div>
-				</ModModuleFrame>
+				</ModuleFrame>
 
-				<ModModuleFrame
-					title="LFO 1"
-					accentClassName="text-cz-light-blue"
-					enabled={lfoEnabled}
-					onToggle={() => setLfoEnabled(!lfoEnabled)}
-				>
-					<div className="grid grid-cols-4 gap-2.5">
-						{(["sine", "triangle", "square", "saw"] as const).map((w) => (
-							<CzButton
-								key={w}
-								active={lfoWaveform === w}
-								onClick={() => setLfoWaveform(w)}
-								className="[&_button]:h-5 [&_button]:w-8 [&_button]:px-0 [&_button]:text-[0.55rem]"
-							>
-								{w}
-							</CzButton>
-						))}
-						<ControlKnob
-							value={lfoRate}
-							onChange={setLfoRate}
-							min={0}
-							max={20}
-							size={56}
-							color="#7f9de4"
-							label="Rate"
-							valueFormatter={(v) => `${v.toFixed(1)}Hz`}
-						/>
-						<ControlKnob
-							value={lfoDepth}
-							onChange={setLfoDepth}
-							min={0}
-							max={1}
-							size={56}
-							color="#7f9de4"
-							label="Depth"
-							valueFormatter={(v) => `${Math.round(v * 100)}%`}
-						/>
-						<ControlKnob
-							value={lfoOffset}
-							onChange={setLfoOffset}
-							min={-1}
-							max={1}
-							size={56}
-							color="#7f9de4"
-							label="Offset"
-							valueFormatter={(v) => `${Math.round(v * 100)}%`}
-						/>
-					</div>
-				</ModModuleFrame>
-
-				<ModModuleFrame
-					title="LFO 2"
-					accentClassName="text-cz-light-blue"
-					enabled={false}
-					onToggle={() => void 0}
-				>
-					<div className="flex h-full min-h-28 w-full items-center justify-center rounded-lg border border-dashed border-cz-border/70 bg-cz-panel/60 px-4 text-center font-mono text-xs uppercase tracking-[0.2em] text-cz-cream-dim">
-						LFO 2 coming soon
-					</div>
-				</ModModuleFrame>
-
-				<ModModuleFrame
+				<ModuleFrame
 					title="Phase Mod"
-					accentClassName="text-cz-light-blue"
+					color="#be3330"
 					enabled={phaseModEnabled}
 					onToggle={() => setPhaseModEnabled(!phaseModEnabled)}
 				>
-					<div className="grid grid-cols-3 gap-2.5">
+					<div className="grid grid-cols-3 gap-2.5 w-full">
 						<ControlKnob
 							value={intPmAmount}
 							onChange={setIntPmAmount}
 							min={0}
 							max={0.3}
-							size={56}
-							color="#7f9de4"
+							defaultValue={0.03}
+							size={50}
+							color="#be3330"
 							label="Amount"
 							valueFormatter={(value) => value.toFixed(2)}
 						/>
@@ -516,28 +407,187 @@ export default function ModConsoleDrawer() {
 							onChange={setIntPmRatio}
 							min={0.5}
 							max={4}
-							size={56}
-							color="#7f9de4"
+							defaultValue={1.0}
+							size={50}
+							color="#be3330"
 							label="Ratio"
 							valueFormatter={(value) => value.toFixed(1)}
 						/>
-						<button
-							type="button"
+						<CompactButton
+							active={pmPre}
 							onClick={() => setPmPre(!pmPre)}
-							className={`h-14 rounded-lg border px-2 font-mono text-[0.56rem] font-bold uppercase tracking-[0.2em] transition-colors ${
-								pmPre
-									? "border-cz-light-blue bg-cz-light-blue/15 text-cz-light-blue"
-									: "border-cz-border bg-black/15 text-cz-cream-dim hover:text-cz-cream"
-							}`}
+							className="h-8 self-center px-2"
 						>
 							Pre
-						</button>
+						</CompactButton>
 					</div>
-				</ModModuleFrame>
+				</ModuleFrame>
+
+				<ModuleFrame title="LFO 1" color="#27588f" enabled>
+					<div className="flex flex-col gap-2 w-full">
+						<div className="grid grid-cols-3 gap-1">
+							{(
+								[
+									["sine", "sine"],
+									["tri", "triangle"],
+									["sq", "square"],
+									["saw", "saw"],
+									["inv", "invertedSaw"],
+									["rnd", "random"],
+								] as const
+							).map(([label, w]) => (
+								<CompactButton
+									key={w}
+									active={lfoWaveform === w}
+									onClick={() => setLfoWaveform(w)}
+								>
+									{label}
+								</CompactButton>
+							))}
+						</div>
+						<div className="grid grid-cols-4 gap-1.5">
+							<ControlKnob
+								value={lfoRate}
+								onChange={setLfoRate}
+								min={0}
+								max={20}
+								defaultValue={5}
+								size={40}
+								color="#27588f"
+								label="Rate"
+								valueFormatter={(v) => `${v.toFixed(1)}Hz`}
+							/>
+							<ControlKnob
+								value={lfoDepth}
+								onChange={setLfoDepth}
+								min={0}
+								max={1}
+								defaultValue={1.0}
+								size={40}
+								color="#27588f"
+								label="Depth"
+								valueFormatter={(v) => `${Math.round(v * 100)}%`}
+							/>
+							<ControlKnob
+								value={lfoOffset}
+								onChange={setLfoOffset}
+								min={-1}
+								max={1}
+								defaultValue={0}
+								size={40}
+								color="#27588f"
+								label="Offset"
+								valueFormatter={(v) => `${Math.round(v * 100)}%`}
+							/>
+							<ControlKnob
+								value={lfoSymmetry}
+								onChange={setLfoSymmetry}
+								min={0}
+								max={1}
+								defaultValue={0.5}
+								size={40}
+								color="#27588f"
+								label="Sym."
+								valueFormatter={(v) => `${Math.round(v * 100)}%`}
+							/>
+						</div>
+						<div className="flex justify-end">
+							<CompactButton
+								active={lfoRetrigger}
+								onClick={() => setLfoRetrigger(!lfoRetrigger)}
+								className="px-2"
+							>
+								Retrig
+							</CompactButton>
+						</div>
+					</div>
+				</ModuleFrame>
+
+				<ModuleFrame title="LFO 2" color="#d7ac3d" enabled>
+					<div className="flex flex-col gap-2 w-full">
+						<div className="grid grid-cols-3 gap-1">
+							{(
+								[
+									["sine", "sine"],
+									["tri", "triangle"],
+									["sq", "square"],
+									["saw", "saw"],
+									["inv", "invertedSaw"],
+									["rnd", "random"],
+								] as const
+							).map(([label, w]) => (
+								<CompactButton
+									key={w}
+									active={lfo2Waveform === w}
+									onClick={() => setLfo2Waveform(w)}
+								>
+									{label}
+								</CompactButton>
+							))}
+						</div>
+						<div className="grid grid-cols-4 gap-1.5">
+							<ControlKnob
+								value={lfo2Rate}
+								onChange={setLfo2Rate}
+								min={0}
+								max={20}
+								defaultValue={5}
+								size={40}
+								color="#d7ac3d"
+								label="Rate"
+								valueFormatter={(v) => `${v.toFixed(1)}Hz`}
+							/>
+							<ControlKnob
+								value={lfo2Depth}
+								onChange={setLfo2Depth}
+								min={0}
+								max={1}
+								defaultValue={1.0}
+								size={40}
+								color="#d7ac3d"
+								label="Depth"
+								valueFormatter={(v) => `${Math.round(v * 100)}%`}
+							/>
+							<ControlKnob
+								value={lfo2Offset}
+								onChange={setLfo2Offset}
+								min={-1}
+								max={1}
+								defaultValue={0}
+								size={40}
+								color="#d7ac3d"
+								label="Offset"
+								valueFormatter={(v) => `${Math.round(v * 100)}%`}
+							/>
+							<ControlKnob
+								value={lfo2Symmetry}
+								onChange={setLfo2Symmetry}
+								min={0}
+								max={1}
+								defaultValue={0.5}
+								size={40}
+								color="#d7ac3d"
+								label="Sym."
+								valueFormatter={(v) => `${Math.round(v * 100)}%`}
+							/>
+						</div>
+						<div className="flex justify-end">
+							<CompactButton
+								active={lfo2Retrigger}
+								onClick={() => setLfo2Retrigger(!lfo2Retrigger)}
+								className="px-2"
+							>
+								Retrig
+							</CompactButton>
+						</div>
+					</div>
+				</ModuleFrame>
 			</div>
 
 			{/* Right: Mod Matrix panel */}
-			<ModMatrixPanel />
+			<div className="flex-1 min-w-0 min-h-0">
+				<ModMatrixPanel />
+			</div>
 		</div>
 	);
 }

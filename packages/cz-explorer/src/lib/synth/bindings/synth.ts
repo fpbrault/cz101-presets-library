@@ -146,7 +146,13 @@ export type VelocityTarget =
 /**
  * LFO waveform
  */
-export type LfoWaveform = "sine" | "triangle" | "square" | "saw";
+export type LfoWaveform =
+	| "sine"
+	| "triangle"
+	| "square"
+	| "saw"
+	| "invertedSaw"
+	| "random";
 
 /**
  * Filter type
@@ -157,11 +163,6 @@ export type FilterType = "lp" | "hp" | "bp";
  * Portamento mode
  */
 export type PortamentoMode = "rate" | "time";
-
-/**
- * LFO target
- */
-export type LfoTarget = "pitch" | "dcw" | "dca" | "filter";
 
 /**
  * Chorus parameters
@@ -215,7 +216,6 @@ export type PortamentoParams = {
  * LFO parameters
  */
 export type LfoParams = {
-	enabled: boolean;
 	waveform: LfoWaveform;
 	/**
 	 * Rate in Hz
@@ -225,7 +225,14 @@ export type LfoParams = {
 	 * Depth [0, 1]
 	 */
 	depth: number;
-	target: LfoTarget;
+	/**
+	 * Symmetry [0, 1] (0 = saw, 0.5 = triangle, 1 = reverse saw)
+	 */
+	symmetry: number;
+	/**
+	 * Retrigger LFO on note-on
+	 */
+	retrigger: boolean;
 	/**
 	 * DC offset/bias applied to LFO output [-1, 1]
 	 */
@@ -344,7 +351,7 @@ export type AlgoUiEntryV1 = {
 export type ModSource =
 	| "lfo1"
 	/**
-	 * LFO2 is currently a placeholder source and evaluates to 0.0 in DSP.
+	 * Secondary LFO source.
 	 */
 	| "lfo2"
 	| "velocity"
@@ -437,6 +444,7 @@ export type SynthParams = {
 	vibrato: VibratoParams;
 	portamento: PortamentoParams;
 	lfo: LfoParams;
+	lfo2?: LfoParams;
 	filter: FilterParams;
 	/**
 	 * Pitch bend wheel range in semitones (1-24). Default 2.

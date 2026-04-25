@@ -299,6 +299,8 @@ pub enum LfoWaveform {
     Triangle,
     Square,
     Saw,
+    InvertedSaw,
+    Random,
 }
 
 /// Filter type
@@ -522,21 +524,6 @@ impl Default for PortamentoParams {
     }
 }
 
-/// LFO target.
-///
-/// Deprecated: per-destination routing should now be done through the modulation matrix.
-/// This enum is kept for backward-compatible preset/state deserialization.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "specta-bindings", derive(Type))]
-#[serde(rename_all = "camelCase")]
-pub enum LfoTarget {
-    #[default]
-    Pitch,
-    Dcw,
-    Dca,
-    Filter,
-}
-
 /// Modulation source selector for modulation matrix routes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
@@ -544,7 +531,7 @@ pub enum LfoTarget {
 pub enum ModSource {
     #[default]
     Lfo1,
-    /// LFO2 is currently a placeholder source and evaluates to 0.0 in DSP.
+    /// Secondary LFO source.
     Lfo2,
     Velocity,
     ModWheel,
@@ -633,15 +620,15 @@ pub struct ModMatrix {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
 pub struct LfoParams {
-    pub enabled: bool,
     pub waveform: LfoWaveform,
     /// Rate in Hz
     pub rate: f32,
     /// Depth [0, 1]
     pub depth: f32,
-    /// Deprecated: use modulation matrix routes for destination selection.
-    /// Kept for backward compatibility.
-    pub target: LfoTarget,
+    /// Symmetry [0, 1] (0 = saw, 0.5 = triangle, 1 = reverse saw)
+    pub symmetry: f32,
+    /// Retrigger LFO on note-on
+    pub retrigger: bool,
     /// DC offset/bias applied to LFO output [-1, 1]
     #[serde(default)]
     pub offset: f32,
@@ -650,11 +637,11 @@ pub struct LfoParams {
 impl Default for LfoParams {
     fn default() -> Self {
         Self {
-            enabled: false,
             waveform: LfoWaveform::Sine,
             rate: 5.0,
             depth: 0.2,
-            target: LfoTarget::Pitch,
+            symmetry: 0.5,
+            retrigger: false,
             offset: 0.0,
         }
     }
@@ -714,6 +701,8 @@ pub struct SynthParams {
     pub vibrato: VibratoParams,
     pub portamento: PortamentoParams,
     pub lfo: LfoParams,
+    #[serde(default)]
+    pub lfo2: LfoParams,
     pub filter: FilterParams,
     /// Pitch bend wheel range in semitones (1-24). Default 2.
     #[serde(default = "default_pitch_bend_range")]
@@ -760,6 +749,7 @@ impl Default for SynthParams {
             vibrato: VibratoParams::default(),
             portamento: PortamentoParams::default(),
             lfo: LfoParams::default(),
+            lfo2: LfoParams::default(),
             filter: FilterParams::default(),
             pitch_bend_range: 2.0,
             mod_wheel_vibrato_depth: 0.0,

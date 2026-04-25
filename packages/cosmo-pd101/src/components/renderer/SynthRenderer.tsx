@@ -22,7 +22,6 @@ import ReverbPanel from "@/components/panels/fx/ReverbPanel";
 import SynthFilterPanel from "@/components/panels/fx/SynthFilterPanel";
 import ModConsoleDrawer from "@/components/panels/mod/ModConsoleDrawer";
 import GlobalVoicePanel from "@/components/panels/voice/GlobalVoicePanel";
-import LfoPanel from "@/components/panels/voice/LfoPanel";
 import PhaseModPanel from "@/components/panels/voice/PhaseModPanel";
 import PortamentoPanel from "@/components/panels/voice/PortamentoPanel";
 import VibratoPanel from "@/components/panels/voice/VibratoPanel";
@@ -184,7 +183,6 @@ function SynthRendererContent({
 								<PortamentoPanel />
 								<PhaseModPanel />
 								<VibratoPanel />
-								<LfoPanel />
 								<ScopePanel
 									analyserNodeRef={analyserNodeRef}
 									audioCtxRef={audioCtxRef}
@@ -260,9 +258,9 @@ function SynthRendererContent({
 													mass: 1,
 												}}
 												style={{ transformOrigin: "top center" }}
-												className="absolute inset-0 z-10 overflow-hidden p-2"
+												className="absolute inset-0 z-10 overflow-hidden p-1"
 											>
-												<div className="relative flex h-full min-h-0 flex-col rounded-lg border border-cz-border bg-cz-body p-3 shadow-xl">
+												<div className="relative flex h-full min-h-0 flex-col rounded-lg border border-cz-border bg-cz-body p-1 shadow-xl">
 													<div className="pointer-events-none absolute inset-0 rounded-lg bg-white/5" />
 													<div className="pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-lg opacity-60" />
 													<div className="relative min-h-0 flex-1">

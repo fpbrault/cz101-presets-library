@@ -54,7 +54,6 @@ export type EngineParams = {
 		rate: number;
 		depth: number;
 		offset: number;
-		target: string;
 	};
 	filter: {
 		enabled: boolean;
@@ -171,7 +170,6 @@ export function useAudioEngine({
 			rate: 0,
 			depth: 0,
 			offset: 0,
-			target: "pitch",
 		},
 		filter: {
 			enabled: false,
