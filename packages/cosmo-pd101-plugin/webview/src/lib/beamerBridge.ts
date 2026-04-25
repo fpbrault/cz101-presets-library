@@ -65,6 +65,9 @@ declare global {
 let installed = false;
 let latestParams: Record<string, number> = {};
 let currentParamHandler: ((json: string) => void) | undefined;
+let currentScopeHandler:
+	| ((samples: number[], sampleRate: number, hz: number) => void)
+	| undefined;
 // Beamer may send numeric-string keys in _onParams; cache the id→stringId mapping.
 const runtimeStringIdsByNumericId: Record<number, string> = {};
 
@@ -80,8 +83,20 @@ function toNormalized(plainValue: number, info: BeamerParamInfo): number {
 }
 
 function emitParams(payload: Record<string, number>) {
-	latestParams = { ...latestParams, ...payload };
-	currentParamHandler?.(JSON.stringify(payload));
+	const changedPayload: Record<string, number> = {};
+	for (const [id, value] of Object.entries(payload)) {
+		if (latestParams[id] === value) {
+			continue;
+		}
+		changedPayload[id] = value;
+	}
+
+	if (Object.keys(changedPayload).length === 0) {
+		return;
+	}
+
+	latestParams = { ...latestParams, ...changedPayload };
+	currentParamHandler?.(JSON.stringify(changedPayload));
 }
 
 function installParamProperty() {
@@ -105,6 +120,32 @@ function installParamProperty() {
 			}
 		},
 	});
+}
+
+function installScopeProperty(onActiveChange: (active: boolean) => void) {
+	const descriptor = Object.getOwnPropertyDescriptor(window, "__czOnScope");
+	if (descriptor?.get || descriptor?.set) {
+		currentScopeHandler =
+			typeof window.__czOnScope === "function" ? window.__czOnScope : undefined;
+		onActiveChange(currentScopeHandler !== undefined);
+		return;
+	}
+
+	currentScopeHandler =
+		typeof window.__czOnScope === "function" ? window.__czOnScope : undefined;
+
+	Object.defineProperty(window, "__czOnScope", {
+		configurable: true,
+		get() {
+			return currentScopeHandler;
+		},
+		set(handler: Window["__czOnScope"]) {
+			currentScopeHandler = typeof handler === "function" ? handler : undefined;
+			onActiveChange(currentScopeHandler !== undefined);
+		},
+	});
+
+	onActiveChange(currentScopeHandler !== undefined);
 }
 
 function onInit(params: BeamerParamInfo[]) {
@@ -261,28 +302,62 @@ function installScopePolling(runtime: BeamerRuntime) {
 	const SCALE = 1 / 127.0;
 	let rafId = 0;
 	let lastScheduled = 0;
+	let pollInFlight = false;
+	let destroyed = false;
+
+	const scheduleNextFrame = () => {
+		if (destroyed || rafId !== 0 || !currentScopeHandler) {
+			return;
+		}
+		rafId = requestAnimationFrame(tick);
+	};
+
+	const stopPolling = () => {
+		if (rafId !== 0) {
+			cancelAnimationFrame(rafId);
+			rafId = 0;
+		}
+		lastScheduled = 0;
+	};
 
 	const tick = async (now: number) => {
-		rafId = requestAnimationFrame(tick);
-		if (now - lastScheduled < INTERVAL_MS) return;
+		rafId = 0;
+		if (destroyed || !currentScopeHandler) {
+			return;
+		}
+		if (now - lastScheduled < INTERVAL_MS || pollInFlight) {
+			scheduleNextFrame();
+			return;
+		}
 		lastScheduled = now;
+		pollInFlight = true;
 
 		try {
 			const raw = (await runtime.invoke("getScopeData")) as ScopeDataResponse;
-			if (raw && raw.samples.length > 0 && window.__czOnScope) {
+			if (raw && raw.samples.length > 0 && currentScopeHandler) {
 				// Rust sends i8 integers (–127..127); rescale to float32 [-1, 1].
 				const floats = raw.samples.map((s) => s * SCALE);
-				window.__czOnScope(floats, raw.sampleRate, raw.hz);
+				currentScopeHandler(floats, raw.sampleRate, raw.hz);
 			}
 		} catch {
 			// Ignore — plugin may not be producing audio yet.
+		} finally {
+			pollInFlight = false;
+			scheduleNextFrame();
 		}
 	};
 
-	rafId = requestAnimationFrame(tick);
+	installScopeProperty((active) => {
+		if (active) {
+			scheduleNextFrame();
+			return;
+		}
+		stopPolling();
+	});
 
 	// Clean up on page unload so the interval doesn't dangle.
 	window.addEventListener("pagehide", () => {
-		cancelAnimationFrame(rafId);
+		destroyed = true;
+		stopPolling();
 	});
 }

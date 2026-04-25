@@ -570,14 +570,24 @@ export function usePluginBridgeSynthEngine(): void {
 	const gatherState = useSynthStore((s) => s.gatherState);
 
 	const sentParamsRef = useRef<Map<string, number>>(new Map());
+	const pendingLocalParamsRef = useRef<
+		Map<string, { value: number; sentAt: number }>
+	>(new Map());
 	const sentEnvelopesRef = useRef<Map<EnvelopeId, string>>(new Map());
 	const sentAlgoControlsRef = useRef<Map<string, string>>(new Map());
 	const sentModMatrixRef = useRef("");
+	const PENDING_PARAM_TTL_MS = 250;
+	const PARAM_EPSILON = 1e-6;
 
 	const queueParam = useCallback((id: string, value: number) => {
 		const prev = sentParamsRef.current.get(id);
 		if (prev === value) return;
 		sentParamsRef.current.set(id, value);
+		pendingLocalParamsRef.current.set(id, {
+			value,
+			sentAt:
+				typeof performance !== "undefined" ? performance.now() : Date.now(),
+		});
 		sendParam(id, value);
 	}, []);
 
@@ -656,7 +666,22 @@ export function usePluginBridgeSynthEngine(): void {
 		window.__czOnParams = (json: string) => {
 			try {
 				const params = JSON.parse(json) as Record<string, number>;
+				const now =
+					typeof performance !== "undefined" ? performance.now() : Date.now();
 				for (const [id, value] of Object.entries(params)) {
+					const pendingLocal = pendingLocalParamsRef.current.get(id);
+					if (pendingLocal) {
+						const ageMs = now - pendingLocal.sentAt;
+						if (Math.abs(pendingLocal.value - value) <= PARAM_EPSILON) {
+							pendingLocalParamsRef.current.delete(id);
+							continue;
+						}
+						if (ageMs < PENDING_PARAM_TTL_MS) {
+							continue;
+						}
+						pendingLocalParamsRef.current.delete(id);
+					}
+
 					PLUGIN_PARAM_DESCRIPTOR_BY_ID.get(id)?.apply(
 						value,
 						useSynthStore.getState(),

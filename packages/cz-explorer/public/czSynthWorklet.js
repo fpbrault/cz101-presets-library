@@ -296,9 +296,6 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 
 			this._synth = new globalThis.wasm_bindgen.CzSynthProcessor(sampleRate);
 
-			// Apply params accumulated before WASM was ready
-			this._synth.setParams(JSON.stringify(this._params));
-
 			// Drain queued messages
 			for (const d of this._queue) this._dispatch(d);
 			this._queue.length = 0;
