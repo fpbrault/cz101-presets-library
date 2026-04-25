@@ -253,7 +253,7 @@ export function ControlKnob({
 				<div className="min-h-2 -mt-1.5 space-y-0">
 					{valueVisibility !== "never" && editing ? (
 						<input
-							ref={inputRef}
+							ref={inputRef as React.RefObject<HTMLInputElement>}
 							type="text"
 							aria-label={valueControlLabel}
 							className="w-14 border border-base-300 bg-cz-surface px-1 text-center text-2xs font-semibold text-base-content/80 outline-none focus:border-primary"

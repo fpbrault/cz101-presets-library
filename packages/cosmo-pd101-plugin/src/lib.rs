@@ -217,20 +217,6 @@ pub enum PolyModeParam {
     Mono,
 }
 
-/// Velocity routing target.
-#[derive(Copy, Clone, PartialEq, EnumParameter)]
-pub enum VelocityTarget {
-    #[name = "Amp"]
-    #[default]
-    Amp,
-    #[name = "DCW"]
-    Dcw,
-    #[name = "Both"]
-    Both,
-    #[name = "Off"]
-    Off,
-}
-
 /// LFO waveform.
 #[derive(Copy, Clone, PartialEq, EnumParameter)]
 pub enum LfoWaveform {
@@ -265,8 +251,8 @@ pub enum FilterType {
 #[derive(Copy, Clone, PartialEq, EnumParameter)]
 pub enum PortamentoMode {
     #[name = "Rate"]
-    #[default]
     Rate,
+    #[default]
     #[name = "Time"]
     Time,
 }
@@ -296,9 +282,6 @@ pub struct CzParameters {
 
     #[parameter(id = "legato", name = "Legato", default = 0.0, range = 0.0..=1.0)]
     pub legato: FloatParameter,
-
-    #[parameter(id = "vel_target", name = "Velocity Target", group = "Global")]
-    pub vel_target: EnumParameter<VelocityTarget>,
 
     #[parameter(id = "int_pm_enabled", name = "Int PM Enabled", default = 0.0, range = 0.0..=1.0)]
     pub int_pm_enabled: FloatParameter,
@@ -471,7 +454,7 @@ pub struct CzParameters {
     #[parameter(id = "port_mode", name = "Mode", group = "Portamento")]
     pub port_mode: EnumParameter<PortamentoMode>,
 
-    #[parameter(id = "port_time", name = "Time (s)", default = 0.5, range = 0.0..=2.0, group = "Portamento")]
+    #[parameter(id = "port_time", name = "Time (s)", default = 0.1, range = 0.0..=2.0, group = "Portamento")]
     pub port_time: FloatParameter,
 }
 
@@ -579,12 +562,6 @@ impl CzParameters {
                 PolyModeParam::Mono => PolyMode::Mono,
             },
             legato: self.legato.get() >= 0.5,
-            velocity_target: match self.vel_target.get() {
-                VelocityTarget::Amp => cosmo_synth_engine::params::VelocityTarget::Amp,
-                VelocityTarget::Dcw => cosmo_synth_engine::params::VelocityTarget::Dcw,
-                VelocityTarget::Both => cosmo_synth_engine::params::VelocityTarget::Both,
-                VelocityTarget::Off => cosmo_synth_engine::params::VelocityTarget::Off,
-            },
             int_pm_enabled: self.int_pm_enabled.get() >= 0.5,
             int_pm_amount: self.int_pm_amount.get() as f32,
             int_pm_ratio: self.int_pm_ratio.get() as f32,
@@ -695,7 +672,6 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         volume,
         poly_mode,
         legato,
-        velocity_target,
         chorus,
         delay,
         reverb,
@@ -703,6 +679,8 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         portamento,
         lfo,
         lfo2,
+        mod_env,
+        random,
         filter,
         pitch_bend_range: _pitch_bend_range, // not yet a VST param
         mod_wheel_vibrato_depth: _mod_wheel_vibrato_depth, // not yet a VST param
@@ -828,7 +806,6 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         volume,
         poly_mode,
         legato,
-        velocity_target,
     );
 }
 

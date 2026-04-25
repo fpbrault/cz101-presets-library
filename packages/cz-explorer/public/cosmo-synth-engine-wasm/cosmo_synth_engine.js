@@ -22,6 +22,26 @@ let wasm_bindgen = (function(exports) {
             wasm.__wbg_czsynthprocessor_free(ptr, 0);
         }
         /**
+         * Return the latest runtime modulation-source values as JSON for UI telemetry.
+         * @returns {string}
+         */
+        getRuntimeModSources() {
+            let deferred1_0;
+            let deferred1_1;
+            try {
+                const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+                wasm.czsynthprocessor_getRuntimeModSources(retptr, this.__wbg_ptr);
+                var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+                var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+                deferred1_0 = r0;
+                deferred1_1 = r1;
+                return getStringFromWasm0(r0, r1);
+            } finally {
+                wasm.__wbindgen_add_to_stack_pointer(16);
+                wasm.__wbindgen_export(deferred1_0, deferred1_1, 1);
+            }
+        }
+        /**
          * Create a new processor at the given sample rate.
          * @param {number} sample_rate
          */
@@ -60,7 +80,7 @@ let wasm_bindgen = (function(exports) {
          * @param {Float32Array} output
          */
         process(output) {
-            var ptr0 = passArrayF32ToWasm0(output, wasm.__wbindgen_export);
+            var ptr0 = passArrayF32ToWasm0(output, wasm.__wbindgen_export2);
             var len0 = WASM_VECTOR_LEN;
             wasm.czsynthprocessor_process(this.__wbg_ptr, ptr0, len0, addHeapObject(output));
         }
@@ -86,7 +106,7 @@ let wasm_bindgen = (function(exports) {
          * @param {string} json
          */
         setParams(json) {
-            const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+            const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
             const len0 = WASM_VECTOR_LEN;
             wasm.czsynthprocessor_setParams(this.__wbg_ptr, ptr0, len0);
         }
@@ -158,6 +178,14 @@ let wasm_bindgen = (function(exports) {
     function getArrayU8FromWasm0(ptr, len) {
         ptr = ptr >>> 0;
         return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+    }
+
+    let cachedDataViewMemory0 = null;
+    function getDataViewMemory0() {
+        if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
+            cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
+        }
+        return cachedDataViewMemory0;
     }
 
     let cachedFloat32ArrayMemory0 = null;
@@ -263,6 +291,7 @@ let wasm_bindgen = (function(exports) {
     function __wbg_finalize_init(instance, module) {
         wasm = instance.exports;
         wasmModule = module;
+        cachedDataViewMemory0 = null;
         cachedFloat32ArrayMemory0 = null;
         cachedUint8ArrayMemory0 = null;
         return wasm;
