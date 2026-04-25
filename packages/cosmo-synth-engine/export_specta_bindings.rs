@@ -13,7 +13,7 @@ use cosmo_synth_engine::generators::{
 use cosmo_synth_engine::params::{
     Algo, AlgoControlValueV1, ChorusParams, CzAlgo, CzLineParams, CzWaveform, DelayParams, EnvStep,
     FilterParams, FilterType, LfoParams, LfoWaveform, LineParams, LineSelect, ModDestination,
-    ModEnvParams, ModMatrix, ModMode, ModRoute, ModSource, PolyMode, PortamentoMode, PhaserParams, 
+    ModEnvParams, ModMatrix, ModMode, ModRoute, ModSource, PhaserParams, PolyMode, PortamentoMode,
     PortamentoParams, RandomParams, ReverbParams, StepEnvData, SynthParams, VibratoParams,
     WindowType,
 };
