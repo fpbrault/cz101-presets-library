@@ -59,8 +59,6 @@ export function SharedPhaseDistortionVisualizer({
 	const line2DcaEnv = useSynthStore((s) => s.line2DcaEnv);
 	const setLine2DcaEnv = useSynthStore((s) => s.setLine2DcaEnv);
 	const velocityCurve = useSynthStore((s) => s.velocityCurve);
-	const lineSelect = useSynthStore((s) => s.lineSelect);
-	const filterEnabled = useSynthStore((s) => s.filterEnabled);
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
 	const presetStateKey = useSynthStore((s) => JSON.stringify(s.gatherState()));
@@ -215,16 +213,7 @@ export function SharedPhaseDistortionVisualizer({
 		});
 	}, [heldNote, effectivePitchHz, activePresetName, t]);
 
-	const _lcdSecondaryText = useMemo(() => {
-		const filterStatus = filterEnabled
-			? t("states.filterOn", { defaultValue: "FILT ON" })
-			: t("states.filterOff", { defaultValue: "FILT OFF" });
-		return t("display.linePolyFilter", {
-			line: lineSelect,
-			filter: filterStatus,
-			defaultValue: `LINE ${lineSelect}`,
-		});
-	}, [lineSelect, filterEnabled, t]);
+
 
 	return (
 		<SynthRenderer

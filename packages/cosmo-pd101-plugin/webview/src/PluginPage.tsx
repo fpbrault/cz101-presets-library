@@ -27,8 +27,6 @@ type PluginPageProps = {
 };
 
 export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
-	const lineSelect = useSynthStore((s) => s.lineSelect);
-	const filterEnabled = useSynthStore((s) => s.filterEnabled);
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
 	const velocityCurve = useSynthStore((s) => s.velocityCurve);
@@ -121,10 +119,6 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 		() => `PRESET ${activePresetName.toUpperCase()}`,
 		[activePresetName],
 	);
-	const _lcdSecondaryText = useMemo(() => {
-		const filterStatus = filterEnabled ? "FILT ON" : "FILT OFF";
-		return `LINE ${lineSelect} | ${filterStatus}`;
-	}, [lineSelect, filterEnabled]);
 
 	return (
 		<SynthRenderer
