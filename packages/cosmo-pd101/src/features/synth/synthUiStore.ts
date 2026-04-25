@@ -19,6 +19,9 @@ type SynthUiState = {
 	activeEnvTab: EnvTab;
 	keyboardVisible: boolean;
 	libraryModeOpen: boolean;
+	scopeCycles: number;
+	scopeVerticalZoom: number;
+	scopeTriggerLevel: number;
 };
 
 type SynthUiActions = {
@@ -28,6 +31,9 @@ type SynthUiActions = {
 	setActiveEnvTab: (tab: EnvTab) => void;
 	setKeyboardVisible: (visible: boolean) => void;
 	setLibraryModeOpen: (open: boolean) => void;
+	setScopeCycles: (cycles: number) => void;
+	setScopeVerticalZoom: (zoom: number) => void;
+	setScopeTriggerLevel: (level: number) => void;
 };
 
 export type SynthUiStore = SynthUiState & SynthUiActions;
@@ -59,6 +65,9 @@ const DEFAULT_UI_STATE: SynthUiState = {
 	activeEnvTab: "dcw",
 	keyboardVisible: true,
 	libraryModeOpen: false,
+	scopeCycles: 4,
+	scopeVerticalZoom: 1,
+	scopeTriggerLevel: 128,
 };
 
 const getStringValue = (value: unknown): string | null =>
@@ -102,6 +111,24 @@ const normalizeSynthUiState = (value: unknown): SynthUiState => {
 			typeof candidate.libraryModeOpen === "boolean"
 				? candidate.libraryModeOpen
 				: DEFAULT_UI_STATE.libraryModeOpen,
+		scopeCycles:
+			typeof candidate.scopeCycles === "number" &&
+			candidate.scopeCycles >= 0.5 &&
+			candidate.scopeCycles <= 8
+				? candidate.scopeCycles
+				: DEFAULT_UI_STATE.scopeCycles,
+		scopeVerticalZoom:
+			typeof candidate.scopeVerticalZoom === "number" &&
+			candidate.scopeVerticalZoom >= 0.25 &&
+			candidate.scopeVerticalZoom <= 4
+				? candidate.scopeVerticalZoom
+				: DEFAULT_UI_STATE.scopeVerticalZoom,
+		scopeTriggerLevel:
+			typeof candidate.scopeTriggerLevel === "number" &&
+			candidate.scopeTriggerLevel >= 0 &&
+			candidate.scopeTriggerLevel <= 255
+				? candidate.scopeTriggerLevel
+				: DEFAULT_UI_STATE.scopeTriggerLevel,
 	};
 };
 
@@ -115,6 +142,9 @@ export const useSynthUiStore = create<SynthUiStore>()(
 			setActiveEnvTab: (tab) => set({ activeEnvTab: tab }),
 			setKeyboardVisible: (visible) => set({ keyboardVisible: visible }),
 			setLibraryModeOpen: (open) => set({ libraryModeOpen: open }),
+			setScopeCycles: (cycles) => set({ scopeCycles: cycles }),
+			setScopeVerticalZoom: (zoom) => set({ scopeVerticalZoom: zoom }),
+			setScopeTriggerLevel: (level) => set({ scopeTriggerLevel: level }),
 		}),
 		{
 			name: SYNTH_UI_STATE_STORAGE_KEY,
@@ -126,6 +156,9 @@ export const useSynthUiStore = create<SynthUiStore>()(
 				activeEnvTab: state.activeEnvTab,
 				keyboardVisible: state.keyboardVisible,
 				libraryModeOpen: state.libraryModeOpen,
+				scopeCycles: state.scopeCycles,
+				scopeVerticalZoom: state.scopeVerticalZoom,
+				scopeTriggerLevel: state.scopeTriggerLevel,
 			}),
 			merge: (persistedState, currentState) => ({
 				...currentState,

@@ -1,12 +1,11 @@
-import { Component, createRef, type ReactElement, type RefObject } from "react";
+import { type ReactElement, type RefObject, useEffect, useRef } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import type { AsidePanelComponent } from "@/components/layout/AsidePanelSwitcher";
 import SynthPanelContainer from "@/components/layout/SynthPanelContainer";
+import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import { drawOscilloscope } from "@/lib/synth/drawOscilloscope";
 
-type ScopeTriggerMode = "off" | "rise" | "fall";
-
-export type ScopePanelProps = {
+export type ScopeMiniDisplayProps = {
 	analyserNodeRef?: RefObject<AnalyserNode | null>;
 	audioCtxRef?: RefObject<AudioContext | null>;
 	effectivePitchHz: number;
@@ -19,12 +18,8 @@ export type ScopePanelProps = {
 	) => () => void;
 };
 
-type ScopePanelState = {
-	scopeCycles: number;
-	scopeVerticalZoom: number;
-	scopeTriggerLevel: number;
-	displayedHz: number;
-};
+/** @deprecated Use ScopeMiniDisplayProps */
+export type ScopePanelProps = ScopeMiniDisplayProps;
 
 function drawScopeBackdrop(canvas: HTMLCanvasElement) {
 	const ctx = canvas.getContext("2d");
@@ -63,227 +58,212 @@ function drawScopeBackdrop(canvas: HTMLCanvasElement) {
 	ctx.stroke();
 }
 
-class ScopePanel extends Component<ScopePanelProps, ScopePanelState> {
-	static panelId = "scope" as const;
-	static panelTab = { topLabel: "Scope", bottomLabel: "View" } as const;
-
-	private readonly scopeTriggerMode: ScopeTriggerMode = "rise";
-	private rafId = 0;
-	private readonly canvasRef = createRef<HTMLCanvasElement>();
-	private unsubscribeScopeFrames: (() => void) | null = null;
-	private smoothedTriggerLevel: number | null = null;
-
-	constructor(props: ScopePanelProps) {
-		super(props);
-		this.state = {
-			scopeCycles: 4,
-			scopeVerticalZoom: 1,
-			scopeTriggerLevel: 128,
-			displayedHz: props.effectivePitchHz,
-		};
+function calculateFrameMean(samples: Uint8Array | Float32Array): number {
+	if (samples.length === 0) return 128;
+	let sum = 0;
+	if (samples instanceof Uint8Array) {
+		for (let i = 0; i < samples.length; i++) sum += samples[i];
+		return sum / samples.length;
 	}
+	for (let i = 0; i < samples.length; i++) sum += samples[i];
+	const meanFloat = sum / samples.length;
+	return Math.max(0, Math.min(255, meanFloat * 128 + 128));
+}
 
-	componentDidMount() {
-		this.subscribeToScopeFrames();
-		this.startDrawLoop();
-	}
+/**
+ * Compact oscilloscope canvas placed next to the single-cycle display in the
+ * main toolbar.  Scope settings (cycles, zoom, trigger) are read from
+ * useSynthUiStore so they stay in sync with the ScopePanel controls.
+ */
+export function ScopeMiniDisplay({
+	analyserNodeRef,
+	audioCtxRef,
+	effectivePitchHz,
+	subscribeScopeFrames,
+}: ScopeMiniDisplayProps) {
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const rafIdRef = useRef(0);
+	const unsubscribeRef = useRef<(() => void) | null>(null);
+	const smoothedTriggerRef = useRef<number | null>(null);
 
-	componentDidUpdate(prevProps: ScopePanelProps) {
-		if (prevProps.subscribeScopeFrames !== this.props.subscribeScopeFrames) {
-			this.subscribeToScopeFrames();
+	const scopeCycles = useSynthUiStore((s) => s.scopeCycles);
+	const scopeVerticalZoom = useSynthUiStore((s) => s.scopeVerticalZoom);
+	const scopeTriggerLevel = useSynthUiStore((s) => s.scopeTriggerLevel);
+
+	// Keep refs to the latest values so RAF/subscription closures always read
+	// current state without needing to restart effects on every settings change.
+	const settingsRef = useRef({
+		scopeCycles,
+		scopeVerticalZoom,
+		scopeTriggerLevel,
+	});
+	settingsRef.current = { scopeCycles, scopeVerticalZoom, scopeTriggerLevel };
+
+	const propsRef = useRef({ effectivePitchHz, analyserNodeRef, audioCtxRef });
+	propsRef.current = { effectivePitchHz, analyserNodeRef, audioCtxRef };
+
+	// Stable draw function stored in a ref; updated each render so it always
+	// reads the current settings/props refs without recreating effects.
+	const drawFrameRef = useRef(
+		(
+			_canvas: HTMLCanvasElement,
+			_samples: Uint8Array | Float32Array,
+			_hz: number,
+			_sampleRate: number,
+		) => {},
+	);
+	drawFrameRef.current = (
+		canvas: HTMLCanvasElement,
+		samples: Uint8Array | Float32Array,
+		hz: number,
+		sampleRate: number,
+	) => {
+		const mean = calculateFrameMean(samples);
+		if (smoothedTriggerRef.current == null) {
+			smoothedTriggerRef.current = mean;
+		} else {
+			smoothedTriggerRef.current += 0.18 * (mean - smoothedTriggerRef.current);
 		}
-		if (
-			prevProps.effectivePitchHz !== this.props.effectivePitchHz &&
-			this.state.displayedHz !== this.props.effectivePitchHz
-		) {
-			this.setState({ displayedHz: this.props.effectivePitchHz });
-		}
-	}
+		const bias = settingsRef.current.scopeTriggerLevel - 128;
+		const triggerLevel = Math.max(
+			0,
+			Math.min(255, smoothedTriggerRef.current + bias),
+		);
+		drawOscilloscope(
+			canvas,
+			samples,
+			{
+				cycles: settingsRef.current.scopeCycles,
+				verticalZoom: settingsRef.current.scopeVerticalZoom,
+				triggerLevel,
+				triggerMode: "rise",
+			},
+			hz,
+			sampleRate,
+		);
+	};
 
-	componentWillUnmount() {
-		window.cancelAnimationFrame(this.rafId);
-		this.unsubscribeScopeFrames?.();
-		this.unsubscribeScopeFrames = null;
-	}
-
-	private subscribeToScopeFrames() {
-		this.unsubscribeScopeFrames?.();
-		this.unsubscribeScopeFrames = null;
-		if (!this.props.subscribeScopeFrames) {
-			return;
-		}
-		this.unsubscribeScopeFrames = this.props.subscribeScopeFrames((frame) => {
-			const canvas = this.canvasRef.current;
+	// Subscribe to external frame push stream (plugin mode).
+	useEffect(() => {
+		unsubscribeRef.current?.();
+		unsubscribeRef.current = null;
+		if (!subscribeScopeFrames) return;
+		unsubscribeRef.current = subscribeScopeFrames((frame) => {
+			const canvas = canvasRef.current;
 			if (!canvas) return;
-			this.drawScopeFrame(
+			drawFrameRef.current(
 				canvas,
 				frame.samples,
 				Math.max(1, frame.hz),
 				frame.sampleRate,
 			);
-			if (this.state.displayedHz !== frame.hz) {
-				this.setState({ displayedHz: frame.hz });
-			}
 		});
-	}
+		return () => {
+			unsubscribeRef.current?.();
+			unsubscribeRef.current = null;
+		};
+	}, [subscribeScopeFrames]);
 
-	private startDrawLoop() {
+	// RAF loop for AnalyserNode path (web-audio mode).
+	useEffect(() => {
 		const draw = () => {
-			this.rafId = window.requestAnimationFrame(draw);
-			const canvas = this.canvasRef.current;
+			rafIdRef.current = window.requestAnimationFrame(draw);
+			const canvas = canvasRef.current;
 			if (!canvas) return;
-
-			// When an external frame stream is wired, avoid a second RAF-based draw path.
-			if (this.unsubscribeScopeFrames) {
-				return;
-			}
-
-			const analyser = this.props.analyserNodeRef?.current;
-			if (!analyser) {
+			// External stream takes priority.
+			if (unsubscribeRef.current) return;
+			const {
+				effectivePitchHz: hz,
+				analyserNodeRef: aRef,
+				audioCtxRef: ctxRef,
+			} = propsRef.current;
+			const analyserNode = aRef?.current;
+			if (!analyserNode) {
 				drawScopeBackdrop(canvas);
 				return;
 			}
-
-			const data = new Uint8Array(analyser.fftSize);
-			analyser.getByteTimeDomainData(data);
-			const sampleRate = this.props.audioCtxRef?.current?.sampleRate ?? 44100;
-			const hz = Math.max(1, this.props.effectivePitchHz);
-			this.drawScopeFrame(canvas, data, hz, sampleRate);
+			const data = new Uint8Array(analyserNode.fftSize);
+			analyserNode.getByteTimeDomainData(data);
+			const sampleRate = ctxRef?.current?.sampleRate ?? 44100;
+			drawFrameRef.current(canvas, data, Math.max(1, hz), sampleRate);
 		};
-
 		draw();
-	}
+		return () => {
+			window.cancelAnimationFrame(rafIdRef.current);
+		};
+	}, []); // Runs once on mount; reads latest values through refs.
 
-	private drawScopeFrame(
-		canvas: HTMLCanvasElement,
-		samples: Uint8Array | Float32Array,
-		hz: number,
-		sampleRate: number,
-	) {
-		const triggerLevel = this.getSmoothedAnalogTriggerLevel(samples);
-
-		drawOscilloscope(
-			canvas,
-			samples,
-			{
-				cycles: this.state.scopeCycles,
-				verticalZoom: this.state.scopeVerticalZoom,
-				triggerLevel,
-				triggerMode: this.scopeTriggerMode,
-			},
-			hz,
-			sampleRate,
-		);
-	}
-
-	private getSmoothedAnalogTriggerLevel(
-		samples: Uint8Array | Float32Array,
-	): number {
-		const frameCenter = this.calculateFrameMean(samples);
-		if (this.smoothedTriggerLevel == null) {
-			this.smoothedTriggerLevel = frameCenter;
-		} else {
-			const alpha = 0.18;
-			this.smoothedTriggerLevel +=
-				alpha * (frameCenter - this.smoothedTriggerLevel);
-		}
-		return this.applyTriggerBias(this.smoothedTriggerLevel);
-	}
-
-	private applyTriggerBias(center: number): number {
-		const bias = this.state.scopeTriggerLevel - 128;
-		return Math.max(0, Math.min(255, center + bias));
-	}
-
-	private calculateFrameMean(samples: Uint8Array | Float32Array): number {
-		if (samples.length === 0) {
-			return 128;
-		}
-
-		let sum = 0;
-		if (samples instanceof Uint8Array) {
-			for (let i = 0; i < samples.length; i++) {
-				sum += samples[i];
-			}
-			return sum / samples.length;
-		}
-
-		for (let i = 0; i < samples.length; i++) {
-			sum += samples[i];
-		}
-		const meanFloat = sum / samples.length;
-		return this.floatToTriggerLevel(meanFloat);
-	}
-
-	private floatToTriggerLevel(value: number): number {
-		return Math.max(0, Math.min(255, value * 128 + 128));
-	}
-
-	render(): ReactElement {
-		const { scopeCycles, scopeVerticalZoom, scopeTriggerLevel, displayedHz } =
-			this.state;
-
-		return (
-			<SynthPanelContainer>
-				<div className="space-y-2">
-					<div className="relative overflow-hidden rounded-lg border border-cz-border bg-cz-lcd-bg">
-						<div className="absolute left-2 top-1 text-5xs font-mono text-cz-lcd-fg/60">
-							CH1
-						</div>
-						<div className="absolute right-3 top-3 text-3xs font-mono uppercase tracking-[0.2em] text-cz-lcd-fg/60">
-							{displayedHz.toFixed(1)} Hz
-						</div>
-						<canvas
-							ref={this.canvasRef}
-							width={900}
-							height={220}
-							className="h-36 w-full"
-							style={{ imageRendering: "pixelated" }}
-						/>
-					</div>
-					<div className="flex justify-center gap-2">
-						<ControlKnob
-							value={scopeCycles}
-							onChange={(value) => this.setState({ scopeCycles: value })}
-							min={0.5}
-							max={8}
-							size={48}
-							color="#3dff3d"
-							label="Cycles"
-							valueFormatter={(value) => value.toFixed(1)}
-						/>
-						<ControlKnob
-							value={scopeVerticalZoom}
-							onChange={(value) => this.setState({ scopeVerticalZoom: value })}
-							min={0.25}
-							max={4}
-							size={48}
-							color="#9cb937"
-							label="Zoom"
-							valueFormatter={(value) => `${value.toFixed(1)}x`}
-						/>
-						<ControlKnob
-							value={scopeTriggerLevel}
-							onChange={(value) =>
-								this.setState({ scopeTriggerLevel: Math.round(value) })
-							}
-							min={0}
-							max={255}
-							size={48}
-							color="#7f9de4"
-							label="Trig"
-							valueFormatter={(value) => `${Math.round(value)}`}
-						/>
-					</div>
+	return (
+		<div className="flex flex-col items-center">
+			<span className="mb-1 text-3xs uppercase tracking-[0.24em] text-base-content/55">
+				Scope
+			</span>
+			<div className="relative overflow-hidden rounded border border-cz-border bg-cz-lcd-bg">
+				<div className="absolute left-1 top-0.5 text-5xs font-mono text-cz-lcd-fg/60">
+					CH1
 				</div>
-			</SynthPanelContainer>
-		);
-	}
+				<canvas
+					ref={canvasRef}
+					className="h-16 w-36"
+					style={{ imageRendering: "pixelated" }}
+				/>
+			</div>
+		</div>
+	);
 }
 
-const ScopePanelComponent = ScopePanel as unknown as ((
-	props: ScopePanelProps,
-) => ReactElement) &
-	AsidePanelComponent<"scope">;
+/**
+ * Aside-panel component containing only the scope adjustment controls.
+ * The oscilloscope canvas itself lives in ScopeMiniDisplay (toolbar).
+ */
+function ScopePanel() {
+	const scopeCycles = useSynthUiStore((s) => s.scopeCycles);
+	const scopeVerticalZoom = useSynthUiStore((s) => s.scopeVerticalZoom);
+	const scopeTriggerLevel = useSynthUiStore((s) => s.scopeTriggerLevel);
+	const setScopeCycles = useSynthUiStore((s) => s.setScopeCycles);
+	const setScopeVerticalZoom = useSynthUiStore((s) => s.setScopeVerticalZoom);
+	const setScopeTriggerLevel = useSynthUiStore((s) => s.setScopeTriggerLevel);
 
-export default ScopePanelComponent;
+	return (
+		<SynthPanelContainer>
+			<div className="flex justify-center gap-2">
+				<ControlKnob
+					value={scopeCycles}
+					onChange={setScopeCycles}
+					min={0.5}
+					max={8}
+					size={48}
+					color="#3dff3d"
+					label="Cycles"
+					valueFormatter={(value) => value.toFixed(1)}
+				/>
+				<ControlKnob
+					value={scopeVerticalZoom}
+					onChange={setScopeVerticalZoom}
+					min={0.25}
+					max={4}
+					size={48}
+					color="#9cb937"
+					label="Zoom"
+					valueFormatter={(value) => `${value.toFixed(1)}x`}
+				/>
+				<ControlKnob
+					value={scopeTriggerLevel}
+					onChange={(value) => setScopeTriggerLevel(Math.round(value))}
+					min={0}
+					max={255}
+					size={48}
+					color="#7f9de4"
+					label="Trig"
+					valueFormatter={(value) => `${Math.round(value)}`}
+				/>
+			</div>
+		</SynthPanelContainer>
+	);
+}
+
+ScopePanel.panelId = "scope" as const;
+ScopePanel.panelTab = { topLabel: "Scope", bottomLabel: "Ctrl" } as const;
+
+export default ScopePanel as unknown as (() => ReactElement) &
+	AsidePanelComponent<"scope">;

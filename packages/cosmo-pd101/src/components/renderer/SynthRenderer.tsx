@@ -14,7 +14,9 @@ import { SynthSingleCycleDisplay } from "@/components/editor/SingleCycleDisplay"
 import type { AsidePanelTab } from "@/components/layout/AsidePanelSwitcher";
 import AsidePanelSwitcher from "@/components/layout/AsidePanelSwitcher";
 import SynthLcdDisplay from "@/components/layout/SynthLcdDisplay";
-import ScopePanel from "@/components/panels/analysis/ScopePanel";
+import ScopePanel, {
+	ScopeMiniDisplay,
+} from "@/components/panels/analysis/ScopePanel";
 import ChorusPanel from "@/components/panels/fx/ChorusPanel";
 import DelayPanel from "@/components/panels/fx/DelayPanel";
 import FxConsoleDrawer from "@/components/panels/fx/FxConsoleDrawer";
@@ -183,12 +185,7 @@ function SynthRendererContent({
 								<PortamentoPanel />
 								<PhaseModPanel />
 								<VibratoPanel />
-								<ScopePanel
-									analyserNodeRef={analyserNodeRef}
-									audioCtxRef={audioCtxRef}
-									effectivePitchHz={effectivePitchHz}
-									subscribeScopeFrames={subscribeScopeFrames}
-								/>
+								<ScopePanel />
 								<SynthFilterPanel />
 								<ChorusPanel />
 								<DelayPanel />
@@ -204,6 +201,12 @@ function SynthRendererContent({
 										<LineSelectControl />
 										<ModModeControl />
 										<SynthSingleCycleDisplay />
+										<ScopeMiniDisplay
+											analyserNodeRef={analyserNodeRef}
+											audioCtxRef={audioCtxRef}
+											effectivePitchHz={effectivePitchHz}
+											subscribeScopeFrames={subscribeScopeFrames}
+										/>
 										<div className="flex items-end gap-2 border-l border-cz-border pl-2 xl:pl-3">
 											<CzButton
 												active={mainPanelMode === "phase"}
