@@ -134,9 +134,40 @@ describe("PresetLibrary", () => {
 
 		const list = screen.getByRole("listbox", { name: "Preset library" });
 		fireEvent.keyDown(list, { key: "ArrowDown" });
+		fireEvent.keyDown(list, { key: "End" });
 		fireEvent.keyDown(list, { key: "Enter" });
 
-		expect(props.onLoadLibrary).toHaveBeenCalledWith(libraryPreset);
+		expect(props.onLoadLibrary).toHaveBeenCalledTimes(3);
+		expect(props.onLoadLibrary).toHaveBeenNthCalledWith(1, libraryPreset);
+		expect(props.onLoadLibrary).toHaveBeenNthCalledWith(2, libraryPreset);
+		expect(props.onLoadLibrary).toHaveBeenNthCalledWith(3, libraryPreset);
+	});
+
+	it("clears modal state when dialogs receive a native cancel event", () => {
+		const props = createProps();
+		render(<PresetLibrary {...props} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Rename Local Keys" }));
+		const renameDialog = screen.getByText("Rename preset").closest("dialog");
+		if (!(renameDialog instanceof HTMLDialogElement)) {
+			throw new Error("expected rename dialog");
+		}
+		fireEvent(
+			renameDialog,
+			new Event("cancel", { bubbles: false, cancelable: true }),
+		);
+		expect(renameDialog.open).toBe(false);
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete Local Keys" }));
+		const deleteDialog = screen.getByText("Delete preset?").closest("dialog");
+		if (!(deleteDialog instanceof HTMLDialogElement)) {
+			throw new Error("expected delete dialog");
+		}
+		fireEvent(
+			deleteDialog,
+			new Event("cancel", { bubbles: false, cancelable: true }),
+		);
+		expect(deleteDialog.open).toBe(false);
 	});
 
 	it("closes back to the synth view", () => {

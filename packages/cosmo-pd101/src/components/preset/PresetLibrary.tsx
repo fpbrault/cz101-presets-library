@@ -153,12 +153,6 @@ export default function PresetLibrary({
 				handleLoad(lastEntry);
 			}
 		}
-		if (event.key === "End") {
-			event.preventDefault();
-			setFocusedEntryId(
-				filteredEntries[filteredEntries.length - 1]?.id ?? null,
-			);
-		}
 		if (event.key === "Enter" && focusedEntry) {
 			event.preventDefault();
 			handleLoad(focusedEntry);
@@ -418,7 +412,15 @@ export default function PresetLibrary({
 				</div>
 			</div>
 
-			<dialog className="modal" open={renameEntry !== null}>
+			<dialog
+				className="modal"
+				open={renameEntry !== null}
+				onCancel={(event) => {
+					event.preventDefault();
+					setRenameEntry(null);
+					setRenameValue("");
+				}}
+			>
 				<div className="modal-box rounded-md border border-cz-border bg-cz-surface text-cz-cream">
 					<h3 className="font-mono text-lg font-bold">Rename preset</h3>
 					<input
@@ -451,7 +453,14 @@ export default function PresetLibrary({
 				</div>
 			</dialog>
 
-			<dialog className="modal" open={deleteEntry !== null}>
+			<dialog
+				className="modal"
+				open={deleteEntry !== null}
+				onCancel={(event) => {
+					event.preventDefault();
+					setDeleteEntry(null);
+				}}
+			>
 				<div className="modal-box rounded-md border border-cz-border bg-cz-surface text-cz-cream">
 					<h3 className="font-mono text-lg font-bold">Delete preset?</h3>
 					<p className="mt-3 text-sm text-cz-cream-dim">

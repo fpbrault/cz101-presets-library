@@ -45,7 +45,7 @@ describe("PresetNavigator", () => {
 
 		fireEvent.click(
 			screen.getByRole("button", {
-				name: "Preset Current State. Open library",
+				name: "Preset Current State. Close library",
 			}),
 		);
 		expect(onLibraryModeChange).toHaveBeenLastCalledWith(false);

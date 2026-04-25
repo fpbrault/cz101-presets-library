@@ -379,7 +379,14 @@ function PendingModifiedPresetModal({
 	}, [pendingPresetChange]);
 
 	return (
-		<dialog className="modal" open={pendingPresetChange !== null}>
+		<dialog
+			className="modal"
+			open={pendingPresetChange !== null}
+			onCancel={(event) => {
+				event.preventDefault();
+				onCancel?.();
+			}}
+		>
 			<div className="modal-box rounded-md border border-cz-border bg-cz-surface text-cz-cream">
 				<h3 className="font-mono text-lg font-bold">Save modified preset?</h3>
 				<p className="mt-3 text-sm text-cz-cream-dim">

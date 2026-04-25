@@ -66,6 +66,45 @@ describe("useSynthPresetManager", () => {
 		]);
 	});
 
+	it("skips preset session hydration when current state hydration is disabled", () => {
+		const savedState = makePreset(0.33);
+		let currentState = clonePreset();
+		const applyPreset = vi.fn((preset: SynthPresetV1) => {
+			currentState = preset;
+		});
+
+		saveCurrentState(savedState);
+		saveCurrentPresetSession({
+			activePresetId: "builtin:Factory Brass",
+			activePresetNameBase: "Factory Brass",
+			loadedPresetFingerprint: JSON.stringify(savedState),
+		});
+
+		const { result } = renderHook(() =>
+			useSynthPresetManager({
+				builtinPresets: {
+					"Factory Brass": makePreset(0.7),
+					Beta: makePreset(0.9),
+				},
+				gatherState: () => currentState,
+				applyPreset,
+				shouldLoadCurrentState: () => false,
+			}),
+		);
+
+		expect(applyPreset).not.toHaveBeenCalled();
+		expect(result.current.activePresetId).toBeNull();
+		expect(result.current.activePresetName).toBe("Current State");
+
+		act(() => {
+			result.current.handleLoadBuiltin("Beta");
+		});
+
+		expect(result.current.pendingPresetChange).toBeNull();
+		expect(result.current.activePresetId).toBe("builtin:Beta");
+		expect(result.current.activePresetName).toBe("Beta");
+	});
+
 	it("queues pending navigation when switching presets with unsaved changes", () => {
 		const alphaPreset = makePreset(0.1);
 		const betaPreset = makePreset(0.9);

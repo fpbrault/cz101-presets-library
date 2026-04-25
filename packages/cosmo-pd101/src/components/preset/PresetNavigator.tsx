@@ -47,7 +47,7 @@ export default function PresetNavigator({
 						}`}
 						onClick={toggleLibrary}
 						aria-expanded={isLibraryModeOpen}
-						aria-label={`Preset ${activePresetName}. Open library`}
+						aria-label={`Preset ${activePresetName}. ${isLibraryModeOpen ? "Close library" : "Open library"}`}
 					>
 						<span className="text-3xs font-mono uppercase tracking-[0.32em] text-cz-gold">
 							Preset

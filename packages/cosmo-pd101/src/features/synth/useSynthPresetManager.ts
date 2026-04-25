@@ -90,7 +90,14 @@ export function useSynthPresetManager({
 	presetStateKey,
 }: UseSynthPresetManagerOptions): UseSynthPresetManagerResult {
 	const [presetList, setPresetList] = useState<string[]>([]);
-	const initialPresetSession = useMemo(() => loadCurrentPresetSession(), []);
+	const shouldHydratePersistedState = useMemo(
+		() => (shouldLoadCurrentState ? shouldLoadCurrentState() : true),
+		[shouldLoadCurrentState],
+	);
+	const initialPresetSession = useMemo(
+		() => (shouldHydratePersistedState ? loadCurrentPresetSession() : null),
+		[shouldHydratePersistedState],
+	);
 	const [activePresetId, setActivePresetId] = useState<string | null>(
 		initialPresetSession?.activePresetId ?? null,
 	);
@@ -413,11 +420,10 @@ export function useSynthPresetManager({
 
 	useEffect(() => {
 		setPresetList(listPresets());
-		const shouldLoad = shouldLoadCurrentState ? shouldLoadCurrentState() : true;
-		if (!shouldLoad) return;
+		if (!shouldHydratePersistedState) return;
 		const saved = loadCurrentState();
 		if (saved) applyPreset(saved);
-	}, [applyPreset, shouldLoadCurrentState]);
+	}, [applyPreset, shouldHydratePersistedState]);
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
