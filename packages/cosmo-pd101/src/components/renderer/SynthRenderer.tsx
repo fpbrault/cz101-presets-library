@@ -6,6 +6,7 @@ import {
 	useEffect,
 	useState,
 } from "react";
+import ControlKnob from "@/components/controls/ControlKnob";
 import LineSelectControl from "@/components/controls/LineSelectControl";
 import ModModeControl from "@/components/controls/ModModeControl";
 import type { EnvOverrideHandlers } from "@/components/editor/PhaseLinesSection";
@@ -23,7 +24,6 @@ import SynthFilterPanel from "@/components/panels/fx/SynthFilterPanel";
 import ModConsoleDrawer from "@/components/panels/mod/ModConsoleDrawer";
 import GlobalVoicePanel from "@/components/panels/voice/GlobalVoicePanel";
 import PhaseModPanel from "@/components/panels/voice/PhaseModPanel";
-import PortamentoPanel from "@/components/panels/voice/PortamentoPanel";
 import VibratoPanel from "@/components/panels/voice/VibratoPanel";
 import PresetLibrary from "@/components/preset/PresetLibrary";
 import SynthHeader, {
@@ -31,7 +31,10 @@ import SynthHeader, {
 } from "@/components/preset/SynthHeader";
 import CzButton from "@/components/primitives/CzButton";
 import { ModMatrixProvider } from "@/context/ModMatrixContext";
-import { SynthParamControllerProvider } from "@/features/synth/SynthParamController";
+import {
+	SynthParamControllerProvider,
+	useSynthParam,
+} from "@/features/synth/SynthParamController";
 import { useSynthStore } from "@/features/synth/synthStore";
 import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import { HoverInfoProvider, useHoverInfo } from "../layout/HoverInfo";
@@ -180,7 +183,6 @@ function SynthRendererContent({
 								onTabChange={onAsidePanelChange}
 							>
 								<GlobalVoicePanel />
-								<PortamentoPanel />
 								<PhaseModPanel />
 								<VibratoPanel />
 								<ScopePanel
@@ -202,6 +204,7 @@ function SynthRendererContent({
 								<div className="relative shrink-0 rounded-md border border-cz-border bg-cz-body px-2 py-2 xl:px-3 shadow-inner">
 									<div className="flex flex-wrap items-end justify-end gap-x-2 gap-y-2 xl:gap-x-4">
 										<LineSelectControl />
+										<MasterVolumeControl />
 										<ModModeControl />
 										<SynthSingleCycleDisplay />
 										<div className="flex items-end gap-2 border-l border-cz-border pl-2 xl:pl-3">
@@ -353,6 +356,26 @@ function SynthRendererContent({
 				</div>
 			</SynthParamControllerProvider>
 		</ModMatrixProvider>
+	);
+}
+
+function MasterVolumeControl() {
+	const { value: volume, setValue: setVolume } = useSynthParam("volume");
+
+	return (
+		<div className="shrink-0">
+			<ControlKnob
+				value={volume}
+				onChange={setVolume}
+				min={0}
+				max={1}
+				size={32}
+				color="#9cb937"
+				label="Volume"
+				valueFormatter={(value) => `${Math.round(value * 100)}%`}
+				modDestination="volume"
+			/>
+		</div>
 	);
 }
 

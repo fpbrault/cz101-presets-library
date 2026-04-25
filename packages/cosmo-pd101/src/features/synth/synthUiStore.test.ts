@@ -71,4 +71,20 @@ describe("synthUiStore", () => {
 			keyboardVisible: true,
 		});
 	});
+
+	it("falls back to global when persisted side panel was portamento", async () => {
+		localStorage.setItem(
+			SYNTH_UI_STATE_STORAGE_KEY,
+			JSON.stringify({
+				state: {
+					activeAsidePanel: "portamento",
+				},
+				version: 0,
+			}),
+		);
+
+		await useSynthUiStore.persist.rehydrate();
+
+		expect(useSynthUiStore.getState().activeAsidePanel).toBe("global");
+	});
 });

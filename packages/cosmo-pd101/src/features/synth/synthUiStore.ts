@@ -37,7 +37,6 @@ const ASIDE_PANEL_TABS = new Set<AsidePanelTab>([
 	"global",
 	"phaseMod",
 	"vibrato",
-	"portamento",
 	"filter",
 	"chorus",
 	"delay",

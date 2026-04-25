@@ -21,7 +21,6 @@ export type AsidePanelTab =
 	| "global"
 	| "phaseMod"
 	| "vibrato"
-	| "portamento"
 	| "filter"
 	| "chorus"
 	| "delay"
@@ -59,7 +58,6 @@ export default function AsidePanelSwitcher<T extends string>({
 }: AsidePanelSwitcherProps<T>) {
 	const { value: phaseModEnabled } = useSynthParam("phaseModEnabled");
 	const { value: vibratoEnabled } = useSynthParam("vibratoEnabled");
-	const { value: portamentoEnabled } = useSynthParam("portamentoEnabled");
 	const { value: filterEnabled } = useSynthParam("filterEnabled");
 	const { value: chorusEnabled } = useSynthParam("chorusEnabled");
 	const { value: delayEnabled } = useSynthParam("delayEnabled");
@@ -76,8 +74,6 @@ export default function AsidePanelSwitcher<T extends string>({
 				return phaseModEnabled;
 			case "vibrato":
 				return vibratoEnabled;
-			case "portamento":
-				return portamentoEnabled;
 			case "filter":
 				return filterEnabled;
 			case "chorus":
