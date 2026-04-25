@@ -459,6 +459,7 @@ impl Default for DelayParams {
 /// Phaser parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta-bindings", derive(Type))]
+#[serde(rename_all = "camelCase")]
 pub struct PhaserParams {
     #[serde(default)]
     pub enabled: bool,

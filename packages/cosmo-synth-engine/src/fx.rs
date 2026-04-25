@@ -32,6 +32,15 @@ const FDN_LFO_RATES: [f32; FDN_N] = [0.127, 0.167, 0.207, 0.247, 0.289, 0.331, 0
 const ER_N: usize = 5;
 const ER_TAP_DELAYS_S: [f32; ER_N] = [0.017, 0.026, 0.035, 0.045, 0.057];
 const ER_TAP_GAINS: [f32; ER_N] = [0.70, 0.55, 0.40, 0.28, 0.18];
+// Tape echo constants
+// ---------------------------------------------------------------------------
+
+/// Upper cutoff frequency for the tape echo LP filter (bright setting, warmth = 0).
+const TAPE_BRIGHT_CUTOFF_HZ: f32 = 20000.0;
+/// How much the cutoff frequency drops from bright to warm (warmth = 1).
+const TAPE_WARM_RANGE_HZ: f32 = 19700.0;
+/// Soft-saturation drive applied in the tape feedback path.
+const TAPE_SATURATION_DRIVE: f32 = 1.5;
 
 // ---------------------------------------------------------------------------
 // DelayLine
@@ -464,13 +473,12 @@ impl FxChain {
         let delayed = self.delay_line.read_at_fractional(delay_samples);
 
         let feedback_input = if self.delay_tape_mode {
-            // One-pole LP filter: warmth 0 = bright (fc≈20000 Hz), warmth 1 = warm (fc≈300 Hz)
-            let fc = 20000.0 - self.delay_warmth * 19700.0;
+            // One-pole LP filter: warmth 0 = bright, warmth 1 = warm
+            let fc = TAPE_BRIGHT_CUTOFF_HZ - self.delay_warmth * TAPE_WARM_RANGE_HZ;
             let g = expf(-TWO_PI * fc / self.sample_rate);
             self.tape_filter_state = self.tape_filter_state * g + delayed * (1.0 - g);
             // Gentle soft saturation
-            let drive = 1.5;
-            tanhf(self.tape_filter_state * drive) / drive
+            tanhf(self.tape_filter_state * TAPE_SATURATION_DRIVE) / TAPE_SATURATION_DRIVE
         } else {
             delayed
         };
