@@ -37,7 +37,7 @@ describe("GlobalVoicePanel", () => {
 		setters.clear();
 		values.clear();
 		values.set("polyMode", "poly8");
-		values.set("velocityTarget", "amp");
+		values.set("velocityCurve", 0);
 		values.set("pitchBendRange", 2);
 		values.set("portamentoEnabled", false);
 		values.set("portamentoMode", "rate");
@@ -50,13 +50,10 @@ describe("GlobalVoicePanel", () => {
 		});
 	});
 
-	it("groups voice mode, portamento, and bend range controls", () => {
+	it("groups portamento and bend range controls", () => {
 		render(<GlobalVoicePanel />);
 		const portamentoSection = screen.getByText("Portamento").parentElement;
 
-		expect(screen.getByText("Voice Mode")).toBeInTheDocument();
-		expect(screen.getByText("Poly 8")).toBeInTheDocument();
-		expect(screen.getByText("Mono")).toBeInTheDocument();
 		expect(screen.getByText("Portamento")).toBeInTheDocument();
 		expect(portamentoSection).not.toBeNull();
 		expect(
@@ -87,16 +84,10 @@ describe("GlobalVoicePanel", () => {
 		expect(portamentoSection).not.toBeNull();
 		fireEvent.click(
 			within(portamentoSection as HTMLElement).getByRole("button", {
-				name: "Off",
-			}),
-		);
-		fireEvent.click(
-			within(portamentoSection as HTMLElement).getByRole("button", {
 				name: "Time",
 			}),
 		);
 
-		expect(setters.get("portamentoEnabled")).toHaveBeenCalledWith(true);
 		expect(setters.get("portamentoMode")).toHaveBeenCalledWith("time");
 	});
 });

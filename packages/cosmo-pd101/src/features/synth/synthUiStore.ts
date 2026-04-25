@@ -37,12 +37,12 @@ const ASIDE_PANEL_TABS = new Set<AsidePanelTab>([
 	"global",
 	"phaseMod",
 	"vibrato",
-	"filter",
 	"chorus",
 	"delay",
 	"reverb",
 ]);
 const REMOVED_ASIDE_PANEL_FALLBACKS = new Map<string, AsidePanelTab>([
+	["filter", "global"],
 	["portamento", "global"],
 ]);
 const MAIN_PANEL_MODES = new Set<MainPanelMode>(["phase", "fx", "mod"]);

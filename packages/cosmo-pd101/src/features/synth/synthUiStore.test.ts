@@ -87,4 +87,20 @@ describe("synthUiStore", () => {
 
 		expect(useSynthUiStore.getState().activeAsidePanel).toBe("global");
 	});
+
+	it("falls back to global when persisted side panel was filter", async () => {
+		localStorage.setItem(
+			SYNTH_UI_STATE_STORAGE_KEY,
+			JSON.stringify({
+				state: {
+					activeAsidePanel: "filter",
+				},
+				version: 0,
+			}),
+		);
+
+		await useSynthUiStore.persist.rehydrate();
+
+		expect(useSynthUiStore.getState().activeAsidePanel).toBe("global");
+	});
 });

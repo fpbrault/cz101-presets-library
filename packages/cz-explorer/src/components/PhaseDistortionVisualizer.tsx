@@ -222,11 +222,10 @@ export function SharedPhaseDistortionVisualizer({
 			: t("states.filterOff", { defaultValue: "FILT OFF" });
 		return t("display.linePolyFilter", {
 			line: lineSelect,
-			poly: polyMode.toUpperCase(),
 			filter: filterStatus,
-			defaultValue: `LINE ${lineSelect} | ${polyMode.toUpperCase()} | ${filterStatus}`,
+			defaultValue: `LINE ${lineSelect}`,
 		});
-	}, [lineSelect, polyMode, filterEnabled, t]);
+	}, [lineSelect, filterEnabled, t]);
 
 	return (
 		<SynthRenderer
@@ -254,7 +253,7 @@ export function SharedPhaseDistortionVisualizer({
 			frameStyle={frameStyle}
 			headerExtra={headerExtra}
 			lcdPrimaryText={lcdPrimaryText}
-			lcdSecondaryText={lcdSecondaryText}
+			lcdSecondaryText={""}
 			lcdTransientReadout={lcdControlReadout}
 			effectivePitchHz={effectivePitchHz}
 			analyserNodeRef={analyserNodeRef}
