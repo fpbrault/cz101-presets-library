@@ -1,0 +1,13 @@
+{
+	"root": false,
+	"extends": ["../../biome.json"],
+	"files": {
+		"includes": ["!!public/cosmo-synth-engine-wasm"],
+		"ignoreUnknown": true
+	},
+	"javascript": {
+		"formatter": {
+			"indentStyle": "tab"
+		}
+	}
+}

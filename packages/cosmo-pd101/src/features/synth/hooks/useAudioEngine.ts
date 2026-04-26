@@ -32,6 +32,16 @@ export type UseAudioEngineParams = {
 	synthWasmUrl: string;
 	synthBindingsUrl: string;
 	pdVisualizerWorkletUrl: string;
+	outputChannelStart?: number;
+	sampleRate?: number;
+	bufferSize?: number;
+	audioDeviceId?: string;
+	/**
+	 * Optional callback invoked on every audio buffer with stereo-interleaved
+	 * F32 samples (L0, R0, L1, R1, …).  When provided the browser AudioContext
+	 * output is muted so the caller can route audio elsewhere (e.g. cpal).
+	 */
+	onCaptureSamples?: (stereoInterleaved: Float32Array) => void;
 };
 
 export type AudioEngineRefs = {
@@ -165,12 +175,20 @@ export function useAudioEngine({
 	synthWasmUrl,
 	synthBindingsUrl,
 	pdVisualizerWorkletUrl,
+	outputChannelStart = 1,
+	sampleRate = 44100,
+	bufferSize = 512,
+	audioDeviceId = "default",
+	onCaptureSamples,
 }: UseAudioEngineParams): AudioEngineRefs {
 	const audioCtxRef = useRef<AudioContext | null>(null);
 	const gainNodeRef = useRef<GainNode | null>(null);
 	const analyserNodeRef = useRef<AnalyserNode | null>(null);
 	const workletNodeRef = useRef<AudioWorkletNode | null>(null);
 	const audioInitRef = useRef(false);
+	// Keep the callback in a ref so the effect doesn't need it as a dep.
+	const onCaptureSamplesRef = useRef(onCaptureSamples);
+	onCaptureSamplesRef.current = onCaptureSamples;
 
 	const paramsRef = useRef<EngineParams>({
 		lineSelect: "L1+L2",
@@ -223,6 +241,10 @@ export function useAudioEngine({
 		if (audioInitRef.current) return;
 		audioInitRef.current = true;
 		let disposed = false;
+		let outputSplitter: ChannelSplitterNode | null = null;
+		let outputMerger: ChannelMergerNode | null = null;
+		let streamDestination: MediaStreamAudioDestinationNode | null = null;
+		let sinkAudioElement: HTMLAudioElement | null = null;
 
 		const normalizeRuntimeModSources = (
 			value: unknown,
@@ -250,10 +272,56 @@ export function useAudioEngine({
 
 		const init = async () => {
 			try {
-				const ctx = new AudioContext();
+				const latencyHint = Math.max(0.001, bufferSize / sampleRate);
+				const ctx = new AudioContext({
+					sampleRate,
+					latencyHint,
+				});
 				if (disposed) {
 					ctx.close();
 					return;
+				}
+
+				const ctxWithSink = ctx as AudioContext & {
+					setSinkId?: (sinkId: string) => Promise<void>;
+				};
+				const mediaElementProto =
+					HTMLMediaElement.prototype as HTMLMediaElement & {
+						setSinkId?: (sinkId: string) => Promise<void>;
+					};
+				if (
+					audioDeviceId !== "default" &&
+					typeof ctxWithSink.setSinkId === "function"
+				) {
+					await ctxWithSink.setSinkId(audioDeviceId).catch((error) => {
+						console.warn(
+							"[PD Visualizer] Failed to set audio output device:",
+							error,
+						);
+					});
+				} else if (
+					audioDeviceId !== "default" &&
+					typeof mediaElementProto.setSinkId === "function"
+				) {
+					streamDestination = ctx.createMediaStreamDestination();
+					sinkAudioElement = new Audio();
+					sinkAudioElement.autoplay = true;
+					sinkAudioElement.srcObject = streamDestination.stream;
+					const audioWithSink = sinkAudioElement as HTMLAudioElement & {
+						setSinkId?: (sinkId: string) => Promise<void>;
+					};
+					await audioWithSink.setSinkId?.(audioDeviceId).catch((error) => {
+						console.warn(
+							"[PD Visualizer] Failed to set sink on fallback audio element:",
+							error,
+						);
+					});
+					await sinkAudioElement.play().catch((error) => {
+						console.warn(
+							"[PD Visualizer] Failed to start fallback audio sink element:",
+							error,
+						);
+					});
 				}
 
 				const [wasmResponse, bindingsResponse] = await Promise.all([
@@ -317,7 +385,76 @@ export function useAudioEngine({
 
 				workletNode.connect(gainNode);
 				gainNode.connect(analyserNode);
-				analyserNode.connect(ctx.destination);
+
+				// ── cpal capture path ──────────────────────────────────────────
+				// When a capture callback is provided (e.g. Tauri standalone app
+				// routing audio through cpal) we intercept the output with a
+				// ScriptProcessorNode, mute the browser sink, and forward stereo-
+				// interleaved PCM to the callback.  ScriptProcessorNode is
+				// deprecated but remains the only synchronous capture API that
+				// works in WKWebView without a custom AudioWorklet module.
+				const captureBufferSize = Math.max(512, Math.min(4096, bufferSize));
+				// eslint-disable-next-line @typescript-eslint/no-deprecated
+				const captureNode = onCaptureSamplesRef.current
+					? ctx.createScriptProcessor(captureBufferSize, 2, 2)
+					: null;
+
+				if (captureNode) {
+					captureNode.onaudioprocess = (e) => {
+						const cb = onCaptureSamplesRef.current;
+						if (!cb) return;
+						const left = e.inputBuffer.getChannelData(0);
+						const right = e.inputBuffer.getChannelData(1);
+						const interleaved = new Float32Array(left.length * 2);
+						for (let i = 0; i < left.length; i++) {
+							interleaved[i * 2] = left[i];
+							interleaved[i * 2 + 1] = right[i];
+						}
+						cb(interleaved);
+					};
+				}
+
+				const outputDestination = streamDestination || ctx.destination;
+
+				const startChannel = Math.max(1, Math.floor(outputChannelStart));
+				if (startChannel <= 1) {
+					if (captureNode) {
+						// Route: analyser → capture → silent gain → destination
+						const silentGain = ctx.createGain();
+						silentGain.gain.value = 0;
+						analyserNode.connect(captureNode);
+						captureNode.connect(silentGain);
+						silentGain.connect(outputDestination);
+					} else {
+						analyserNode.connect(outputDestination);
+					}
+				} else {
+					const destinationChannels = Math.max(
+						2,
+						outputDestination === ctx.destination
+							? ctx.destination.channelCount
+							: 2,
+					);
+					const leftIndex = Math.min(startChannel - 1, destinationChannels - 1);
+					const rightIndex = Math.min(startChannel, destinationChannels - 1);
+
+					outputSplitter = ctx.createChannelSplitter(2);
+					outputMerger = ctx.createChannelMerger(destinationChannels);
+
+					analyserNode.connect(outputSplitter);
+					outputSplitter.connect(outputMerger, 0, leftIndex);
+					outputSplitter.connect(outputMerger, 1, rightIndex);
+
+					if (captureNode) {
+						const silentGain = ctx.createGain();
+						silentGain.gain.value = 0;
+						outputMerger.connect(captureNode);
+						captureNode.connect(silentGain);
+						silentGain.connect(outputDestination);
+					} else {
+						outputMerger.connect(outputDestination);
+					}
+				}
 
 				audioCtxRef.current = ctx;
 				gainNodeRef.current = gainNode;
@@ -330,10 +467,18 @@ export function useAudioEngine({
 			}
 		};
 
-		init();
+		void init();
 
 		return () => {
 			disposed = true;
+			sinkAudioElement?.pause();
+			sinkAudioElement?.removeAttribute("src");
+			if (sinkAudioElement) sinkAudioElement.srcObject = null;
+			sinkAudioElement = null;
+			streamDestination?.disconnect();
+			streamDestination = null;
+			outputMerger?.disconnect();
+			outputSplitter?.disconnect();
 			audioInitRef.current = false;
 			workletNodeRef.current?.disconnect();
 			workletNodeRef.current = null;
@@ -344,7 +489,15 @@ export function useAudioEngine({
 			audioCtxRef.current?.close();
 			audioCtxRef.current = null;
 		};
-	}, [synthWasmUrl, synthBindingsUrl, pdVisualizerWorkletUrl]);
+	}, [
+		synthWasmUrl,
+		synthBindingsUrl,
+		pdVisualizerWorkletUrl,
+		outputChannelStart,
+		sampleRate,
+		bufferSize,
+		audioDeviceId,
+	]);
 
 	return {
 		audioCtxRef,

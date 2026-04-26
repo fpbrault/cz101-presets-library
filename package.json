@@ -10,7 +10,7 @@
 	"scripts": {
 		"postinstall": "bun run scripts/install-wasm-pack.mjs",
 		"dev": "bun --filter @cosmo/cz-explorer dev",
-		"build": "bun run build:plugin && bun run build:web  && bun run build:standalone",
+		"build": "bun run build:plugin && bun run build:web && bun run build:standalone",
 		"build:engine": "bun --filter @cosmo/cosmo-synth-engine build:wasm",
 		"build:web": "bun --filter @cosmo/cosmo-synth-engine build:wasm && bun --filter @cosmo/cz-explorer build",
 		"build:plugin": "bun run scripts/build-plugin.mjs --release",
@@ -19,14 +19,15 @@
 		"build:plugin:windows:all": "cross-env PLUGIN_PLATFORM=windows ARCH=all bun run scripts/build-plugin.mjs --release",
 		"build:plugin:linux": "cross-env PLUGIN_PLATFORM=linux bun run scripts/build-plugin.mjs --release",
 		"build:plugin:linux:all": "cross-env PLUGIN_PLATFORM=linux ARCH=all bun run scripts/build-plugin.mjs --release",
-		"build:standalone": "bun --filter @cosmo/cz-explorer-desktop build",
+		"build:standalone": "bun --filter @cosmo/cosmo-pd101-standalone build",
+		"dev:standalone": "bun --filter @cosmo/cosmo-pd101-standalone dev",
 		"package:plugin:installer": "bun run scripts/package-plugin-installers.mjs",
 		"package:plugin:installer:macos": "bun run scripts/package-plugin-installers.mjs --platform macos",
 		"package:plugin:installer:windows": "bun run scripts/package-plugin-installers.mjs --platform windows",
 		"package:plugin:installer:linux": "bun run scripts/package-plugin-installers.mjs --platform linux",
 		"test": "bun --filter '*' test && cargo test --workspace",
-		"lint": "bunx biome check . && bun run scripts/cargo-fmt-workspace.mjs --check && cargo clippy --workspace --all-targets",
-		"lint:fix:biome": "bunx biome check --write .",
+		"lint": "bunx @biomejs/biome check . && bun run scripts/cargo-fmt-workspace.mjs --check && cargo clippy --workspace --all-targets",
+		"lint:fix:biome": "bunx @biomejs/biome check --write .",
 		"lint:fix:cargo": "bun run scripts/cargo-fmt-workspace.mjs",
 		"lint:fix": "bun run lint:fix:biome && bun run lint:fix:cargo",
 		"clean": "rimraf --glob packages/*/dist packages/**/lib-dist packages/*/target src-tauri/target",
@@ -36,6 +37,7 @@
 		"tailwindcss": "^4.2.4"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "2.4.12",
 		"cross-env": "^10.1.0",
 		"rimraf": "^6.1.3"
 	}

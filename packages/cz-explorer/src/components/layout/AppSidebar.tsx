@@ -59,11 +59,15 @@ export default function AppSidebar({
 	leftPanelCollapsed,
 	setLeftPanelCollapsed,
 }: AppSidebarProps) {
-	const navigate = useNavigate();
 	const location = useLocation();
+	const navigate = useNavigate();
 	const sidebarContent = useSidebarContentSlot();
 
 	const currentMode: AppMode = routeToMode[location.pathname] ?? "presets";
+
+	const switchMode = (mode: AppMode) => {
+		navigate({ to: modeToRoute[mode] });
+	};
 
 	const { data: duplicatePresets = [] } = useQuery({
 		queryKey: ["presets", "sidebar-duplicate-indicator"],
@@ -110,10 +114,7 @@ export default function AppSidebar({
 	).size;
 	const hasDuplicates = duplicateGroupCount > 0;
 
-	const switchMode = (mode: AppMode) => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		navigate({ to: modeToRoute[mode] });
-	};
+	const showSynthRoutes = import.meta.env.VITE_HIDE_SYNTH_ROUTES !== "true";
 
 	const iconNavButtonClass =
 		"group relative grid size-9 place-items-center text-base-content/55 transition-colors hover:text-warning";
@@ -188,17 +189,19 @@ export default function AppSidebar({
 				/* Collapsed: icon-only navigation */
 				<>
 					<div className="flex flex-col items-center gap-3 pt-3">
-						<Button
-							type="button"
-							unstyled
-							className={`${iconNavButtonClass} ${
-								currentMode === "performance" ? activeIconNavButtonClass : ""
-							}`}
-							onClick={() => switchMode("performance")}
-							title="Performance Mode"
-						>
-							<FaBolt size={16} />
-						</Button>
+						{showSynthRoutes && (
+							<Button
+								type="button"
+								unstyled
+								className={`${iconNavButtonClass} ${
+									currentMode === "performance" ? activeIconNavButtonClass : ""
+								}`}
+								onClick={() => switchMode("performance")}
+								title="Performance Mode"
+							>
+								<FaBolt size={16} />
+							</Button>
+						)}
 						<Button
 							type="button"
 							unstyled
@@ -260,17 +263,19 @@ export default function AppSidebar({
 							)}
 						</Button>
 
-						<Button
-							type="button"
-							unstyled
-							className={`${iconNavButtonClass} ${
-								currentMode === "visualizer" ? activeIconNavButtonClass : ""
-							}`}
-							onClick={() => switchMode("visualizer")}
-							title="Phase Distortion Visualizer"
-						>
-							<FaWaveSquare size={16} />
-						</Button>
+						{showSynthRoutes && (
+							<Button
+								type="button"
+								unstyled
+								className={`${iconNavButtonClass} ${
+									currentMode === "visualizer" ? activeIconNavButtonClass : ""
+								}`}
+								onClick={() => switchMode("visualizer")}
+								title="Phase Distortion Visualizer"
+							>
+								<FaWaveSquare size={16} />
+							</Button>
+						)}
 					</div>
 
 					<div className="mt-auto flex flex-col items-center gap-3 pb-1">
@@ -283,20 +288,22 @@ export default function AppSidebar({
 				/* Expanded: full navigation + page-specific slot */
 				<>
 					<div className="grid grid-cols-1 gap-2 pt-1">
-						<Button
-							type="button"
-							unstyled
-							className={`${expandedNavButtonClass} ${
-								currentMode === "performance"
-									? activeExpandedNavButtonClass
-									: ""
-							}`}
-							onClick={() => switchMode("performance")}
-							title="Performance Mode"
-						>
-							<FaBolt size={16} />
-							<span>Performance</span>
-						</Button>
+						{showSynthRoutes && (
+							<Button
+								type="button"
+								unstyled
+								className={`${expandedNavButtonClass} ${
+									currentMode === "performance"
+										? activeExpandedNavButtonClass
+										: ""
+								}`}
+								onClick={() => switchMode("performance")}
+								title="Performance Mode"
+							>
+								<FaBolt size={16} />
+								<span>Performance</span>
+							</Button>
+						)}
 						<Button
 							type="button"
 							unstyled
@@ -367,18 +374,22 @@ export default function AppSidebar({
 							)}
 						</Button>
 
-						<Button
-							type="button"
-							unstyled
-							className={`${expandedNavButtonClass} ${
-								currentMode === "visualizer" ? activeExpandedNavButtonClass : ""
-							}`}
-							onClick={() => switchMode("visualizer")}
-							title="Phase Distortion Visualizer"
-						>
-							<FaWaveSquare size={16} />
-							<span>PD Visualizer</span>
-						</Button>
+						{showSynthRoutes && (
+							<Button
+								type="button"
+								unstyled
+								className={`${expandedNavButtonClass} ${
+									currentMode === "visualizer"
+										? activeExpandedNavButtonClass
+										: ""
+								}`}
+								onClick={() => switchMode("visualizer")}
+								title="Phase Distortion Visualizer"
+							>
+								<FaWaveSquare size={16} />
+								<span>PD Visualizer</span>
+							</Button>
+						)}
 					</div>
 
 					{/* Page-specific sidebar content slot */}
