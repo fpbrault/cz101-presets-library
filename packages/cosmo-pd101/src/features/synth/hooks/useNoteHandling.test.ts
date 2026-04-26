@@ -24,7 +24,10 @@ describe("useNoteHandling", () => {
 		act(() => result.current.sendNoteOn(60, 100));
 
 		expect(events).toContainEqual(
-			expect.objectContaining({ type: "noteOn", payload: expect.objectContaining({ note: 60 }) }),
+			expect.objectContaining({
+				type: "noteOn",
+				payload: expect.objectContaining({ note: 60 }),
+			}),
 		);
 		expect(result.current.activeNotes).toContain(60);
 	});
@@ -38,7 +41,10 @@ describe("useNoteHandling", () => {
 		});
 
 		expect(events).toContainEqual(
-			expect.objectContaining({ type: "noteOff", payload: expect.objectContaining({ note: 60 }) }),
+			expect.objectContaining({
+				type: "noteOff",
+				payload: expect.objectContaining({ note: 60 }),
+			}),
 		);
 		expect(result.current.activeNotes).not.toContain(60);
 	});
@@ -144,7 +150,9 @@ describe("useNoteHandling", () => {
 		});
 
 		// The note is still held (activeNotes), so no noteOff should have been sent yet.
-		const noteOffBeforeFinalRelease = events.filter((e) => e.type === "noteOff");
+		const noteOffBeforeFinalRelease = events.filter(
+			(e) => e.type === "noteOff",
+		);
 		expect(noteOffBeforeFinalRelease).toHaveLength(0);
 
 		// Now physically release the note.

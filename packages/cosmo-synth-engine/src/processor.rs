@@ -615,8 +615,7 @@ mod tests {
     use super::*;
 
     fn active_voice_indices_for_note(proc: &CosmoProcessor, note: u8) -> Vec<usize> {
-        proc
-            .voices
+        proc.voices
             .iter()
             .enumerate()
             .filter_map(|(idx, voice)| {
