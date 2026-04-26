@@ -69,6 +69,13 @@ Bun monorepo. Main packages:
 - **MIDI/SysEx**: Always use `Uint8Array` for raw MIDI data, never `number[]`. SysEx starts `0xF0`, ends `0xF7`.
 - **Temporary code**: If a change is temporary, add an explicit `TODO:` comment at the relevant code location so follow-up work is trackable.
 
+## Git & Pull Requests
+
+- **Commit messages**: Follow [Conventional Commits](https://www.conventionalcommits.org/) format: `type(scope): description`
+- **PR titles**: Must follow conventional commits format (enforced)
+- **Commit types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+- **Breaking changes**: Use `!` before the colon for breaking changes: `feat!: remove old API` or add `BREAKING CHANGE:` in footer
+
 ## Testing
 
 - Two Vitest projects: `unit` (happy-dom) and `browser` (Playwright/Chromium)
