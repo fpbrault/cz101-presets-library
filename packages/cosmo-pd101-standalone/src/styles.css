@@ -1,0 +1,33 @@
+@import "../../cosmo-pd101/src/index.css";
+
+@source "./**/*.{js,ts,jsx,tsx}";
+
+:root {
+	--color-primary: rgb(59, 130, 246);
+	--color-secondary: rgb(71, 85, 105);
+	--color-accent: rgb(217, 119, 6);
+	--color-neutral: rgb(226, 232, 240);
+	--color-base-100: rgb(3, 7, 18);
+	--color-base-200: rgb(15, 23, 42);
+	--color-base-300: rgb(30, 41, 59);
+	--color-info: rgb(34, 211, 238);
+	--color-success: rgb(16, 185, 129);
+	--color-warning: rgb(217, 119, 6);
+	--color-error: rgb(239, 68, 68);
+}
+
+* {
+	@apply box-border;
+}
+
+html,
+body {
+	@apply m-0 p-0 overflow-hidden;
+}
+
+html,
+body,
+#root {
+	width: 100%;
+	height: 100%;
+}

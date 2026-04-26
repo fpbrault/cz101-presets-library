@@ -1,10 +1,5 @@
 @import "tailwindcss";
-
-@plugin "daisyui" {
-	themes:
-		dracula --default,
-		cyberpunk;
-}
+@plugin "daisyui/index.js";
 
 @source "../index.html";
 @source "./**/*.{js,ts,jsx,tsx}";
