@@ -85,7 +85,8 @@ pub fn warp_phase(
     let pivot = (0.5 + tilt * 0.3 + symmetry * 0.125).clamp(0.05, 0.95);
     for _ in 0..folds {
         if p > pivot {
-            p = 1.0 - p;
+            // Reflect around the configured pivot for continuity at the fold edge.
+            p = (2.0 * pivot - p).max(0.0);
         }
         let fold_gain = (1.0 / pivot).min(8.0);
         let softened_gain =

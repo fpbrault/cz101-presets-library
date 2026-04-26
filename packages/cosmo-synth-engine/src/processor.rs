@@ -207,6 +207,8 @@ impl CosmoProcessor {
         voice.is_silent = false;
         voice.sustained = false;
         voice.gate_was_open = false;
+        voice.anti_click_fade = 0;
+        voice.anti_click_attack = crate::voice::ANTI_CLICK_ATTACK_SAMPLES;
 
         if self.params.vibrato.enabled {
             voice.vibrato_phase = 0.0;
