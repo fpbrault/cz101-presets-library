@@ -111,6 +111,7 @@ impl ScopeFrame {
 type ScopeBuffer = Arc<Mutex<ScopeFrame>>;
 type UiInputQueue = Arc<Mutex<VecDeque<UiInputEvent>>>;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 enum UiInputEvent {
     NoteOn { note: u8, velocity: f32 },
@@ -749,6 +750,114 @@ impl Default for CzParams {
 }
 
 impl CzParams {
+    fn enum_index_to_normalized(value: f32, max_index: f32) -> f32 {
+        if max_index <= 0.0 {
+            0.0
+        } else {
+            value.round().clamp(0.0, max_index) / max_index
+        }
+    }
+
+    /// Apply a plain value update received from the webview bridge using host-safe parameter
+    /// automation callbacks.
+    pub fn set_from_webview(&self, setter: &ParamSetter<'_>, param_id: &str, value: f32) -> bool {
+        match param_id {
+            "volume" => setter.set_parameter(&self.volume, value),
+            "octave" => setter.set_parameter(&self.octave, value),
+            "line_select" => setter.set_parameter_normalized(
+                &self.line_select,
+                Self::enum_index_to_normalized(value, 4.0),
+            ),
+            "mod_mode" => setter.set_parameter_normalized(
+                &self.mod_mode,
+                Self::enum_index_to_normalized(value, 2.0),
+            ),
+            "poly_mode" => setter.set_parameter_normalized(
+                &self.poly_mode,
+                Self::enum_index_to_normalized(value, 1.0),
+            ),
+            "legato" => setter.set_parameter(&self.legato, value),
+            "int_pm_enabled" => setter.set_parameter(&self.int_pm_enabled, value),
+            "int_pm_amount" => setter.set_parameter(&self.int_pm_amount, value),
+            "int_pm_ratio" => setter.set_parameter(&self.int_pm_ratio, value),
+            "ext_pm_amount" => setter.set_parameter(&self.ext_pm_amount, value),
+            "pm_pre" => setter.set_parameter(&self.pm_pre, value),
+            "l1_waveform" => setter.set_parameter_normalized(
+                &self.l1_waveform,
+                Self::enum_index_to_normalized(value, 8.0),
+            ),
+            "l1_warp_algo" => setter.set_parameter_normalized(
+                &self.l1_warp_algo,
+                Self::enum_index_to_normalized(value, 13.0),
+            ),
+            "l1_dcw_base" => setter.set_parameter(&self.l1_dcw_base, value),
+            "l1_dca_base" => setter.set_parameter(&self.l1_dca_base, value),
+            "l1_octave" => setter.set_parameter(&self.l1_octave, value),
+            "l1_detune" => setter.set_parameter(&self.l1_detune, value),
+            "l1_key_follow" => setter.set_parameter(&self.l1_key_follow, value),
+            "l1_modulation" => setter.set_parameter(&self.l1_modulation, value),
+            "l1_algo_blend" => setter.set_parameter(&self.l1_algo_blend, value),
+            "l1_warp_algo2" => setter.set_parameter(&self.l1_warp_algo2, value),
+            "l2_waveform" => setter.set_parameter_normalized(
+                &self.l2_waveform,
+                Self::enum_index_to_normalized(value, 8.0),
+            ),
+            "l2_warp_algo" => setter.set_parameter_normalized(
+                &self.l2_warp_algo,
+                Self::enum_index_to_normalized(value, 13.0),
+            ),
+            "l2_dcw_base" => setter.set_parameter(&self.l2_dcw_base, value),
+            "l2_dca_base" => setter.set_parameter(&self.l2_dca_base, value),
+            "l2_octave" => setter.set_parameter(&self.l2_octave, value),
+            "l2_detune" => setter.set_parameter(&self.l2_detune, value),
+            "l2_key_follow" => setter.set_parameter(&self.l2_key_follow, value),
+            "l2_modulation" => setter.set_parameter(&self.l2_modulation, value),
+            "l2_algo_blend" => setter.set_parameter(&self.l2_algo_blend, value),
+            "l2_warp_algo2" => setter.set_parameter(&self.l2_warp_algo2, value),
+            "vib_enabled" => setter.set_parameter(&self.vib_enabled, value),
+            "vib_waveform" => setter.set_parameter(&self.vib_waveform, value),
+            "vib_rate" => setter.set_parameter(&self.vib_rate, value),
+            "vib_depth" => setter.set_parameter(&self.vib_depth, value),
+            "vib_delay" => setter.set_parameter(&self.vib_delay, value),
+            "cho_enabled" => setter.set_parameter(&self.cho_enabled, value),
+            "cho_mix" => setter.set_parameter(&self.cho_mix, value),
+            "cho_rate" => setter.set_parameter(&self.cho_rate, value),
+            "cho_depth" => setter.set_parameter(&self.cho_depth, value),
+            "del_enabled" => setter.set_parameter(&self.del_enabled, value),
+            "del_mix" => setter.set_parameter(&self.del_mix, value),
+            "del_time" => setter.set_parameter(&self.del_time, value),
+            "del_feedback" => setter.set_parameter(&self.del_feedback, value),
+            "rev_enabled" => setter.set_parameter(&self.rev_enabled, value),
+            "rev_mix" => setter.set_parameter(&self.rev_mix, value),
+            "rev_space" => setter.set_parameter(&self.rev_space, value),
+            "rev_predelay" => setter.set_parameter(&self.rev_predelay, value),
+            "rev_distance" => setter.set_parameter(&self.rev_distance, value),
+            "rev_character" => setter.set_parameter(&self.rev_character, value),
+            "lfo_waveform" => setter.set_parameter_normalized(
+                &self.lfo_waveform,
+                Self::enum_index_to_normalized(value, 5.0),
+            ),
+            "lfo_rate" => setter.set_parameter(&self.lfo_rate, value),
+            "lfo_depth" => setter.set_parameter(&self.lfo_depth, value),
+            "fil_enabled" => setter.set_parameter(&self.fil_enabled, value),
+            "fil_cutoff" => setter.set_parameter(&self.fil_cutoff, value),
+            "fil_resonance" => setter.set_parameter(&self.fil_resonance, value),
+            "fil_env_amount" => setter.set_parameter(&self.fil_env_amount, value),
+            "fil_type" => setter.set_parameter_normalized(
+                &self.fil_type,
+                Self::enum_index_to_normalized(value, 2.0),
+            ),
+            "port_enabled" => setter.set_parameter(&self.port_enabled, value),
+            "port_mode" => setter.set_parameter_normalized(
+                &self.port_mode,
+                Self::enum_index_to_normalized(value, 1.0),
+            ),
+            "port_time" => setter.set_parameter(&self.port_time, value),
+            _ => return false,
+        }
+        true
+    }
+
     fn map_waveform(value: Waveform) -> cosmo_synth_engine::params::CzWaveform {
         match value {
             Waveform::Saw => cosmo_synth_engine::params::CzWaveform::Saw,
@@ -1293,7 +1402,9 @@ fn handle_ipc_invoke(
     mod_matrix: &Arc<RwLock<ModMatrixState>>,
     scope_buffer: &ScopeBuffer,
 ) -> Result<serde_json::Value, String> {
-    append_log(&format!("ipc invoke method={method} args={}", args.len()));
+    if method != "getScopeData" && method != "clientLog" {
+        append_log(&format!("ipc invoke method={method} args={}", args.len()));
+    }
 
     match method {
         "setEnvelope" => {
@@ -1355,6 +1466,18 @@ fn handle_ipc_invoke(
             Ok(
                 serde_json::json!({ "samples": int_samples, "sampleRate": scope.sample_rate, "hz": scope.hz }),
             )
+        }
+        "clientLog" => {
+            let level = args
+                .first()
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("info");
+            let message = args
+                .get(1)
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
+            append_log(&format!("[webview:{level}] {message}"));
+            Ok(serde_json::Value::Null)
         }
         _ => Err(format!("unknown method: {method}")),
     }
@@ -1435,7 +1558,7 @@ fn parse_set_algo_controls_args(
     Ok((line, bank, controls))
 }
 
-fn parse_set_mod_matrix_args(args: &[serde_json::Value]) -> Result<ModMatrix, String> {
+pub(crate) fn parse_set_mod_matrix_args(args: &[serde_json::Value]) -> Result<ModMatrix, String> {
     let payload = args
         .first()
         .ok_or_else(|| "setModMatrix expects at least one argument".to_string())?;
@@ -1445,6 +1568,70 @@ fn parse_set_mod_matrix_args(args: &[serde_json::Value]) -> Result<ModMatrix, St
         .cloned()
         .unwrap_or_else(|| payload.clone());
     serde_json::from_value(matrix_value).map_err(|e| format!("invalid mod matrix payload: {e}"))
+}
+
+/// Handles the direct-format IPC messages that bypass the nihPlugBridge router.
+///
+/// wry exposes `window.ipc` as a non-configurable, frozen object, so the
+/// nihPlugBridge shim cannot be installed.  As a result the cosmo-pd101
+/// library sends algo-controls, mod-matrix and envelope updates in their
+/// original direct-object form:
+///
+///   `{ algo_controls: { line, bank, controls } }`
+///   `{ mod_matrix: { routes: [...] } }`
+///   `{ envelope_id: "...", data: {...} }`
+///
+/// Returns `true` when the message was handled so the caller can skip the RPC
+/// path.
+pub(crate) fn handle_ipc_direct_format(
+    msg: &serde_json::Value,
+    envelopes: &Arc<RwLock<EnvelopeState>>,
+    algo_controls: &Arc<RwLock<AlgoControlsState>>,
+    mod_matrix: &Arc<RwLock<ModMatrixState>>,
+) -> bool {
+    // { algo_controls: { line, bank, controls } }
+    if let Some(ac_val) = msg.get("algo_controls") {
+        let line = ac_val.get("line").and_then(|v| v.as_u64()).unwrap_or(1) as u8;
+        let bank = ac_val
+            .get("bank")
+            .and_then(|v| v.as_str())
+            .unwrap_or("a")
+            .to_string();
+        let controls_val = ac_val
+            .get("controls")
+            .cloned()
+            .unwrap_or_else(|| serde_json::Value::Array(vec![]));
+        if let Ok(controls) = serde_json::from_value::<Vec<AlgoControlValueV1>>(controls_val) {
+            if let Ok(mut ac) = algo_controls.write() {
+                let _ = ac.set(line, &bank, controls);
+            }
+        }
+        return true;
+    }
+
+    // { mod_matrix: { routes: [...] } }
+    if let Some(mm_val) = msg.get("mod_matrix") {
+        if let Ok(matrix) = serde_json::from_value::<ModMatrix>(mm_val.clone()) {
+            if let Ok(mut mm) = mod_matrix.write() {
+                mm.set(matrix);
+            }
+        }
+        return true;
+    }
+
+    // { envelope_id: "...", data: {...} }
+    if let (Some(env_id_val), Some(data_val)) = (msg.get("envelope_id"), msg.get("data")) {
+        if let Some(env_id) = env_id_val.as_str() {
+            if let Ok(data) = serde_json::from_value::<StepEnvData>(data_val.clone()) {
+                if let Ok(mut env) = envelopes.write() {
+                    let _ = env.set(env_id, data);
+                }
+            }
+        }
+        return true;
+    }
+
+    false
 }
 
 // =============================================================================
@@ -1485,6 +1672,13 @@ impl Default for CzPlugin {
 }
 
 impl CzPlugin {
+    fn all_notes_off(proc: &mut CosmoProcessor) {
+        proc.set_sustain(false);
+        for note in 0u8..=127u8 {
+            proc.note_off(note);
+        }
+    }
+
     fn drain_ui_input_events(&mut self) {
         let Ok(mut queue) = self.ui_input_queue.lock() else {
             return;
@@ -1573,7 +1767,11 @@ impl Plugin for CzPlugin {
         true
     }
 
-    fn reset(&mut self) {}
+    fn reset(&mut self) {
+        if let Some(proc) = &mut self.processor {
+            Self::all_notes_off(proc);
+        }
+    }
 
     fn process(
         &mut self,
@@ -1599,6 +1797,10 @@ impl Plugin for CzPlugin {
                         match cc {
                             1 => proc.set_mod_wheel(value),
                             64 => proc.set_sustain(value >= 0.5),
+                            // Host transport stop/reset safety: clear held notes.
+                            120 | 123 => {
+                                Self::all_notes_off(proc);
+                            }
                             _ => {}
                         }
                     }

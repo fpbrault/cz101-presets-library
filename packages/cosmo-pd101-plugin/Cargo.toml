@@ -10,6 +10,8 @@ crate-type = ["cdylib"]
 [features]
 default = []
 vst3 = ["nih_plug/vst3"]
+# Reserved for check-cfg compatibility with objc/cocoa macro internals.
+cargo-clippy = []
 # Enable Safari Web Inspector on the plugin WebView and load UI from the repo's
 # dist/ directory (instead of the bundle).  Build with:
 #   cargo build -p cosmo-pd101-plugin --features debug_gui
@@ -18,7 +20,7 @@ debug_gui = []
 [dependencies]
 cosmo-synth-engine = { path = "../cosmo-synth-engine" }
 nih_plug = { workspace = true, features = ["vst3"] }
-wry = { workspace = true }
+wry = { path = "../../vendor/wry-0.47.2" }
 raw-window-handle = { workspace = true }
 rwh_06 = { package = "raw-window-handle", version = "0.6" }
 serde_json = "1.0"

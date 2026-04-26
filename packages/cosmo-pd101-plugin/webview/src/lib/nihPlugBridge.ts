@@ -1,13 +1,13 @@
 /**
  * nih-plug IPC bridge.
  *
- * Provides the same surface as beamerBridge (window.__czOnParams,
+ * Provides a plugin bridge surface for the webview (window.__czOnParams,
  * window.__czGetEnvelopes, window.__czGetModMatrix, window.__czOnScope,
  * window.ipc.postMessage) but wired to the wry WebView IPC channel that
  * nih-plug / Rust uses.
  *
  * ## Rust → JS (inbound):
- *   - `window.__czOnParams(jsonObject)` — pushed by Rust after param changes
+ *   - `window.__czOnParams(jsonString)` — pushed by Rust after param changes
  *   - `window.__czIpcResponse({ id, result })` — RPC replies
  *
  * ## JS → Rust (outbound via window.ipc.postMessage):
@@ -71,44 +71,40 @@ const pendingRpc = new Map<
 	{ resolve: (value: unknown) => void; reject: (reason: unknown) => void }
 >();
 
-let latestParams: Record<string, number> = {};
 let currentParamHandler: ((json: string) => void) | undefined;
 let currentScopeHandler:
 	| ((samples: number[], sampleRate: number, hz: number) => void)
 	| undefined;
+let nativeIpcObject: Window["ipc"] | undefined;
+
+type IpcPostMessage = (msg: string) => void;
+let _routerPostMessage: IpcPostMessage | null = null;
 
 // ─── RPC helper ──────────────────────────────────────────────────────────────
 
 function invokeRust(method: string, ...args: unknown[]): Promise<unknown> {
 	return new Promise((resolve, reject) => {
-		if (!window.ipc) {
-			reject(new Error("[nihPlugBridge] window.ipc not available"));
+		if (!_nativePostMessage) {
+			reject(new Error("[nihPlugBridge] native IPC not available"));
 			return;
 		}
 		const id = nextRpcId++;
 		pendingRpc.set(id, { resolve, reject });
-		window.ipc.postMessage(JSON.stringify({ id, method, args }));
+		_nativePostMessage(JSON.stringify({ id, method, args }));
 	});
 }
 
 // ─── Param property ──────────────────────────────────────────────────────────
 
-function emitParams(payload: Record<string, number>) {
-	const changed: Record<string, number> = {};
-	for (const [id, value] of Object.entries(payload)) {
-		if (latestParams[id] !== value) {
-			changed[id] = value;
-		}
-	}
-	if (Object.keys(changed).length === 0) {
-		return;
-	}
-	latestParams = { ...latestParams, ...changed };
-	currentParamHandler?.(JSON.stringify(changed));
-}
-
 function installParamProperty() {
 	const descriptor = Object.getOwnPropertyDescriptor(window, "__czOnParams");
+	if (descriptor && descriptor.configurable === false) {
+		currentParamHandler =
+			typeof window.__czOnParams === "function"
+				? window.__czOnParams
+				: undefined;
+		return;
+	}
 	if (descriptor?.get || descriptor?.set) {
 		return;
 	}
@@ -120,12 +116,6 @@ function installParamProperty() {
 		},
 		set(handler: ((json: string) => void) | undefined) {
 			currentParamHandler = handler;
-			if (
-				typeof handler === "function" &&
-				Object.keys(latestParams).length > 0
-			) {
-				queueMicrotask(() => handler(JSON.stringify(latestParams)));
-			}
 		},
 	});
 }
@@ -133,7 +123,7 @@ function installParamProperty() {
 // ─── RPC response handler ─────────────────────────────────────────────────────
 
 function installIpcResponseHandler() {
-	window.__czIpcResponse = (response: IpcRpcResponse) => {
+	const handler = (response: IpcRpcResponse) => {
 		const pending = pendingRpc.get(response.id);
 		if (!pending) {
 			return;
@@ -146,20 +136,85 @@ function installIpcResponseHandler() {
 		}
 	};
 
-	// Rust also calls __czOnParams directly for param pushes — the property
-	// accessor above handles that. But Rust pushes the full params JSON object
-	// (not a diff) so we coerce it here and delegate to emitParams.
-	const origOnParams = window.__czOnParams;
-	// Install a setter-aware receiver so Rust's evaluate_script call works.
-	// Note: the property is already defined as a getter/setter above, so
-	// direct assignment from Rust (via evaluate_script) will trigger our setter.
-	if (
-		origOnParams &&
-		typeof origOnParams === "function" &&
-		Object.keys(latestParams).length === 0
-	) {
-		// Already hooked; nothing more to do.
+	const descriptor = Object.getOwnPropertyDescriptor(window, "__czIpcResponse");
+	const isReadonlyDescriptor = Boolean(
+		descriptor &&
+			descriptor.configurable === false &&
+			(("writable" in descriptor && descriptor.writable === false) ||
+				(!("writable" in descriptor) && !descriptor.set)),
+	);
+	if (isReadonlyDescriptor) {
+		// Host owns this callback as readonly; do not reassign and avoid crashing.
+		return;
 	}
+
+	try {
+		Object.defineProperty(window, "__czIpcResponse", {
+			configurable: true,
+			writable: true,
+			value: handler,
+		});
+	} catch {
+		// Some hosts expose this symbol as immutable/non-configurable.
+	}
+}
+
+function routeOutgoingMessage(message: string) {
+	let payload: unknown;
+	try {
+		payload = JSON.parse(message) as unknown;
+	} catch {
+		_nativePostMessage(message);
+		return;
+	}
+
+	if (typeof payload !== "object" || payload === null) {
+		_nativePostMessage(message);
+		return;
+	}
+
+	if ("method" in payload) {
+		// RPC envelopes are already in Rust-native format.
+		_nativePostMessage(message);
+		return;
+	}
+
+	const msg = payload as Record<string, unknown>;
+
+	if ("param_id" in msg) {
+		// Direct param change — send raw; Rust reads { param_id, value }.
+		_nativePostMessage(message);
+		return;
+	}
+
+	if ("algo_controls" in msg) {
+		const ac = msg.algo_controls as AlgoControlsPayload;
+		void invokeRust(
+			"setAlgoControls",
+			ac.line,
+			ac.bank ?? "a",
+			ac.controls,
+		).catch((error) => {
+			console.error("[nihPlugBridge] setAlgoControls error", error);
+		});
+		return;
+	}
+
+	if ("mod_matrix" in msg) {
+		void invokeRust("setModMatrix", msg.mod_matrix).catch((error) => {
+			console.error("[nihPlugBridge] setModMatrix error", error);
+		});
+		return;
+	}
+
+	if ("envelope_id" in msg) {
+		void invokeRust("setEnvelope", msg.envelope_id, msg.data).catch((error) => {
+			console.error("[nihPlugBridge] setEnvelope error", error);
+		});
+		return;
+	}
+
+	_nativePostMessage(message);
 }
 
 // ─── window.ipc router ────────────────────────────────────────────────────────
@@ -175,65 +230,7 @@ function installIpcResponseHandler() {
  *   - `{ mod_matrix }` — mod matrix update (RPC)
  */
 function installIpcRouter() {
-	window.ipc = {
-		postMessage(message: string) {
-			// Already an RPC envelope (has `method` key) — pass through.
-			let payload: unknown;
-			try {
-				payload = JSON.parse(message) as unknown;
-			} catch {
-				return;
-			}
-
-			if (
-				typeof payload !== "object" ||
-				payload === null ||
-				"method" in payload
-			) {
-				// Raw RPC or non-object: forward as-is to the native IPC.
-				// (In the nih-plug/wry setup, window.ipc IS the native channel,
-				//  so we shouldn't recurse. This guard prevents infinite loops.)
-				return;
-			}
-
-			const msg = payload as Record<string, unknown>;
-
-			if ("param_id" in msg) {
-				// Direct param change — send raw; Rust reads { param_id, value }.
-				_nativePostMessage(message);
-				return;
-			}
-
-			if ("algo_controls" in msg) {
-				const ac = msg.algo_controls as AlgoControlsPayload;
-				void invokeRust(
-					"setAlgoControls",
-					ac.line,
-					ac.bank ?? "a",
-					ac.controls,
-				).catch((error) => {
-					console.error("[nihPlugBridge] setAlgoControls error", error);
-				});
-				return;
-			}
-
-			if ("mod_matrix" in msg) {
-				void invokeRust("setModMatrix", msg.mod_matrix).catch((error) => {
-					console.error("[nihPlugBridge] setModMatrix error", error);
-				});
-				return;
-			}
-
-			if ("envelope_id" in msg) {
-				void invokeRust("setEnvelope", msg.envelope_id, msg.data).catch(
-					(error) => {
-						console.error("[nihPlugBridge] setEnvelope error", error);
-					},
-				);
-				return;
-			}
-		},
-	};
+	_routerPostMessage = routeOutgoingMessage;
 
 	window.__czGetEnvelopes = async () => {
 		const response = await invokeRust("getEnvelopes");
@@ -258,6 +255,12 @@ let _nativePostMessage: (msg: string) => void = (msg) => {
 
 function installScopeProperty(onActiveChange: (active: boolean) => void) {
 	const descriptor = Object.getOwnPropertyDescriptor(window, "__czOnScope");
+	if (descriptor && descriptor.configurable === false) {
+		currentScopeHandler =
+			typeof window.__czOnScope === "function" ? window.__czOnScope : undefined;
+		onActiveChange(currentScopeHandler !== undefined);
+		return;
+	}
 	if (descriptor?.get || descriptor?.set) {
 		currentScopeHandler =
 			typeof window.__czOnScope === "function" ? window.__czOnScope : undefined;
@@ -364,7 +367,8 @@ export function ensureNihPlugBridge(): boolean {
 		return false;
 	}
 
-	// Capture the native IPC endpoint before we replace window.ipc.
+	// Capture the native IPC endpoint before we patch postMessage routing.
+	nativeIpcObject = window.ipc;
 	_nativePostMessage = window.ipc.postMessage.bind(window.ipc);
 
 	installed = true;
@@ -374,13 +378,45 @@ export function ensureNihPlugBridge(): boolean {
 	installIpcRouter();
 	installScopePolling();
 
-	// Ask Rust to push the initial param snapshot.
-	// Rust will call window.__czOnParams(jsonObject) in response.
-	// (If Rust already pushed params before the bridge was ready, the
-	//  __czOnParams setter will replay them when a consumer subscribes.)
-	_nativePostMessage(
-		JSON.stringify({ id: nextRpcId++, method: "getParams", args: [] }),
-	);
+	// Fallback: if host prevented method patching, route via a getter/setter
+	// shim on window.ipc that preserves the native object identity.
+	if (nativeIpcObject?.postMessage !== routeOutgoingMessage) {
+		const descriptor = Object.getOwnPropertyDescriptor(window, "ipc");
+		if (!descriptor || descriptor.configurable) {
+			try {
+				Object.defineProperty(window, "ipc", {
+					configurable: true,
+					get() {
+						if (!nativeIpcObject) {
+							return undefined;
+						}
+						return {
+							postMessage(message: string) {
+								if (_routerPostMessage) {
+									_routerPostMessage(message);
+									return;
+								}
+								nativeIpcObject?.postMessage(message);
+							},
+						};
+					},
+					set(value) {
+						nativeIpcObject = value;
+						_nativePostMessage = value
+							? value.postMessage.bind(value)
+							: (msg: string) => {
+									console.warn(
+										"[nihPlugBridge] native IPC unavailable after reassignment, dropped:",
+										msg,
+									);
+								};
+					},
+				});
+			} catch {
+				// Some hosts lock down window.ipc; keep native endpoint untouched.
+			}
+		}
+	}
 
 	return true;
 }
