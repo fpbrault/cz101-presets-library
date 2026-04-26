@@ -434,11 +434,9 @@ impl CosmoProcessor {
         self.sustain_on = on;
         if !on {
             for i in 0..NUM_VOICES {
-                let note = self.voices[i].note;
                 let sustained = self.voices[i].sustained;
                 if sustained {
-                    let still_held =
-                        note.is_some_and(|n| self.active_notes.iter().any(|e| e.note == n));
+                    let still_held = self.active_notes.iter().any(|e| e.voice_idx == i);
                     if !still_held {
                         self.voices[i].sustained = false;
                         self.start_release(i);
@@ -610,4 +608,56 @@ fn soft_clip_tanh(sample: f32, drive: f32) -> f32 {
     let clipped = libm::tanhf(sample * drive) / norm;
     let blend = ((abs_sample - SOFT_CLIP_THRESHOLD) / (1.0 - SOFT_CLIP_THRESHOLD)).clamp(0.0, 1.0);
     sample + (clipped - sample) * blend
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn active_voice_indices_for_note(proc: &CosmoProcessor, note: u8) -> Vec<usize> {
+        proc
+            .voices
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, voice)| {
+                (voice.note == Some(note) && !voice.is_releasing && !voice.is_silent).then_some(idx)
+            })
+            .collect()
+    }
+
+    #[test]
+    fn releasing_sustain_does_not_latch_old_voice_on_same_note_retrigger() {
+        let mut proc = CosmoProcessor::new(48_000.0);
+        let note = 60_u8;
+        let freq = midi_note_to_freq(note);
+
+        proc.note_on(note, freq, 1.0);
+        proc.set_sustain(true);
+        proc.note_off(note);
+
+        // Re-strike the same note while pedal is still down.
+        proc.note_on(note, freq, 1.0);
+
+        // Releasing sustain should release the older sustained voice.
+        proc.set_sustain(false);
+
+        let active_voice_indices = active_voice_indices_for_note(&proc, note);
+        expect_eq!(
+            active_voice_indices.len(),
+            1,
+            "expected only the latest retriggered voice to remain active",
+        );
+
+        proc.note_off(note);
+        let mut scratch = [0.0_f32; 128];
+        for _ in 0..400 {
+            proc.process(&mut scratch);
+        }
+
+        let lingering = active_voice_indices_for_note(&proc, note);
+        expect!(
+            lingering.is_empty(),
+            "note should fully release after note-off and enough process cycles",
+        );
+    }
 }
