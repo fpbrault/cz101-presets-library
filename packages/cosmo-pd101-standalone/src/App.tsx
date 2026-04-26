@@ -61,31 +61,33 @@ export default function App() {
 
 		void invoke("push_audio_samples", {
 			samples: Array.from(merged),
-		})
-			.catch((error) => {
-				console.error("[standalone] Failed to push captured samples:", error);
-			});
+		}).catch((error) => {
+			console.error("[standalone] Failed to push captured samples:", error);
+		});
 	}, []);
 
-	const onCaptureSamples = useCallback((stereoInterleaved: Float32Array) => {
-		pendingSampleBatchesRef.current.push(stereoInterleaved);
-		pendingSampleCountRef.current += stereoInterleaved.length;
+	const onCaptureSamples = useCallback(
+		(stereoInterleaved: Float32Array) => {
+			pendingSampleBatchesRef.current.push(stereoInterleaved);
+			pendingSampleCountRef.current += stereoInterleaved.length;
 
-		const minBatchFloats = 4096;
-		if (pendingSampleCountRef.current >= minBatchFloats) {
-			flushScheduledRef.current = false;
-			flushCapturedSamples();
-			return;
-		}
-
-		if (!flushScheduledRef.current) {
-			flushScheduledRef.current = true;
-			setTimeout(() => {
+			const minBatchFloats = 4096;
+			if (pendingSampleCountRef.current >= minBatchFloats) {
 				flushScheduledRef.current = false;
 				flushCapturedSamples();
-			}, 3);
-		}
-	}, [flushCapturedSamples]);
+				return;
+			}
+
+			if (!flushScheduledRef.current) {
+				flushScheduledRef.current = true;
+				setTimeout(() => {
+					flushScheduledRef.current = false;
+					flushCapturedSamples();
+				}, 3);
+			}
+		},
+		[flushCapturedSamples],
+	);
 
 	// Start (or restart) the cpal stream whenever the selected device changes.
 	useEffect(() => {

@@ -294,7 +294,10 @@ export function useAudioEngine({
 					typeof ctxWithSink.setSinkId === "function"
 				) {
 					await ctxWithSink.setSinkId(audioDeviceId).catch((error) => {
-						console.warn("[PD Visualizer] Failed to set audio output device:", error);
+						console.warn(
+							"[PD Visualizer] Failed to set audio output device:",
+							error,
+						);
 					});
 				} else if (
 					audioDeviceId !== "default" &&
