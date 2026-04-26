@@ -9,7 +9,7 @@ export interface AudioSettings {
 	audio_driver?: string;
 	audio_device?: string;
 	midi_input_device?: string;
-	input_channels?: number;
+	output_channel_start?: number;
 	buffer_size?: number;
 	sample_rate?: number;
 }

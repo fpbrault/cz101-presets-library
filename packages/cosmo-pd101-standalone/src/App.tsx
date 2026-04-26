@@ -19,18 +19,110 @@ import { Settings as SettingsIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AudioSettings } from "./types/audio";
 
+type CpalStreamInfo = {
+	sample_rate: number;
+	channels: number;
+};
+
 export default function App() {
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
 	const velocityCurve = useSynthStore((s) => s.velocityCurve);
 	const presetStateKey = useSynthStore((s) => JSON.stringify(s.gatherState()));
 	const [midiInputId, setMidiInputId] = useState("all");
+	const [outputChannelStart, setOutputChannelStart] = useState(1);
+	const [audioSampleRate, setAudioSampleRate] = useState(44100);
+	const [audioBufferSize, setAudioBufferSize] = useState(512);
+	const [audioDeviceId, setAudioDeviceId] = useState("default");
+	const pendingSampleBatchesRef = useRef<Float32Array[]>([]);
+	const pendingSampleCountRef = useRef(0);
+	const flushScheduledRef = useRef(false);
+
+	// ── cpal audio output ──────────────────────────────────────────────────────
+	// WKWebView does not support AudioContext.setSinkId() on macOS < 14.4, so we
+	// route audio through a Rust cpal stream instead.  The capture callback is
+	// called on every ScriptProcessorNode buffer and forwards raw PCM to cpal.
+	const flushCapturedSamples = useCallback(() => {
+		if (pendingSampleCountRef.current === 0) {
+			return;
+		}
+
+		const batches = pendingSampleBatchesRef.current;
+		const total = pendingSampleCountRef.current;
+		pendingSampleBatchesRef.current = [];
+		pendingSampleCountRef.current = 0;
+
+		const merged = new Float32Array(total);
+		let offset = 0;
+		for (const chunk of batches) {
+			merged.set(chunk, offset);
+			offset += chunk.length;
+		}
+
+		void invoke("push_audio_samples", {
+			samples: Array.from(merged),
+		})
+			.catch((error) => {
+				console.error("[standalone] Failed to push captured samples:", error);
+			});
+	}, []);
+
+	const onCaptureSamples = useCallback((stereoInterleaved: Float32Array) => {
+		pendingSampleBatchesRef.current.push(stereoInterleaved);
+		pendingSampleCountRef.current += stereoInterleaved.length;
+
+		const minBatchFloats = 4096;
+		if (pendingSampleCountRef.current >= minBatchFloats) {
+			flushScheduledRef.current = false;
+			flushCapturedSamples();
+			return;
+		}
+
+		if (!flushScheduledRef.current) {
+			flushScheduledRef.current = true;
+			setTimeout(() => {
+				flushScheduledRef.current = false;
+				flushCapturedSamples();
+			}, 3);
+		}
+	}, [flushCapturedSamples]);
+
+	// Start (or restart) the cpal stream whenever the selected device changes.
+	useEffect(() => {
+		void invoke<CpalStreamInfo>("start_cpal_output", {
+			deviceName: audioDeviceId,
+		})
+			.then((streamInfo) => {
+				// Lock engine rate to the active hardware stream to avoid pitch drift.
+				if (streamInfo.sample_rate > 0) {
+					setAudioSampleRate(streamInfo.sample_rate);
+					void invoke("update_audio_setting", {
+						key: "sample_rate",
+						value: streamInfo.sample_rate,
+					}).catch(() => undefined);
+				}
+			})
+			.catch((err) => {
+				console.error("[standalone] Failed to start cpal output:", err);
+			});
+		return () => {
+			pendingSampleBatchesRef.current = [];
+			pendingSampleCountRef.current = 0;
+			flushScheduledRef.current = false;
+			void invoke("stop_cpal_output").catch(() => undefined);
+		};
+	}, [audioDeviceId]);
 
 	const { audioCtxRef, analyserNodeRef, workletNodeRef, paramsRef } =
 		useAudioEngine({
 			synthWasmUrl,
 			synthBindingsUrl,
 			pdVisualizerWorkletUrl,
+			outputChannelStart,
+			sampleRate: audioSampleRate,
+			bufferSize: audioBufferSize,
+			audioDeviceId,
+			onCaptureSamples,
 		});
 
 	const lastHeldFreqRef = useRef(220);
@@ -64,6 +156,9 @@ export default function App() {
 			try {
 				const settings = await invoke<AudioSettings>("get_audio_settings");
 				setMidiInputId(settings.midi_input_device || "all");
+				setOutputChannelStart(settings.output_channel_start || 1);
+				setAudioBufferSize(settings.buffer_size || 512);
+				setAudioDeviceId(settings.audio_device || "default");
 			} catch (error) {
 				console.error("[standalone] Failed to load audio settings:", error);
 			}
@@ -74,6 +169,9 @@ export default function App() {
 		let unlisten: (() => void) | null = null;
 		void listen<AudioSettings>("audio-settings-updated", (event) => {
 			setMidiInputId(event.payload.midi_input_device || "all");
+			setOutputChannelStart(event.payload.output_channel_start || 1);
+			setAudioBufferSize(event.payload.buffer_size || 512);
+			setAudioDeviceId(event.payload.audio_device || "default");
 		}).then((fn) => {
 			unlisten = fn;
 		});

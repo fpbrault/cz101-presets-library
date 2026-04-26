@@ -56,7 +56,7 @@ Audio settings are persisted via Tauri commands:
 - Audio driver (platform-specific)
 - Output device selection
 - Input channel count
-- Buffer size (128-2048)
+- Buffer size (64-2048)
 - Sample rate (44.1/48/96 kHz)
 
 ## TODO

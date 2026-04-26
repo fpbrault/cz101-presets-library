@@ -1,9 +1,1 @@
-{
-	"default": {
-		"identifier": "default",
-		"description": "Capability for the main synth window and the settings popup window",
-		"local": true,
-		"windows": ["main", "settings"],
-		"permissions": ["core:default", "midi:default"]
-	}
-}
+{"default":{"identifier":"default","description":"Capability for the main synth window and the settings popup window","local":true,"windows":["main","settings"],"permissions":["core:default","midi:default"]}}

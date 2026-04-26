@@ -1,5 +1,6 @@
 pub mod audio;
 
+use tauri::menu::{Menu, MenuItem, Submenu};
 use tauri::Manager;
 
 /// Open (or focus) the audio/MIDI settings window.
@@ -7,6 +8,10 @@ use tauri::Manager;
 /// native OS window backed by the same webview app shell.
 #[tauri::command]
 async fn open_settings_window(app: tauri::AppHandle) -> Result<(), String> {
+	open_settings_window_impl(app)
+}
+
+fn open_settings_window_impl(app: tauri::AppHandle) -> Result<(), String> {
 	// Re-focus if already open instead of opening a second copy.
 	if let Some(existing) = app.get_webview_window("settings") {
 		existing.set_focus().map_err(|e| e.to_string())?;
@@ -30,12 +35,31 @@ async fn open_settings_window(app: tauri::AppHandle) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
 	tauri::Builder::default()
+		.setup(|app| {
+			let open_settings_item =
+				MenuItem::with_id(app, "settings_open", "Open Settings", true, None::<&str>)?;
+			let settings_menu =
+				Submenu::with_items(app, "Settings", true, &[&open_settings_item])?;
+			let menu = Menu::with_items(app, &[&settings_menu])?;
+			app.set_menu(menu)?;
+			Ok(())
+		})
+		.on_menu_event(|app, event| {
+			if event.id().as_ref() == "settings_open" {
+				if let Err(error) = open_settings_window_impl(app.clone()) {
+					eprintln!("failed to open settings window from menu: {error}");
+				}
+			}
+		})
 		.plugin(tauri_plugin_midi::init())
 		.invoke_handler(tauri::generate_handler![
 			audio::enumerate_audio_devices,
 			audio::enumerate_audio_hosts,
 			audio::get_audio_settings,
 			audio::update_audio_setting,
+			audio::start_cpal_output,
+			audio::push_audio_samples,
+			audio::stop_cpal_output,
 			open_settings_window,
 		])
 		.run(tauri::generate_context!())
