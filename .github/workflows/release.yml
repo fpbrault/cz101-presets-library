@@ -36,7 +36,7 @@ jobs:
           - os: macos-latest
             platform: macos
             arch: universal
-            build_cmd: bun run build:plugin:universal
+            build_cmd: bun run build:plugin
             plugin_bundle_path: packages/cosmo-pd101-plugin/target/release/CosmoPd101.vst3
             secondary_bundle_path: packages/cosmo-pd101-plugin/target/release/CosmoPd101.component
             installer_glob: dist/plugin-installers/macos/cosmo-plugins-macos-universal-v*.pkg

@@ -180,7 +180,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Run plugin webview unit tests
-        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:unit
+        run: bun --filter @cosmo/cosmo-pd101-plugin test:unit
         shell: bash
 
   plugin-webview-browser-tests:
@@ -215,7 +215,7 @@ jobs:
         shell: bash
 
       - name: Run plugin webview browser tests
-        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:browser
+        run: bun --filter @cosmo/cosmo-pd101-plugin test:browser
         shell: bash
 
   plugin-webview-e2e-tests:
@@ -250,7 +250,7 @@ jobs:
         shell: bash
 
       - name: Run plugin webview e2e tests
-        run: bun --filter @cosmo/cosmo-pd101-plugin webview:test:e2e
+        run: bun --filter @cosmo/cosmo-pd101-plugin test:e2e
         shell: bash
 
   build-plugins:
@@ -261,7 +261,7 @@ jobs:
         include:
           - os: macos-latest
             platform: macos
-            build_cmd: bun run build:plugin:universal
+            build_cmd: $env:ARCH='universal'; bun run build:plugin
           - os: windows-latest
             platform: windows
             build_cmd: bun run build:plugin
