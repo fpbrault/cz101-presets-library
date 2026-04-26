@@ -57,11 +57,7 @@ declare global {
 		__czOnParams?: (json: unknown) => void;
 		__czGetEnvelopes?: () => Promise<EnvelopeMap>;
 		__czGetModMatrix?: () => Promise<ModMatrix>;
-		__czOnScope?: (
-			samples: number[],
-			sampleRate: number,
-			hz: number,
-		) => void;
+		__czOnScope?: (samples: number[], sampleRate: number, hz: number) => void;
 		__czIpcResponse?: (response: IpcRpcResponse) => void;
 	}
 }
@@ -264,9 +260,7 @@ function installScopeProperty(onActiveChange: (active: boolean) => void) {
 	const descriptor = Object.getOwnPropertyDescriptor(window, "__czOnScope");
 	if (descriptor?.get || descriptor?.set) {
 		currentScopeHandler =
-			typeof window.__czOnScope === "function"
-				? window.__czOnScope
-				: undefined;
+			typeof window.__czOnScope === "function" ? window.__czOnScope : undefined;
 		onActiveChange(currentScopeHandler !== undefined);
 		return;
 	}
@@ -280,8 +274,7 @@ function installScopeProperty(onActiveChange: (active: boolean) => void) {
 			return currentScopeHandler;
 		},
 		set(handler: Window["__czOnScope"]) {
-			currentScopeHandler =
-				typeof handler === "function" ? handler : undefined;
+			currentScopeHandler = typeof handler === "function" ? handler : undefined;
 			onActiveChange(currentScopeHandler !== undefined);
 		},
 	});
@@ -385,7 +378,9 @@ export function ensureNihPlugBridge(): boolean {
 	// Rust will call window.__czOnParams(jsonObject) in response.
 	// (If Rust already pushed params before the bridge was ready, the
 	//  __czOnParams setter will replay them when a consumer subscribes.)
-	_nativePostMessage(JSON.stringify({ id: nextRpcId++, method: "getParams", args: [] }));
+	_nativePostMessage(
+		JSON.stringify({ id: nextRpcId++, method: "getParams", args: [] }),
+	);
 
 	return true;
 }

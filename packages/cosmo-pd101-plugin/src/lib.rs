@@ -10,12 +10,12 @@ use std::io::Write;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use nih_plug::prelude::*;
 use cosmo_synth_engine::default_envelopes::{default_dca_env, default_dco_env, default_dcw_env};
 use cosmo_synth_engine::params::{
     AlgoControlValueV1, ModMatrix, PolyMode, StepEnvData, SynthParams,
 };
 use cosmo_synth_engine::processor::{midi_note_to_freq, CosmoProcessor};
+use nih_plug::prelude::*;
 
 pub mod gui;
 
@@ -459,7 +459,14 @@ impl Default for CzParams {
     fn default() -> Self {
         Self {
             volume: FloatParam::new("Volume", 0.4, FloatRange::Linear { min: 0.0, max: 1.0 }),
-            octave: FloatParam::new("Octave", 0.0, FloatRange::Linear { min: -2.0, max: 2.0 }),
+            octave: FloatParam::new(
+                "Octave",
+                0.0,
+                FloatRange::Linear {
+                    min: -2.0,
+                    max: 2.0,
+                },
+            ),
             line_select: EnumParam::new("Line Select", LineSelect::L1PlusL2),
             mod_mode: EnumParam::new("Mod Mode", ModMode::Normal),
             poly_mode: EnumParam::new("Poly Mode", PolyModeParam::Poly8),
@@ -501,17 +508,26 @@ impl Default for CzParams {
             l1_octave: FloatParam::new(
                 "L1 Octave",
                 0.0,
-                FloatRange::Linear { min: -2.0, max: 2.0 },
+                FloatRange::Linear {
+                    min: -2.0,
+                    max: 2.0,
+                },
             ),
             l1_detune: FloatParam::new(
                 "L1 Detune (cents)",
                 0.0,
-                FloatRange::Linear { min: -100.0, max: 100.0 },
+                FloatRange::Linear {
+                    min: -100.0,
+                    max: 100.0,
+                },
             ),
             l1_key_follow: FloatParam::new(
                 "L1 Key Follow",
                 0.0,
-                FloatRange::Linear { min: 0.0, max: 10.0 },
+                FloatRange::Linear {
+                    min: 0.0,
+                    max: 10.0,
+                },
             ),
             l1_modulation: FloatParam::new(
                 "L1 Modulation",
@@ -526,7 +542,10 @@ impl Default for CzParams {
             l1_warp_algo2: FloatParam::new(
                 "L1 Warp Algo 2",
                 -1.0,
-                FloatRange::Linear { min: -1.0, max: 13.0 },
+                FloatRange::Linear {
+                    min: -1.0,
+                    max: 13.0,
+                },
             ),
 
             l2_waveform: EnumParam::new("L2 Waveform", Waveform::Saw),
@@ -544,17 +563,26 @@ impl Default for CzParams {
             l2_octave: FloatParam::new(
                 "L2 Octave",
                 0.0,
-                FloatRange::Linear { min: -2.0, max: 2.0 },
+                FloatRange::Linear {
+                    min: -2.0,
+                    max: 2.0,
+                },
             ),
             l2_detune: FloatParam::new(
                 "L2 Detune (cents)",
                 0.0,
-                FloatRange::Linear { min: -100.0, max: 100.0 },
+                FloatRange::Linear {
+                    min: -100.0,
+                    max: 100.0,
+                },
             ),
             l2_key_follow: FloatParam::new(
                 "L2 Key Follow",
                 0.0,
-                FloatRange::Linear { min: 0.0, max: 10.0 },
+                FloatRange::Linear {
+                    min: 0.0,
+                    max: 10.0,
+                },
             ),
             l2_modulation: FloatParam::new(
                 "L2 Modulation",
@@ -569,7 +597,10 @@ impl Default for CzParams {
             l2_warp_algo2: FloatParam::new(
                 "L2 Warp Algo 2",
                 -1.0,
-                FloatRange::Linear { min: -1.0, max: 13.0 },
+                FloatRange::Linear {
+                    min: -1.0,
+                    max: 13.0,
+                },
             ),
 
             vib_enabled: FloatParam::new(
@@ -585,17 +616,26 @@ impl Default for CzParams {
             vib_rate: FloatParam::new(
                 "Vib Rate",
                 55.0,
-                FloatRange::Linear { min: 0.0, max: 99.0 },
+                FloatRange::Linear {
+                    min: 0.0,
+                    max: 99.0,
+                },
             ),
             vib_depth: FloatParam::new(
                 "Vib Depth",
                 8.0,
-                FloatRange::Linear { min: 0.0, max: 99.0 },
+                FloatRange::Linear {
+                    min: 0.0,
+                    max: 99.0,
+                },
             ),
             vib_delay: FloatParam::new(
                 "Vib Delay (ms)",
                 120.0,
-                FloatRange::Linear { min: 0.0, max: 5000.0 },
+                FloatRange::Linear {
+                    min: 0.0,
+                    max: 5000.0,
+                },
             ),
 
             cho_enabled: FloatParam::new(
@@ -607,13 +647,12 @@ impl Default for CzParams {
             cho_rate: FloatParam::new(
                 "Cho Rate (Hz)",
                 0.8,
-                FloatRange::Linear { min: 0.1, max: 10.0 },
+                FloatRange::Linear {
+                    min: 0.1,
+                    max: 10.0,
+                },
             ),
-            cho_depth: FloatParam::new(
-                "Cho Depth",
-                1.0,
-                FloatRange::Linear { min: 0.0, max: 3.0 },
-            ),
+            cho_depth: FloatParam::new("Cho Depth", 1.0, FloatRange::Linear { min: 0.0, max: 3.0 }),
 
             del_enabled: FloatParam::new(
                 "Del Enabled",
@@ -624,7 +663,10 @@ impl Default for CzParams {
             del_time: FloatParam::new(
                 "Del Time (s)",
                 0.3,
-                FloatRange::Linear { min: 0.01, max: 2.0 },
+                FloatRange::Linear {
+                    min: 0.01,
+                    max: 2.0,
+                },
             ),
             del_feedback: FloatParam::new(
                 "Del Feedback",
@@ -638,11 +680,7 @@ impl Default for CzParams {
                 FloatRange::Linear { min: 0.0, max: 1.0 },
             ),
             rev_mix: FloatParam::new("Rev Mix", 0.0, FloatRange::Linear { min: 0.0, max: 1.0 }),
-            rev_space: FloatParam::new(
-                "Rev Space",
-                0.5,
-                FloatRange::Linear { min: 0.0, max: 1.0 },
-            ),
+            rev_space: FloatParam::new("Rev Space", 0.5, FloatRange::Linear { min: 0.0, max: 1.0 }),
             rev_predelay: FloatParam::new(
                 "Rev Pre-Delay (s)",
                 0.0,
@@ -663,13 +701,12 @@ impl Default for CzParams {
             lfo_rate: FloatParam::new(
                 "LFO Rate (Hz)",
                 5.0,
-                FloatRange::Linear { min: 0.01, max: 20.0 },
+                FloatRange::Linear {
+                    min: 0.01,
+                    max: 20.0,
+                },
             ),
-            lfo_depth: FloatParam::new(
-                "LFO Depth",
-                0.2,
-                FloatRange::Linear { min: 0.0, max: 1.0 },
-            ),
+            lfo_depth: FloatParam::new("LFO Depth", 0.2, FloatRange::Linear { min: 0.0, max: 1.0 }),
 
             fil_enabled: FloatParam::new(
                 "Fil Enabled",
@@ -679,7 +716,10 @@ impl Default for CzParams {
             fil_cutoff: FloatParam::new(
                 "Fil Cutoff (Hz)",
                 5000.0,
-                FloatRange::Linear { min: 20.0, max: 20000.0 },
+                FloatRange::Linear {
+                    min: 20.0,
+                    max: 20000.0,
+                },
             ),
             fil_resonance: FloatParam::new(
                 "Fil Resonance",
@@ -995,32 +1035,128 @@ fn _assert_synth_params_coverage(p: SynthParams) {
         mod_matrix: _mod_matrix,
     } = p;
 
-    let ChorusParams { enabled: _, rate: _, depth: _, mix: _ } = chorus;
-    let DelayParams { enabled: _, tape_mode: _, warmth: _, time: _, feedback: _, mix: _ } = delay;
-    let ReverbParams { enabled: _, mix: _, space: _, predelay: _, distance: _, character: _ } = reverb;
-    let VibratoParams { enabled: _, waveform: _, rate: _, depth: _, delay: _ } = vibrato;
-    let PortamentoParams { enabled: _, mode: _, rate: _, time: _ } = portamento;
-    let LfoParams { waveform: _, rate: _, depth: _, symmetry: _, retrigger: _, offset: _ } = lfo;
-    let LfoParams { waveform: _, rate: _, depth: _, symmetry: _, retrigger: _, offset: _ } = lfo2;
-    let FilterParams { enabled: _, filter_type: _, cutoff: _, resonance: _, env_amount: _ } = filter;
+    let ChorusParams {
+        enabled: _,
+        rate: _,
+        depth: _,
+        mix: _,
+    } = chorus;
+    let DelayParams {
+        enabled: _,
+        tape_mode: _,
+        warmth: _,
+        time: _,
+        feedback: _,
+        mix: _,
+    } = delay;
+    let ReverbParams {
+        enabled: _,
+        mix: _,
+        space: _,
+        predelay: _,
+        distance: _,
+        character: _,
+    } = reverb;
+    let VibratoParams {
+        enabled: _,
+        waveform: _,
+        rate: _,
+        depth: _,
+        delay: _,
+    } = vibrato;
+    let PortamentoParams {
+        enabled: _,
+        mode: _,
+        rate: _,
+        time: _,
+    } = portamento;
+    let LfoParams {
+        waveform: _,
+        rate: _,
+        depth: _,
+        symmetry: _,
+        retrigger: _,
+        offset: _,
+    } = lfo;
+    let LfoParams {
+        waveform: _,
+        rate: _,
+        depth: _,
+        symmetry: _,
+        retrigger: _,
+        offset: _,
+    } = lfo2;
+    let FilterParams {
+        enabled: _,
+        filter_type: _,
+        cutoff: _,
+        resonance: _,
+        env_amount: _,
+    } = filter;
 
     let LineParams {
-        algo: _, algo2: _, algo_blend: _, window: _, dca_base: _, dcw_base: _,
-        modulation: _, detune_cents: _, octave: _, dco_env: _, dcw_env: _, dca_env: _,
-        key_follow: _, cz: _l1_cz, algo_controls_a: _, algo_controls_b: _,
+        algo: _,
+        algo2: _,
+        algo_blend: _,
+        window: _,
+        dca_base: _,
+        dcw_base: _,
+        modulation: _,
+        detune_cents: _,
+        octave: _,
+        dco_env: _,
+        dcw_env: _,
+        dca_env: _,
+        key_follow: _,
+        cz: _l1_cz,
+        algo_controls_a: _,
+        algo_controls_b: _,
     } = line1;
-    let CzLineParams { slot_a_waveform: _, slot_b_waveform: _, window: _ } = _l1_cz;
+    let CzLineParams {
+        slot_a_waveform: _,
+        slot_b_waveform: _,
+        window: _,
+    } = _l1_cz;
 
     let LineParams {
-        algo: _, algo2: _, algo_blend: _, window: _, dca_base: _, dcw_base: _,
-        modulation: _, detune_cents: _, octave: _, dco_env: _, dcw_env: _, dca_env: _,
-        key_follow: _, cz: _l2_cz, algo_controls_a: _, algo_controls_b: _,
+        algo: _,
+        algo2: _,
+        algo_blend: _,
+        window: _,
+        dca_base: _,
+        dcw_base: _,
+        modulation: _,
+        detune_cents: _,
+        octave: _,
+        dco_env: _,
+        dcw_env: _,
+        dca_env: _,
+        key_follow: _,
+        cz: _l2_cz,
+        algo_controls_a: _,
+        algo_controls_b: _,
     } = line2;
-    let CzLineParams { slot_a_waveform: _, slot_b_waveform: _, window: _ } = _l2_cz;
+    let CzLineParams {
+        slot_a_waveform: _,
+        slot_b_waveform: _,
+        window: _,
+    } = _l2_cz;
 
     let _ = (
-        line_select, mod_mode, octave, int_pm_enabled, int_pm_amount, int_pm_ratio,
-        ext_pm_amount, pm_pre, volume, poly_mode, legato, phaser, mod_env, random,
+        line_select,
+        mod_mode,
+        octave,
+        int_pm_enabled,
+        int_pm_amount,
+        int_pm_ratio,
+        ext_pm_amount,
+        pm_pre,
+        volume,
+        poly_mode,
+        legato,
+        phaser,
+        mod_env,
+        random,
     );
 }
 
@@ -1102,7 +1238,12 @@ impl AlgoControlsState {
         params.line2.algo_controls_b = Some(self.line2_b.clone());
     }
 
-    fn set(&mut self, line: u8, bank: &str, controls: Vec<AlgoControlValueV1>) -> Result<(), String> {
+    fn set(
+        &mut self,
+        line: u8,
+        bank: &str,
+        controls: Vec<AlgoControlValueV1>,
+    ) -> Result<(), String> {
         match (line, bank) {
             (1, "a") => self.line1_a = controls,
             (1, "b") => self.line1_b = controls,
@@ -1157,42 +1298,63 @@ fn handle_ipc_invoke(
     match method {
         "setEnvelope" => {
             let (envelope_id, data) = parse_set_envelope_args(args)?;
-            let mut env = envelopes.write().map_err(|_| "envelope store is poisoned".to_string())?;
+            let mut env = envelopes
+                .write()
+                .map_err(|_| "envelope store is poisoned".to_string())?;
             env.set(envelope_id, data)?;
             Ok(serde_json::Value::Null)
         }
         "setAlgoControls" => {
             let (line, bank, controls) = parse_set_algo_controls_args(args)?;
-            let mut ac = algo_controls.write().map_err(|_| "algo controls store is poisoned".to_string())?;
+            let mut ac = algo_controls
+                .write()
+                .map_err(|_| "algo controls store is poisoned".to_string())?;
             ac.set(line, &bank, controls)?;
             Ok(serde_json::Value::Null)
         }
         "setModMatrix" => {
             let matrix = parse_set_mod_matrix_args(args)?;
-            let mut mm = mod_matrix.write().map_err(|_| "mod matrix store is poisoned".to_string())?;
+            let mut mm = mod_matrix
+                .write()
+                .map_err(|_| "mod matrix store is poisoned".to_string())?;
             mm.set(matrix);
             Ok(serde_json::Value::Null)
         }
         "getEnvelopes" => {
-            let env = envelopes.read().map_err(|_| "envelope store is poisoned".to_string())?;
+            let env = envelopes
+                .read()
+                .map_err(|_| "envelope store is poisoned".to_string())?;
             Ok(env.to_json())
         }
         "getAlgoControls" => {
-            let ac = algo_controls.read().map_err(|_| "algo controls store is poisoned".to_string())?;
+            let ac = algo_controls
+                .read()
+                .map_err(|_| "algo controls store is poisoned".to_string())?;
             Ok(ac.to_json())
         }
         "getModMatrix" => {
-            let mm = mod_matrix.read().map_err(|_| "mod matrix store is poisoned".to_string())?;
+            let mm = mod_matrix
+                .read()
+                .map_err(|_| "mod matrix store is poisoned".to_string())?;
             Ok(mm.to_json())
         }
         "getScopeData" => {
-            let scope = scope_buffer.lock().map_err(|_| "scope buffer is poisoned".to_string())?;
+            let scope = scope_buffer
+                .lock()
+                .map_err(|_| "scope buffer is poisoned".to_string())?;
             if scope.samples.is_empty() {
-                return Ok(serde_json::json!({ "samples": [], "sampleRate": scope.sample_rate, "hz": 0.0_f64 }));
+                return Ok(
+                    serde_json::json!({ "samples": [], "sampleRate": scope.sample_rate, "hz": 0.0_f64 }),
+                );
             }
             let linear = scope.to_linear();
-            let int_samples: Vec<i8> = linear.iter().map(|&s| (s.clamp(-1.0, 1.0) * 127.0) as i8).collect();
-            Ok(serde_json::json!({ "samples": int_samples, "sampleRate": scope.sample_rate, "hz": scope.hz }))
+            let int_samples: Vec<i8> = linear
+                .iter()
+                .map(|&s| (s.clamp(-1.0, 1.0) * 127.0) as i8)
+                .collect();
+            Ok(
+                serde_json::json!({ "samples": int_samples, "sampleRate": scope.sample_rate, "hz": scope.hz }),
+            )
         }
         _ => Err(format!("unknown method: {method}")),
     }
@@ -1200,40 +1362,88 @@ fn handle_ipc_invoke(
 
 fn parse_set_envelope_args(args: &[serde_json::Value]) -> Result<(&str, StepEnvData), String> {
     if args.len() == 2 {
-        let envelope_id = args[0].as_str().ok_or_else(|| "setEnvelope expects envelope id as first argument".to_string())?;
-        let data: StepEnvData = serde_json::from_value(args[1].clone()).map_err(|e| format!("invalid envelope payload: {e}"))?;
+        let envelope_id = args[0]
+            .as_str()
+            .ok_or_else(|| "setEnvelope expects envelope id as first argument".to_string())?;
+        let data: StepEnvData = serde_json::from_value(args[1].clone())
+            .map_err(|e| format!("invalid envelope payload: {e}"))?;
         return Ok((envelope_id, data));
     }
-    let payload = args.first().ok_or_else(|| "setEnvelope expects at least one argument".to_string())?;
-    let envelope_id = payload.get("envelope_id").or_else(|| payload.get("envelopeId")).and_then(serde_json::Value::as_str).ok_or_else(|| "setEnvelope payload is missing envelope_id".to_string())?;
-    let data_value = payload.get("data").cloned().ok_or_else(|| "setEnvelope payload is missing data".to_string())?;
-    let data: StepEnvData = serde_json::from_value(data_value).map_err(|e| format!("invalid envelope payload: {e}"))?;
+    let payload = args
+        .first()
+        .ok_or_else(|| "setEnvelope expects at least one argument".to_string())?;
+    let envelope_id = payload
+        .get("envelope_id")
+        .or_else(|| payload.get("envelopeId"))
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| "setEnvelope payload is missing envelope_id".to_string())?;
+    let data_value = payload
+        .get("data")
+        .cloned()
+        .ok_or_else(|| "setEnvelope payload is missing data".to_string())?;
+    let data: StepEnvData =
+        serde_json::from_value(data_value).map_err(|e| format!("invalid envelope payload: {e}"))?;
     Ok((envelope_id, data))
 }
 
-fn parse_set_algo_controls_args(args: &[serde_json::Value]) -> Result<(u8, String, Vec<AlgoControlValueV1>), String> {
+fn parse_set_algo_controls_args(
+    args: &[serde_json::Value],
+) -> Result<(u8, String, Vec<AlgoControlValueV1>), String> {
     if args.len() == 2 {
-        let line = args[0].as_u64().ok_or_else(|| "setAlgoControls expects line as first argument".to_string())? as u8;
-        let controls: Vec<AlgoControlValueV1> = serde_json::from_value(args[1].clone()).map_err(|e| format!("invalid algo controls payload: {e}"))?;
+        let line = args[0]
+            .as_u64()
+            .ok_or_else(|| "setAlgoControls expects line as first argument".to_string())?
+            as u8;
+        let controls: Vec<AlgoControlValueV1> = serde_json::from_value(args[1].clone())
+            .map_err(|e| format!("invalid algo controls payload: {e}"))?;
         return Ok((line, "a".to_string(), controls));
     }
     if args.len() == 3 {
-        let line = args[0].as_u64().ok_or_else(|| "setAlgoControls expects line as first argument".to_string())? as u8;
-        let bank = args[1].as_str().ok_or_else(|| "setAlgoControls expects bank as second argument".to_string())?.to_string();
-        let controls: Vec<AlgoControlValueV1> = serde_json::from_value(args[2].clone()).map_err(|e| format!("invalid algo controls payload: {e}"))?;
+        let line = args[0]
+            .as_u64()
+            .ok_or_else(|| "setAlgoControls expects line as first argument".to_string())?
+            as u8;
+        let bank = args[1]
+            .as_str()
+            .ok_or_else(|| "setAlgoControls expects bank as second argument".to_string())?
+            .to_string();
+        let controls: Vec<AlgoControlValueV1> = serde_json::from_value(args[2].clone())
+            .map_err(|e| format!("invalid algo controls payload: {e}"))?;
         return Ok((line, bank, controls));
     }
-    let payload = args.first().ok_or_else(|| "setAlgoControls expects at least one argument".to_string())?;
-    let line = payload.get("line").or_else(|| payload.get("line_id")).or_else(|| payload.get("lineId")).and_then(serde_json::Value::as_u64).ok_or_else(|| "setAlgoControls payload is missing line".to_string())? as u8;
-    let controls_value = payload.get("controls").or_else(|| payload.get("algo_controls")).cloned().ok_or_else(|| "setAlgoControls payload is missing controls".to_string())?;
-    let bank = payload.get("bank").and_then(serde_json::Value::as_str).unwrap_or("a").to_string();
-    let controls: Vec<AlgoControlValueV1> = serde_json::from_value(controls_value).map_err(|e| format!("invalid algo controls payload: {e}"))?;
+    let payload = args
+        .first()
+        .ok_or_else(|| "setAlgoControls expects at least one argument".to_string())?;
+    let line = payload
+        .get("line")
+        .or_else(|| payload.get("line_id"))
+        .or_else(|| payload.get("lineId"))
+        .and_then(serde_json::Value::as_u64)
+        .ok_or_else(|| "setAlgoControls payload is missing line".to_string())? as u8;
+    let controls_value = payload
+        .get("controls")
+        .or_else(|| payload.get("algo_controls"))
+        .cloned()
+        .ok_or_else(|| "setAlgoControls payload is missing controls".to_string())?;
+    let bank = payload
+        .get("bank")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("a")
+        .to_string();
+    let controls: Vec<AlgoControlValueV1> = serde_json::from_value(controls_value)
+        .map_err(|e| format!("invalid algo controls payload: {e}"))?;
     Ok((line, bank, controls))
 }
 
 fn parse_set_mod_matrix_args(args: &[serde_json::Value]) -> Result<ModMatrix, String> {
-    let payload = args.first().ok_or_else(|| "setModMatrix expects at least one argument".to_string())?;
-    let matrix_value = payload.get("mod_matrix").or_else(|| payload.get("modMatrix")).cloned().unwrap_or_else(|| payload.clone());
+    let payload = args
+        .first()
+        .ok_or_else(|| "setModMatrix expects at least one argument".to_string())?;
+    let matrix_value = payload
+        .get("mod_matrix")
+        .or_else(|| payload.get("modMatrix"))
+        .cloned()
+        .unwrap_or_else(|| payload.clone());
     serde_json::from_value(matrix_value).map_err(|e| format!("invalid mod matrix payload: {e}"))
 }
 
@@ -1276,11 +1486,15 @@ impl Default for CzPlugin {
 
 impl CzPlugin {
     fn drain_ui_input_events(&mut self) {
-        let Ok(mut queue) = self.ui_input_queue.lock() else { return; };
+        let Ok(mut queue) = self.ui_input_queue.lock() else {
+            return;
+        };
         while let Some(event) = queue.pop_front() {
             if let Some(proc) = &mut self.processor {
                 match event {
-                    UiInputEvent::NoteOn { note, velocity } => proc.note_on(note, midi_note_to_freq(note), velocity),
+                    UiInputEvent::NoteOn { note, velocity } => {
+                        proc.note_on(note, midi_note_to_freq(note), velocity)
+                    }
                     UiInputEvent::NoteOff { note } => proc.note_off(note),
                     UiInputEvent::Sustain { on } => proc.set_sustain(on),
                     UiInputEvent::PitchBend { value } => proc.set_pitch_bend(value),
@@ -1444,7 +1658,8 @@ impl Plugin for CzPlugin {
 
 impl ClapPlugin for CzPlugin {
     const CLAP_ID: &'static str = "jp.cosmo.pd101";
-    const CLAP_DESCRIPTION: Option<&'static str> = Some("Cosmo PD-101 Phase Distortion Synthesizer");
+    const CLAP_DESCRIPTION: Option<&'static str> =
+        Some("Cosmo PD-101 Phase Distortion Synthesizer");
     const CLAP_MANUAL_URL: Option<&'static str> = None;
     const CLAP_SUPPORT_URL: Option<&'static str> = None;
     const CLAP_FEATURES: &'static [ClapFeature] = &[
@@ -1476,7 +1691,13 @@ mod tests {
     use cosmo_synth_engine::params::EnvStep;
     use serde_json::json;
 
-    fn make_env(level: u8, rate: u8, step_count: usize, sustain_step: usize, loop_: bool) -> StepEnvData {
+    fn make_env(
+        level: u8,
+        rate: u8,
+        step_count: usize,
+        sustain_step: usize,
+        loop_: bool,
+    ) -> StepEnvData {
         let mut env = StepEnvData::default();
         env.steps[0] = EnvStep { level, rate };
         env.step_count = step_count;
@@ -1530,8 +1751,14 @@ mod tests {
     #[test]
     fn algo_controls_state_applies_per_line_values_and_rejects_unknown_lines() {
         let mut state = AlgoControlsState::default();
-        let line1 = vec![AlgoControlValueV1 { id: "warp".to_string(), value: 0.25 }];
-        let line2 = vec![AlgoControlValueV1 { id: "bias".to_string(), value: 0.75 }];
+        let line1 = vec![AlgoControlValueV1 {
+            id: "warp".to_string(),
+            value: 0.25,
+        }];
+        let line2 = vec![AlgoControlValueV1 {
+            id: "bias".to_string(),
+            value: 0.75,
+        }];
 
         state.set(1, "a", line1).unwrap();
         state.set(2, "b", line2).unwrap();

@@ -130,7 +130,9 @@ impl Editor for CzEditor {
         let ns_view = match parent {
             ParentWindowHandle::AppKitNsView(ptr) => ptr,
             other => {
-                append_log(&format!("CzEditor::spawn: unsupported window handle: {other:?}"));
+                append_log(&format!(
+                    "CzEditor::spawn: unsupported window handle: {other:?}"
+                ));
                 panic!("Cosmo PD-101 only supports macOS (AppKit) hosts");
             }
         };
@@ -212,8 +214,10 @@ unsafe fn build_webview_from_ns_view(
     webview_state: Arc<Mutex<WebViewContainer>>,
 ) -> wry::WebView {
     use core::ptr::NonNull;
-    use rwh_06::{AppKitDisplayHandle, AppKitWindowHandle, HasDisplayHandle, HasWindowHandle,
-        RawDisplayHandle, RawWindowHandle, WindowHandle, DisplayHandle, HandleError};
+    use rwh_06::{
+        AppKitDisplayHandle, AppKitWindowHandle, DisplayHandle, HandleError, HasDisplayHandle,
+        HasWindowHandle, RawDisplayHandle, RawWindowHandle, WindowHandle,
+    };
     use wry::dpi;
 
     // Wrapper that presents the host NSView as an rwh 0.6 window handle target
@@ -262,16 +266,24 @@ unsafe fn build_webview_from_ns_view(
                     .cloned()
                     .unwrap_or_default();
 
-                let result =
-                    handle_ipc_invoke(method, &args, &envelopes, &algo_controls, &mod_matrix, &scope_buffer);
+                let result = handle_ipc_invoke(
+                    method,
+                    &args,
+                    &envelopes,
+                    &algo_controls,
+                    &mod_matrix,
+                    &scope_buffer,
+                );
 
                 let response = match result {
                     Ok(val) => serde_json::json!({ "id": id, "result": val }),
                     Err(e) => serde_json::json!({ "id": id, "error": e }),
                 };
 
-                let script =
-                    format!("window.__czIpcResponse && window.__czIpcResponse({})", response);
+                let script = format!(
+                    "window.__czIpcResponse && window.__czIpcResponse({})",
+                    response
+                );
                 if let Ok(container) = webview_state_for_response.lock() {
                     if let Some(wv) = &container.webview {
                         let _ = wv.evaluate_script(&script);

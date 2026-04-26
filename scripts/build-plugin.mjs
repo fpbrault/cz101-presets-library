@@ -219,12 +219,7 @@ function buildClapBundle(archArg, profile, outRoot) {
 
 /** Build AUv2 .component via clap-wrapper cmake. */
 function buildAuv2Wrapper(clapBundlePath, profile, outRoot) {
-	const wrapperDir = join(
-		ROOT,
-		"packages",
-		"cosmo-pd101-plugin",
-		"au-wrapper",
-	);
+	const wrapperDir = join(ROOT, "packages", "cosmo-pd101-plugin", "au-wrapper");
 	const buildDir = join(outRoot, "au-wrapper", profile);
 	const cmakeBuildType = profile === "release" ? "Release" : "Debug";
 
@@ -242,7 +237,6 @@ function buildAuv2Wrapper(clapBundlePath, profile, outRoot) {
 		);
 	}
 }
-
 
 console.log(
 	`==> Building ${PLUGIN_BASENAME} plugin (${profile}) for ${targetPlatform}, arch=${archArg}`,
