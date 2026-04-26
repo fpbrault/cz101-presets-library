@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ChevronDown } from "lucide-react";
-import type { AudioSettings, AudioDevice } from "../types/audio";
+import { useCallback, useEffect, useState } from "react";
+import type { AudioDevice, AudioSettings } from "../types/audio";
 
 interface SettingsMenuProps {
 	onClose: () => void;
@@ -16,7 +16,9 @@ export default function SettingsMenu({ onClose: _onClose }: SettingsMenuProps) {
 	const [settings, setSettings] = useState<AudioSettings | null>(null);
 	const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
 	const [audioHosts, setAudioHosts] = useState<string[]>([]);
-	const [midiInputDevices, setMidiInputDevices] = useState<MidiInputDevice[]>([]);
+	const [midiInputDevices, setMidiInputDevices] = useState<MidiInputDevice[]>(
+		[],
+	);
 	const [expandedSection, setExpandedSection] = useState<string | null>(
 		"audio",
 	);
@@ -97,9 +99,7 @@ export default function SettingsMenu({ onClose: _onClose }: SettingsMenuProps) {
 				<button
 					type="button"
 					onClick={() =>
-						setExpandedSection(
-							expandedSection === "audio" ? null : "audio",
-						)
+						setExpandedSection(expandedSection === "audio" ? null : "audio")
 					}
 					className="w-full px-4 py-2 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
 				>
@@ -181,7 +181,7 @@ export default function SettingsMenu({ onClose: _onClose }: SettingsMenuProps) {
 								onChange={(e) =>
 									void updateSetting(
 										"input_channels",
-										parseInt(e.target.value),
+										parseInt(e.target.value, 10),
 									)
 								}
 								className="input input-sm input-bordered w-full bg-slate-800 border-slate-600"
@@ -202,7 +202,7 @@ export default function SettingsMenu({ onClose: _onClose }: SettingsMenuProps) {
 								onChange={(e) =>
 									void updateSetting(
 										"buffer_size",
-										parseInt(e.target.value),
+										parseInt(e.target.value, 10),
 									)
 								}
 								className="select select-sm select-bordered w-full bg-slate-800 border-slate-600"
@@ -229,7 +229,7 @@ export default function SettingsMenu({ onClose: _onClose }: SettingsMenuProps) {
 								onChange={(e) =>
 									void updateSetting(
 										"sample_rate",
-										parseInt(e.target.value),
+										parseInt(e.target.value, 10),
 									)
 								}
 								className="select select-sm select-bordered w-full bg-slate-800 border-slate-600"

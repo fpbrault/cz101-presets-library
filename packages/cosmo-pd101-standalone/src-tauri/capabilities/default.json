@@ -3,8 +3,5 @@
 	"identifier": "default",
 	"description": "Capability for the main synth window and the settings popup window",
 	"windows": ["main", "settings"],
-	"permissions": [
-		"core:default",
-		"midi:default"
-	]
+	"permissions": ["core:default", "midi:default"]
 }

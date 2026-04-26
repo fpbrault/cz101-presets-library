@@ -13,6 +13,7 @@
 			"!!**/target",
 			"!!vendor",
 			"!!packages/cz-explorer/public/cosmo-synth-engine-wasm",
+			"!!packages/cosmo-pd101-standalone/public/cosmo-synth-engine-wasm",
 			"!!**/bindings/*.ts"
 		],
 		"maxSize": 20000000

@@ -1,6 +1,8 @@
 {
-	"extends": ["biome"],
+	"root": false,
+	"extends": ["../../biome.json"],
 	"files": {
+		"includes": ["!!public/cosmo-synth-engine-wasm"],
 		"ignoreUnknown": true
 	},
 	"javascript": {
