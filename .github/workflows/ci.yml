@@ -261,7 +261,7 @@ jobs:
         include:
           - os: macos-latest
             platform: macos
-            build_cmd: cross-env ARCH=universal bun run build:plugin
+            build_cmd: $env:ARCH='universal'; bun run build:plugin
           - os: windows-latest
             platform: windows
             build_cmd: bun run build:plugin
