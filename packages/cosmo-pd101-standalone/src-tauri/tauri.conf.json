@@ -1,0 +1,41 @@
+{
+	"productName": "Cosmo PD-101 Standalone",
+	"version": "0.1.0",
+	"identifier": "com.cosmo.pd101.standalone",
+	"build": {
+		"beforeBuildCommand": "bun run build:web",
+		"beforeDevCommand": "bun run dev:vite",
+		"devUrl": "http://localhost:1421",
+		"frontendDist": "../dist"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "Cosmo PD-101 Standalone",
+				"width": 1280,
+				"height": 800,
+				"minWidth": 1280,
+				"minHeight": 800,
+				"maxWidth": 1280,
+				"maxHeight": 800,
+				"resizable": false,
+				"fullscreen": false
+			}
+		],
+		"security": {
+			"csp": null
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": ["deb", "appimage"],
+		"icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+		"resources": [],
+		"externalBin": [],
+		"copyright": "© 2025 Cosmo",
+		"macOS": {
+			"frameworks": ["CoreAudio", "AVFoundation"],
+			"minimumSystemVersion": "11.0"
+		}
+	}
+}

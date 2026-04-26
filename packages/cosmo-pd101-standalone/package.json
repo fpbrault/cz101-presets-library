@@ -1,0 +1,34 @@
+{
+	"name": "@cosmo/cosmo-pd101-standalone",
+	"version": "0.1.0",
+	"type": "module",
+	"description": "Standalone Tauri desktop synth app with native audio I/O",
+	"scripts": {
+		"dev": "tauri dev",
+		"dev:vite": "vite",
+		"build": "tauri build",
+		"build:web": "vite build",
+		"preview": "vite preview",
+		"lint": "biome check src",
+		"type-check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@cosmo/cosmo-pd101": "workspace:*",
+		"@tauri-apps/api": "^2.0.0",
+		"@tanstack/react-query": "^5.28.0",
+		"daisyui": "^5.5.19",
+		"lucide-react": "^0.408.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"devDependencies": {
+		"@tauri-apps/cli": "^2.10.1",
+		"@tailwindcss/vite": "^4.2.4",
+		"@types/node": "^20.0.0",
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
+		"@vitejs/plugin-react": "^4.3.0",
+		"typescript": "^5.0.0",
+		"vite": "^8.0.0"
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"version": 2,
+	"capability": {
+		"admin": {
+			"allow": []
+		},
+		"ui": {
+			"allow": [
+				"window:allow-close",
+				"window:allow-minimize",
+				"window:allow-maximize",
+				"window:allow-focus",
+				"window:allow-blur",
+				"window:allow-request-user-attention"
+			]
+		},
+		"app": {
+			"allow": [
+				"app:default"
+			]
+		}
+	}
+}

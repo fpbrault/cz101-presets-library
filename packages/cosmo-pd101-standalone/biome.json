@@ -1,0 +1,11 @@
+{
+	"extends": ["biome"],
+	"files": {
+		"ignoreUnknown": true
+	},
+	"javascript": {
+		"formatter": {
+			"indentStyle": "tab"
+		}
+	}
+}
