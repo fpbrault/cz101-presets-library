@@ -13,7 +13,8 @@
 			"!!**/target",
 			"!!vendor",
 			"!!packages/cz-explorer/public/cosmo-synth-engine-wasm",
-			"!!**/bindings/*.ts"
+			"!!**/bindings/*.ts",
+			"!!**/packages/cz-explorer-desktop/gen/schemas/*.json"
 		],
 		"maxSize": 20000000
 	},
