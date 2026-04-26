@@ -43,7 +43,8 @@ const indexRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	path: "/",
 	beforeLoad: () => {
-		throw redirect({ to: "/presets" });
+		// biome-ignore lint/suspicious/noExplicitAny: Redirect path typing issue in TanStack Router
+		throw redirect({ to: "/presets" } as any);
 	},
 });
 
@@ -89,16 +90,27 @@ const visualizerRoute = createRoute({
 	component: VisualizerPage,
 });
 
-export const routeTree = rootRoute.addChildren([
+// Conditionally include synth routes based on environment
+// When VITE_HIDE_SYNTH_ROUTES is true, synth routes (/performance, /lab) are excluded
+// This is useful for desktop builds that only include the preset library
+const baseRouteChildren = [
 	indexRoute,
 	presetsRoute,
-	performanceRoute,
 	synthBackupsRoute,
 	setlistsRoute,
 	tagsRoute,
 	duplicatesRoute,
-	visualizerRoute,
-]);
+] as const;
+
+const synthRouteChildren = [performanceRoute, visualizerRoute] as const;
+
+const routeChildren =
+	import.meta.env.VITE_HIDE_SYNTH_ROUTES !== "true"
+		? [...baseRouteChildren, ...synthRouteChildren]
+		: baseRouteChildren;
+
+// biome-ignore lint/suspicious/noExplicitAny: Conditional route children typing requires any
+export const routeTree = rootRoute.addChildren(routeChildren as any);
 
 export const router = createRouter({
 	routeTree,

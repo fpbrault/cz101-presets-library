@@ -6,7 +6,7 @@
 	"build": {
 		"beforeDevCommand": "bun run dev",
 		"devUrl": "http://localhost:1420",
-		"beforeBuildCommand": "bun --filter @cosmo/cz-explorer build",
+		"beforeBuildCommand": "VITE_HIDE_SYNTH_ROUTES=true bun --filter @cosmo/cz-explorer build",
 		"frontendDist": "../cz-explorer/dist"
 	},
 	"app": {

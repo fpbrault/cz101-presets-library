@@ -8,6 +8,8 @@ type UseNoteHandlingParams = {
 	eventSink?: (type: string, payload: Record<string, unknown>) => void;
 	/** Velocity curve exponent parameter in range [-1, 1]. 0 = linear. */
 	velocityCurve?: number;
+	/** Optional selected MIDI input id. "all" (default) listens to all ports. */
+	midiInputId?: string;
 };
 
 export type NoteHandlingApi = {
@@ -24,6 +26,7 @@ export function useNoteHandling({
 	workletNodeRef,
 	eventSink,
 	velocityCurve = 0,
+	midiInputId = "all",
 }: UseNoteHandlingParams): NoteHandlingApi {
 	const dispatchEngineEvent = useCallback(
 		(type: string, payload: Record<string, unknown>) => {
@@ -190,7 +193,17 @@ export function useNoteHandling({
 				if (disposed) return;
 
 				const bindInputs = () => {
+					for (const fn of cleanupHandlers) {
+						fn();
+					}
+					cleanupHandlers.length = 0;
+
 					for (const input of access.inputs.values()) {
+						if (midiInputId !== "all" && input.id !== midiInputId) {
+							input.onmidimessage = null;
+							continue;
+						}
+
 						const handler = (event: MIDIMessageEvent) => {
 							const data = event.data;
 							if (data == null || data.length < 2) return;
@@ -262,6 +275,7 @@ export function useNoteHandling({
 			}
 		};
 	}, [
+		midiInputId,
 		sendModWheel,
 		sendPitchBend,
 		sendAftertouch,
