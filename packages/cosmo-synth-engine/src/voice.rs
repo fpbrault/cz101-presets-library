@@ -494,8 +494,8 @@ pub fn render_voice(
     // cases where release was initiated via sustain pedal and residual filter
     // energy does not track DCA envelope level perfectly.
     if voice.is_releasing && voice.anti_click_fade == 0 {
-        let env_near_silence = libm::fabsf(env.dca1) < SILENCE_THRESHOLD
-            && libm::fabsf(env.dca2) < SILENCE_THRESHOLD;
+        let env_near_silence =
+            libm::fabsf(env.dca1) < SILENCE_THRESHOLD && libm::fabsf(env.dca2) < SILENCE_THRESHOLD;
         let tail_near_silence = voice.release_tail_level < RELEASE_TAIL_LEVEL_THRESHOLD;
         if env_near_silence || tail_near_silence {
             voice.anti_click_fade = ANTI_CLICK_FADE_SAMPLES;
