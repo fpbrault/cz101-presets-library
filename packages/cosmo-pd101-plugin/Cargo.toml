@@ -2,25 +2,25 @@
 name = "cosmo-pd101-plugin"
 version = "0.1.0"
 edition = "2021"
-description = "Cosmo PD-101 synthesizer VST3/AU plugin"
+description = "Cosmo PD-101 synthesizer VST3/CLAP plugin"
 
 [lib]
 crate-type = ["cdylib"]
 
 [features]
 default = []
-au = ["beamer/au"]
-vst3 = ["beamer/vst3"]
-auv2 = ["au"]
-auv3 = ["au"]
+vst3 = ["nih_plug/vst3"]
 # Enable Safari Web Inspector on the plugin WebView and load UI from the repo's
-# dist/ directory (instead of the AU bundle).  Build with:
+# dist/ directory (instead of the bundle).  Build with:
 #   cargo build -p cosmo-pd101-plugin --features debug_gui
 debug_gui = []
 
 [dependencies]
 cosmo-synth-engine = { path = "../cosmo-synth-engine" }
-beamer = { workspace = true }
+nih_plug = { workspace = true, features = ["vst3"] }
+wry = { workspace = true }
+raw-window-handle = { workspace = true }
+rwh_06 = { package = "raw-window-handle", version = "0.6" }
 serde_json = "1.0"
 libm = "0.2"
 libc = "0.2"
