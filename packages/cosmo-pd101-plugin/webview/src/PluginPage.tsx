@@ -26,19 +26,33 @@ type PluginPageProps = {
 	utilityExtra?: ReactNode;
 };
 
+function readStoredUiScale(): UiScale {
+	try {
+		const saved = globalThis.localStorage?.getItem(UI_SCALE_KEY);
+		const parsed = saved ? Number(saved) : 70;
+		return (
+			PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.includes(parsed) ? parsed : 70
+		) as UiScale;
+	} catch {
+		return 70 as UiScale;
+	}
+}
+
+function persistUiScale(value: UiScale): void {
+	try {
+		globalThis.localStorage?.setItem(UI_SCALE_KEY, String(value));
+	} catch {
+		// Ignore storage write failures in restricted plugin WebViews.
+	}
+}
+
 export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const gatherState = useSynthStore((s) => s.gatherState);
 	const applyPreset = useSynthStore((s) => s.applyPreset);
 	const velocityCurve = useSynthStore((s) => s.velocityCurve);
 	const presetStateKey = useSynthStore((s) => JSON.stringify(s.gatherState()));
 
-	const [uiScale, setUiScale] = useState<UiScale>(() => {
-		const saved = localStorage.getItem(UI_SCALE_KEY);
-		const parsed = saved ? Number(saved) : 70;
-		return (
-			PLUGIN_RUNTIME_CAPABILITIES.uiScaleOptions.includes(parsed) ? parsed : 70
-		) as UiScale;
-	});
+	const [uiScale, setUiScale] = useState<UiScale>(() => readStoredUiScale());
 	const [scopeActiveHz, setScopeActiveHz] = useState(220);
 	const analyserNodeRef = useRef<AnalyserNode | null>(null);
 	const audioCtxRef = useRef<AudioContext | null>(null);
@@ -47,9 +61,6 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	const { lcdControlReadout, pushLcdControlReadout } = useLcdControlReadout();
 	const { activeNotes, sendNoteOn, sendNoteOff } = useNoteHandling({
 		velocityCurve,
-		eventSink: (type, payload) => {
-			window.__BEAMER__?.emit?.(type, payload);
-		},
 	});
 
 	usePluginParamBridge();
@@ -83,7 +94,7 @@ export default function PluginPage({ utilityExtra }: PluginPageProps = {}) {
 	);
 
 	useEffect(() => {
-		localStorage.setItem(UI_SCALE_KEY, String(uiScale));
+		persistUiScale(uiScale);
 	}, [uiScale]);
 
 	const shouldLoadCurrentState = useCallback(() => !window.ipc, []);

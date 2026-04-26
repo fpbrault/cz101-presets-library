@@ -1,6 +1,15 @@
 import { usePluginBridgeSynthEngine } from "@cosmo/cosmo-pd101";
 import { useEffect, useRef } from "react";
-import { ensureBeamerBridge } from "@/lib/beamerBridge";
+import { ensureNihPlugBridge } from "@/lib/nihPlugBridge";
+
+function ensurePluginBridge(): boolean {
+	try {
+		return ensureNihPlugBridge();
+	} catch (error) {
+		console.error("[pluginBridge] ensureNihPlugBridge failed", error);
+		return false;
+	}
+}
 
 export function usePluginParamBridge(): void {
 	const bridgeReadyRef = useRef(false);
@@ -10,13 +19,13 @@ export function usePluginParamBridge(): void {
 			return;
 		}
 
-		if (ensureBeamerBridge()) {
+		if (ensurePluginBridge()) {
 			bridgeReadyRef.current = true;
 			return;
 		}
 
 		const intervalId = window.setInterval(() => {
-			if (ensureBeamerBridge()) {
+			if (ensurePluginBridge()) {
 				bridgeReadyRef.current = true;
 				window.clearInterval(intervalId);
 			}

@@ -89,6 +89,11 @@ export interface MockBridgeHandle {
 declare global {
 	interface Window {
 		__MOCK_BRIDGE__?: MockBridgeHandle;
+		__czIpcResponse?: (response: {
+			id: number;
+			result?: unknown;
+			error?: string;
+		}) => void;
 	}
 }
 
@@ -265,6 +270,113 @@ export function installMockPluginBridge(): void {
 			}
 		}
 	}
+
+	function respondIpc(
+		id: unknown,
+		payload: { result?: unknown; error?: string },
+	) {
+		queueMicrotask(() => {
+			if (typeof window.__czIpcResponse === "function") {
+				window.__czIpcResponse({
+					id: typeof id === "number" ? id : 0,
+					...payload,
+				});
+			}
+		});
+	}
+
+	window.ipc = {
+		postMessage: (message: string) => {
+			let parsed: unknown;
+			try {
+				parsed = JSON.parse(message) as unknown;
+			} catch {
+				return;
+			}
+
+			if (typeof parsed !== "object" || parsed === null) {
+				return;
+			}
+
+			const msg = parsed as Record<string, unknown>;
+
+			if (typeof msg.param_id === "string" && typeof msg.value === "number") {
+				const param = paramsByStringId[msg.param_id];
+				if (!param) {
+					return;
+				}
+				param.plainValue = msg.value;
+				param.value =
+					param.max === param.min
+						? param.defaultValue
+						: (msg.value - param.min) / (param.max - param.min);
+				virtualParamState[param.stringId] = param.value;
+				recordMessage({
+					type: "param:set",
+					id: param.id,
+					stringId: param.stringId,
+					value: param.value,
+				});
+				return;
+			}
+
+			if (typeof msg.method !== "string") {
+				return;
+			}
+
+			const method = msg.method;
+			const id = msg.id;
+			const args = Array.isArray(msg.args) ? msg.args : [];
+			recordMessage({ type: "invoke", method, args });
+
+			if (method === "getEnvelopes") {
+				respondIpc(id, { result: {} });
+				return;
+			}
+			if (method === "setEnvelope") {
+				respondIpc(id, { result: null });
+				return;
+			}
+			if (method === "setAlgoControls") {
+				respondIpc(id, { result: null });
+				return;
+			}
+			if (method === "getAlgoControls") {
+				respondIpc(id, {
+					result: {
+						line1: { a: [], b: [] },
+						line2: { a: [], b: [] },
+					},
+				});
+				return;
+			}
+			if (method === "setModMatrix") {
+				const next = (args[0] ?? { routes: [] }) as {
+					routes?: unknown[];
+				};
+				virtualModMatrix = { routes: [...(next.routes ?? [])] };
+				respondIpc(id, { result: null });
+				return;
+			}
+			if (method === "getModMatrix") {
+				respondIpc(id, { result: { routes: [...virtualModMatrix.routes] } });
+				return;
+			}
+			if (method === "getScopeData") {
+				respondIpc(id, {
+					result: { samples: [], sampleRate: 44100, hz: 220 },
+				});
+				return;
+			}
+			if (method === "clientLog") {
+				respondIpc(id, { result: null });
+				return;
+			}
+
+			pendingInvokeResolve = (result) => respondIpc(id, { result });
+			pendingInvokeReject = (error) => respondIpc(id, { error });
+		},
+	};
 
 	// ---------------------------------------------------------------------------
 	// Synthetic window.__BEAMER__ runtime
