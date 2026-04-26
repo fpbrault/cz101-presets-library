@@ -24,6 +24,10 @@ pub(crate) const ANTI_CLICK_ATTACK_SAMPLES: u32 = 64;
 /// abrupt signal discontinuities (e.g., filter resonance ringing at release).
 const ANTI_CLICK_FADE_SAMPLES: u32 = 64;
 const DCW_DEZIPPER_TIME_SECONDS: f32 = 0.0015;
+const POP_SUPPRESS_DELTA_THRESHOLD: f32 = 1.2;
+const POP_SUPPRESS_EXCESS_KEEP: f32 = 0.15;
+const RELEASE_TAIL_LEVEL_TIME_SECONDS: f32 = 0.01;
+const RELEASE_TAIL_LEVEL_THRESHOLD: f32 = 0.002;
 
 // ---------------------------------------------------------------------------
 // ADSR modulation envelope
@@ -277,6 +281,13 @@ pub struct Voice {
     pub smoothed_dcw1: f32,
     pub smoothed_dcw2: f32,
 
+    /// Previous post-modulation sample for one-sample discontinuity suppression.
+    pub last_output_sample: f32,
+
+    /// Smoothed absolute output level used to decide when release tail is
+    /// truly near silence (avoids false triggers at zero crossings).
+    pub release_tail_level: f32,
+
     /// Per-voice runtime state owned by generator algorithms.
     pub algo_runtime: AlgoRuntimeState,
 }
@@ -312,6 +323,8 @@ impl Voice {
             anti_click_attack: 0,
             smoothed_dcw1: 0.0,
             smoothed_dcw2: 0.0,
+            last_output_sample: 0.0,
+            release_tail_level: 0.0,
             algo_runtime: AlgoRuntimeState::default(),
         }
     }
@@ -395,18 +408,9 @@ pub fn render_voice(
 
     if voice.is_silent {
         advance_silent_voice(voice, p, sr, base_freq);
+        voice.last_output_sample = 0.0;
+        voice.release_tail_level = 0.0;
         return 0.0;
-    }
-
-    // When the DCA has fallen below the silence threshold, start a short
-    // linear fade to prevent a discontinuity pop (e.g. from filter resonance
-    // ringing after the envelope has ended).
-    if voice.is_releasing
-        && libm::fabsf(env.dca1) < SILENCE_THRESHOLD
-        && libm::fabsf(env.dca2) < SILENCE_THRESHOLD
-        && voice.anti_click_fade == 0
-    {
-        voice.anti_click_fade = ANTI_CLICK_FADE_SAMPLES;
     }
 
     // Advance per-voice ADSR mod envelope.
@@ -482,11 +486,29 @@ pub fn render_voice(
     let volume_mod = mod_value_for(ModDestination::Volume, &p.mod_matrix, &mod_sources);
     let mut sample = sample * (1.0 + volume_mod);
 
+    let tail_alpha = 1.0 - libm::expf(-1.0 / (RELEASE_TAIL_LEVEL_TIME_SECONDS * sr.max(1.0)));
+    voice.release_tail_level += (libm::fabsf(sample) - voice.release_tail_level) * tail_alpha;
+
+    // Start a short fade when the release tail is near silence.
+    // Use both envelope and signal-level checks: the signal check catches
+    // cases where release was initiated via sustain pedal and residual filter
+    // energy does not track DCA envelope level perfectly.
+    if voice.is_releasing && voice.anti_click_fade == 0 {
+        let env_near_silence = libm::fabsf(env.dca1) < SILENCE_THRESHOLD
+            && libm::fabsf(env.dca2) < SILENCE_THRESHOLD;
+        let tail_near_silence = voice.release_tail_level < RELEASE_TAIL_LEVEL_THRESHOLD;
+        if env_near_silence || tail_near_silence {
+            voice.anti_click_fade = ANTI_CLICK_FADE_SAMPLES;
+        }
+    }
+
     if voice.anti_click_attack > 0 {
         let ramp = 1.0 - (voice.anti_click_attack as f32 / ANTI_CLICK_ATTACK_SAMPLES as f32);
         sample *= ramp;
         voice.anti_click_attack -= 1;
     }
+
+    sample = suppress_sample_discontinuity(voice.last_output_sample, sample);
 
     advance_voice_phase(
         voice,
@@ -498,8 +520,10 @@ pub fn render_voice(
 
     // Apply anti-click fade and silence the voice when the fade completes.
     if voice.anti_click_fade > 0 {
-        let fade = voice.anti_click_fade as f32 / ANTI_CLICK_FADE_SAMPLES as f32;
         voice.anti_click_fade -= 1;
+        let fade = voice.anti_click_fade as f32 / ANTI_CLICK_FADE_SAMPLES as f32;
+        let faded = sample * fade;
+
         if voice.anti_click_fade == 0 {
             voice.is_silent = true;
             voice.note = None;
@@ -507,10 +531,16 @@ pub fn render_voice(
             voice.line1_env.dca.output = 0.0;
             voice.line2_env.dca.output = 0.0;
             voice.mod_env.reset();
+            voice.last_output_sample = 0.0;
+            voice.release_tail_level = 0.0;
+            return 0.0;
         }
-        return sample * fade;
+
+        voice.last_output_sample = faded;
+        return faded;
     }
 
+    voice.last_output_sample = sample;
     sample
 }
 
@@ -611,6 +641,19 @@ fn apply_dcw_dezipper(voice: &mut Voice, sr: f32, signal: &mut SignalState) {
 
     signal.final_dcw1 = voice.smoothed_dcw1.clamp(0.0, 1.0);
     signal.final_dcw2 = voice.smoothed_dcw2.clamp(0.0, 1.0);
+}
+
+#[inline]
+fn suppress_sample_discontinuity(prev_sample: f32, sample: f32) -> f32 {
+    let delta = sample - prev_sample;
+    let delta_abs = libm::fabsf(delta);
+    if delta_abs <= POP_SUPPRESS_DELTA_THRESHOLD {
+        return sample;
+    }
+
+    let excess = delta_abs - POP_SUPPRESS_DELTA_THRESHOLD;
+    let allowed = POP_SUPPRESS_DELTA_THRESHOLD + excess * POP_SUPPRESS_EXCESS_KEEP;
+    prev_sample + delta.signum() * allowed
 }
 
 /// Maps a normalized DCO envelope output (0.0–1.0) to a 0.0–1.0 normalized pitch

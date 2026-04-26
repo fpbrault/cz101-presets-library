@@ -209,6 +209,8 @@ impl CosmoProcessor {
         voice.gate_was_open = false;
         voice.anti_click_fade = 0;
         voice.anti_click_attack = crate::voice::ANTI_CLICK_ATTACK_SAMPLES;
+        voice.last_output_sample = 0.0;
+        voice.release_tail_level = 0.0;
 
         if self.params.vibrato.enabled {
             voice.vibrato_phase = 0.0;
@@ -414,6 +416,10 @@ impl CosmoProcessor {
 
         if self.sustain_on {
             self.voices[voice_idx].sustained = true;
+            // Sustain holds the amplitude envelopes, but key release should still
+            // let the modulation ADSR leave attack/sustain so pedal-up does not
+            // introduce a sudden modulation jump.
+            self.voices[voice_idx].mod_env.note_off();
             return;
         }
 
