@@ -196,7 +196,6 @@ export function ControlKnob({
 	const hoverHandlers = useHoverInfoHandlers(resolvedTooltip, {
 		useCapture: true,
 	});
-	const infoButtonHandlers = useHoverInfoHandlers(resolvedTooltip);
 
 	const inner = (
 		<div
@@ -206,20 +205,8 @@ export function ControlKnob({
 		>
 			{label && (
 				<div className="space-y-0.5">
-					<div className="flex items-center justify-center gap-1 text-3xs uppercase tracking-[0.24em] text-base-content/55">
+					<div className="flex items-center justify-center text-3xs uppercase tracking-[0.24em] text-base-content/55">
 						<span>{label}</span>
-						{resolvedTooltip ? (
-							<button
-								type="button"
-								className="btn btn-ghost btn-circle btn-xs h-4 min-h-4 w-4 border border-cz-border p-0 text-2xs font-semibold leading-none text-cz-cream/70 hover:border-cz-light-blue hover:text-cz-light-blue"
-								aria-label="Show control description"
-								data-hover-info={resolvedTooltip}
-								tabIndex={-1}
-								{...infoButtonHandlers}
-							>
-								?
-							</button>
-						) : null}
 					</div>
 				</div>
 			)}
