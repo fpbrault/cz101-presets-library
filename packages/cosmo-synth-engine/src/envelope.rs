@@ -105,7 +105,10 @@ impl EnvGen {
                 self.prev_level = target_level;
                 self.step_pos = 0;
                 self.step += 1;
-                if self.step >= effective_end_step {
+
+                // Allow entering the final active step so its own rate controls
+                // the release to zero; only clamp once we've advanced past it.
+                if self.step > effective_end_step {
                     self.step = effective_end_step;
                     self.output = 0.0; // last step always ends at 0
                 }
@@ -306,5 +309,60 @@ mod tests {
         assert_eq!(params.line1.dcw_env.steps[0].rate, 8);
         assert_eq!(params.line1.dca_env.steps[0].level, 29);
         assert_eq!(params.line1.dca_env.steps[0].rate, 119);
+    }
+
+    #[test]
+    fn release_with_multiple_post_sustain_steps_does_not_hard_zero_on_transition() {
+        use crate::params::{EnvStep, StepEnvData, NUM_ENV_STEPS};
+
+        let mut env = StepEnvData {
+            steps: [EnvStep { level: 0, rate: 99 }; NUM_ENV_STEPS],
+            sustain_step: 1,
+            step_count: 4,
+            loop_: false,
+        };
+
+        // Active steps:
+        // 0 -> attack target
+        // 1 -> sustain target
+        // 2 -> first release segment target
+        // 3 -> final segment (forced to zero in engine)
+        env.steps[0] = EnvStep {
+            level: 99,
+            rate: 99,
+        };
+        env.steps[1] = EnvStep {
+            level: 70,
+            rate: 99,
+        };
+        env.steps[2] = EnvStep {
+            level: 40,
+            rate: 99,
+        };
+        env.steps[3] = EnvStep {
+            level: 30,
+            rate: 99,
+        };
+
+        let mut gen = EnvGen::default();
+        gen.prev_level = 0.7;
+        gen.output = 0.7;
+        gen.step = 1; // at sustain
+
+        gen.start_release(&env);
+
+        // Consume release step 2 completely so generator transitions to step 3.
+        // We don't need exact sample count, just enough to guarantee transition.
+        for _ in 0..8192 {
+            gen.advance(EnvelopeKind::Dca, &env, 48_000.0, 0.0, 60);
+            if gen.step >= 3 {
+                break;
+            }
+        }
+
+        assert_eq!(gen.step, 3);
+        // On entering the final step, output must still be above zero and then
+        // decay using the final step's rate, not jump immediately to 0.
+        assert!(gen.output > 0.0);
     }
 }

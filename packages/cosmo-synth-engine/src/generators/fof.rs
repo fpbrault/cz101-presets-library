@@ -76,5 +76,5 @@ pub fn warp_phase(phase: f32, amt: f32, ratio: f32, tightness: f32, offset: f32,
     let diff = phase - (0.5 + skew * 0.25);
     let sharpness = 8.0 + tightness * 36.0;
     let window = libm::expf(-sharpness * diff * diff);
-    wrap01(carrier * (1.0 - amt) + carrier * window * amt)
+    (carrier * (1.0 - amt) + carrier * window * amt).clamp(0.0, 1.0)
 }
