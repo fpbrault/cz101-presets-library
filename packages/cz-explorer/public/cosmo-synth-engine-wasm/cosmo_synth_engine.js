@@ -22,6 +22,22 @@ let wasm_bindgen = (function(exports) {
             wasm.__wbg_czsynthprocessor_free(ptr, 0);
         }
         /**
+         * Apply a named module preset directly in the engine.
+         *
+         * Returns `true` when the module/preset pair is recognized.
+         * @param {string} module
+         * @param {string} preset
+         * @returns {boolean}
+         */
+        applyModulePreset(module, preset) {
+            const ptr0 = passStringToWasm0(module, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+            const len0 = WASM_VECTOR_LEN;
+            const ptr1 = passStringToWasm0(preset, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+            const len1 = WASM_VECTOR_LEN;
+            const ret = wasm.czsynthprocessor_applyModulePreset(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+            return ret !== 0;
+        }
+        /**
          * Return the latest runtime modulation-source values as JSON for UI telemetry.
          * @returns {string}
          */
@@ -38,7 +54,7 @@ let wasm_bindgen = (function(exports) {
                 return getStringFromWasm0(r0, r1);
             } finally {
                 wasm.__wbindgen_add_to_stack_pointer(16);
-                wasm.__wbindgen_export(deferred1_0, deferred1_1, 1);
+                wasm.__wbindgen_export3(deferred1_0, deferred1_1, 1);
             }
         }
         /**
@@ -80,7 +96,7 @@ let wasm_bindgen = (function(exports) {
          * @param {Float32Array} output
          */
         process(output) {
-            var ptr0 = passArrayF32ToWasm0(output, wasm.__wbindgen_export2);
+            var ptr0 = passArrayF32ToWasm0(output, wasm.__wbindgen_export);
             var len0 = WASM_VECTOR_LEN;
             wasm.czsynthprocessor_process(this.__wbg_ptr, ptr0, len0, addHeapObject(output));
         }
@@ -106,7 +122,7 @@ let wasm_bindgen = (function(exports) {
          * @param {string} json
          */
         setParams(json) {
-            const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
+            const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export, wasm.__wbindgen_export2);
             const len0 = WASM_VECTOR_LEN;
             wasm.czsynthprocessor_setParams(this.__wbg_ptr, ptr0, len0);
         }
