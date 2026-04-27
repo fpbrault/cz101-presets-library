@@ -1,3 +1,4 @@
+import { useHoverInfoHandlers } from "@/components/layout/HoverInfo";
 import { BaseFxSection, type FxKnobConfig } from "./BaseFxSection";
 
 interface DelaySectionProps {
@@ -25,9 +26,12 @@ export function DelaySection({
 	warmth,
 	setWarmth,
 }: DelaySectionProps) {
+	const tapeModeTooltip = "Toggle tape echo coloration for delay repeats.";
+	const tapeModeHoverHandlers = useHoverInfoHandlers(tapeModeTooltip);
 	const knobs: FxKnobConfig[] = [
 		{
 			label: "Time",
+			tooltip: "Sets the delay repeat interval.",
 			value: time,
 			setValue: setTime,
 			min: 0.01,
@@ -38,6 +42,7 @@ export function DelaySection({
 		},
 		{
 			label: "Dly Fdbk",
+			tooltip: "Feeds delayed signal back for additional repeats.",
 			value: feedback,
 			setValue: setFeedback,
 			min: 0,
@@ -50,6 +55,7 @@ export function DelaySection({
 			? ([
 					{
 						label: "Warmth",
+						tooltip: "Adds tape-style saturation and high-frequency rolloff.",
 						value: warmth,
 						setValue: setWarmth,
 						min: 0,
@@ -62,6 +68,7 @@ export function DelaySection({
 			: []),
 		{
 			label: "Mix",
+			tooltip: "Blends dry signal with delayed signal.",
 			value: mix,
 			setValue: setMix,
 			min: 0,
@@ -81,6 +88,8 @@ export function DelaySection({
 				<button
 					type="button"
 					onClick={() => setTapeMode(!tapeMode)}
+					data-hover-info={tapeModeTooltip}
+					{...tapeModeHoverHandlers}
 					className={`rounded px-3 py-1 text-xs font-medium tracking-wide border transition-colors ${
 						tapeMode
 							? "border-amber-500/60 bg-amber-500/20 text-amber-300"

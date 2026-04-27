@@ -33,6 +33,7 @@ export default function ReverbModule() {
 				size={48}
 				color="#f97316"
 				label="Space"
+				tooltip="Sets the virtual room size for reverb reflections."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 			<ControlKnob
@@ -44,6 +45,7 @@ export default function ReverbModule() {
 				size={48}
 				color="#f97316"
 				label="Pre-Dly"
+				tooltip="Adds delay before the reverb tail starts."
 				valueFormatter={(value) => `${Math.round(value * 1000)}ms`}
 			/>
 			<ControlKnob
@@ -55,6 +57,7 @@ export default function ReverbModule() {
 				size={48}
 				color="#f97316"
 				label="Dist"
+				tooltip="Moves source position deeper into the reverb space."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 			<ControlKnob
@@ -66,6 +69,7 @@ export default function ReverbModule() {
 				size={48}
 				color="#f97316"
 				label="Character"
+				tooltip="Shapes reverb tone from dark to bright."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 			<ControlKnob
@@ -77,6 +81,7 @@ export default function ReverbModule() {
 				size={48}
 				color="#f97316"
 				label="Mix"
+				tooltip="Blends dry signal with reverb output."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 		</ModuleFrame>

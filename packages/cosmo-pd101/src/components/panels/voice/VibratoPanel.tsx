@@ -28,6 +28,7 @@ const VibratoPanel: AsidePanelComponent<"vibrato"> = Object.assign(
 							key={w}
 							active={vibratoWave === i + 1}
 							onClick={() => setVibratoWave(i + 1)}
+							tooltip={`Select ${w} vibrato waveform.`}
 						>
 							{w}
 						</CzButton>
@@ -42,6 +43,7 @@ const VibratoPanel: AsidePanelComponent<"vibrato"> = Object.assign(
 						size={44}
 						color="#7f9de4"
 						label="Rate"
+						tooltip="Sets vibrato speed."
 						valueFormatter={(v) => `${Math.round(v)}`}
 					/>
 					<ControlKnob
@@ -52,6 +54,7 @@ const VibratoPanel: AsidePanelComponent<"vibrato"> = Object.assign(
 						size={44}
 						color="#7f9de4"
 						label="Depth"
+						tooltip="Sets vibrato pitch modulation amount."
 						valueFormatter={(v) => `${Math.round(v)}`}
 						modDestination="vibratoDepth"
 					/>
@@ -63,6 +66,7 @@ const VibratoPanel: AsidePanelComponent<"vibrato"> = Object.assign(
 						size={44}
 						color="#7f9de4"
 						label="Delay"
+						tooltip="Delays vibrato onset after a note is triggered."
 						valueFormatter={(v) => `${Math.round(v)}ms`}
 					/>
 				</div>

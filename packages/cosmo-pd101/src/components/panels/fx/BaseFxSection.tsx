@@ -3,6 +3,7 @@ import type { KnobVariant } from "@/components/controls/knob/KnobView";
 
 export interface FxKnobConfig {
 	label: string;
+	tooltip?: string;
 	value: number;
 	setValue: (v: number) => void;
 	min: number;
@@ -36,6 +37,7 @@ export function BaseFxSection({ title, knobs }: BaseFxSectionProps) {
 						variant={knob.variant}
 						color={knob.color}
 						label={knob.label}
+						tooltip={knob.tooltip}
 						valueFormatter={knob.valueFormatter}
 					/>
 				))}

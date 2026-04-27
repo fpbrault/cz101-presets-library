@@ -96,12 +96,14 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 							<CzButton
 								active={portamentoMode === "rate"}
 								onClick={() => setPortamentoMode("rate")}
+								tooltip="Portamento time scales with note interval distance."
 							>
 								Rate
 							</CzButton>
 							<CzButton
 								active={portamentoMode === "time"}
 								onClick={() => setPortamentoMode("time")}
+								tooltip="Portamento uses a fixed glide time between notes."
 							>
 								Time
 							</CzButton>
@@ -116,6 +118,7 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 									size={32}
 									color="#7f9de4"
 									label="Rate"
+									tooltip="Sets glide speed when portamento mode is Rate."
 									valueFormatter={(v) => `${Math.round(v)}`}
 								/>
 							) : (
@@ -127,6 +130,7 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 									size={32}
 									color="#7f9de4"
 									label="Time"
+									tooltip="Sets glide duration when portamento mode is Time."
 									valueFormatter={(v) => `${v.toFixed(2)}s`}
 								/>
 							)}
@@ -143,6 +147,7 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 								size={30}
 								color="#5bc8d4"
 								label="Bend"
+								tooltip="Sets maximum pitch bend range in semitones."
 								valueFormatter={(v) => `${Math.round(v)} st`}
 							/>
 						</div>
@@ -158,6 +163,7 @@ const GlobalVoicePanel: AsidePanelComponent<"global"> = Object.assign(
 								size={28}
 								color="#c46eb4"
 								label="Vel Curve"
+								tooltip="Shapes how keyboard velocity maps to output level."
 								valueFormatter={(v) => (v === 0 ? "Linear" : v.toFixed(2))}
 							/>
 						</div>

@@ -22,6 +22,7 @@ export default function RandomModule() {
 				size={52}
 				color="#c2571a"
 				label="Rate"
+				tooltip="Sets sample-and-hold random modulation refresh rate."
 				valueFormatter={(v) => `${v.toFixed(2)}Hz`}
 			/>
 		</ModuleFrame>

@@ -30,6 +30,7 @@ function PerLineParametersCardInner({
 	const controls = [
 		{
 			label: "DCW Amt",
+			tooltip: "Sets base harmonic warp amount for this line.",
 			value: warpAmount,
 			min: 0,
 			max: 1,
@@ -42,6 +43,7 @@ function PerLineParametersCardInner({
 		},
 		{
 			label: "Level",
+			tooltip: "Sets base output level for this line.",
 			value: level,
 			min: 0,
 			max: 1,
@@ -54,6 +56,7 @@ function PerLineParametersCardInner({
 		},
 		{
 			label: "Oct",
+			tooltip: "Transposes this line by octave steps.",
 			value: octave,
 			min: -2,
 			max: 2,
@@ -66,6 +69,7 @@ function PerLineParametersCardInner({
 		},
 		{
 			label: "Fine",
+			tooltip: "Fine tunes this line in cents.",
 			value: fineDetune,
 			min: -50,
 			max: 50,
@@ -87,6 +91,7 @@ function PerLineParametersCardInner({
 				{controls.map(
 					({
 						label,
+						tooltip,
 						value,
 						min,
 						max,
@@ -100,6 +105,7 @@ function PerLineParametersCardInner({
 						<ControlKnob
 							key={label}
 							label={label}
+							tooltip={tooltip}
 							value={value}
 							min={min}
 							max={max}
