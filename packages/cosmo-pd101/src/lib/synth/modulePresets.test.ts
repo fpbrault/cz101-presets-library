@@ -29,7 +29,9 @@ describe("module presets", () => {
 			throw new Error("Expected at least one LFO preset");
 		}
 
-		expect(getLfoModulePatch(1, lfoPresetPatch)).toEqual({ lfo: lfoPresetPatch });
+		expect(getLfoModulePatch(1, lfoPresetPatch)).toEqual({
+			lfo: lfoPresetPatch,
+		});
 		expect(getLfoModulePatch(2, lfoPresetPatch)).toEqual({
 			lfo2: lfoPresetPatch,
 		});
