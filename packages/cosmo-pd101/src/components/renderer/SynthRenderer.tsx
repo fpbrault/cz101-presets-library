@@ -39,6 +39,7 @@ import { useSynthStore } from "@/features/synth/synthStore";
 import { useSynthUiStore } from "@/features/synth/synthUiStore";
 import { HoverInfoProvider, useHoverInfo } from "../layout/HoverInfo";
 import MiniKeyboardOverlay from "../layout/MiniKeyboardOverlay";
+import SynthInfoBar from "../layout/SynthInfoBar";
 import PhaserPanel from "../panels/fx/PhaserPanel";
 
 type SynthRendererProps = {
@@ -94,7 +95,7 @@ export default function SynthRenderer({
 	miniKeyboard,
 }: SynthRendererProps) {
 	return (
-		<HoverInfoProvider>
+		<HoverInfoProvider externalReadout={lcdTransientReadout}>
 			<SynthRendererContent
 				headerProps={headerProps}
 				frameClassName={frameClassName}
@@ -126,7 +127,6 @@ function SynthRendererContent({
 	bottomBarExtra,
 	lcdPrimaryText: _lcdPrimaryText,
 	lcdSecondaryText: _lcdSecondaryText,
-	lcdTransientReadout = null,
 	effectivePitchHz,
 	analyserNodeRef,
 	audioCtxRef,
@@ -145,12 +145,7 @@ function SynthRendererContent({
 	const setKeyboardVisible = useSynthUiStore((s) => s.setKeyboardVisible);
 	const libraryModeOpen = useSynthUiStore((s) => s.libraryModeOpen);
 	const setLibraryModeOpen = useSynthUiStore((s) => s.setLibraryModeOpen);
-	const { hoverInfo } = useHoverInfo();
-	const infoText = hoverInfo
-		? hoverInfo
-		: lcdTransientReadout
-			? `${lcdTransientReadout.label}: ${lcdTransientReadout.value}`
-			: "Hover any control for context.";
+	const { infoText, setControlReadout } = useHoverInfo();
 
 	return (
 		<ModMatrixProvider modMatrix={modMatrix} setModMatrix={setModMatrix}>
@@ -208,35 +203,54 @@ function SynthRendererContent({
 										<div className="flex items-end gap-2">
 											<CzTabButton
 												active={mainPanelMode === "phase"}
-												onClick={() => setMainPanelMode("phase")}
+												onClick={() => {
+													setMainPanelMode("phase");
+													setControlReadout({
+														label: "Main Panel",
+														value: "PHASE",
+													});
+												}}
 												topLabel="Main"
 												bottomLabel=""
 												color="red"
 												width={48}
+												tooltip="Show phase editor controls."
 											></CzTabButton>
 											<CzTabButton
 												active={mainPanelMode === "fx"}
 												onClick={() =>
-													setMainPanelMode(
-														mainPanelMode === "fx" ? "phase" : "fx",
-													)
+													{
+														const nextMode = mainPanelMode === "fx" ? "phase" : "fx";
+														setMainPanelMode(nextMode);
+														setControlReadout({
+															label: "Main Panel",
+															value: nextMode.toUpperCase(),
+														});
+													}
 												}
 												topLabel="FX"
 												bottomLabel=""
 												width={48}
 												color="blue"
+												tooltip="Toggle FX console drawer."
 											></CzTabButton>
 											<CzTabButton
 												active={mainPanelMode === "mod"}
 												onClick={() =>
-													setMainPanelMode(
-														mainPanelMode === "mod" ? "phase" : "mod",
-													)
+													{
+														const nextMode = mainPanelMode === "mod" ? "phase" : "mod";
+														setMainPanelMode(nextMode);
+														setControlReadout({
+															label: "Main Panel",
+															value: nextMode.toUpperCase(),
+														});
+													}
 												}
 												topLabel="MOD"
 												bottomLabel=""
 												width={48}
 												color="cyan"
+												tooltip="Toggle modulation console drawer."
 											></CzTabButton>
 										</div>
 									</div>
@@ -332,28 +346,13 @@ function SynthRendererContent({
 							onNoteOff={miniKeyboard.onNoteOff}
 						/>
 					) : null}
-					<div className="relative z-20 mt-1 flex min-h-8 flex-wrap items-center gap-x-3 gap-y-1 rounded-t-sm border border-cz-border/80 bg-cz-body px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-cz-cream/80 shadow-inner">
-						<span className="text-cz-light-blue/80">Info</span>
-						<span className="min-w-0 flex-1 truncate">{infoText}</span>
-						{bottomBarExtra ? (
-							<div className="flex items-center gap-2 text-[0.54rem] tracking-[0.18em]">
-								{bottomBarExtra}
-							</div>
-						) : null}
-						{miniKeyboard && !libraryModeOpen ? (
-							<button
-								type="button"
-								onClick={() => setKeyboardVisible(!keyboardVisible)}
-								className={`rounded-sm border px-2 py-1 text-[0.56rem] uppercase tracking-[0.24em] transition-colors ${
-									keyboardVisible
-										? "border-cz-gold bg-cz-gold/10 text-cz-gold"
-										: "border-cz-border bg-black/10 text-cz-cream/70 hover:text-cz-cream"
-								}`}
-							>
-								{keyboardVisible ? "Hide Keys" : "Show Keys"}
-							</button>
-						) : null}
-					</div>
+					<SynthInfoBar
+						infoText={infoText}
+						bottomBarExtra={bottomBarExtra}
+						showKeyboardToggle={Boolean(miniKeyboard) && !libraryModeOpen}
+						keyboardVisible={keyboardVisible}
+						onKeyboardToggle={() => setKeyboardVisible(!keyboardVisible)}
+					/>
 				</div>
 			</SynthParamControllerProvider>
 		</ModMatrixProvider>
@@ -373,6 +372,7 @@ function MasterVolumeControl() {
 				size={48}
 				color="white"
 				label="Main Volume"
+				tooltip="Sets the global synth output level."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 				modDestination="volume"
 			/>

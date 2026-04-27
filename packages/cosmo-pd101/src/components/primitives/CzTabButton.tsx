@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import type React from "react";
 import { joinClasses } from "@/components/primitives/Card";
+import { useHoverInfo } from "../layout/HoverInfo";
 
 export type CzTabButtonColor = "black" | "blue" | "cyan" | "grey" | "red";
 export type CzTabButtonLedColor = "off" | "red" | "green" | "blue";
@@ -19,6 +20,7 @@ type CzTabButtonProps = {
 	showLed?: boolean;
 	color?: CzTabButtonColor;
 	ledColor?: CzTabButtonLedColor;
+	tooltip?: string;
 };
 
 const colorStyles: Record<
@@ -94,11 +96,21 @@ export default function CzTabButton({
 	showLed = true,
 	color = "black",
 	ledColor,
+	tooltip,
 }: CzTabButtonProps) {
+	const { setHoverInfo, clearHoverInfo } = useHoverInfo();
 	const palette = colorStyles[color];
 	const resolvedLedColor = ledColor ?? (active ? "red" : "off");
 	const resolvedWidth = width ?? height ?? 48;
 	const resolvedHeight = height ?? width ?? 48;
+	const hoverHandlers = tooltip
+		? {
+				onPointerEnter: () => setHoverInfo(tooltip),
+				onPointerLeave: clearHoverInfo,
+				onFocus: () => setHoverInfo(tooltip),
+				onBlur: clearHoverInfo,
+			}
+		: undefined;
 
 	return (
 		<div className={joinClasses("flex flex-col items-center gap-1", className)}>
@@ -130,6 +142,8 @@ export default function CzTabButton({
 				type={type}
 				disabled={disabled}
 				onClick={onClick}
+				data-hover-info={tooltip}
+				{...hoverHandlers}
 				animate={
 					active
 						? {
