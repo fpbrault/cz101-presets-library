@@ -111,6 +111,7 @@ const ModRouteRow = memo(function ModRouteRow({
 					size={32}
 					color="#7f9de4"
 					label="Amount"
+					tooltip="Sets modulation depth and direction from source to destination."
 					valueFormatter={(v) => v.toFixed(2)}
 					valueVisibility="hover"
 				/>

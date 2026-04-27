@@ -31,6 +31,7 @@ export default function PhaserModule() {
 				size={52}
 				color="#a78bfa"
 				label="Rate"
+				tooltip="Sets phaser sweep speed."
 				valueFormatter={(value) => `${value.toFixed(1)}Hz`}
 			/>
 			<ControlKnob
@@ -42,6 +43,7 @@ export default function PhaserModule() {
 				size={52}
 				color="#a78bfa"
 				label="Depth"
+				tooltip="Sets depth of the phaser notch sweep."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 			<ControlKnob
@@ -53,6 +55,7 @@ export default function PhaserModule() {
 				size={52}
 				color="#a78bfa"
 				label="Fdbk"
+				tooltip="Feeds phased signal back for stronger notches."
 				valueFormatter={(value) =>
 					value >= 0
 						? `+${Math.round(value * 100)}%`
@@ -68,6 +71,7 @@ export default function PhaserModule() {
 				size={52}
 				color="#a78bfa"
 				label="Mix"
+				tooltip="Blends dry signal with phaser output."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 		</ModuleFrame>

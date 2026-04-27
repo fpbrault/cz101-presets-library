@@ -235,6 +235,7 @@ function ScopePanel() {
 					size={48}
 					color="#3dff3d"
 					label="Cycles"
+					tooltip="Sets how many waveform cycles are shown in scope view."
 					valueFormatter={(value) => value.toFixed(1)}
 				/>
 				<ControlKnob
@@ -245,6 +246,7 @@ function ScopePanel() {
 					size={48}
 					color="#9cb937"
 					label="Zoom"
+					tooltip="Sets vertical waveform magnification."
 					valueFormatter={(value) => `${value.toFixed(1)}x`}
 				/>
 				<ControlKnob
@@ -255,6 +257,7 @@ function ScopePanel() {
 					size={48}
 					color="#7f9de4"
 					label="Trig"
+					tooltip="Sets trigger threshold used to stabilize waveform display."
 					valueFormatter={(value) => `${Math.round(value)}`}
 				/>
 			</div>

@@ -414,6 +414,7 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 										</div>
 										<ControlKnob
 											label="Blend"
+											tooltip="Crossfades between Algo A and Algo B outputs."
 											value={algoBlend}
 											onChange={setAlgoBlend}
 											min={0}

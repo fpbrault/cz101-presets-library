@@ -30,6 +30,7 @@ export default function ChorusModule() {
 				size={52}
 				color="#818cf8"
 				label="Rate"
+				tooltip="Sets chorus modulation speed."
 				valueFormatter={(value) => value.toFixed(1)}
 			/>
 			<ControlKnob
@@ -41,6 +42,7 @@ export default function ChorusModule() {
 				size={52}
 				color="#818cf8"
 				label="Depth"
+				tooltip="Sets intensity of chorus pitch modulation."
 				valueFormatter={(value) => `${Math.round((value / 3) * 100)}%`}
 			/>
 			<ControlKnob
@@ -52,6 +54,7 @@ export default function ChorusModule() {
 				size={52}
 				color="#818cf8"
 				label="Mix"
+				tooltip="Blends dry signal with chorus effect."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 		</ModuleFrame>

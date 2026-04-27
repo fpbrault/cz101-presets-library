@@ -28,6 +28,7 @@ const PhaseModPanel: AsidePanelComponent<"phaseMod"> = Object.assign(
 						size={52}
 						color="#7f9de4"
 						label="Amount"
+						tooltip="Sets internal phase modulation depth."
 						valueFormatter={(value) => value.toFixed(2)}
 						modDestination="intPmAmount"
 					/>
@@ -39,12 +40,14 @@ const PhaseModPanel: AsidePanelComponent<"phaseMod"> = Object.assign(
 						size={52}
 						color="#9cb937"
 						label="Ratio"
+						tooltip="Sets modulator-to-carrier frequency ratio."
 						valueFormatter={(value) => value.toFixed(1)}
 					/>
 				</div>
 				<CzButton
 					active={pmPre}
 					onClick={() => setPmPre(!pmPre)}
+					tooltip="Apply phase modulation before warp shaping."
 					className="mt-3 [&_button]:bg-cz-inset [&_button]:border-cz-border"
 				>
 					Pre-warp PM

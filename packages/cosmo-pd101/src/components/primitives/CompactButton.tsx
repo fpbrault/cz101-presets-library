@@ -1,9 +1,12 @@
+import { useHoverInfoHandlers } from "../layout/HoverInfo";
+
 type CompactButtonProps = {
 	active?: boolean;
 	onClick?: () => void;
 	children: React.ReactNode;
 	className?: string;
 	disabled?: boolean;
+	tooltip?: string;
 };
 
 /**
@@ -17,12 +20,18 @@ export default function CompactButton({
 	children,
 	className = "",
 	disabled = false,
+	tooltip,
 }: CompactButtonProps) {
+	const hoverHandlers = useHoverInfoHandlers(tooltip);
+	const resolvedTooltip = tooltip?.trim() ? tooltip : undefined;
+
 	return (
 		<button
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
+			data-hover-info={resolvedTooltip}
+			{...hoverHandlers}
 			className={`inline-flex items-center justify-center h-5 min-w-7 px-1 font-mono text-[0.56rem] font-bold uppercase tracking-wide select-none cursor-pointer transition-colors rounded-xs border disabled:opacity-40 disabled:cursor-not-allowed ${
 				active
 					? "bg-cz-cream text-cz-body border-cz-cream"

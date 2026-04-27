@@ -476,6 +476,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 									min={0}
 									max={99}
 									label="Lvl"
+									tooltip={`Sets envelope level for step ${i + 1}.`}
 									// CZ behaviour: last step always outputs 0; show effective
 									// value as 0 but the stored value is still editable so it
 									// is preserved when the step count is increased.
@@ -491,6 +492,7 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 									min={0}
 									max={99}
 									label="Rate"
+									tooltip={`Sets envelope transition speed for step ${i + 1}.`}
 									valueFormatter={(v) => `${Math.round(v)}`}
 									color="#a3a3a3"
 									size={compact ? 26 : 30}

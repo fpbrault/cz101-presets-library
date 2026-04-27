@@ -1,4 +1,9 @@
+import { useCallback } from "react";
 import ModulatableControl from "@/components/controls/modulation/ModulatableControl";
+import {
+	useHoverInfo,
+	useHoverInfoHandlers,
+} from "@/components/layout/HoverInfo";
 import type { ModDestination } from "@/lib/synth/bindings/synth";
 import {
 	type ModTarget,
@@ -13,6 +18,9 @@ interface CzHorizontalSliderProps {
 	onChange: (v: number) => void;
 	disabled?: boolean;
 	className?: string;
+	label?: string;
+	tooltip?: string;
+	valueFormatter?: (value: number) => string;
 	/** Simple modulation opt-in with auto destination resolution. */
 	modulatable?: ModTarget;
 	/** Line context for line-scoped targets (defaults to line 1). */
@@ -34,10 +42,31 @@ export default function CzHorizontalSlider({
 	onChange,
 	disabled = false,
 	className = "",
+	label,
+	tooltip,
+	valueFormatter,
 	modulatable,
 	lineIndex = 1,
 	modDestination,
 }: CzHorizontalSliderProps) {
+	const { setControlReadout } = useHoverInfo();
+	const resolvedTooltip = tooltip?.trim() ? tooltip : label?.trim();
+	const hoverHandlers = useHoverInfoHandlers(resolvedTooltip);
+	const emitChange = useCallback(
+		(nextValue: number) => {
+			onChange(nextValue);
+			setControlReadout({
+				label: label ?? "Value",
+				value: valueFormatter
+					? valueFormatter(nextValue)
+					: Number.isInteger(nextValue)
+						? `${nextValue}`
+						: nextValue.toFixed(2),
+			});
+		},
+		[label, onChange, setControlReadout, valueFormatter],
+	);
+
 	const input = (
 		<input
 			type="range"
@@ -45,8 +74,11 @@ export default function CzHorizontalSlider({
 			max={max}
 			step={step}
 			value={value}
-			onChange={(e) => onChange(Number(e.target.value))}
+			onChange={(e) => emitChange(Number(e.target.value))}
 			className={`range range-xs w-full ${className}`.trim()}
+			aria-label={label}
+			data-hover-info={resolvedTooltip}
+			{...hoverHandlers}
 			disabled={disabled}
 		/>
 	);

@@ -49,6 +49,7 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 						className="grow"
 						active={lfoWaveform === w}
 						onClick={() => setLfoWaveform(w)}
+						tooltip={`Select ${label} waveform for LFO ${id}.`}
 					>
 						{label}
 					</CompactButton>
@@ -63,6 +64,7 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Rate"
+				tooltip={`Sets LFO ${id} speed.`}
 				valueFormatter={(v) => `${v.toFixed(1)}Hz`}
 			/>
 			<ControlKnob
@@ -74,6 +76,7 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Depth"
+				tooltip={`Sets modulation depth for LFO ${id}.`}
 				valueFormatter={(v) => `${Math.round(v * 100)}%`}
 			/>
 			<ControlKnob
@@ -85,6 +88,7 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Offset"
+				tooltip={`Offsets LFO ${id} output around zero.`}
 				valueFormatter={(v) => `${Math.round(v * 100)}%`}
 			/>
 			<ControlKnob
@@ -96,11 +100,13 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Sym."
+				tooltip={`Adjusts waveform symmetry for LFO ${id}.`}
 				valueFormatter={(v) => `${Math.round(v * 100)}%`}
 			/>
 			<CompactButton
 				active={lfoRetrigger}
 				onClick={() => setLfoRetrigger(!lfoRetrigger)}
+				tooltip={`Restart LFO ${id} phase on each new note.`}
 				className="px-2 col-span-4 w-fit justify-self-center"
 			>
 				Retrig

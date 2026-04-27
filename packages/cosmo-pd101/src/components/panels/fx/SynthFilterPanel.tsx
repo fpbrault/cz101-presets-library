@@ -96,6 +96,13 @@ const SynthFilterPanel: AsidePanelComponent<"filter"> = Object.assign(
 							key={t}
 							active={filterType === t}
 							onClick={() => setFilterType(t)}
+							tooltip={
+								t === "lp"
+									? "Low-pass mode: attenuates frequencies above cutoff."
+									: t === "hp"
+										? "High-pass mode: attenuates frequencies below cutoff."
+										: "Band-pass mode: emphasizes a narrow band around cutoff."
+							}
 							className="flex-1"
 						>
 							{t.toUpperCase()}
@@ -111,6 +118,7 @@ const SynthFilterPanel: AsidePanelComponent<"filter"> = Object.assign(
 						size={44}
 						color="#3dff3d"
 						label="Cutoff"
+						tooltip="Sets the filter cutoff frequency."
 						valueFormatter={(v) => `${Math.round(v)}Hz`}
 						modDestination="filterCutoff"
 					/>
@@ -122,6 +130,7 @@ const SynthFilterPanel: AsidePanelComponent<"filter"> = Object.assign(
 						size={44}
 						color="#3dff3d"
 						label="Res"
+						tooltip="Boosts frequencies around the cutoff point."
 						valueFormatter={(v) => `${Math.round(v * 100)}%`}
 						modDestination="filterResonance"
 					/>
@@ -133,6 +142,7 @@ const SynthFilterPanel: AsidePanelComponent<"filter"> = Object.assign(
 						size={44}
 						color="#3dff3d"
 						label="Env"
+						tooltip="Applies envelope modulation amount to the cutoff."
 						valueFormatter={(v) => `${Math.round(v * 100)}%`}
 						modDestination="filterEnvAmount"
 					/>

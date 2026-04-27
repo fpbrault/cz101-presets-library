@@ -1,4 +1,5 @@
 import ControlKnob from "@/components/controls/ControlKnob";
+import { useHoverInfoHandlers } from "@/components/layout/HoverInfo";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
 import { useSynthParam } from "@/features/synth/SynthParamController";
 
@@ -15,6 +16,8 @@ export default function DelayModule() {
 	const { value: delayWarmth, setValue: setDelayWarmth } =
 		useSynthParam("delayWarmth");
 	const delayModeLabel = delayTapeMode ? "Tape Echo" : "Digital";
+	const tapeModeTooltip = "Toggle tape echo coloration for delay repeats.";
+	const tapeModeHoverHandlers = useHoverInfoHandlers(tapeModeTooltip);
 	return (
 		<ModuleFrame
 			title="Delay"
@@ -27,6 +30,8 @@ export default function DelayModule() {
 			<button
 				type="button"
 				onClick={() => setDelayTapeMode(!delayTapeMode)}
+				data-hover-info={tapeModeTooltip}
+				{...tapeModeHoverHandlers}
 				className={`rounded px-2 py-0.5 text-[0.6rem] font-medium tracking-wider border transition-colors w-fit justify-self-center grow col-span-${delayTapeMode ? 4 : 3} ${
 					delayTapeMode
 						? "border-amber-500/60 bg-amber-500/20 text-amber-300"
@@ -44,6 +49,7 @@ export default function DelayModule() {
 				size={52}
 				color="#fbbf24"
 				label="Time"
+				tooltip="Sets the delay repeat interval."
 				valueFormatter={(value) => `${Math.round(value * 1000)}ms`}
 			/>
 			<ControlKnob
@@ -55,6 +61,7 @@ export default function DelayModule() {
 				size={52}
 				color="#fbbf24"
 				label="Fdbk"
+				tooltip="Controls how much delayed signal feeds back into the delay."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 			{delayTapeMode && (
@@ -67,6 +74,7 @@ export default function DelayModule() {
 					size={52}
 					color="#f59e0b"
 					label="Warmth"
+					tooltip="Adds tape-style saturation and tone darkening."
 					valueFormatter={(value) => `${Math.round(value * 100)}%`}
 				/>
 			)}
@@ -79,6 +87,7 @@ export default function DelayModule() {
 				size={52}
 				color="#fbbf24"
 				label="Mix"
+				tooltip="Blends dry signal with delayed repeats."
 				valueFormatter={(value) => `${Math.round(value * 100)}%`}
 			/>
 		</ModuleFrame>

@@ -20,6 +20,7 @@ export function ChorusSection({
 	const knobs: FxKnobConfig[] = [
 		{
 			label: "Rate",
+			tooltip: "Sets chorus modulation speed.",
 			value: rate,
 			setValue: setRate,
 			min: 0.1,
@@ -30,6 +31,7 @@ export function ChorusSection({
 		},
 		{
 			label: "Depth",
+			tooltip: "Sets how wide the chorus pitch modulation swings.",
 			value: depth,
 			setValue: setDepth,
 			min: 0,
@@ -40,6 +42,7 @@ export function ChorusSection({
 		},
 		{
 			label: "Mix",
+			tooltip: "Blends dry signal with the chorus effect.",
 			value: mix,
 			setValue: setMix,
 			min: 0,
