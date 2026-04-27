@@ -541,12 +541,14 @@ impl CosmoProcessor {
                 + mod_value_for(ModDestination::Lfo1Rate, matrix, &pre_sources);
             let lfo1_depth_mod = mod_value_for(ModDestination::LfoDepth, matrix, &pre_sources)
                 + mod_value_for(ModDestination::Lfo1Depth, matrix, &pre_sources);
-            let lfo1_symmetry_mod = mod_value_for(ModDestination::Lfo1Symmetry, matrix, &pre_sources);
+            let lfo1_symmetry_mod =
+                mod_value_for(ModDestination::Lfo1Symmetry, matrix, &pre_sources);
             let lfo1_offset_mod = mod_value_for(ModDestination::Lfo1Offset, matrix, &pre_sources);
 
             let lfo2_rate_mod = mod_value_for(ModDestination::Lfo2Rate, matrix, &pre_sources);
             let lfo2_depth_mod = mod_value_for(ModDestination::Lfo2Depth, matrix, &pre_sources);
-            let lfo2_symmetry_mod = mod_value_for(ModDestination::Lfo2Symmetry, matrix, &pre_sources);
+            let lfo2_symmetry_mod =
+                mod_value_for(ModDestination::Lfo2Symmetry, matrix, &pre_sources);
             let lfo2_offset_mod = mod_value_for(ModDestination::Lfo2Offset, matrix, &pre_sources);
             let random_rate_mod = mod_value_for(ModDestination::RandomRate, matrix, &pre_sources);
 
@@ -606,49 +608,49 @@ impl CosmoProcessor {
                 .clamp(0.0, 3.0);
             self.fx.chorus_mix = (base_chorus_mix
                 + mod_value_for(ModDestination::ChorusMix, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
 
             self.fx.delay_time = (base_delay_time
                 + mod_value_for(ModDestination::DelayTime, matrix, &mod_sources))
-                .clamp(0.01, 2.0);
+            .clamp(0.01, 2.0);
             self.fx.delay_feedback = (base_delay_feedback
                 + mod_value_for(ModDestination::DelayFeedback, matrix, &mod_sources))
-                .clamp(0.0, 0.95);
+            .clamp(0.0, 0.95);
             self.fx.delay_mix = (base_delay_mix
                 + mod_value_for(ModDestination::DelayMix, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
             self.fx.delay_warmth = (base_delay_warmth
                 + mod_value_for(ModDestination::DelayWarmth, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
 
             self.fx.reverb.mix = (base_reverb_mix
                 + mod_value_for(ModDestination::ReverbMix, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
             self.fx.reverb.space = (base_reverb_space
                 + mod_value_for(ModDestination::ReverbSpace, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
             self.fx.reverb.predelay = (base_reverb_predelay
                 + mod_value_for(ModDestination::ReverbPredelay, matrix, &mod_sources) * 0.1)
                 .clamp(0.0, 0.2);
             self.fx.reverb.distance = (base_reverb_distance
                 + mod_value_for(ModDestination::ReverbDistance, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
             self.fx.reverb.character = (base_reverb_character
                 + mod_value_for(ModDestination::ReverbCharacter, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
 
             self.fx.phaser_rate = (base_phaser_rate
                 + mod_value_for(ModDestination::PhaserRate, matrix, &mod_sources) * 10.0)
                 .clamp(0.01, 10.0);
             self.fx.phaser_depth = (base_phaser_depth
                 + mod_value_for(ModDestination::PhaserDepth, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
             self.fx.phaser_feedback = (base_phaser_feedback
                 + mod_value_for(ModDestination::PhaserFeedback, matrix, &mod_sources))
-                .clamp(-0.95, 0.95);
+            .clamp(-0.95, 0.95);
             self.fx.phaser_mix = (base_phaser_mix
                 + mod_value_for(ModDestination::PhaserMix, matrix, &mod_sources))
-                .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
 
             let mut mixed = 0.0_f32;
             // SAFETY: `voices` and `params` are separate fields; we use raw pointer to avoid

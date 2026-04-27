@@ -354,8 +354,12 @@ fn apply_env_step_modulation(
         let rate_mod = mod_value_for(rate_dest, matrix, sources);
 
         let step: &mut EnvStep = &mut modded.steps[step_index];
-        let next_level = (step.level as f32 + level_mod * 127.0).round().clamp(0.0, 127.0) as u8;
-        let next_rate = (step.rate as f32 + rate_mod * 127.0).round().clamp(0.0, 127.0) as u8;
+        let next_level = (step.level as f32 + level_mod * 127.0)
+            .round()
+            .clamp(0.0, 127.0) as u8;
+        let next_rate = (step.rate as f32 + rate_mod * 127.0)
+            .round()
+            .clamp(0.0, 127.0) as u8;
         step.level = next_level;
         step.rate = next_rate;
     }
@@ -379,9 +383,12 @@ fn modulated_line_params(
 
     let mut modded = line.clone();
     modded.algo_blend = (line.algo_blend + algo_blend_mod).clamp(0.0, 1.0);
-    modded.dco_env = apply_env_step_modulation(&line.dco_env, line_index, EnvKindKey::Dco, matrix, sources);
-    modded.dcw_env = apply_env_step_modulation(&line.dcw_env, line_index, EnvKindKey::Dcw, matrix, sources);
-    modded.dca_env = apply_env_step_modulation(&line.dca_env, line_index, EnvKindKey::Dca, matrix, sources);
+    modded.dco_env =
+        apply_env_step_modulation(&line.dco_env, line_index, EnvKindKey::Dco, matrix, sources);
+    modded.dcw_env =
+        apply_env_step_modulation(&line.dcw_env, line_index, EnvKindKey::Dcw, matrix, sources);
+    modded.dca_env =
+        apply_env_step_modulation(&line.dca_env, line_index, EnvKindKey::Dca, matrix, sources);
     modded
 }
 // ---------------------------------------------------------------------------
@@ -579,7 +586,14 @@ pub fn render_voice(
     );
     let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
     let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
-    let mut signal = build_signal_state(&line1_modded, &line2_modded, &p.mod_matrix, &env, base_freq, &mod_sources);
+    let mut signal = build_signal_state(
+        &line1_modded,
+        &line2_modded,
+        &p.mod_matrix,
+        &env,
+        base_freq,
+        &mod_sources,
+    );
     apply_pitch_and_lfo_modulation(
         voice,
         p,
@@ -668,30 +682,48 @@ fn advance_envelopes(
 ) -> EnvelopeSnapshot {
     let note = voice.env_note;
 
-    voice
-        .line1_env
-        .dco
-        .advance(EnvelopeKind::Dco, &line1.dco_env, sr, line1.key_follow, note);
-    voice
-        .line1_env
-        .dcw
-        .advance(EnvelopeKind::Dcw, &line1.dcw_env, sr, line1.key_follow, note);
-    voice
-        .line1_env
-        .dca
-        .advance(EnvelopeKind::Dca, &line1.dca_env, sr, line1.key_follow, note);
-    voice
-        .line2_env
-        .dco
-        .advance(EnvelopeKind::Dco, &line2.dco_env, sr, line2.key_follow, note);
-    voice
-        .line2_env
-        .dcw
-        .advance(EnvelopeKind::Dcw, &line2.dcw_env, sr, line2.key_follow, note);
-    voice
-        .line2_env
-        .dca
-        .advance(EnvelopeKind::Dca, &line2.dca_env, sr, line2.key_follow, note);
+    voice.line1_env.dco.advance(
+        EnvelopeKind::Dco,
+        &line1.dco_env,
+        sr,
+        line1.key_follow,
+        note,
+    );
+    voice.line1_env.dcw.advance(
+        EnvelopeKind::Dcw,
+        &line1.dcw_env,
+        sr,
+        line1.key_follow,
+        note,
+    );
+    voice.line1_env.dca.advance(
+        EnvelopeKind::Dca,
+        &line1.dca_env,
+        sr,
+        line1.key_follow,
+        note,
+    );
+    voice.line2_env.dco.advance(
+        EnvelopeKind::Dco,
+        &line2.dco_env,
+        sr,
+        line2.key_follow,
+        note,
+    );
+    voice.line2_env.dcw.advance(
+        EnvelopeKind::Dcw,
+        &line2.dcw_env,
+        sr,
+        line2.key_follow,
+        note,
+    );
+    voice.line2_env.dca.advance(
+        EnvelopeKind::Dca,
+        &line2.dca_env,
+        sr,
+        line2.key_follow,
+        note,
+    );
 
     EnvelopeSnapshot {
         dco1_env: voice.line1_env.dco.output,
@@ -885,8 +917,9 @@ fn apply_vibrato(
     let vib_waveform = vibrato_waveform(vibrato.waveform);
     let lfo_val = lfo_output(voice.vibrato_phase, vib_waveform);
     let vibrato_depth_mod = mod_value_for(ModDestination::VibratoDepth, &p.mod_matrix, sources);
-    let effective_depth = (vibrato.depth + mod_wheel * p.mod_wheel_vibrato_depth + vibrato_depth_mod * 99.0)
-        .clamp(0.0, 99.0);
+    let effective_depth =
+        (vibrato.depth + mod_wheel * p.mod_wheel_vibrato_depth + vibrato_depth_mod * 99.0)
+            .clamp(0.0, 99.0);
     let pitch_mod = 1.0 + lfo_val * (effective_depth / 1000.0);
     signal.effective_freq1 *= pitch_mod;
     signal.effective_freq2 *= pitch_mod;
