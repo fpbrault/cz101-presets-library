@@ -1,6 +1,6 @@
-import { useRef } from "react";
 import { motion } from "motion/react";
 import type React from "react";
+import { useRef } from "react";
 import { joinClasses } from "@/components/primitives/Card";
 
 export type CzTabButtonColor = "black" | "blue" | "cyan" | "grey" | "red";
@@ -53,9 +53,15 @@ const adjustHexColor = (hex: string, delta: number): string => {
 	const green = parseInt(normalized.slice(3, 5), 16);
 	const blue = parseInt(normalized.slice(5, 7), 16);
 
-	const nextRed = clampColor(red + delta).toString(16).padStart(2, "0");
-	const nextGreen = clampColor(green + delta).toString(16).padStart(2, "0");
-	const nextBlue = clampColor(blue + delta).toString(16).padStart(2, "0");
+	const nextRed = clampColor(red + delta)
+		.toString(16)
+		.padStart(2, "0");
+	const nextGreen = clampColor(green + delta)
+		.toString(16)
+		.padStart(2, "0");
+	const nextBlue = clampColor(blue + delta)
+		.toString(16)
+		.padStart(2, "0");
 
 	return `#${nextRed}${nextGreen}${nextBlue}`;
 };
@@ -256,7 +262,11 @@ export default function CzTabButton({
 				className={joinClasses(
 					"shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold px-1 py-1",
 					"disabled:opacity-40 disabled:cursor-not-allowed",
-					normalizedCustomColor ? "text-white" : active ? palette.active : palette.inactive,
+					normalizedCustomColor
+						? "text-white"
+						: active
+							? palette.active
+							: palette.inactive,
 					buttonClassName,
 				)}
 				style={buttonStyle}
