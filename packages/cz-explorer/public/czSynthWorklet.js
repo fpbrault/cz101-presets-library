@@ -14,6 +14,7 @@
  *
  * After that the message API is identical to the old pdVisualizerProcessor.js:
  *   { type: "setParams",  params: SynthParams }
+ *   { type: "applyModulePreset", module, preset, patch? }
  *   { type: "noteOn",     note, frequency?, velocity? }
  *   { type: "noteOff",   note }
  *   { type: "sustain",   on }
@@ -128,6 +129,17 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 				const p = d.params;
 				this._mergeParams(p);
 				synth.setParams(JSON.stringify(this._params));
+				break;
+			}
+			case "applyModulePreset": {
+				if (d.patch) {
+					this._mergeParams(d.patch);
+				}
+				if (typeof synth.applyModulePreset === "function") {
+					synth.applyModulePreset(d.module, d.preset);
+				} else {
+					synth.setParams(JSON.stringify(this._params));
+				}
 				break;
 			}
 			case "noteOn":

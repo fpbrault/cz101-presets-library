@@ -12,6 +12,7 @@ use crate::dsp_utils::{lfo_output_with_symmetry, random_hold_value};
 use crate::envelope::normalize_synth_params_envelopes_to_raw_if_human;
 use crate::fx::FxChain;
 use crate::generators::PER_LINE_HEADROOM;
+use crate::module_presets;
 use crate::params::{PolyMode, SynthParams, NUM_VOICES};
 use crate::voice::{render_voice, Voice};
 
@@ -169,6 +170,17 @@ impl CosmoProcessor {
         normalize_synth_params_envelopes_to_raw_if_human(&mut params);
         self.params = params;
         self.update_fx();
+    }
+
+    /// Apply a named module preset to the current parameters.
+    ///
+    /// Returns `true` when the module/preset pair is recognized.
+    pub fn apply_module_preset(&mut self, module: &str, preset: &str) -> bool {
+        let applied = module_presets::apply_module_preset(&mut self.params, module, preset);
+        if applied {
+            self.update_fx();
+        }
+        applied
     }
 
     /// Reset all envelope generators for the selected voice.

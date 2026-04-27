@@ -47,6 +47,14 @@ impl CzSynthProcessor {
         }
     }
 
+    /// Apply a named module preset directly in the engine.
+    ///
+    /// Returns `true` when the module/preset pair is recognized.
+    #[wasm_bindgen(js_name = applyModulePreset)]
+    pub fn apply_module_preset(&mut self, module: &str, preset: &str) -> bool {
+        self.inner.apply_module_preset(module, preset)
+    }
+
     /// Trigger a note-on event.
     ///
     /// * `note`      — MIDI note number (0-127)
