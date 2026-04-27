@@ -514,6 +514,8 @@ export const PerLineWarpBlock = memo(function PerLineWarpBlock({
 									env={activeEnv.env}
 									onChange={activeEnv.setEnv}
 									color={activeEnv.envColor}
+									lineIndex={lineIndex}
+									envKind={activeEnvTab}
 									compact
 								/>
 								<div className="mt-2 flex items-center gap-2">
