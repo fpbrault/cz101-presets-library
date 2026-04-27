@@ -35,6 +35,7 @@ export function ReverbSection({
 			size: 44,
 			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
+			modTarget: "reverb.space",
 		},
 		{
 			label: "Pre-Dly",
@@ -45,6 +46,7 @@ export function ReverbSection({
 			size: 44,
 			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 1000)}ms`,
+			modTarget: "reverb.predelay",
 		},
 		{
 			label: "Char",
@@ -55,6 +57,7 @@ export function ReverbSection({
 			size: 44,
 			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
+			modTarget: "reverb.character",
 		},
 		{
 			label: "Dist",
@@ -65,6 +68,7 @@ export function ReverbSection({
 			size: 44,
 			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
+			modTarget: "reverb.distance",
 		},
 		{
 			label: "Mix",
@@ -75,6 +79,7 @@ export function ReverbSection({
 			size: 44,
 			color: "#3dff3d",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
+			modTarget: "reverb.mix",
 		},
 	];
 	return <BaseFxSection title="Reverb" knobs={knobs} />;

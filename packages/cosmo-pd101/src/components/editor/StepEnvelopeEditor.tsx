@@ -2,6 +2,8 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import Card from "@/components/primitives/Card";
 import type { StepEnvData } from "@/lib/synth/bindings/synth";
+import type { EnvKind } from "@/lib/synth/modTargets";
+import { resolveTargetFromMetadata } from "@/lib/synth/modTargets";
 
 const STEP_KEYS = ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7"] as const;
 
@@ -11,6 +13,8 @@ interface StepEnvelopeEditorProps {
 	onChange: (env: StepEnvData) => void;
 	color?: string;
 	compact?: boolean;
+	lineIndex?: 1 | 2;
+	envKind?: EnvKind;
 }
 
 type EnvPoint = {
@@ -181,6 +185,8 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 	onChange,
 	color = "#60a5fa",
 	compact = false,
+	lineIndex = 1,
+	envKind = "dco",
 }: StepEnvelopeEditorProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [hoverStep, setHoverStep] = useState<number | null>(null);
@@ -484,6 +490,11 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 									}
 									color={isLastStep ? "#6b7280" : color}
 									size={compact ? 26 : 30}
+									modDestination={resolveTargetFromMetadata("env.stepLevel", {
+										lineIndex,
+										envKind,
+										stepIndex: i + 1,
+									})}
 								/>
 								<ControlKnob
 									value={step.rate}
@@ -494,6 +505,11 @@ export const StepEnvelopeEditor = memo(function StepEnvelopeEditor({
 									valueFormatter={(v) => `${Math.round(v)}`}
 									color="#a3a3a3"
 									size={compact ? 26 : 30}
+									modDestination={resolveTargetFromMetadata("env.stepRate", {
+										lineIndex,
+										envKind,
+										stepIndex: i + 1,
+									})}
 								/>
 							</div>
 						</div>

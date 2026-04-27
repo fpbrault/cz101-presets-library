@@ -2,6 +2,7 @@ import ControlKnob from "@/components/controls/ControlKnob";
 import CompactButton from "@/components/primitives/CompactButton";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { resolveTargetFromMetadata } from "@/lib/synth/modTargets";
 
 interface LfoModuleProps {
 	id: 1 | 2;
@@ -63,6 +64,7 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Rate"
+				modDestination={resolveTargetFromMetadata("lfo.rate", { lfoIndex: id })}
 				valueFormatter={(v) => `${v.toFixed(1)}Hz`}
 			/>
 			<ControlKnob
@@ -74,6 +76,9 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Depth"
+				modDestination={resolveTargetFromMetadata("lfo.depth", {
+					lfoIndex: id,
+				})}
 				valueFormatter={(v) => `${Math.round(v * 100)}%`}
 			/>
 			<ControlKnob
@@ -85,6 +90,9 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Offset"
+				modDestination={resolveTargetFromMetadata("lfo.offset", {
+					lfoIndex: id,
+				})}
 				valueFormatter={(v) => `${Math.round(v * 100)}%`}
 			/>
 			<ControlKnob
@@ -96,6 +104,9 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 				size={40}
 				color="#27588f"
 				label="Sym."
+				modDestination={resolveTargetFromMetadata("lfo.symmetry", {
+					lfoIndex: id,
+				})}
 				valueFormatter={(v) => `${Math.round(v * 100)}%`}
 			/>
 			<CompactButton

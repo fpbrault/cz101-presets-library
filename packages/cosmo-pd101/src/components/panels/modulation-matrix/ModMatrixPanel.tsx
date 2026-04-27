@@ -9,80 +9,15 @@ import type {
 	ModRoute,
 	ModSource,
 } from "@/lib/synth/bindings/synth";
+import {
+	getModDestinationGroups,
+	getModDestinationLabel,
+} from "@/lib/synth/modTargets";
 
-const DESTINATION_GROUPS: {
-	label: string;
-	destinations: { value: ModDestination; label: string }[];
-}[] = [
-	{
-		label: "Global",
-		destinations: [
-			{ value: "volume", label: "Volume" },
-			{ value: "pitch", label: "Pitch" },
-			{ value: "intPmAmount", label: "PM Amount" },
-		],
-	},
-	{
-		label: "Line 1",
-		destinations: [
-			{ value: "line1DcwBase", label: "L1 DCW" },
-			{ value: "line1DcaBase", label: "L1 DCA" },
-			{ value: "line1AlgoBlend", label: "L1 Algo Blend" },
-			{ value: "line1Detune", label: "L1 Detune" },
-			{ value: "line1Octave", label: "L1 Octave" },
-			{ value: "line1AlgoParam1", label: "L1 Param 1" },
-			{ value: "line1AlgoParam2", label: "L1 Param 2" },
-			{ value: "line1AlgoParam3", label: "L1 Param 3" },
-			{ value: "line1AlgoParam4", label: "L1 Param 4" },
-			{ value: "line1AlgoParam5", label: "L1 Param 5" },
-			{ value: "line1AlgoParam6", label: "L1 Param 6" },
-			{ value: "line1AlgoParam7", label: "L1 Param 7" },
-			{ value: "line1AlgoParam8", label: "L1 Param 8" },
-		],
-	},
-	{
-		label: "Line 2",
-		destinations: [
-			{ value: "line2DcwBase", label: "L2 DCW" },
-			{ value: "line2DcaBase", label: "L2 DCA" },
-			{ value: "line2AlgoBlend", label: "L2 Algo Blend" },
-			{ value: "line2Detune", label: "L2 Detune" },
-			{ value: "line2Octave", label: "L2 Octave" },
-			{ value: "line2AlgoParam1", label: "L2 Param 1" },
-			{ value: "line2AlgoParam2", label: "L2 Param 2" },
-			{ value: "line2AlgoParam3", label: "L2 Param 3" },
-			{ value: "line2AlgoParam4", label: "L2 Param 4" },
-			{ value: "line2AlgoParam5", label: "L2 Param 5" },
-			{ value: "line2AlgoParam6", label: "L2 Param 6" },
-			{ value: "line2AlgoParam7", label: "L2 Param 7" },
-			{ value: "line2AlgoParam8", label: "L2 Param 8" },
-		],
-	},
-	{
-		label: "FX",
-		destinations: [
-			{ value: "filterCutoff", label: "Filter Cutoff" },
-			{ value: "filterResonance", label: "Filter Res" },
-			{ value: "filterEnvAmount", label: "Filter Env" },
-			{ value: "chorusMix", label: "Chorus Mix" },
-			{ value: "delayMix", label: "Delay Mix" },
-			{ value: "reverbMix", label: "Reverb Mix" },
-		],
-	},
-	{
-		label: "Modulation",
-		destinations: [
-			{ value: "vibratoDepth", label: "Vibrato Depth" },
-			{ value: "lfoDepth", label: "LFO Depth" },
-			{ value: "lfoRate", label: "LFO Rate" },
-		],
-	},
-];
-
-const ALL_DESTINATIONS = DESTINATION_GROUPS.flatMap((g) => g.destinations);
+const DESTINATION_GROUPS = getModDestinationGroups();
 
 function destinationLabel(dest: ModDestination): string {
-	return ALL_DESTINATIONS.find((d) => d.value === dest)?.label ?? dest;
+	return getModDestinationLabel(dest);
 }
 
 const MOD_SOURCES: { label: string; value: ModSource }[] = [
