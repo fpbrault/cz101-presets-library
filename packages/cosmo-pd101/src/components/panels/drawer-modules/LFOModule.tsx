@@ -1,7 +1,10 @@
+import { useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import CompactButton from "@/components/primitives/CompactButton";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
+import { requestApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { getLfoModulePatch, LFO_PRESETS } from "@/lib/synth/modulePresets";
 
 interface LfoModuleProps {
 	id: 1 | 2;
@@ -9,6 +12,7 @@ interface LfoModuleProps {
 }
 
 export default function LfoModule({ id, color }: LfoModuleProps) {
+	const [selectedPreset, setSelectedPreset] = useState<string>("custom");
 	// Dynamically resolve the parameter names based on the LFO id
 	const prefix = id === 1 ? "lfo" : "lfo2";
 
@@ -31,8 +35,45 @@ export default function LfoModule({ id, color }: LfoModuleProps) {
 		`${prefix}Offset`,
 	);
 
+	const handlePresetChange = (presetId: string) => {
+		setSelectedPreset(presetId);
+		if (presetId === "custom") {
+			return;
+		}
+
+		const preset = LFO_PRESETS.find((entry) => entry.id === presetId);
+		if (!preset) {
+			return;
+		}
+
+		setLfoWaveform(preset.patch.waveform);
+		setLfoRate(preset.patch.rate);
+		setLfoDepth(preset.patch.depth);
+		setLfoSymmetry(preset.patch.symmetry);
+		setLfoRetrigger(preset.patch.retrigger);
+		setLfoOffset(preset.patch.offset);
+		requestApplyModulePreset({
+			module: id === 1 ? "lfo1" : "lfo2",
+			preset: preset.id,
+			patch: getLfoModulePatch(id, preset.patch),
+		});
+	};
+
 	return (
 		<ModuleFrame title={`LFO ${id}`} color={color} showLed={false} enabled>
+			<select
+				className="select select-bordered select-xs col-span-full"
+				aria-label={`LFO ${id} preset`}
+				value={selectedPreset}
+				onChange={(event) => handlePresetChange(event.target.value)}
+			>
+				<option value="custom">Custom</option>
+				{LFO_PRESETS.map((preset) => (
+					<option key={preset.id} value={preset.id}>
+						{preset.label}
+					</option>
+				))}
+			</select>
 			<div className="grid grid-cols-3 justify-center col-span-4 gap-1">
 				{(
 					[

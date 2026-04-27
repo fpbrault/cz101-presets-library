@@ -1,9 +1,13 @@
+import { useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import CompactButton from "@/components/primitives/CompactButton";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
+import { requestApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { VIBRATO_PRESETS } from "@/lib/synth/modulePresets";
 
 export default function VibratoModule() {
+	const [selectedPreset, setSelectedPreset] = useState<string>("custom");
 	const { value: vibratoEnabled, setValue: setVibratoEnabled } =
 		useSynthParam("vibratoEnabled");
 	const { value: vibratoWave, setValue: setVibratoWave } =
@@ -15,6 +19,29 @@ export default function VibratoModule() {
 	const { value: vibratoDelay, setValue: setVibratoDelay } =
 		useSynthParam("vibratoDelay");
 
+	const handlePresetChange = (presetId: string) => {
+		setSelectedPreset(presetId);
+		if (presetId === "custom") {
+			return;
+		}
+
+		const preset = VIBRATO_PRESETS.find((entry) => entry.id === presetId);
+		if (!preset) {
+			return;
+		}
+
+		setVibratoEnabled(preset.patch.vibrato.enabled);
+		setVibratoWave(preset.patch.vibrato.waveform);
+		setVibratoRate(preset.patch.vibrato.rate);
+		setVibratoDepth(preset.patch.vibrato.depth);
+		setVibratoDelay(preset.patch.vibrato.delay);
+		requestApplyModulePreset({
+			module: "vibrato",
+			preset: preset.id,
+			patch: preset.patch,
+		});
+	};
+
 	return (
 		<ModuleFrame
 			title="Vibrato"
@@ -23,6 +50,19 @@ export default function VibratoModule() {
 			columns={3}
 			onToggle={() => setVibratoEnabled(!vibratoEnabled)}
 		>
+			<select
+				className="select select-bordered select-xs col-span-full"
+				aria-label="Vibrato preset"
+				value={selectedPreset}
+				onChange={(event) => handlePresetChange(event.target.value)}
+			>
+				<option value="custom">Custom</option>
+				{VIBRATO_PRESETS.map((preset) => (
+					<option key={preset.id} value={preset.id}>
+						{preset.label}
+					</option>
+				))}
+			</select>
 			<div className="grid grid-cols-4 gap-1 w-full col-span-3">
 				{(["sine", "tri", "sq", "saw"] as const).map((w, i) => (
 					<CompactButton

@@ -1,8 +1,12 @@
+import { useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
+import { requestApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { DELAY_PRESETS } from "@/lib/synth/modulePresets";
 
 export default function DelayModule() {
+	const [selectedPreset, setSelectedPreset] = useState<string>("custom");
 	const { value: delayEnabled, setValue: setDelayEnabled } =
 		useSynthParam("delayEnabled");
 	const { value: delayTime, setValue: setDelayTime } =
@@ -15,6 +19,31 @@ export default function DelayModule() {
 	const { value: delayWarmth, setValue: setDelayWarmth } =
 		useSynthParam("delayWarmth");
 	const delayModeLabel = delayTapeMode ? "Tape Echo" : "Digital";
+
+	const handlePresetChange = (presetId: string) => {
+		setSelectedPreset(presetId);
+		if (presetId === "custom") {
+			return;
+		}
+
+		const preset = DELAY_PRESETS.find((entry) => entry.id === presetId);
+		if (!preset) {
+			return;
+		}
+
+		setDelayEnabled(preset.patch.delay.enabled);
+		setDelayTime(preset.patch.delay.time);
+		setDelayFeedback(preset.patch.delay.feedback);
+		setDelayMix(preset.patch.delay.mix);
+		setDelayTapeMode(preset.patch.delay.tapeMode);
+		setDelayWarmth(preset.patch.delay.warmth);
+		requestApplyModulePreset({
+			module: "delay",
+			preset: preset.id,
+			patch: preset.patch,
+		});
+	};
+
 	return (
 		<ModuleFrame
 			title="Delay"
@@ -24,6 +53,19 @@ export default function DelayModule() {
 			enabled={delayEnabled}
 			onToggle={() => setDelayEnabled(!delayEnabled)}
 		>
+			<select
+				className="select select-bordered select-xs col-span-full"
+				aria-label="Delay preset"
+				value={selectedPreset}
+				onChange={(event) => handlePresetChange(event.target.value)}
+			>
+				<option value="custom">Custom</option>
+				{DELAY_PRESETS.map((preset) => (
+					<option key={preset.id} value={preset.id}>
+						{preset.label}
+					</option>
+				))}
+			</select>
 			<button
 				type="button"
 				onClick={() => setDelayTapeMode(!delayTapeMode)}

@@ -1,8 +1,12 @@
+import { useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
+import { requestApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { MOD_ENV_PRESETS } from "@/lib/synth/modulePresets";
 
 export default function ModEnveloppeModule() {
+	const [selectedPreset, setSelectedPreset] = useState<string>("custom");
 	const { value: modEnvAttack, setValue: setModEnvAttack } =
 		useSynthParam("modEnvAttack");
 	const { value: modEnvDecay, setValue: setModEnvDecay } =
@@ -12,8 +16,43 @@ export default function ModEnveloppeModule() {
 	const { value: modEnvRelease, setValue: setModEnvRelease } =
 		useSynthParam("modEnvRelease");
 
+	const handlePresetChange = (presetId: string) => {
+		setSelectedPreset(presetId);
+		if (presetId === "custom") {
+			return;
+		}
+
+		const preset = MOD_ENV_PRESETS.find((entry) => entry.id === presetId);
+		if (!preset) {
+			return;
+		}
+
+		setModEnvAttack(preset.patch.modEnv.attack);
+		setModEnvDecay(preset.patch.modEnv.decay);
+		setModEnvSustain(preset.patch.modEnv.sustain);
+		setModEnvRelease(preset.patch.modEnv.release);
+		requestApplyModulePreset({
+			module: "modEnv",
+			preset: preset.id,
+			patch: preset.patch,
+		});
+	};
+
 	return (
 		<ModuleFrame title="Mod Env" color="#c24587" enabled showLed={false}>
+			<select
+				className="select select-bordered select-xs col-span-full"
+				aria-label="Mod env preset"
+				value={selectedPreset}
+				onChange={(event) => handlePresetChange(event.target.value)}
+			>
+				<option value="custom">Custom</option>
+				{MOD_ENV_PRESETS.map((preset) => (
+					<option key={preset.id} value={preset.id}>
+						{preset.label}
+					</option>
+				))}
+			</select>
 			<ControlKnob
 				value={modEnvAttack}
 				onChange={setModEnvAttack}

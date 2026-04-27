@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { subscribeApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { SynthEngineController } from "@/features/synth/engine/synthEngineAdapter";
 import { createSynthEngineSnapshot } from "@/features/synth/engine/synthEngineSnapshot";
 import { createWorkletSynthEngineAdapter } from "@/features/synth/engine/workletSynthEngineAdapter";
@@ -47,4 +48,18 @@ export function useSynthParamsToWorklet({
 		sync();
 		return useSynthStore.subscribe(sync);
 	}, [adapter, gatherState, effectivePitchHz, extPmAmount]);
+
+	useEffect(() => {
+		return subscribeApplyModulePreset((request) => {
+			if (!workletNodeRef.current) {
+				return;
+			}
+			workletNodeRef.current.port.postMessage({
+				type: "applyModulePreset",
+				module: request.module,
+				preset: request.preset,
+				patch: request.patch,
+			});
+		});
+	}, [workletNodeRef]);
 }
