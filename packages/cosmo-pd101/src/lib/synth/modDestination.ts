@@ -1,45 +1,10 @@
 import type { ModDestination } from "@/lib/synth/bindings/synth";
-
-const DIRECT_DESTINATIONS: ReadonlySet<ModDestination> = new Set([
-	"volume",
-	"pitch",
-	"intPmAmount",
-	"line1DcwBase",
-	"line1DcaBase",
-	"line1AlgoBlend",
-	"line1Detune",
-	"line1Octave",
-	"line1AlgoParam1",
-	"line1AlgoParam2",
-	"line1AlgoParam3",
-	"line1AlgoParam4",
-	"line1AlgoParam5",
-	"line1AlgoParam6",
-	"line1AlgoParam7",
-	"line1AlgoParam8",
-	"line2DcwBase",
-	"line2DcaBase",
-	"line2AlgoBlend",
-	"line2Detune",
-	"line2Octave",
-	"line2AlgoParam1",
-	"line2AlgoParam2",
-	"line2AlgoParam3",
-	"line2AlgoParam4",
-	"line2AlgoParam5",
-	"line2AlgoParam6",
-	"line2AlgoParam7",
-	"line2AlgoParam8",
-	"filterCutoff",
-	"filterResonance",
-	"filterEnvAmount",
-	"chorusMix",
-	"delayMix",
-	"reverbMix",
-	"vibratoDepth",
-	"lfoDepth",
-	"lfoRate",
-]);
+import {
+	isRegisteredModDestination,
+	type ModTargetContext,
+	type ModTargetKey,
+	resolveTargetFromMetadata,
+} from "@/lib/synth/modTargets";
 
 export type LineScopedModTarget =
 	| "dcwBase"
@@ -61,7 +26,8 @@ export type AlgoParamSlotTarget =
 export type ModTarget =
 	| ModDestination
 	| LineScopedModTarget
-	| AlgoParamSlotTarget;
+	| AlgoParamSlotTarget
+	| ModTargetKey;
 
 export function algoParamTargetFromSlot(
 	slot: number,
@@ -74,14 +40,22 @@ export function algoParamTargetFromSlot(
 
 export function resolveModDestination(
 	target: ModTarget | undefined,
-	options?: { lineIndex?: 1 | 2 },
+	options?: { lineIndex?: 1 | 2 } & ModTargetContext,
 ): ModDestination | undefined {
 	if (!target) {
 		return undefined;
 	}
 
-	if (DIRECT_DESTINATIONS.has(target as ModDestination)) {
+	if (isRegisteredModDestination(target as ModDestination)) {
 		return target as ModDestination;
+	}
+
+	const metadataDestination = resolveTargetFromMetadata(
+		target as ModTargetKey,
+		options,
+	);
+	if (metadataDestination) {
+		return metadataDestination;
 	}
 
 	const linePrefix = options?.lineIndex === 2 ? "line2" : "line1";

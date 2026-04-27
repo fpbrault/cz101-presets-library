@@ -27,6 +27,7 @@ export function ChorusSection({
 			size: 44,
 			color: "#7f9de4",
 			valueFormatter: (value) => value.toFixed(1),
+			modTarget: "chorus.rate",
 		},
 		{
 			label: "Depth",
@@ -37,6 +38,7 @@ export function ChorusSection({
 			size: 44,
 			color: "#7f9de4",
 			valueFormatter: (value) => `${Math.round((value / 3) * 100)}%`,
+			modTarget: "chorus.depth",
 		},
 		{
 			label: "Mix",
@@ -47,6 +49,7 @@ export function ChorusSection({
 			size: 44,
 			color: "#9cb937",
 			valueFormatter: (value) => `${Math.round(value * 100)}%`,
+			modTarget: "chorus.mix",
 		},
 	];
 	return <BaseFxSection title="Chorus" knobs={knobs} />;

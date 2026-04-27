@@ -10,8 +10,8 @@ use crate::dsp_utils::{lfo_output, wrap01};
 use crate::envelope::{EnvGen, EnvelopeKind};
 use crate::generators::{self, AlgoRuntimeState, LineRenderConfig};
 use crate::params::{
-    FilterType, LfoWaveform, LineParams, LineSelect, ModDestination, ModEnvParams, ModMatrix,
-    ModMode, ModSource, PortamentoMode, SynthParams,
+    EnvStep, FilterType, LfoWaveform, LineParams, LineSelect, ModDestination, ModEnvParams,
+    ModMatrix, ModMode, ModSource, PortamentoMode, StepEnvData, SynthParams, NUM_ENV_STEPS,
 };
 
 // TWO_PI for f32
@@ -134,7 +134,7 @@ pub(crate) struct ModSources {
 }
 
 impl ModSources {
-    fn new(
+    pub(crate) fn new(
         lfo1: f32,
         lfo2: f32,
         random: f32,
@@ -154,7 +154,7 @@ impl ModSources {
         }
     }
 
-    fn source_value(&self, source: ModSource) -> f32 {
+    pub(crate) fn source_value(&self, source: ModSource) -> f32 {
         match source {
             ModSource::Lfo1 => self.lfo1,
             ModSource::Lfo2 => self.lfo2,
@@ -168,7 +168,7 @@ impl ModSources {
 }
 
 /// Sum all enabled routes targeting `dest`, clamping the total to [-1, 1].
-fn mod_value_for(dest: ModDestination, matrix: &ModMatrix, sources: &ModSources) -> f32 {
+pub(crate) fn mod_value_for(dest: ModDestination, matrix: &ModMatrix, sources: &ModSources) -> f32 {
     let mut total = 0.0_f32;
     for route in &matrix.routes {
         if route.enabled && route.destination == dest {
@@ -212,6 +212,177 @@ fn algo_param_slot_mods_for_line(
         out[idx] = mod_value_for(*dest, matrix, sources);
     }
     out
+}
+
+#[derive(Debug, Clone, Copy)]
+enum EnvKindKey {
+    Dco,
+    Dcw,
+    Dca,
+}
+
+fn env_step_level_destination(
+    line_index: u8,
+    env_kind: EnvKindKey,
+    step_index: usize,
+) -> ModDestination {
+    match (line_index, env_kind, step_index) {
+        (1, EnvKindKey::Dco, 0) => ModDestination::Line1DcoEnvStep1Level,
+        (1, EnvKindKey::Dco, 1) => ModDestination::Line1DcoEnvStep2Level,
+        (1, EnvKindKey::Dco, 2) => ModDestination::Line1DcoEnvStep3Level,
+        (1, EnvKindKey::Dco, 3) => ModDestination::Line1DcoEnvStep4Level,
+        (1, EnvKindKey::Dco, 4) => ModDestination::Line1DcoEnvStep5Level,
+        (1, EnvKindKey::Dco, 5) => ModDestination::Line1DcoEnvStep6Level,
+        (1, EnvKindKey::Dco, 6) => ModDestination::Line1DcoEnvStep7Level,
+        (1, EnvKindKey::Dco, 7) => ModDestination::Line1DcoEnvStep8Level,
+        (1, EnvKindKey::Dcw, 0) => ModDestination::Line1DcwEnvStep1Level,
+        (1, EnvKindKey::Dcw, 1) => ModDestination::Line1DcwEnvStep2Level,
+        (1, EnvKindKey::Dcw, 2) => ModDestination::Line1DcwEnvStep3Level,
+        (1, EnvKindKey::Dcw, 3) => ModDestination::Line1DcwEnvStep4Level,
+        (1, EnvKindKey::Dcw, 4) => ModDestination::Line1DcwEnvStep5Level,
+        (1, EnvKindKey::Dcw, 5) => ModDestination::Line1DcwEnvStep6Level,
+        (1, EnvKindKey::Dcw, 6) => ModDestination::Line1DcwEnvStep7Level,
+        (1, EnvKindKey::Dcw, 7) => ModDestination::Line1DcwEnvStep8Level,
+        (1, EnvKindKey::Dca, 0) => ModDestination::Line1DcaEnvStep1Level,
+        (1, EnvKindKey::Dca, 1) => ModDestination::Line1DcaEnvStep2Level,
+        (1, EnvKindKey::Dca, 2) => ModDestination::Line1DcaEnvStep3Level,
+        (1, EnvKindKey::Dca, 3) => ModDestination::Line1DcaEnvStep4Level,
+        (1, EnvKindKey::Dca, 4) => ModDestination::Line1DcaEnvStep5Level,
+        (1, EnvKindKey::Dca, 5) => ModDestination::Line1DcaEnvStep6Level,
+        (1, EnvKindKey::Dca, 6) => ModDestination::Line1DcaEnvStep7Level,
+        (1, EnvKindKey::Dca, 7) => ModDestination::Line1DcaEnvStep8Level,
+        (2, EnvKindKey::Dco, 0) => ModDestination::Line2DcoEnvStep1Level,
+        (2, EnvKindKey::Dco, 1) => ModDestination::Line2DcoEnvStep2Level,
+        (2, EnvKindKey::Dco, 2) => ModDestination::Line2DcoEnvStep3Level,
+        (2, EnvKindKey::Dco, 3) => ModDestination::Line2DcoEnvStep4Level,
+        (2, EnvKindKey::Dco, 4) => ModDestination::Line2DcoEnvStep5Level,
+        (2, EnvKindKey::Dco, 5) => ModDestination::Line2DcoEnvStep6Level,
+        (2, EnvKindKey::Dco, 6) => ModDestination::Line2DcoEnvStep7Level,
+        (2, EnvKindKey::Dco, 7) => ModDestination::Line2DcoEnvStep8Level,
+        (2, EnvKindKey::Dcw, 0) => ModDestination::Line2DcwEnvStep1Level,
+        (2, EnvKindKey::Dcw, 1) => ModDestination::Line2DcwEnvStep2Level,
+        (2, EnvKindKey::Dcw, 2) => ModDestination::Line2DcwEnvStep3Level,
+        (2, EnvKindKey::Dcw, 3) => ModDestination::Line2DcwEnvStep4Level,
+        (2, EnvKindKey::Dcw, 4) => ModDestination::Line2DcwEnvStep5Level,
+        (2, EnvKindKey::Dcw, 5) => ModDestination::Line2DcwEnvStep6Level,
+        (2, EnvKindKey::Dcw, 6) => ModDestination::Line2DcwEnvStep7Level,
+        (2, EnvKindKey::Dcw, 7) => ModDestination::Line2DcwEnvStep8Level,
+        (2, EnvKindKey::Dca, 0) => ModDestination::Line2DcaEnvStep1Level,
+        (2, EnvKindKey::Dca, 1) => ModDestination::Line2DcaEnvStep2Level,
+        (2, EnvKindKey::Dca, 2) => ModDestination::Line2DcaEnvStep3Level,
+        (2, EnvKindKey::Dca, 3) => ModDestination::Line2DcaEnvStep4Level,
+        (2, EnvKindKey::Dca, 4) => ModDestination::Line2DcaEnvStep5Level,
+        (2, EnvKindKey::Dca, 5) => ModDestination::Line2DcaEnvStep6Level,
+        (2, EnvKindKey::Dca, 6) => ModDestination::Line2DcaEnvStep7Level,
+        (2, EnvKindKey::Dca, 7) => ModDestination::Line2DcaEnvStep8Level,
+        _ => ModDestination::Volume,
+    }
+}
+
+fn env_step_rate_destination(
+    line_index: u8,
+    env_kind: EnvKindKey,
+    step_index: usize,
+) -> ModDestination {
+    match (line_index, env_kind, step_index) {
+        (1, EnvKindKey::Dco, 0) => ModDestination::Line1DcoEnvStep1Rate,
+        (1, EnvKindKey::Dco, 1) => ModDestination::Line1DcoEnvStep2Rate,
+        (1, EnvKindKey::Dco, 2) => ModDestination::Line1DcoEnvStep3Rate,
+        (1, EnvKindKey::Dco, 3) => ModDestination::Line1DcoEnvStep4Rate,
+        (1, EnvKindKey::Dco, 4) => ModDestination::Line1DcoEnvStep5Rate,
+        (1, EnvKindKey::Dco, 5) => ModDestination::Line1DcoEnvStep6Rate,
+        (1, EnvKindKey::Dco, 6) => ModDestination::Line1DcoEnvStep7Rate,
+        (1, EnvKindKey::Dco, 7) => ModDestination::Line1DcoEnvStep8Rate,
+        (1, EnvKindKey::Dcw, 0) => ModDestination::Line1DcwEnvStep1Rate,
+        (1, EnvKindKey::Dcw, 1) => ModDestination::Line1DcwEnvStep2Rate,
+        (1, EnvKindKey::Dcw, 2) => ModDestination::Line1DcwEnvStep3Rate,
+        (1, EnvKindKey::Dcw, 3) => ModDestination::Line1DcwEnvStep4Rate,
+        (1, EnvKindKey::Dcw, 4) => ModDestination::Line1DcwEnvStep5Rate,
+        (1, EnvKindKey::Dcw, 5) => ModDestination::Line1DcwEnvStep6Rate,
+        (1, EnvKindKey::Dcw, 6) => ModDestination::Line1DcwEnvStep7Rate,
+        (1, EnvKindKey::Dcw, 7) => ModDestination::Line1DcwEnvStep8Rate,
+        (1, EnvKindKey::Dca, 0) => ModDestination::Line1DcaEnvStep1Rate,
+        (1, EnvKindKey::Dca, 1) => ModDestination::Line1DcaEnvStep2Rate,
+        (1, EnvKindKey::Dca, 2) => ModDestination::Line1DcaEnvStep3Rate,
+        (1, EnvKindKey::Dca, 3) => ModDestination::Line1DcaEnvStep4Rate,
+        (1, EnvKindKey::Dca, 4) => ModDestination::Line1DcaEnvStep5Rate,
+        (1, EnvKindKey::Dca, 5) => ModDestination::Line1DcaEnvStep6Rate,
+        (1, EnvKindKey::Dca, 6) => ModDestination::Line1DcaEnvStep7Rate,
+        (1, EnvKindKey::Dca, 7) => ModDestination::Line1DcaEnvStep8Rate,
+        (2, EnvKindKey::Dco, 0) => ModDestination::Line2DcoEnvStep1Rate,
+        (2, EnvKindKey::Dco, 1) => ModDestination::Line2DcoEnvStep2Rate,
+        (2, EnvKindKey::Dco, 2) => ModDestination::Line2DcoEnvStep3Rate,
+        (2, EnvKindKey::Dco, 3) => ModDestination::Line2DcoEnvStep4Rate,
+        (2, EnvKindKey::Dco, 4) => ModDestination::Line2DcoEnvStep5Rate,
+        (2, EnvKindKey::Dco, 5) => ModDestination::Line2DcoEnvStep6Rate,
+        (2, EnvKindKey::Dco, 6) => ModDestination::Line2DcoEnvStep7Rate,
+        (2, EnvKindKey::Dco, 7) => ModDestination::Line2DcoEnvStep8Rate,
+        (2, EnvKindKey::Dcw, 0) => ModDestination::Line2DcwEnvStep1Rate,
+        (2, EnvKindKey::Dcw, 1) => ModDestination::Line2DcwEnvStep2Rate,
+        (2, EnvKindKey::Dcw, 2) => ModDestination::Line2DcwEnvStep3Rate,
+        (2, EnvKindKey::Dcw, 3) => ModDestination::Line2DcwEnvStep4Rate,
+        (2, EnvKindKey::Dcw, 4) => ModDestination::Line2DcwEnvStep5Rate,
+        (2, EnvKindKey::Dcw, 5) => ModDestination::Line2DcwEnvStep6Rate,
+        (2, EnvKindKey::Dcw, 6) => ModDestination::Line2DcwEnvStep7Rate,
+        (2, EnvKindKey::Dcw, 7) => ModDestination::Line2DcwEnvStep8Rate,
+        (2, EnvKindKey::Dca, 0) => ModDestination::Line2DcaEnvStep1Rate,
+        (2, EnvKindKey::Dca, 1) => ModDestination::Line2DcaEnvStep2Rate,
+        (2, EnvKindKey::Dca, 2) => ModDestination::Line2DcaEnvStep3Rate,
+        (2, EnvKindKey::Dca, 3) => ModDestination::Line2DcaEnvStep4Rate,
+        (2, EnvKindKey::Dca, 4) => ModDestination::Line2DcaEnvStep5Rate,
+        (2, EnvKindKey::Dca, 5) => ModDestination::Line2DcaEnvStep6Rate,
+        (2, EnvKindKey::Dca, 6) => ModDestination::Line2DcaEnvStep7Rate,
+        (2, EnvKindKey::Dca, 7) => ModDestination::Line2DcaEnvStep8Rate,
+        _ => ModDestination::Volume,
+    }
+}
+
+fn apply_env_step_modulation(
+    env: &StepEnvData,
+    line_index: u8,
+    env_kind: EnvKindKey,
+    matrix: &ModMatrix,
+    sources: &ModSources,
+) -> StepEnvData {
+    let mut modded = env.clone();
+
+    for step_index in 0..NUM_ENV_STEPS {
+        let level_dest = env_step_level_destination(line_index, env_kind, step_index);
+        let rate_dest = env_step_rate_destination(line_index, env_kind, step_index);
+
+        let level_mod = mod_value_for(level_dest, matrix, sources);
+        let rate_mod = mod_value_for(rate_dest, matrix, sources);
+
+        let step: &mut EnvStep = &mut modded.steps[step_index];
+        let next_level = (step.level as f32 + level_mod * 127.0).round().clamp(0.0, 127.0) as u8;
+        let next_rate = (step.rate as f32 + rate_mod * 127.0).round().clamp(0.0, 127.0) as u8;
+        step.level = next_level;
+        step.rate = next_rate;
+    }
+
+    modded
+}
+
+fn modulated_line_params(
+    line: &LineParams,
+    line_index: u8,
+    matrix: &ModMatrix,
+    sources: &ModSources,
+) -> LineParams {
+    let algo_blend_dest = if line_index == 2 {
+        ModDestination::Line2AlgoBlend
+    } else {
+        ModDestination::Line1AlgoBlend
+    };
+
+    let algo_blend_mod = mod_value_for(algo_blend_dest, matrix, sources);
+
+    let mut modded = line.clone();
+    modded.algo_blend = (line.algo_blend + algo_blend_mod).clamp(0.0, 1.0);
+    modded.dco_env = apply_env_step_modulation(&line.dco_env, line_index, EnvKindKey::Dco, matrix, sources);
+    modded.dcw_env = apply_env_step_modulation(&line.dcw_env, line_index, EnvKindKey::Dcw, matrix, sources);
+    modded.dca_env = apply_env_step_modulation(&line.dca_env, line_index, EnvKindKey::Dca, matrix, sources);
+    modded
 }
 // ---------------------------------------------------------------------------
 // LineEnvs — per-line group of three envelope generators
@@ -367,13 +538,26 @@ pub fn render_voice(
     mod_wheel: f32,
     aftertouch: f32,
 ) -> f32 {
-    let l1 = &p.line1;
-    let l2 = &p.line2;
     let base_freq = base_voice_frequency(voice);
-    let env = advance_envelopes(voice, p, sr);
+
+    // Apply per-line modulation destinations before any per-sample envelope/
+    // algorithm work so all downstream stages use a consistent modulated view.
+    let preview_mod_sources = ModSources::new(
+        lfo_mod_val,
+        lfo2_mod_val,
+        random_mod_val,
+        voice.mod_env.output,
+        voice.velocity,
+        mod_wheel,
+        aftertouch,
+    );
+    let line1_modded = modulated_line_params(&p.line1, 1, &p.mod_matrix, &preview_mod_sources);
+    let line2_modded = modulated_line_params(&p.line2, 2, &p.mod_matrix, &preview_mod_sources);
+
+    let env = advance_envelopes(voice, &line1_modded, &line2_modded, sr);
 
     if voice.is_silent {
-        advance_silent_voice(voice, p, sr, base_freq);
+        advance_silent_voice(voice, &line1_modded, &line2_modded, p, sr, base_freq);
         return 0.0;
     }
 
@@ -395,7 +579,7 @@ pub fn render_voice(
     );
     let line1_algo_param_mods = algo_param_slot_mods_for_line(1, &p.mod_matrix, &mod_sources);
     let line2_algo_param_mods = algo_param_slot_mods_for_line(2, &p.mod_matrix, &mod_sources);
-    let mut signal = build_signal_state(p, &env, base_freq, &mod_sources);
+    let mut signal = build_signal_state(&line1_modded, &line2_modded, &p.mod_matrix, &env, base_freq, &mod_sources);
     apply_pitch_and_lfo_modulation(
         voice,
         p,
@@ -409,7 +593,7 @@ pub fn render_voice(
 
     let phase = build_phase_frame(voice, p, sr, base_freq, &mod_sources);
     let (s1, ks_raw1) = voice.algo_runtime.render_line1(LineRenderConfig::from_line(
-        l1,
+        &line1_modded,
         voice.cycle_count1,
         phase.phi1,
         phase.phase_a_post,
@@ -420,7 +604,7 @@ pub fn render_voice(
         line1_algo_param_mods,
     ));
     let (s2, ks_raw2) = voice.algo_runtime.render_line2(LineRenderConfig::from_line(
-        l2,
+        &line2_modded,
         voice.cycle_count2,
         phase.phi2,
         phase.phase_b_post,
@@ -436,8 +620,8 @@ pub fn render_voice(
         phase.phi1,
         s1,
         s2,
-        l1,
-        l2,
+        &line1_modded,
+        &line2_modded,
         voice.cycle_count1,
         voice.cycle_count2,
         ks_raw1,
@@ -476,49 +660,59 @@ fn base_voice_frequency(voice: &Voice) -> f32 {
     }
 }
 
-fn advance_envelopes(voice: &mut Voice, p: &SynthParams, sr: f32) -> EnvelopeSnapshot {
+fn advance_envelopes(
+    voice: &mut Voice,
+    line1: &LineParams,
+    line2: &LineParams,
+    sr: f32,
+) -> EnvelopeSnapshot {
     let note = voice.env_note;
-    let l1 = &p.line1;
-    let l2 = &p.line2;
 
     voice
         .line1_env
         .dco
-        .advance(EnvelopeKind::Dco, &l1.dco_env, sr, l1.key_follow, note);
+        .advance(EnvelopeKind::Dco, &line1.dco_env, sr, line1.key_follow, note);
     voice
         .line1_env
         .dcw
-        .advance(EnvelopeKind::Dcw, &l1.dcw_env, sr, l1.key_follow, note);
+        .advance(EnvelopeKind::Dcw, &line1.dcw_env, sr, line1.key_follow, note);
     voice
         .line1_env
         .dca
-        .advance(EnvelopeKind::Dca, &l1.dca_env, sr, l1.key_follow, note);
+        .advance(EnvelopeKind::Dca, &line1.dca_env, sr, line1.key_follow, note);
     voice
         .line2_env
         .dco
-        .advance(EnvelopeKind::Dco, &l2.dco_env, sr, l2.key_follow, note);
+        .advance(EnvelopeKind::Dco, &line2.dco_env, sr, line2.key_follow, note);
     voice
         .line2_env
         .dcw
-        .advance(EnvelopeKind::Dcw, &l2.dcw_env, sr, l2.key_follow, note);
+        .advance(EnvelopeKind::Dcw, &line2.dcw_env, sr, line2.key_follow, note);
     voice
         .line2_env
         .dca
-        .advance(EnvelopeKind::Dca, &l2.dca_env, sr, l2.key_follow, note);
+        .advance(EnvelopeKind::Dca, &line2.dca_env, sr, line2.key_follow, note);
 
     EnvelopeSnapshot {
         dco1_env: voice.line1_env.dco.output,
         dco2_env: voice.line2_env.dco.output,
         dca1: voice.line1_env.dca.output,
         dca2: voice.line2_env.dca.output,
-        dcw1: l1.dcw_base * voice.line1_env.dcw.output,
-        dcw2: l2.dcw_base * voice.line2_env.dcw.output,
+        dcw1: line1.dcw_base * voice.line1_env.dcw.output,
+        dcw2: line2.dcw_base * voice.line2_env.dcw.output,
     }
 }
 
-fn advance_silent_voice(voice: &mut Voice, p: &SynthParams, sr: f32, base_freq: f32) {
-    let freq1 = line_frequency(base_freq, &p.line1, 0.0);
-    let freq2 = line_frequency(base_freq, &p.line2, 0.0);
+fn advance_silent_voice(
+    voice: &mut Voice,
+    line1: &LineParams,
+    line2: &LineParams,
+    p: &SynthParams,
+    sr: f32,
+    base_freq: f32,
+) {
+    let freq1 = line_frequency(base_freq, line1, 0.0);
+    let freq2 = line_frequency(base_freq, line2, 0.0);
     let pm_delta = (base_freq * p.int_pm_ratio) / sr;
 
     advance_voice_phase(voice, sr, freq1, freq2, pm_delta);
@@ -542,16 +736,15 @@ fn release_has_faded_out(voice: &mut Voice, env: EnvelopeSnapshot) -> bool {
 }
 
 fn build_signal_state(
-    p: &SynthParams,
+    line1: &LineParams,
+    line2: &LineParams,
+    matrix: &ModMatrix,
     env: &EnvelopeSnapshot,
     base_freq: f32,
     sources: &ModSources,
 ) -> SignalState {
-    let l1 = &p.line1;
-    let l2 = &p.line2;
-    let matrix = &p.mod_matrix;
-    let dca1_level = l1.dca_base * env.dca1;
-    let dca2_level = l2.dca_base * env.dca2;
+    let dca1_level = line1.dca_base * env.dca1;
+    let dca2_level = line2.dca_base * env.dca2;
 
     // Mod matrix offsets for DCW/DCA
     let dcw1_mod = mod_value_for(ModDestination::Line1DcwBase, matrix, sources);
@@ -560,8 +753,8 @@ fn build_signal_state(
     let dca2_mod = mod_value_for(ModDestination::Line2DcaBase, matrix, sources);
 
     SignalState {
-        effective_freq1: line_frequency(base_freq, l1, env.dco1_env),
-        effective_freq2: line_frequency(base_freq, l2, env.dco2_env),
+        effective_freq1: line_frequency(base_freq, line1, env.dco1_env),
+        effective_freq2: line_frequency(base_freq, line2, env.dco2_env),
         final_dcw1: (env.dcw1 + dcw1_mod).clamp(0.0, 1.0),
         final_dcw2: (env.dcw2 + dcw2_mod).clamp(0.0, 1.0),
         final_dca1: (dca1_level + dca1_mod).max(0.0),
@@ -611,7 +804,7 @@ fn apply_pitch_and_lfo_modulation(
 ) {
     apply_portamento(voice, &p.portamento, sr, base_freq, signal);
     apply_pitch_bend(pitch_bend_semitones, signal);
-    apply_vibrato(voice, p, sr, mod_wheel, signal);
+    apply_vibrato(voice, p, sr, mod_wheel, sources, signal);
     // Pitch modulation from mod matrix (additive semitone offset via ratio)
     let pitch_mod = mod_value_for(ModDestination::Pitch, &p.mod_matrix, sources);
     if pitch_mod != 0.0 {
@@ -671,6 +864,7 @@ fn apply_vibrato(
     p: &SynthParams,
     sr: f32,
     mod_wheel: f32,
+    sources: &ModSources,
     signal: &mut SignalState,
 ) {
     let vibrato = &p.vibrato;
@@ -690,7 +884,9 @@ fn apply_vibrato(
 
     let vib_waveform = vibrato_waveform(vibrato.waveform);
     let lfo_val = lfo_output(voice.vibrato_phase, vib_waveform);
-    let effective_depth = vibrato.depth + mod_wheel * p.mod_wheel_vibrato_depth;
+    let vibrato_depth_mod = mod_value_for(ModDestination::VibratoDepth, &p.mod_matrix, sources);
+    let effective_depth = (vibrato.depth + mod_wheel * p.mod_wheel_vibrato_depth + vibrato_depth_mod * 99.0)
+        .clamp(0.0, 99.0);
     let pitch_mod = 1.0 + lfo_val * (effective_depth / 1000.0);
     signal.effective_freq1 *= pitch_mod;
     signal.effective_freq2 *= pitch_mod;
@@ -965,17 +1161,19 @@ mod tests {
     use super::{mod_value_for, ModSources};
     use crate::params::{ModDestination, ModMatrix, ModRoute, ModSource};
 
-    fn all_sources() -> [ModSource; 5] {
+    fn all_sources() -> [ModSource; 7] {
         [
             ModSource::Lfo1,
             ModSource::Lfo2,
+            ModSource::Random,
+            ModSource::ModEnv,
             ModSource::Velocity,
             ModSource::ModWheel,
             ModSource::Aftertouch,
         ]
     }
 
-    fn all_destinations() -> [ModDestination; 38] {
+    fn all_destinations() -> [ModDestination; 67] {
         [
             ModDestination::Volume,
             ModDestination::Pitch,
@@ -1015,6 +1213,35 @@ mod tests {
             ModDestination::VibratoDepth,
             ModDestination::LfoDepth,
             ModDestination::LfoRate,
+            ModDestination::Line1DcoEnvStep1Level,
+            ModDestination::Line1DcoEnvStep1Rate,
+            ModDestination::Line1DcwEnvStep3Level,
+            ModDestination::Line1DcaEnvStep4Rate,
+            ModDestination::Line2DcoEnvStep2Level,
+            ModDestination::Line2DcwEnvStep6Rate,
+            ModDestination::Line2DcaEnvStep8Level,
+            ModDestination::ChorusRate,
+            ModDestination::ChorusDepth,
+            ModDestination::DelayTime,
+            ModDestination::DelayFeedback,
+            ModDestination::DelayWarmth,
+            ModDestination::ReverbSpace,
+            ModDestination::ReverbPredelay,
+            ModDestination::ReverbDistance,
+            ModDestination::ReverbCharacter,
+            ModDestination::PhaserRate,
+            ModDestination::PhaserDepth,
+            ModDestination::PhaserFeedback,
+            ModDestination::PhaserMix,
+            ModDestination::Lfo1Rate,
+            ModDestination::Lfo1Depth,
+            ModDestination::Lfo1Symmetry,
+            ModDestination::Lfo1Offset,
+            ModDestination::Lfo2Rate,
+            ModDestination::Lfo2Depth,
+            ModDestination::Lfo2Symmetry,
+            ModDestination::Lfo2Offset,
+            ModDestination::RandomRate,
         ]
     }
 
@@ -1125,5 +1352,70 @@ mod tests {
 
         let got = mod_value_for(destination, &matrix, &sources);
         assert_eq!(got, 1.0);
+    }
+
+    #[test]
+    fn line_algo_blend_destination_modulates_effective_blend() {
+        let line = crate::params::LineParams {
+            algo_blend: 0.25,
+            ..crate::params::LineParams::default()
+        };
+        let matrix = ModMatrix {
+            routes: vec![ModRoute {
+                source: ModSource::Lfo1,
+                destination: ModDestination::Line1AlgoBlend,
+                amount: 0.5,
+                enabled: true,
+            }],
+        };
+        let sources = ModSources {
+            lfo1: 1.0,
+            lfo2: 0.0,
+            velocity: 0.0,
+            mod_wheel: 0.0,
+            aftertouch: 0.0,
+            mod_env: 0.0,
+            random: 0.0,
+        };
+
+        let modded = super::modulated_line_params(&line, 1, &matrix, &sources);
+        assert!((modded.algo_blend - 0.75).abs() < 1e-6);
+    }
+
+    #[test]
+    fn env_step_level_rate_destinations_modulate_step_data() {
+        let mut line = crate::params::LineParams::default();
+        line.dco_env.steps[0].level = 20;
+        line.dco_env.steps[0].rate = 30;
+
+        let matrix = ModMatrix {
+            routes: vec![
+                ModRoute {
+                    source: ModSource::Lfo1,
+                    destination: ModDestination::Line1DcoEnvStep1Level,
+                    amount: 0.5,
+                    enabled: true,
+                },
+                ModRoute {
+                    source: ModSource::Lfo1,
+                    destination: ModDestination::Line1DcoEnvStep1Rate,
+                    amount: 0.25,
+                    enabled: true,
+                },
+            ],
+        };
+        let sources = ModSources {
+            lfo1: 1.0,
+            lfo2: 0.0,
+            velocity: 0.0,
+            mod_wheel: 0.0,
+            aftertouch: 0.0,
+            mod_env: 0.0,
+            random: 0.0,
+        };
+
+        let modded = super::modulated_line_params(&line, 1, &matrix, &sources);
+        assert_eq!(modded.dco_env.steps[0].level, 84);
+        assert_eq!(modded.dco_env.steps[0].rate, 62);
     }
 }
