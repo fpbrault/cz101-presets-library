@@ -33,6 +33,44 @@ pub struct RuntimeModSources {
     pub aftertouch: f32,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct RuntimeVoiceEnvState {
+    pub value: f32,
+    pub step: usize,
+    pub releasing: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct RuntimeVoiceLineState {
+    pub dco: RuntimeVoiceEnvState,
+    pub dcw: RuntimeVoiceEnvState,
+    pub dca: RuntimeVoiceEnvState,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct RuntimeVoiceDebugState {
+    pub index: usize,
+    pub active: bool,
+    pub is_releasing: bool,
+    pub sustained: bool,
+    pub note: Option<u8>,
+    pub env_note: u8,
+    pub velocity: f32,
+    pub frequency: f32,
+    pub current_freq: f32,
+    pub target_freq: f32,
+    pub phase1: f32,
+    pub phase2: f32,
+    pub anti_click_fade: u32,
+    pub anti_click_attack: u32,
+    pub release_tail_level: f32,
+    pub line1: RuntimeVoiceLineState,
+    pub line2: RuntimeVoiceLineState,
+}
+
 // ---------------------------------------------------------------------------
 // NoteEntry — maps a MIDI note to a voice index
 // ---------------------------------------------------------------------------
@@ -130,6 +168,64 @@ impl CosmoProcessor {
         self.last_runtime_mod_sources
     }
 
+    pub fn runtime_voice_debug_state(&self) -> Vec<RuntimeVoiceDebugState> {
+        self.voices
+            .iter()
+            .enumerate()
+            .map(|(index, voice)| RuntimeVoiceDebugState {
+                index,
+                active: !voice.is_silent,
+                is_releasing: voice.is_releasing,
+                sustained: voice.sustained,
+                note: voice.note,
+                env_note: voice.env_note,
+                velocity: voice.velocity,
+                frequency: voice.frequency,
+                current_freq: voice.current_freq,
+                target_freq: voice.target_freq,
+                phase1: voice.phi1,
+                phase2: voice.phi2,
+                anti_click_fade: voice.anti_click_fade,
+                anti_click_attack: voice.anti_click_attack,
+                release_tail_level: voice.release_tail_level,
+                line1: RuntimeVoiceLineState {
+                    dco: RuntimeVoiceEnvState {
+                        value: voice.line1_env.dco.output,
+                        step: voice.line1_env.dco.step,
+                        releasing: voice.line1_env.dco.releasing,
+                    },
+                    dcw: RuntimeVoiceEnvState {
+                        value: voice.line1_env.dcw.output,
+                        step: voice.line1_env.dcw.step,
+                        releasing: voice.line1_env.dcw.releasing,
+                    },
+                    dca: RuntimeVoiceEnvState {
+                        value: voice.line1_env.dca.output,
+                        step: voice.line1_env.dca.step,
+                        releasing: voice.line1_env.dca.releasing,
+                    },
+                },
+                line2: RuntimeVoiceLineState {
+                    dco: RuntimeVoiceEnvState {
+                        value: voice.line2_env.dco.output,
+                        step: voice.line2_env.dco.step,
+                        releasing: voice.line2_env.dco.releasing,
+                    },
+                    dcw: RuntimeVoiceEnvState {
+                        value: voice.line2_env.dcw.output,
+                        step: voice.line2_env.dcw.step,
+                        releasing: voice.line2_env.dcw.releasing,
+                    },
+                    dca: RuntimeVoiceEnvState {
+                        value: voice.line2_env.dca.output,
+                        step: voice.line2_env.dca.step,
+                        releasing: voice.line2_env.dca.releasing,
+                    },
+                },
+            })
+            .collect()
+    }
+
     // -----------------------------------------------------------------------
     // FX parameter sync
     // -----------------------------------------------------------------------
@@ -208,6 +304,9 @@ impl CosmoProcessor {
         voice.sustained = false;
         voice.gate_was_open = false;
         voice.anti_click_fade = 0;
+        voice.anti_click_fade_len = 0;
+        voice.zero_cross_stop_pending = false;
+        voice.zero_cross_stop_wait = 0;
         voice.anti_click_attack = crate::voice::ANTI_CLICK_ATTACK_SAMPLES;
         voice.last_output_sample = 0.0;
         voice.release_tail_level = 0.0;
@@ -649,7 +748,7 @@ mod tests {
         proc.set_sustain(false);
 
         let active_voice_indices = active_voice_indices_for_note(&proc, note);
-        expect_eq!(
+        assert_eq!(
             active_voice_indices.len(),
             1,
             "expected only the latest retriggered voice to remain active",
@@ -662,7 +761,7 @@ mod tests {
         }
 
         let lingering = active_voice_indices_for_note(&proc, note);
-        expect!(
+        assert!(
             lingering.is_empty(),
             "note should fully release after note-off and enough process cycles",
         );
