@@ -1,6 +1,9 @@
 import ControlKnob from "@/components/controls/ControlKnob";
 import type { KnobVariant } from "@/components/controls/knob/KnobView";
-import type { ModTarget } from "@/lib/synth/modDestination";
+import {
+	type ModTarget,
+	resolveModDestination,
+} from "@/lib/synth/modDestination";
 
 export interface FxKnobConfig {
 	label: string;
@@ -27,21 +30,25 @@ export function BaseFxSection({ title, knobs }: BaseFxSectionProps) {
 		<div className="space-y-2 bg-cz-surface border border-cz-border rounded-sm py-3">
 			<div className="cz-light-blue">{title}</div>
 			<div className="flex justify-center gap-2 md:gap-4">
-				{knobs.map((knob) => (
-					<ControlKnob
-						key={knob.label}
-						value={knob.value}
-						onChange={knob.setValue}
-						min={knob.min}
-						max={knob.max}
-						size={knob.size}
-						variant={knob.variant}
-						color={knob.color}
-						label={knob.label}
-						valueFormatter={knob.valueFormatter}
-						modulatable={knob.modTarget}
-					/>
-				))}
+				{knobs.map((knob) => {
+					const modDestination = resolveModDestination(knob.modTarget);
+
+					return (
+						<ControlKnob
+							key={knob.label}
+							value={knob.value}
+							onChange={knob.setValue}
+							min={knob.min}
+							max={knob.max}
+							size={knob.size}
+							variant={knob.variant}
+							color={knob.color}
+							label={knob.label}
+							valueFormatter={knob.valueFormatter}
+							modDestination={modDestination}
+						/>
+					);
+				})}
 			</div>
 		</div>
 	);
