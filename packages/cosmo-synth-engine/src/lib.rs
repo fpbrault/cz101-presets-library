@@ -12,6 +12,7 @@ pub mod envelope;
 pub mod envelope_map;
 pub mod fx;
 pub mod generators;
+pub mod module_presets;
 pub mod params;
 pub mod preset_wire;
 pub mod processor;
