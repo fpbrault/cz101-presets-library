@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import type React from "react";
-import { useHoverInfo } from "../layout/HoverInfo";
+import { useHoverInfoHandlers } from "../layout/HoverInfo";
 
 type CzButtonProps = {
 	active?: boolean;
@@ -35,22 +35,15 @@ export default function CzButton({
 	style,
 	tooltip,
 }: CzButtonProps) {
-	const { setHoverInfo, clearHoverInfo } = useHoverInfo();
-	const hoverHandlers = tooltip
-		? {
-				onPointerEnter: () => setHoverInfo(tooltip),
-				onPointerLeave: clearHoverInfo,
-				onFocus: () => setHoverInfo(tooltip),
-				onBlur: clearHoverInfo,
-			}
-		: undefined;
+	const resolvedTooltip = tooltip?.trim() ? tooltip : undefined;
+	const hoverHandlers = useHoverInfoHandlers(resolvedTooltip);
 
 	const buttonFace = (
 		<motion.button
 			type={type}
 			disabled={disabled}
 			onClick={onClick}
-			data-hover-info={tooltip}
+			data-hover-info={resolvedTooltip}
 			{...hoverHandlers}
 			initial={{
 				boxShadow:

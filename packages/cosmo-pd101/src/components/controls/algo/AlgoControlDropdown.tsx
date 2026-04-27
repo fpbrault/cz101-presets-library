@@ -1,4 +1,8 @@
 import { memo } from "react";
+import {
+	useHoverInfo,
+	useHoverInfoHandlers,
+} from "@/components/layout/HoverInfo";
 import type {
 	AlgoControlBinding,
 	AlgoControlOptionRuntime,
@@ -22,9 +26,13 @@ function AlgoControlDropdownInner({
 	getActiveSelectOption,
 	applyOptionAssignments,
 }: AlgoControlDropdownProps) {
+	const { setControlReadout } = useHoverInfo();
 	const options = control.options ?? [];
 	const activeOption = getActiveSelectOption(control);
 	const selectedValue = activeOption?.value ?? options[0]?.value ?? "";
+	const hoverHandlers = useHoverInfoHandlers(
+		control.description ?? control.label,
+	);
 
 	return (
 		<div className="grid grid-rows-[2.15rem_auto] gap-1.5">
@@ -35,6 +43,8 @@ function AlgoControlDropdownInner({
 				className="select select-bordered select-xs w-full"
 				disabled={disabled}
 				value={selectedValue}
+				data-hover-info={control.description ?? control.label}
+				{...hoverHandlers}
 				onChange={(event) => {
 					if (disabled) {
 						return;
@@ -48,6 +58,10 @@ function AlgoControlDropdownInner({
 					}
 
 					if (nextOption.set.length > 0) {
+						setControlReadout({
+							label: control.label,
+							value: nextOption.label,
+						});
 						applyOptionAssignments(nextOption);
 						return;
 					}
@@ -56,6 +70,10 @@ function AlgoControlDropdownInner({
 						(option) => option.value === nextOption.value,
 					);
 					if (selectedIndex >= 0) {
+						setControlReadout({
+							label: control.label,
+							value: nextOption.label,
+						});
 						binding?.setNumber?.(selectedIndex);
 					}
 				}}

@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
 import ModulatableControl from "@/components/controls/modulation/ModulatableControl";
 import { useOptionalSynthController } from "@/features/synth/SynthParamController";
 import type { ModDestination } from "@/lib/synth/bindings/synth";
@@ -6,7 +6,7 @@ import {
 	type ModTarget,
 	resolveModDestination,
 } from "@/lib/synth/modDestination";
-import { useHoverInfo } from "../layout/HoverInfo";
+import { useHoverInfo, useHoverInfoHandlers } from "../layout/HoverInfo";
 import { type KnobVariant, KnobView } from "./knob/KnobView";
 import {
 	bipolarCenterNorm,
@@ -104,7 +104,30 @@ export function ControlKnob({
 	const svgRef = useRef<SVGSVGElement | null>(null);
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
 	const [hovered, setHovered] = useState(false);
-	const { setHoverInfo, clearHoverInfo } = useHoverInfo();
+	const { setControlReadout } = useHoverInfo();
+	const resolvedTooltip = tooltip?.trim() ? tooltip : label?.trim();
+	const formatDisplayValue = useCallback(
+		(nextValue: number) => {
+			if (valueFormatter) {
+				return valueFormatter(nextValue);
+			}
+
+			return Number.isInteger(nextValue)
+				? `${nextValue}`
+				: nextValue.toFixed(2);
+		},
+		[valueFormatter],
+	);
+	const emitChange = useCallback(
+		(nextValue: number) => {
+			onChange(nextValue);
+			setControlReadout({
+				label: label ?? "Value",
+				value: formatDisplayValue(nextValue),
+			});
+		},
+		[formatDisplayValue, label, onChange, setControlReadout],
+	);
 
 	const arcGeometry =
 		arcStartAngle !== undefined || arcSweepAngle !== undefined
@@ -138,7 +161,7 @@ export function ControlKnob({
 		wheelStep,
 		fineWheelStep,
 		disabled,
-		onChange,
+		onChange: emitChange,
 		arcGeometry,
 		svgRef,
 		buttonRef,
@@ -170,39 +193,27 @@ export function ControlKnob({
 		? valueFormatter(value)
 		: value.toFixed(2);
 	const valueControlLabel = label ? `${label} value` : "knob value";
-	const hoverHandlers = tooltip
-		? {
-				onPointerEnter: () => setHoverInfo(tooltip),
-				onPointerLeave: clearHoverInfo,
-				onFocusCapture: () => setHoverInfo(tooltip),
-				onBlurCapture: clearHoverInfo,
-			}
-		: undefined;
-	const infoButtonHandlers = tooltip
-		? {
-				onPointerEnter: () => setHoverInfo(tooltip),
-				onPointerLeave: clearHoverInfo,
-				onFocus: () => setHoverInfo(tooltip),
-				onBlur: clearHoverInfo,
-			}
-		: undefined;
+	const hoverHandlers = useHoverInfoHandlers(resolvedTooltip, {
+		useCapture: true,
+	});
+	const infoButtonHandlers = useHoverInfoHandlers(resolvedTooltip);
 
 	const inner = (
 		<div
 			className={`group flex flex-col items-center gap-0.5 text-center ${className ?? ""}`}
-			data-hover-info={tooltip}
+			data-hover-info={resolvedTooltip}
 			{...hoverHandlers}
 		>
 			{label && (
 				<div className="space-y-0.5">
 					<div className="flex items-center justify-center gap-1 text-3xs uppercase tracking-[0.24em] text-base-content/55">
 						<span>{label}</span>
-						{tooltip ? (
+						{resolvedTooltip ? (
 							<button
 								type="button"
 								className="btn btn-ghost btn-circle btn-xs h-4 min-h-4 w-4 border border-cz-border p-0 text-2xs font-semibold leading-none text-cz-cream/70 hover:border-cz-light-blue hover:text-cz-light-blue"
 								aria-label="Show control description"
-								data-hover-info={tooltip}
+								data-hover-info={resolvedTooltip}
 								tabIndex={-1}
 								{...infoButtonHandlers}
 							>

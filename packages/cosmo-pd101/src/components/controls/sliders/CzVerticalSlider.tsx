@@ -1,5 +1,9 @@
 import { useCallback, useRef } from "react";
 import ModulatableControl from "@/components/controls/modulation/ModulatableControl";
+import {
+	useHoverInfo,
+	useHoverInfoHandlers,
+} from "@/components/layout/HoverInfo";
 import type { ModDestination } from "@/lib/synth/bindings/synth";
 import {
 	type ModTarget,
@@ -14,6 +18,8 @@ interface CzVerticalSliderProps {
 	onChange: (v: number) => void;
 	color?: string;
 	ariaLabel?: string;
+	tooltip?: string;
+	valueFormatter?: (value: number) => string;
 	/** Optional fixed height for the slider in px. When omitted, it fills parent height. */
 	trackHeight?: number;
 	/** Simple modulation opt-in with auto destination resolution. */
@@ -36,12 +42,32 @@ export default function CzVerticalSlider({
 	onChange,
 	color = "#9cb937",
 	ariaLabel,
+	tooltip,
+	valueFormatter,
 	trackHeight,
 	modulatable,
 	lineIndex = 1,
 	modDestination,
 }: CzVerticalSliderProps) {
+	const { setControlReadout } = useHoverInfo();
 	const trackRef = useRef<HTMLDivElement>(null);
+	const resolvedLabel = ariaLabel?.trim() ? ariaLabel : "Value";
+	const resolvedTooltip = tooltip?.trim() ? tooltip : resolvedLabel;
+	const hoverHandlers = useHoverInfoHandlers(resolvedTooltip);
+	const emitChange = useCallback(
+		(nextValue: number) => {
+			onChange(nextValue);
+			setControlReadout({
+				label: resolvedLabel,
+				value: valueFormatter
+					? valueFormatter(nextValue)
+					: Number.isInteger(nextValue)
+						? `${nextValue}`
+						: nextValue.toFixed(2),
+			});
+		},
+		[onChange, resolvedLabel, setControlReadout, valueFormatter],
+	);
 
 	const capH = 30; // height of the fader cap in px
 	const trackW = 30; // overall control width in px
@@ -75,11 +101,11 @@ export default function CzVerticalSlider({
 			if (!el) return;
 			el.setPointerCapture(e.pointerId);
 			const rect = el.getBoundingClientRect();
-			onChange(posToValue(e.clientY, rect));
+			emitChange(posToValue(e.clientY, rect));
 
 			const onMove = (ev: PointerEvent) => {
 				const r = el.getBoundingClientRect();
-				onChange(posToValue(ev.clientY, r));
+				emitChange(posToValue(ev.clientY, r));
 			};
 			const onUp = () => {
 				el.removeEventListener("pointermove", onMove);
@@ -88,7 +114,7 @@ export default function CzVerticalSlider({
 			el.addEventListener("pointermove", onMove);
 			el.addEventListener("pointerup", onUp);
 		},
-		[onChange, posToValue],
+		[emitChange, posToValue],
 	);
 
 	const handleWheel = useCallback(
@@ -96,9 +122,9 @@ export default function CzVerticalSlider({
 			e.preventDefault();
 			const delta = -e.deltaY / 100;
 			const range = max - min;
-			onChange(clampToStep(value + delta * range * 0.05));
+			emitChange(clampToStep(value + delta * range * 0.05));
 		},
-		[value, min, max, clampToStep, onChange],
+		[value, min, max, clampToStep, emitChange],
 	);
 
 	const inner = (
@@ -106,6 +132,8 @@ export default function CzVerticalSlider({
 			ref={trackRef}
 			onPointerDown={handlePointerDown}
 			onWheel={handleWheel}
+			data-hover-info={resolvedTooltip}
+			{...hoverHandlers}
 			className="relative h-full min-h-64 select-none cursor-ns-resize"
 			style={{
 				width: trackW,
@@ -120,8 +148,8 @@ export default function CzVerticalSlider({
 			tabIndex={0}
 			onKeyDown={(e) => {
 				const inc = step || (max - min) / 100;
-				if (e.key === "ArrowUp") onChange(clampToStep(value + inc));
-				if (e.key === "ArrowDown") onChange(clampToStep(value - inc));
+				if (e.key === "ArrowUp") emitChange(clampToStep(value + inc));
+				if (e.key === "ArrowDown") emitChange(clampToStep(value - inc));
 			}}
 		>
 			{/* Track channel */}

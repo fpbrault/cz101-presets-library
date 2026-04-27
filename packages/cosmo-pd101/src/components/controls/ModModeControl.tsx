@@ -10,21 +10,9 @@ export default function ModModeControl() {
 			<div className="flex gap-1">
 				{(
 					[
-						[
-							"normal",
-							"Normal",
-							"Standard phase modulation behavior.",
-						],
-						[
-							"ring",
-							"Ring",
-							"Enable ring modulation between lines.",
-						],
-						[
-							"noise",
-							"Noise",
-							"Mix noise source into modulation path.",
-						],
+						["normal", "Normal", "Standard phase modulation behavior."],
+						["ring", "Ring", "Enable ring modulation between lines."],
+						["noise", "Noise", "Mix noise source into modulation path."],
 					] as const
 				).map(([mode, label, tooltip]) => (
 					<CzButton

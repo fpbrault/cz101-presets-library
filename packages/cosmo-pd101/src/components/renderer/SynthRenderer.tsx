@@ -218,16 +218,15 @@ function SynthRendererContent({
 											></CzTabButton>
 											<CzTabButton
 												active={mainPanelMode === "fx"}
-												onClick={() =>
-													{
-														const nextMode = mainPanelMode === "fx" ? "phase" : "fx";
-														setMainPanelMode(nextMode);
-														setControlReadout({
-															label: "Main Panel",
-															value: nextMode.toUpperCase(),
-														});
-													}
-												}
+												onClick={() => {
+													const nextMode =
+														mainPanelMode === "fx" ? "phase" : "fx";
+													setMainPanelMode(nextMode);
+													setControlReadout({
+														label: "Main Panel",
+														value: nextMode.toUpperCase(),
+													});
+												}}
 												topLabel="FX"
 												bottomLabel=""
 												width={48}
@@ -236,16 +235,15 @@ function SynthRendererContent({
 											></CzTabButton>
 											<CzTabButton
 												active={mainPanelMode === "mod"}
-												onClick={() =>
-													{
-														const nextMode = mainPanelMode === "mod" ? "phase" : "mod";
-														setMainPanelMode(nextMode);
-														setControlReadout({
-															label: "Main Panel",
-															value: nextMode.toUpperCase(),
-														});
-													}
-												}
+												onClick={() => {
+													const nextMode =
+														mainPanelMode === "mod" ? "phase" : "mod";
+													setMainPanelMode(nextMode);
+													setControlReadout({
+														label: "Main Panel",
+														value: nextMode.toUpperCase(),
+													});
+												}}
 												topLabel="MOD"
 												bottomLabel=""
 												width={48}
