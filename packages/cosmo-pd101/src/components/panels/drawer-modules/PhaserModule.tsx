@@ -1,8 +1,12 @@
+import { useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
+import { requestApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { PHASER_PRESETS } from "@/lib/synth/modulePresets";
 
 export default function PhaserModule() {
+	const [selectedPreset, setSelectedPreset] = useState<string>("custom");
 	const { value: phaserEnabled, setValue: setPhaserEnabled } =
 		useSynthParam("phaserEnabled");
 	const { value: phaserRate, setValue: setPhaserRate } =
@@ -14,6 +18,29 @@ export default function PhaserModule() {
 	const { value: phaserMix, setValue: setPhaserMix } =
 		useSynthParam("phaserMix");
 
+	const handlePresetChange = (presetId: string) => {
+		setSelectedPreset(presetId);
+		if (presetId === "custom") {
+			return;
+		}
+
+		const preset = PHASER_PRESETS.find((entry) => entry.id === presetId);
+		if (!preset) {
+			return;
+		}
+
+		setPhaserEnabled(preset.patch.phaser.enabled);
+		setPhaserRate(preset.patch.phaser.rate);
+		setPhaserDepth(preset.patch.phaser.depth);
+		setPhaserFeedback(preset.patch.phaser.feedback);
+		setPhaserMix(preset.patch.phaser.mix);
+		requestApplyModulePreset({
+			module: "phaser",
+			preset: preset.id,
+			patch: preset.patch,
+		});
+	};
+
 	return (
 		<ModuleFrame
 			title="Phaser"
@@ -22,6 +49,19 @@ export default function PhaserModule() {
 			enabled={phaserEnabled}
 			onToggle={() => setPhaserEnabled(!phaserEnabled)}
 		>
+			<select
+				className="select select-bordered select-xs col-span-full"
+				aria-label="Phaser preset"
+				value={selectedPreset}
+				onChange={(event) => handlePresetChange(event.target.value)}
+			>
+				<option value="custom">Custom</option>
+				{PHASER_PRESETS.map((preset) => (
+					<option key={preset.id} value={preset.id}>
+						{preset.label}
+					</option>
+				))}
+			</select>
 			<ControlKnob
 				value={phaserRate}
 				onChange={setPhaserRate}

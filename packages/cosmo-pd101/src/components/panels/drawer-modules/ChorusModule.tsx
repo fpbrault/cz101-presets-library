@@ -1,8 +1,12 @@
+import { useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
+import { requestApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { CHORUS_PRESETS } from "@/lib/synth/modulePresets";
 
 export default function ChorusModule() {
+	const [selectedPreset, setSelectedPreset] = useState<string>("custom");
 	const { value: chorusEnabled, setValue: setChorusEnabled } =
 		useSynthParam("chorusEnabled");
 	const { value: chorusRate, setValue: setChorusRate } =
@@ -11,6 +15,28 @@ export default function ChorusModule() {
 		useSynthParam("chorusDepth");
 	const { value: chorusMix, setValue: setChorusMix } =
 		useSynthParam("chorusMix");
+
+	const handlePresetChange = (presetId: string) => {
+		setSelectedPreset(presetId);
+		if (presetId === "custom") {
+			return;
+		}
+
+		const preset = CHORUS_PRESETS.find((entry) => entry.id === presetId);
+		if (!preset) {
+			return;
+		}
+
+		setChorusEnabled(preset.patch.chorus.enabled);
+		setChorusRate(preset.patch.chorus.rate);
+		setChorusDepth(preset.patch.chorus.depth);
+		setChorusMix(preset.patch.chorus.mix);
+		requestApplyModulePreset({
+			module: "chorus",
+			preset: preset.id,
+			patch: preset.patch,
+		});
+	};
 
 	return (
 		<ModuleFrame
@@ -21,6 +47,19 @@ export default function ChorusModule() {
 			enabled={chorusEnabled}
 			onToggle={() => setChorusEnabled(!chorusEnabled)}
 		>
+			<select
+				className="select select-bordered select-xs col-span-full"
+				aria-label="Chorus preset"
+				value={selectedPreset}
+				onChange={(event) => handlePresetChange(event.target.value)}
+			>
+				<option value="custom">Custom</option>
+				{CHORUS_PRESETS.map((preset) => (
+					<option key={preset.id} value={preset.id}>
+						{preset.label}
+					</option>
+				))}
+			</select>
 			<ControlKnob
 				value={chorusRate}
 				onChange={setChorusRate}

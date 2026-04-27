@@ -1,9 +1,13 @@
+import { useState } from "react";
 import ControlKnob from "@/components/controls/ControlKnob";
 import CzButton from "@/components/primitives/CzButton";
 import ModuleFrame from "@/components/primitives/ModuleFrame";
+import { requestApplyModulePreset } from "@/features/synth/engine/modulePresetEvents";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { PHASE_MOD_PRESETS } from "@/lib/synth/modulePresets";
 
 export default function PhaseModModule() {
+	const [selectedPreset, setSelectedPreset] = useState<string>("custom");
 	const { value: phaseModEnabled, setValue: setPhaseModEnabled } =
 		useSynthParam("phaseModEnabled");
 	const { value: intPmAmount, setValue: setIntPmAmount } =
@@ -11,6 +15,28 @@ export default function PhaseModModule() {
 	const { value: intPmRatio, setValue: setIntPmRatio } =
 		useSynthParam("intPmRatio");
 	const { value: pmPre, setValue: setPmPre } = useSynthParam("pmPre");
+
+	const handlePresetChange = (presetId: string) => {
+		setSelectedPreset(presetId);
+		if (presetId === "custom") {
+			return;
+		}
+
+		const preset = PHASE_MOD_PRESETS.find((entry) => entry.id === presetId);
+		if (!preset) {
+			return;
+		}
+
+		setPhaseModEnabled(preset.patch.intPmEnabled);
+		setIntPmAmount(preset.patch.intPmAmount);
+		setIntPmRatio(preset.patch.intPmRatio);
+		setPmPre(preset.patch.pmPre);
+		requestApplyModulePreset({
+			module: "phaseMod",
+			preset: preset.id,
+			patch: preset.patch,
+		});
+	};
 
 	return (
 		<ModuleFrame
@@ -20,6 +46,19 @@ export default function PhaseModModule() {
 			columns={2}
 			onToggle={() => setPhaseModEnabled(!phaseModEnabled)}
 		>
+			<select
+				className="select select-bordered select-xs col-span-full"
+				aria-label="Phase mod preset"
+				value={selectedPreset}
+				onChange={(event) => handlePresetChange(event.target.value)}
+			>
+				<option value="custom">Custom</option>
+				{PHASE_MOD_PRESETS.map((preset) => (
+					<option key={preset.id} value={preset.id}>
+						{preset.label}
+					</option>
+				))}
+			</select>
 			<CzButton
 				active={pmPre}
 				onClick={() => setPmPre(!pmPre)}
