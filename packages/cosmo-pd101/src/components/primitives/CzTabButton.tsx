@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { motion } from "motion/react";
 import type React from "react";
 import { joinClasses } from "@/components/primitives/Card";
@@ -8,6 +9,7 @@ export type CzTabButtonLedColor = "off" | "red" | "green" | "blue";
 type CzTabButtonProps = {
 	active?: boolean;
 	onClick?: () => void;
+	onLongPress?: () => void;
 	topLabel: React.ReactNode;
 	bottomLabel: React.ReactNode;
 	width?: number;
@@ -18,7 +20,44 @@ type CzTabButtonProps = {
 	type?: "button" | "submit" | "reset";
 	showLed?: boolean;
 	color?: CzTabButtonColor;
+	customColor?: string;
+	longPressMs?: number;
 	ledColor?: CzTabButtonLedColor;
+};
+
+const clampColor = (value: number) => Math.max(0, Math.min(255, value));
+
+const normalizeHexColor = (value: string): string | null => {
+	const hex = value.trim();
+	if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+		return hex.toLowerCase();
+	}
+
+	if (/^#[0-9a-fA-F]{3}$/.test(hex)) {
+		const r = hex[1] ?? "0";
+		const g = hex[2] ?? "0";
+		const b = hex[3] ?? "0";
+		return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+	}
+
+	return null;
+};
+
+const adjustHexColor = (hex: string, delta: number): string => {
+	const normalized = normalizeHexColor(hex);
+	if (!normalized) {
+		return hex;
+	}
+
+	const red = parseInt(normalized.slice(1, 3), 16);
+	const green = parseInt(normalized.slice(3, 5), 16);
+	const blue = parseInt(normalized.slice(5, 7), 16);
+
+	const nextRed = clampColor(red + delta).toString(16).padStart(2, "0");
+	const nextGreen = clampColor(green + delta).toString(16).padStart(2, "0");
+	const nextBlue = clampColor(blue + delta).toString(16).padStart(2, "0");
+
+	return `#${nextRed}${nextGreen}${nextBlue}`;
 };
 
 const colorStyles: Record<
@@ -83,6 +122,7 @@ const LED_GLOW: Record<Exclude<CzTabButtonLedColor, "off">, LedGlowConfig> = {
 export default function CzTabButton({
 	active = false,
 	onClick,
+	onLongPress,
 	topLabel,
 	bottomLabel,
 	width,
@@ -93,12 +133,75 @@ export default function CzTabButton({
 	type = "button",
 	showLed = true,
 	color = "black",
+	customColor,
+	longPressMs = 450,
 	ledColor,
 }: CzTabButtonProps) {
 	const palette = colorStyles[color];
 	const resolvedLedColor = ledColor ?? (active ? "red" : "off");
 	const resolvedWidth = width ?? height ?? 48;
 	const resolvedHeight = height ?? width ?? 48;
+	const longPressTimerRef = useRef<number | null>(null);
+	const longPressTriggeredRef = useRef(false);
+	const normalizedCustomColor =
+		typeof customColor === "string" ? normalizeHexColor(customColor) : null;
+
+	const clearLongPressTimer = () => {
+		if (longPressTimerRef.current !== null) {
+			window.clearTimeout(longPressTimerRef.current);
+			longPressTimerRef.current = null;
+		}
+	};
+
+	const handlePointerDown = () => {
+		if (!onLongPress || disabled) {
+			return;
+		}
+
+		longPressTriggeredRef.current = false;
+		clearLongPressTimer();
+		longPressTimerRef.current = window.setTimeout(() => {
+			longPressTriggeredRef.current = true;
+			onLongPress();
+		}, longPressMs);
+	};
+
+	const handlePointerUp = () => {
+		clearLongPressTimer();
+	};
+
+	const handleClick = () => {
+		if (longPressTriggeredRef.current) {
+			longPressTriggeredRef.current = false;
+			return;
+		}
+
+		onClick?.();
+	};
+
+	const buttonStyle: React.CSSProperties = {
+		width: `${resolvedWidth}px`,
+		height: `${resolvedHeight}px`,
+	};
+
+	if (normalizedCustomColor) {
+		const borderColor = active
+			? adjustHexColor(normalizedCustomColor, -48)
+			: adjustHexColor(normalizedCustomColor, -28);
+		const topColor = active
+			? adjustHexColor(normalizedCustomColor, 20)
+			: adjustHexColor(normalizedCustomColor, 42);
+		const middleColor = active
+			? normalizedCustomColor
+			: adjustHexColor(normalizedCustomColor, 18);
+		const bottomColor = active
+			? adjustHexColor(normalizedCustomColor, -26)
+			: adjustHexColor(normalizedCustomColor, -12);
+
+		buttonStyle.borderColor = borderColor;
+		buttonStyle.background = `linear-gradient(180deg, ${topColor} 0%, ${middleColor} 32%, ${bottomColor} 100%)`;
+		buttonStyle.color = "#ffffff";
+	}
 
 	return (
 		<div className={joinClasses("flex flex-col items-center gap-1", className)}>
@@ -129,7 +232,11 @@ export default function CzTabButton({
 			<motion.button
 				type={type}
 				disabled={disabled}
-				onClick={onClick}
+				onClick={handleClick}
+				onPointerDown={handlePointerDown}
+				onPointerUp={handlePointerUp}
+				onPointerLeave={handlePointerUp}
+				onPointerCancel={handlePointerUp}
 				animate={
 					active
 						? {
@@ -149,10 +256,10 @@ export default function CzTabButton({
 				className={joinClasses(
 					"shrink-0 flex items-center justify-center rounded-xs border uppercase tracking-[0.06em] text-3xs leading-[1.08] font-bold px-1 py-1",
 					"disabled:opacity-40 disabled:cursor-not-allowed",
-					active ? palette.active : palette.inactive,
+					normalizedCustomColor ? "text-white" : active ? palette.active : palette.inactive,
 					buttonClassName,
 				)}
-				style={{ width: `${resolvedWidth}px`, height: `${resolvedHeight}px` }}
+				style={buttonStyle}
 				aria-pressed={active}
 			>
 				<span className="text-center font-['Arial_Narrow','Arial',sans-serif]">

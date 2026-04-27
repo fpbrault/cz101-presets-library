@@ -9,6 +9,7 @@ import CzTabButton, {
 	type CzTabButtonLedColor,
 } from "@/components/primitives/CzTabButton";
 import { useSynthParam } from "@/features/synth/SynthParamController";
+import { useSynthUiStore } from "@/features/synth/synthUiStore";
 
 export type AsidePanelButtonTab<T extends string> = {
 	id: T;
@@ -37,6 +38,24 @@ const TOGGLE_TAB_IDS = new Set([
 	"phaser",
 ]);
 
+const FX_MODULE_TAB_IDS = new Set([
+	"phasemod",
+	"vibrato",
+	"chorus",
+	"delay",
+	"reverb",
+	"phaser",
+]);
+
+const FX_MODULE_TAB_COLORS: Record<string, string> = {
+	phasemod: "#be3330",
+	vibrato: "#307948",
+	chorus: "#818cf8",
+	delay: "#fbbf24",
+	reverb: "#f97316",
+	phaser: "#a78bfa",
+};
+
 export type AsidePanelTabMeta = {
 	topLabel: string;
 	bottomLabel: string;
@@ -59,6 +78,7 @@ export default function AsidePanelSwitcher<T extends string>({
 	onTabChange,
 	children,
 }: AsidePanelSwitcherProps<T>) {
+	const setMainPanelMode = useSynthUiStore((state) => state.setMainPanelMode);
 	const { value: polyMode, setValue: setPolyMode } = useSynthParam("polyMode");
 	const { value: portamentoEnabled, setValue: setPortamentoEnabled } =
 		useSynthParam("portamentoEnabled");
@@ -123,6 +143,14 @@ export default function AsidePanelSwitcher<T extends string>({
 	const isToggleTab = (tabId: T): boolean =>
 		TOGGLE_TAB_IDS.has(String(tabId).toLowerCase());
 
+	const isFxModuleTab = (tabId: T): boolean =>
+		FX_MODULE_TAB_IDS.has(String(tabId).toLowerCase());
+
+	const getCustomTabColor = (tabId: T): string | undefined => {
+		const normalizedTabId = String(tabId).toLowerCase();
+		return FX_MODULE_TAB_COLORS[normalizedTabId];
+	};
+
 	const toggleTab = (tabId: T) => {
 		switch (String(tabId).toLowerCase()) {
 			case "polymode":
@@ -159,6 +187,14 @@ export default function AsidePanelSwitcher<T extends string>({
 		}
 
 		onTabChange(tabId);
+	};
+
+	const handleTabLongPress = (tabId: T) => {
+		if (!isFxModuleTab(tabId)) {
+			return;
+		}
+
+		setMainPanelMode("fx");
 	};
 
 	const getTabLedColor = (tabId: T, isActive: boolean): CzTabButtonLedColor => {
@@ -228,12 +264,18 @@ export default function AsidePanelSwitcher<T extends string>({
 				{allTabs.map((tab) => (
 					<CzTabButton
 						key={tab.id}
-						color={getTabColor(tab.id)}
+						color={getCustomTabColor(tab.id) ? "black" : getTabColor(tab.id)}
+						customColor={getCustomTabColor(tab.id)}
 						active={
 							isToggleTab(tab.id) ? isTabEnabled(tab.id) : activeTab === tab.id
 						}
 						ledColor={getTabLedColor(tab.id, activeTab === tab.id)}
 						onClick={() => handleTabClick(tab.id)}
+						onLongPress={
+							isFxModuleTab(tab.id)
+								? () => handleTabLongPress(tab.id)
+								: undefined
+						}
 						topLabel={tab.topLabel}
 						bottomLabel={tab.bottomLabel}
 					/>
