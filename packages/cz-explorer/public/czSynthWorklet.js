@@ -83,6 +83,80 @@ const DEFAULT_PARAMS = {
 	modWheelVibratoDepth: 0,
 };
 
+const LEGACY_MOD_DESTINATIONS = new Set([
+	"volume",
+	"pitch",
+	"intPmAmount",
+	"line1DcwBase",
+	"line1DcaBase",
+	"line1AlgoBlend",
+	"line1Detune",
+	"line1Octave",
+	"line1AlgoParam1",
+	"line1AlgoParam2",
+	"line1AlgoParam3",
+	"line1AlgoParam4",
+	"line1AlgoParam5",
+	"line1AlgoParam6",
+	"line1AlgoParam7",
+	"line1AlgoParam8",
+	"line2DcwBase",
+	"line2DcaBase",
+	"line2AlgoBlend",
+	"line2Detune",
+	"line2Octave",
+	"line2AlgoParam1",
+	"line2AlgoParam2",
+	"line2AlgoParam3",
+	"line2AlgoParam4",
+	"line2AlgoParam5",
+	"line2AlgoParam6",
+	"line2AlgoParam7",
+	"line2AlgoParam8",
+	"filterCutoff",
+	"filterResonance",
+	"filterEnvAmount",
+	"chorusMix",
+	"delayMix",
+	"reverbMix",
+	"vibratoDepth",
+	"lfoDepth",
+	"lfoRate",
+]);
+
+function parseSupportedModDestinationsFromSetParamsError(errorMessage) {
+	if (
+		typeof errorMessage !== "string" ||
+		!errorMessage.includes("unknown variant") ||
+		!errorMessage.includes("expected one of")
+	) {
+		return null;
+	}
+
+	const supported = new Set();
+	for (const match of errorMessage.matchAll(/`([^`]+)`/g)) {
+		const destination = match[1]?.trim();
+		if (destination) {
+			supported.add(destination);
+		}
+	}
+
+	return supported.size > 0 ? supported : null;
+}
+
+function filterRoutesToSupportedDestinations(routes, supportedDestinations) {
+	if (!Array.isArray(routes) || routes.length === 0 || !supportedDestinations) {
+		return routes;
+	}
+
+	return routes.filter((route) => {
+		if (!route || typeof route.destination !== "string") {
+			return false;
+		}
+		return supportedDestinations.has(route.destination);
+	});
+}
+
 // ---------------------------------------------------------------------------
 // Worklet processor
 // ---------------------------------------------------------------------------
@@ -127,7 +201,41 @@ class CzSynthWorkletProcessor extends AudioWorkletProcessor {
 			case "setParams": {
 				const p = d.params;
 				this._mergeParams(p);
-				synth.setParams(JSON.stringify(this._params));
+				try {
+					synth.setParams(JSON.stringify(this._params));
+				} catch (error) {
+					const errorMessage =
+						error instanceof Error ? error.message : String(error ?? "");
+					const parsedDestinations =
+						parseSupportedModDestinationsFromSetParamsError(errorMessage);
+					const supportedDestinations =
+						parsedDestinations ?? LEGACY_MOD_DESTINATIONS;
+					const routesBefore = this._params.modMatrix?.routes ?? [];
+					const routesAfter = filterRoutesToSupportedDestinations(
+						routesBefore,
+						supportedDestinations,
+					);
+
+					if (routesAfter.length === routesBefore.length) {
+						throw error;
+					}
+
+					this._params.modMatrix = {
+						...(this._params.modMatrix ?? {}),
+						routes: routesAfter,
+					};
+
+					try {
+						synth.setParams(JSON.stringify(this._params));
+						this.port.postMessage({
+							type: "compatModDestFilterApplied",
+							droppedRoutes: routesBefore.length - routesAfter.length,
+							supportedDestinations: Array.from(supportedDestinations),
+						});
+					} catch {
+						throw error;
+					}
+				}
 				break;
 			}
 			case "noteOn":
