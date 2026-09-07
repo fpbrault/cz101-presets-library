@@ -27,10 +27,10 @@
 		"@types/react": "^18.3.29",
 		"@types/react-dom": "^18.3.7",
 		"@vitejs/plugin-react": "^6.0.2",
-		"@vitest/browser": "^4.1.7",
-		"@vitest/browser-playwright": "^4.1.7",
-		"@vitest/coverage-v8": "^4.1.7",
-		"@vitest/ui": "4.1.10",
+		"@vitest/browser": "^5.0.0",
+		"@vitest/browser-playwright": "^5.0.0",
+		"@vitest/coverage-v8": "^5.0.0",
+		"@vitest/ui": "5.0.0",
 		"daisyui": "^5.5.20",
 		"happy-dom": "^20.9.0",
 		"react": "^18.3.1",
@@ -38,7 +38,7 @@
 		"tailwindcss": "^4.3.0",
 		"typescript": "^6.0.3",
 		"vite": "^8.0.14",
-		"vitest": "^4.1.7"
+		"vitest": "^5.0.0"
 	},
 	"peerDependencies": {
 		"react": "^18.3.1",
