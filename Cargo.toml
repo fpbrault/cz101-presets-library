@@ -17,7 +17,7 @@ repository = "https://github.com/fpbrault/cosmo-pd"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 log = "0.4"
-syn = { version = "2", features = [
+syn = { version = "3", features = [
     "full",
     "parsing",
     "printing",
