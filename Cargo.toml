@@ -35,7 +35,7 @@ truce-standalone = { git = "https://github.com/fpbrault/truce.git", branch = "co
 truce-gui = { git = "https://github.com/fpbrault/truce.git", branch = "cosmo/truce-v6.3.0" }
 truce-build = { git = "https://github.com/fpbrault/truce.git", branch = "cosmo/truce-v6.3.0" }
 truce-test = { git = "https://github.com/fpbrault/truce.git", branch = "cosmo/truce-v6.3.0" }
-wry = "0.56.0"
+wry = "0.57.0"
 raw-window-handle = "0.6"
 
 [workspace.lints]
