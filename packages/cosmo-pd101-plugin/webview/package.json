@@ -30,7 +30,7 @@
 		"@vitest/browser": "^4.1.7",
 		"@vitest/browser-playwright": "^4.1.7",
 		"@vitest/coverage-v8": "^4.1.7",
-		"@vitest/ui": "4.1.10",
+		"@vitest/ui": "4.1.11",
 		"daisyui": "^5.5.20",
 		"happy-dom": "^20.9.0",
 		"react": "^18.3.1",
@@ -48,6 +48,6 @@
 		"@cosmo/cosmo-pd101": "workspace:*",
 		"i18next": "^26.0.6",
 		"react-i18next": "^17.0.4",
-		"tsdown": "^0.22.2"
+		"tsdown": "^0.23.0"
 	}
 }

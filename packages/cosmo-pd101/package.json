@@ -40,7 +40,7 @@
 		"@vitest/browser": "^4.1.4",
 		"@vitest/browser-playwright": "^4.1.4",
 		"@vitest/coverage-v8": "^4.1.4",
-		"@vitest/ui": "4.1.10",
+		"@vitest/ui": "4.1.11",
 		"daisyui": "^5.5.19",
 		"fake-indexeddb": "^6.2.5",
 		"happy-dom": "^20.9.0",
@@ -60,7 +60,7 @@
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
 		"@floating-ui/react": "^0.27.19",
-		"@tsdown/css": "^0.22.1",
+		"@tsdown/css": "^0.23.0",
 		"i18next": "^26.0.6",
 		"motion": "^12.38.0",
 		"react-i18next": "^17.0.4",
@@ -68,7 +68,7 @@
 		"react-resizable-panels": "^4.11.2",
 		"react-select": "^5.10.2",
 		"smol-toml": "^1.6.1",
-		"tsdown": "^0.22.2",
+		"tsdown": "^0.23.0",
 		"zustand": "^5.0.12"
 	}
 }
